@@ -14,6 +14,7 @@ Produce a launch-ready v1 specification and a phased implementation roadmap for 
 - Develop privately under `b4rb13/dot-loaders` and eventually deploy the website to Vercel's `b4rb13's Team`.
 - Plan an MIT-licensed free core and optional paid templates, presets, and tooling.
 - Complete the specification and roadmap first; implement in subsequent sessions.
+- Focus v1 on composable primitives and dot text, chart, and table loaders; defer library-specific integrations and paid tooling.
 
 ## Product promise to validate
 
