@@ -14,6 +14,8 @@ The existing `@m37/loaders` package is a read-only research source. Its reposito
 
 - [Product brief](docs/product-brief.md)
 - [Roadmap](docs/roadmap.md)
+- [Research overview and evidence](docs/research-overview.md)
+- [Product vocabulary](GLOSSARY.md)
 - [Issue tracker operations](.agents/issue-tracker.md)
 
 The [Wayfinder map](https://github.com/b4rb13/dot-loaders/issues/1) is the canonical index of decisions, with twelve research and decision tickets connected through native GitHub dependencies. Research branches contain supporting evidence; they are not implementation branches and should not be merged.
