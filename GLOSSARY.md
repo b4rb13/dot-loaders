@@ -24,6 +24,14 @@ _Avoid_: Loader when referring to the whole coordinated area
 The application's determination that an area can present its useful outcome, including successful content, an empty result, or an error with recovery options.
 _Avoid_: Treating a nonzero value or a successful request as the only ready outcome
 
+**Refresh**:
+A loading cycle in which existing content remains useful while an updated outcome is pending.
+_Avoid_: Replacement when the existing content is still relevant
+
+**Replacement**:
+A loading cycle in which existing content is no longer relevant to the requested outcome.
+_Avoid_: Refresh when the previous content belongs to an unrelated context
+
 **Preset**:
 A reusable visual treatment for a loading surface.
 _Avoid_: Template when referring only to a visual treatment
