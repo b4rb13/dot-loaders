@@ -16,6 +16,14 @@ _Avoid_: Using skeleton as the name for every loading indicator
 The change from a loading surface to its real content once that content is ready.
 _Avoid_: Arrival as a second name for the same product concept
 
+**Loading region**:
+An area that coordinates a loading placeholder and its real content through a loading cycle.
+_Avoid_: Loader when referring to the whole coordinated area
+
+**Readiness**:
+The application's determination that an area can present its useful outcome, including successful content, an empty result, or an error with recovery options.
+_Avoid_: Treating a nonzero value or a successful request as the only ready outcome
+
 **Preset**:
 A reusable visual treatment for a loading surface.
 _Avoid_: Template when referring only to a visual treatment
