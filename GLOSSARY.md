@@ -32,6 +32,10 @@ _Avoid_: Replacement when the existing content is still relevant
 A loading cycle in which existing content is no longer relevant to the requested outcome.
 _Avoid_: Refresh when the previous content belongs to an unrelated context
 
+**Loading cycle**:
+A single attempt to obtain and present an outcome in a loading region, whether initial loading, refresh, or replacement.
+_Avoid_: Treating an appearance change as a new load
+
 **Preset**:
 A reusable visual treatment for a loading surface.
 _Avoid_: Template when referring only to a visual treatment
