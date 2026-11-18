@@ -64,7 +64,8 @@ export function chartPainter(configure?: ChartShader): IdlePaint {
           c = Math.exp(-((distance / band) ** 2)),
           area = distance > 0 && y < h ? 0.26 : 0,
           v = Math.max(c, area),
-          n = noise(x + y * 0.7, t);
+          // Only custom variants read the noise term.
+          n = shader ? noise(x + y * 0.7, t) : 0;
         base[0] = (0.05 + (0.63 - 0.05) * v) * breath;
         base[1] = 1;
         base[2] = 0;
@@ -78,9 +79,10 @@ export function chartPainter(configure?: ChartShader): IdlePaint {
             opacity: clamp(value[0]),
             tone: value[3] ? 'accent' : 'base',
           });
-        if (still) continue;
-        const d = (u * 0.8 + (y / Math.max(1, full)) * 0.2 - glowAt) / sigma,
-          glow = d < -3.2 || d > 3.2 ? 0 : Math.exp(-d * d) * 0.9 * v;
+        if (still || v < 0.02) continue;
+        const d = (u * 0.8 + (y / Math.max(1, full)) * 0.2 - glowAt) / sigma;
+        if (d < -3.2 || d > 3.2) continue;
+        const glow = Math.exp(-d * d) * 0.9 * v;
         if (glow >= 0.02 && ++count <= 4096)
           dot({
             x,
