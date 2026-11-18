@@ -36,34 +36,17 @@ const suites: Record<string, Suite> = {
   },
   m4: {
     prepare: [['bun', 'run', 'scripts/prepare-m4.ts']],
-    configs: [
-      { file: 'playwright.m4.config.ts', chromium: 'chromium' },
-    ],
+    configs: [{ file: 'playwright.m4.config.ts', chromium: 'chromium' }],
     checks: [
       ['bun', 'run', 'scripts/verify-boundaries.ts'],
       ['bun', 'run', 'scripts/verify-catalog-ssr.ts'],
     ],
-  },
-  api: {
-    prepare: [['bun', 'run', 'scripts/prepare-api.ts']],
-    configs: [{ file: 'playwright.api.config.ts', chromium: 'chromium' }],
-  },
-  copies: {
-    prepare: [['bun', 'run', 'scripts/prepare-copies.ts']],
-    configs: [{ file: 'playwright.copies.config.ts', chromium: 'chromium' }],
-  },
-  layout: {
-    prepare: [['bun', 'run', 'scripts/prepare-layout.ts']],
-    configs: [{ file: 'playwright.layout.config.ts', chromium: 'chromium' }],
   },
 };
 // Suites reuse consumers that earlier suites install.
 const requires: Record<string, string[]> = {
   react: ['native'],
   m4: ['react'],
-  api: ['m4'],
-  copies: ['m4'],
-  layout: ['m4'],
 };
 
 const requested = process.argv.slice(2);

@@ -1,12 +1,23 @@
-import { readFile } from 'node:fs/promises';
+// Serves the API examples against the workspace build (packages/*/dist).
 import { resolve, sep } from 'node:path';
+import { renderStatic } from '@dotquilt-internal/core/server';
 
 const root = resolve(import.meta.dir, '../..');
-const consumer = (
-  await readFile(resolve(root, '.artifacts/m4/consumer-path'), 'utf8')
-).trim();
-const core = resolve(consumer, 'node_modules/@dotquilt-internal/core/dist');
-const { renderStatic } = await import(resolve(core, 'server.js'));
+const core = resolve(root, 'packages/core/dist');
+const clients = new Map<string, string>();
+for (const name of ['native.ts', 'react.tsx']) {
+  const build = await Bun.build({
+    entrypoints: [resolve(import.meta.dir, name)],
+    format: 'esm',
+    target: 'browser',
+  });
+  if (!build.success || !build.outputs[0])
+    throw new Error(`Cannot build the API client ${name}`);
+  clients.set(
+    `/${name.replace(/\.tsx?$/, '')}.js`,
+    await build.outputs[0].text(),
+  );
+}
 Bun.serve({
   hostname: '127.0.0.1',
   port: 4203,
@@ -34,11 +45,11 @@ Bun.serve({
       return new Response(Bun.file(resolve(root, 'examples/api/app.css')), {
         headers: { 'content-type': 'text/css' },
       });
-    if (url.pathname === '/native.js' || url.pathname === '/react.js')
-      return new Response(
-        Bun.file(resolve(root, '.artifacts/m4-api', url.pathname.slice(1))),
-        { headers: { 'content-type': 'text/javascript' } },
-      );
+    const client = clients.get(url.pathname);
+    if (client)
+      return new Response(client, {
+        headers: { 'content-type': 'text/javascript' },
+      });
     const markup = renderStatic({
       kind: 'region',
       state: 'ready',
