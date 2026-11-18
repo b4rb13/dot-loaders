@@ -63,7 +63,7 @@ Pre-existing legacy failures, the same on the pre-Phase-2 code (they need triage
 All other legacy suites pass: native (packed), react, chart-production, table, presets, coordination, api, copies and layout.
 
 Not done yet:
-- React style de-duplication (one stylesheet per instance). It changes SSR markup across React 19.0–19.3 and Next, so it gets its own change.
+- React style de-duplication (one stylesheet per instance). Done in Phase 3, see below.
 - Hiding pending SSR content before upgrade. Tried and reverted: the legacy React suite requires pending server content to stay visible and usable without JavaScript. Now decision 11.
 
 **Phase 3 — in progress on `refactor/phase-3-degolf` (2026-11-18).**
@@ -92,8 +92,11 @@ Waiting on decisions:
   - The JavaScript entries stay as they are. Each one keeps imports selective or keeps server code apart.
   - `scripts/package-exports.test.ts` checks that every stylesheet resolves and that the pattern cannot reach anything else.
 
-Next:
-- React style de-duplication: one `<style>` per instance.
+- **React style de-duplication.** Done on `refactor/react-style-dedup`.
+  - In the default inline policy, each React loader rendered its own copy of its pre-upgrade `<style>`; a page with 50 skeletons had 50 copies. Now each component's CSS renders as `<style href precedence>`, and React keeps one copy per document, on React 19.0 and 19.3 alike.
+  - Each component has its own precedence, so React never merges two components' CSS into one element. Every stylesheet's text stays exactly the exported string, and CSP hashes of `react*Styles` still match.
+  - **Nonce policy:** unchanged, one `<style nonce>` per loader. React 19.0 cannot put a nonce on a shared stylesheet. React 19.3 only does when the app also passes a style nonce to its render call, which the adapter can't check.
+  - **External policy:** unchanged, one `<link>` per loader. The browser fetches the file once. A `<link precedence>` would suspend rendering until the file loads, which can blank a Suspense fallback built from loaders.
 
 **Test rework — done on `test/rework-suites` (2026-11-18).**
 

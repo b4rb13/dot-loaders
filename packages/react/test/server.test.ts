@@ -8,6 +8,17 @@ import {
   TextLoader,
   TypingDots,
 } from '../dist/index.js';
+import {
+  reactRegionStyles,
+  reactSkeletonStyles,
+  reactTypingStyles,
+} from '../dist/server.js';
+
+function styleElements(html: string) {
+  return [...html.matchAll(/<style\b([^>]*)>([\s\S]*?)<\/style>/g)].map(
+    (m) => ({ attributes: m[1] ?? '', css: m[2] ?? '' }),
+  );
+}
 
 test('SSR derives geometry from local presets without serializing configuration or request state', () => {
   const typing = renderToString(
@@ -141,4 +152,51 @@ test('ChartLoader SSR is decorative and never samples or serializes a provider, 
   expect(html).toContain('aria-hidden="true"');
   expect(html).toContain('Actual chart');
   expect(html).not.toContain('targetProvider');
+});
+
+test('repeated loaders share one inline stylesheet per component, with the exact CSS that CSP hashes authorize', () => {
+  const html = renderToString(
+    h(
+      'div',
+      null,
+      h(SkeletonBlock),
+      h(SkeletonBlock),
+      h(SkeletonBlock),
+      h(TypingDots),
+      h(TypingDots),
+      h(
+        LoadingRegion,
+        { state: 'pending', placeholder: h(SkeletonBlock) },
+        'a',
+      ),
+      h(
+        LoadingRegion,
+        { state: 'pending', placeholder: h(SkeletonBlock) },
+        'b',
+      ),
+    ),
+  );
+  expect(styleElements(html).map((s) => s.css)).toEqual([
+    reactSkeletonStyles.join('\n'),
+    reactTypingStyles.join('\n'),
+    reactRegionStyles.join('\n'),
+  ]);
+});
+
+test('nonce styles stay one per loader, because React 19.0 cannot put a nonce on a shared stylesheet', () => {
+  const html = renderToString(
+    h(
+      'div',
+      null,
+      ...[1, 2, 3].map((key) =>
+        h(SkeletonBlock, {
+          key,
+          stylePolicy: { mode: 'inline', nonce: 'n' },
+        }),
+      ),
+    ),
+  );
+  const styles = styleElements(html);
+  expect(styles).toHaveLength(3);
+  expect(styles.every((s) => s.attributes.includes('nonce="n"'))).toBe(true);
 });
