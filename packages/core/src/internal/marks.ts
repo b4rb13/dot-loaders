@@ -24,12 +24,16 @@ export const lineHeight = `calc(2*(${markSize} + ${markGap}))`;
 
 /**
  * A grid of round marks painted with CSS, used by static and skeleton surfaces.
- * `position` places the grid: centred by default so it sits symmetrically in
- * blocks and circles; lines, exactly two rows tall, start at `0 0`. The 1 px
- * soft edge keeps small marks round instead of jagged at 1× density.
+ * By default only whole marks are drawn (`space`): blocks and circles of any
+ * size spread the leftover evenly instead of clipping half a row at an edge.
+ * Lines, exactly two rows tall, pass `0 0` and repeat from the left so their
+ * columns line up. The 1 px soft edge keeps small marks round at 1× density.
  */
-export function dotGrid(position = '50% 50%'): string {
-  return `--s:${markSize};--g:calc(var(--s) + ${markGap});background:radial-gradient(circle,${markColor} calc(var(--s)/2 - .5px),#0000 calc(var(--s)/2 + .5px)) ${position}/var(--g) var(--g)`;
+export function dotGrid(position?: string): string {
+  const place = position
+    ? `${position}/var(--g) var(--g)`
+    : 'center/var(--g) var(--g) space';
+  return `--s:${markSize};--g:calc(var(--s) + ${markGap});background:radial-gradient(circle,${markColor} calc(var(--s)/2 - .5px),#0000 calc(var(--s)/2 + .5px)) ${place}`;
 }
 
 /**

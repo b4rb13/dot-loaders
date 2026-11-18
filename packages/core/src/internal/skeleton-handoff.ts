@@ -21,6 +21,31 @@ function gridOffset(position: string, box: number, tile: number): number {
   return tile > 0 ? ((px % tile) + tile) % tile : 0;
 }
 
+/** Plain numbers, so the resize check can compare measurements with `!==`. */
+function flat<K extends string>(
+  axis: K,
+  { step, offset }: { step: number; offset: number },
+) {
+  return { [`${axis}Step`]: step, [`${axis}Offset`]: offset } as Record<
+    `${K}Step` | `${K}Offset`,
+    number
+  >;
+}
+
+/**
+ * Where the CSS grid puts its marks along one axis: the distance between
+ * mark centres and the pattern offset that reproduces them. `space` draws
+ * only whole tiles, the first and last touching the edges.
+ */
+function gridAxis(repeat: string, position: string, box: number, tile: number) {
+  const count = Math.floor(box / tile);
+  if (repeat === 'space' && count >= 2) {
+    const step = (box - tile) / (count - 1);
+    return { step, offset: (tile - step) / 2 };
+  }
+  return { step: tile, offset: gridOffset(position, box, tile) };
+}
+
 /** Nine interleaved dot fields share one clock; no per-dot loop or animation. */
 export function dissolveSkeleton(
   host: HTMLElement,
@@ -43,15 +68,32 @@ export function dissolveSkeleton(
     const box = surface.getBoundingClientRect();
     const css = win.getComputedStyle(surface);
     const gap = parseFloat(css.backgroundSize);
+    const repeat = css.backgroundRepeat.split(/\s+/);
     return {
       x: box.left - bounds.left,
       y: box.top - bounds.top,
       width: box.width,
       height: box.height,
       gap,
-      // Where the CSS grid starts, so the fields line up with the static marks.
-      offsetX: gridOffset(css.backgroundPositionX, box.width, gap),
-      offsetY: gridOffset(css.backgroundPositionY, box.height, gap),
+      // Where the CSS grid puts its marks, so the fields line up with them.
+      ...flat(
+        'column',
+        gridAxis(
+          repeat[0] ?? 'repeat',
+          css.backgroundPositionX,
+          box.width,
+          gap,
+        ),
+      ),
+      ...flat(
+        'row',
+        gridAxis(
+          repeat[1] ?? repeat[0] ?? 'repeat',
+          css.backgroundPositionY,
+          box.height,
+          gap,
+        ),
+      ),
     };
   };
   const shapes = surfaces.map((surface) => measure(surface, bounds));
@@ -133,15 +175,15 @@ export function dissolveSkeleton(
         const pattern = node('pattern', {
           id,
           patternUnits: 'userSpaceOnUse',
-          x: shape.offsetX,
-          y: shape.offsetY,
-          width: shape.gap * 3,
-          height: shape.gap * 3,
+          x: shape.columnOffset,
+          y: shape.rowOffset,
+          width: shape.columnStep * 3,
+          height: shape.rowStep * 3,
         });
         pattern.append(
           node('circle', {
-            cx: shape.gap * ((i % 3) + 0.5),
-            cy: shape.gap * (Math.floor(i / 3) + 0.5),
+            cx: shape.columnStep * ((i % 3) + 0.5),
+            cy: shape.rowStep * (Math.floor(i / 3) + 0.5),
           }),
         );
         const rect = node('rect', {
