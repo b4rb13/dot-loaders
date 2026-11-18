@@ -5,7 +5,7 @@ import type {
   HandoffDefinition,
   IdleDefinition,
 } from '../animations.js';
-import type { createHandoff } from './handoff.js';
+import type { HandoffFactory } from './handoff.js';
 import type { Runner } from './runner.js';
 export const brand: unique symbol = Symbol.for('dotquilt.animation.v1');
 type Definition = (
@@ -17,7 +17,7 @@ type Definition = (
     report: (code: string) => void,
     invalidate: () => void,
   ) => Runner;
-  handoff?: typeof createHandoff;
+  handoff?: HandoffFactory;
   dissolve?: boolean;
 };
 export function definitionOf(

@@ -1,6 +1,7 @@
 import type { ChartLoader } from './chart.js';
 import { chartHandoff } from './internal/chart-participant.js';
 import { node, register } from './internal/dom.js';
+import type { HandoffSource } from './internal/handoff.js';
 import { LoadingController } from './internal/loading-controller.js';
 import { createSkeletonSource } from './internal/skeleton-source.js';
 import type { SkeletonBlock } from './skeleton.js';
@@ -46,9 +47,7 @@ export class LoadingRegion extends LoadingController<'region'> {
   protected override refreshParticipants(): void {
     for (const child of this.participants()) child.refresh();
   }
-  protected override handoffSource(): ReturnType<
-    LoadingController['handoffSource']
-  > {
+  protected override handoffSource(): HandoffSource {
     const participants = this.participants();
     const rich = participants.filter(
       (participant): participant is ChartLoader | TableLoader =>
@@ -58,7 +57,7 @@ export class LoadingRegion extends LoadingController<'region'> {
     if (chart) {
       const binding =
         this.animations.handoff ?? this.preset?.animations?.handoff;
-      if (binding) return [binding, this, binding.id];
+      if (binding) return { binding, host: this, animation: binding.id };
       return chart[chartHandoff](this, rich);
     }
     const child = participants.find(

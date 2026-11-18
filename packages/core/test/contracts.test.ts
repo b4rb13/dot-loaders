@@ -182,22 +182,22 @@ test('authoring adapters retain frozen captured callbacks and revoke late reveal
     source: Object.freeze([]),
     revealTargetIds: Object.freeze(['one']),
   });
-  captured.draw(
+  captured.draw({
     surface,
-    binding.options,
-    Object.freeze({ count: 1 }),
-    0.5,
-    0.4,
-    500,
-    16,
-    () => {},
-    () => {
+    options: binding.options,
+    prepared: Object.freeze({ count: 1 }),
+    linear: 0.5,
+    progress: 0.4,
+    duration: 500,
+    deltaMs: 16,
+    dot: () => {},
+    reveal: () => {
       calls.push('reveal');
     },
-    () => {
+    revealTarget: () => {
       calls.push('target');
     },
-  );
+  });
   late?.();
   expect(calls).toEqual(['captured', 'reveal', 'target']);
 });

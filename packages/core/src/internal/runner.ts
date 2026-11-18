@@ -78,14 +78,14 @@ export function createRunner(
             : undefined,
         );
         painter.draw((dot) =>
-          definition.draw(
-            definition.snapshot(host, binding.family),
-            binding.options,
-            phase,
+          definition.draw({
+            surface: definition.snapshot(host, binding.family),
+            options: binding.options,
+            timeMs: phase,
+            deltaMs,
             still,
             dot,
-            deltaMs,
-          ),
+          }),
         );
         schedule(!still && host.isConnected, invalidate);
       } catch {

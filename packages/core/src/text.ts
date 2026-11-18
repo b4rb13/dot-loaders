@@ -12,6 +12,7 @@ import {
   register,
   upgradeProperties,
 } from './internal/dom.js';
+import type { HandoffSource } from './internal/handoff.js';
 import { LoadingController } from './internal/loading-controller.js';
 import { pointer } from './internal/painter.js';
 import type { Preset } from './internal/preset.js';
@@ -46,10 +47,12 @@ export class TextLoader extends LoadingController<'text'> {
   protected override get styles(): readonly string[] {
     return textStyles;
   }
-  protected override handoffSource(): ReturnType<
-    LoadingController<'text'>['handoffSource']
-  > {
-    return [this.preset?.animations?.handoff ?? handoff, this, 'dotquilt/fade'];
+  protected override handoffSource(): HandoffSource {
+    return {
+      binding: this.preset?.animations?.handoff ?? handoff,
+      host: this,
+      animation: 'dotquilt/fade',
+    };
   }
   #runner: Runner | undefined;
   #runnerDefinition: unknown;

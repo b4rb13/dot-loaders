@@ -1,26 +1,35 @@
 import type { RevealFrame } from '../animations.js';
 import type { LoadingRegion } from '../region.js';
-import { definitionOf } from './binding.js';
 import { frames } from './frames.js';
-import type { HandoffDriver, HandoffScope } from './handoff.js';
-import type { LoadingController } from './loading-controller.js';
+import {
+  type HandoffDriver,
+  type HandoffScope,
+  type HandoffSource,
+  runHandoff,
+} from './handoff.js';
 import { clamp } from './math.js';
 import { createReveal } from './reveal.js';
 import { createTargets } from './targets.js';
 
-type Source = ReturnType<LoadingController['handoffSource']>;
-
 /** All source painters share one total, wrapper effect and explicit-target ledger. */
 export function coordinatedHandoff(
   owner: LoadingRegion,
-  sources: readonly Source[],
-): Source {
+  sources: readonly HandoffSource[],
+): HandoffSource {
   const cycle = owner.cycle;
-  return [
-    undefined,
-    owner,
-    'dotquilt/coordinated',
-    (_binding, _host, content, targets, requested, current, own, report) => {
+  return {
+    binding: undefined,
+    host: owner,
+    animation: 'dotquilt/coordinated',
+    prepare(_binding, request) {
+      const {
+        content,
+        targets,
+        duration: requested,
+        current,
+        own,
+        report,
+      } = request;
       const tracker = createTargets(content, targets, own);
       const reveal = createReveal(content, own, true);
       const claims = new Map<string, number>();
@@ -68,7 +77,7 @@ export function coordinatedHandoff(
           merged.translateY = lift;
       };
       try {
-        for (const [index, [binding, host, , prepare]] of sources.entries()) {
+        for (const [index, { binding, host, prepare }] of sources.entries()) {
           if (
             !owner.isConnected ||
             owner.state !== 'ready' ||
@@ -103,19 +112,12 @@ export function coordinatedHandoff(
             active: false,
           };
           outputs.push(output);
-          const factory = prepare ?? (binding && definitionOf(binding).handoff);
-          if (!factory || !host.isConnected) throw new TypeError();
-          const driver = factory(
-            binding as NonNullable<typeof binding>,
+          if (!host.isConnected) throw new TypeError();
+          const driver = runHandoff(prepare, binding, {
+            ...request,
             host,
-            content,
-            targets,
-            requested,
-            current,
-            own,
-            report,
             scope,
-          );
+          });
           drivers.push(driver);
           if (!Number.isFinite(driver.duration) || driver.duration < 0)
             throw new TypeError();
@@ -179,5 +181,5 @@ export function coordinatedHandoff(
         dispose,
       };
     },
-  ];
+  };
 }

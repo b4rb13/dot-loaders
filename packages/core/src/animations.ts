@@ -1,5 +1,9 @@
 import { createHandoff } from './internal/handoff.js';
-import type { HandoffPaint, IdlePaint } from './internal/paint.js';
+import type {
+  HandoffFrame,
+  HandoffPaint,
+  IdlePaint,
+} from './internal/paint.js';
 import { createReveal } from './internal/reveal.js';
 import { createRunner } from './internal/runner.js';
 import { surface } from './internal/surface.js';
@@ -193,7 +197,7 @@ export function defineAnimation(
     );
   const draw: IdlePaint | HandoffPaint =
     definition.phase === 'idle'
-      ? (((surface, options, timeMs, still, dot, deltaMs) => {
+      ? ((({ surface, options, timeMs, still, dot, deltaMs }) => {
           const context = Object.freeze({
             surface,
             frame: Object.freeze({
@@ -209,18 +213,18 @@ export function defineAnimation(
             ? (captured as IdleDefinition<AnimationFamily, object>).still
             : captured.frame)(context, options);
         }) satisfies IdlePaint)
-      : (
+      : ({
           surface,
           options,
           prepared,
-          linearProgress,
+          linear: linearProgress,
           progress,
           duration,
           deltaMs,
           dot,
           reveal,
           revealTarget,
-        ) => {
+        }: HandoffFrame) => {
           let active = true;
           try {
             (

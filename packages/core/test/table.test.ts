@@ -2,6 +2,7 @@ import { expect, test } from 'bun:test';
 import type { AnimationSurface, Dot } from '../src/animations.js';
 import { defineAnimation, definePreset } from '../src/animations.js';
 import { definitionOf } from '../src/internal/binding.js';
+import type { HandoffPaint, IdlePaint } from '../src/internal/paint.js';
 import { tableCellStyles } from '../src/internal/table-factory.js';
 import {
   tableCells,
@@ -166,18 +167,17 @@ test('every idle/style draws bounded finite static and moving commands with dist
   for (const factory of [typeOn, tableShimmer])
     for (const cellStyle of tableCellStyles) {
       const binding = factory({ cellStyle: cellStyle as 'auto' }),
-        def = definitionOf(binding) as unknown as {
-          draw: (
-            s: typeof surface,
-            o: object,
-            t: number,
-            still: boolean,
-            dot: (d: Dot) => void,
-          ) => void;
-        };
+        def = definitionOf(binding) as unknown as { draw: IdlePaint };
       const draw = (t: number, still = false) => {
         const dots: Dot[] = [];
-        def.draw(surface, binding.options, t, still, (d) => dots.push(d));
+        def.draw({
+          surface,
+          options: binding.options,
+          timeMs: t,
+          still,
+          dot: (d) => dots.push(d),
+          deltaMs: 0,
+        });
         return dots;
       };
       const a = draw(0),
@@ -207,36 +207,25 @@ test('row choreography converges into supplied glyphs, fades decoration, reveals
     def = definitionOf(binding) as unknown as {
       duration: (s: typeof surface, o: object) => number;
       prepare: (s: typeof surface, o: object) => unknown;
-      draw: (
-        s: typeof surface,
-        o: object,
-        plan: unknown,
-        l: number,
-        p: number,
-        duration: number,
-        dt: number,
-        dot: (d: Dot) => void,
-        reveal: (f: object) => void,
-        target: (id: string, f: object) => void,
-      ) => void;
+      draw: HandoffPaint;
     };
   expect(def.duration(surface, binding.options)).toBe(615);
   const plan = def.prepare(surface, binding.options);
   expect(Object.isFrozen(plan)).toBe(true);
   const dots: Dot[] = [],
     targets: object[] = [];
-  def.draw(
+  def.draw({
     surface,
-    binding.options,
-    plan,
-    1,
-    1,
-    615,
-    0,
-    (d) => dots.push(d),
-    () => {},
-    (id, f) => targets.push({ id, ...f }),
-  );
+    options: binding.options,
+    prepared: plan,
+    linear: 1,
+    progress: 1,
+    duration: 615,
+    deltaMs: 0,
+    dot: (d) => dots.push(d),
+    reveal: () => {},
+    revealTarget: (id, f) => targets.push({ id, ...f }),
+  });
   expect(targets).toEqual([{ id: 'a', opacity: 1, translateY: 0 }]);
   expect(dots.every((d) => d.opacity === 0)).toBe(true);
   expect(
@@ -304,33 +293,22 @@ test('unmatched outgoing dots fade instead of vanishing at the first frame', () 
   const binding = rows(),
     def = definitionOf(binding) as unknown as {
       prepare: (s: typeof surface) => unknown;
-      draw: (
-        s: typeof surface,
-        o: object,
-        prepared: unknown,
-        l: number,
-        p: number,
-        duration: number,
-        dt: number,
-        dot: (d: Dot) => void,
-        reveal: (f: object) => void,
-        target: (id: string, f: object) => void,
-      ) => void;
+      draw: HandoffPaint;
     };
   const plan = def.prepare(surface),
     dots: Dot[] = [];
-  def.draw(
+  def.draw({
     surface,
-    binding.options,
-    plan,
-    0,
-    0,
-    615,
-    0,
-    (d) => dots.push(d),
-    () => {},
-    () => {},
-  );
+    options: binding.options,
+    prepared: plan,
+    linear: 0,
+    progress: 0,
+    duration: 615,
+    deltaMs: 0,
+    dot: (d) => dots.push(d),
+    reveal: () => {},
+    revealTarget: () => {},
+  });
   expect(
     dots.some((d) => d.x === 200 && d.y === 100 && d.opacity === 0.5),
   ).toBe(true);
