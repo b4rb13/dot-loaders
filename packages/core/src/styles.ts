@@ -1,5 +1,7 @@
+import { unstyledHold } from './internal/unstyled.js';
 export const skeletonStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
   `:host{display:block;width:100%;height:1em;position:relative;border-radius:var(--dotquilt-radius,.375rem);overflow:hidden}:host .surface{position:absolute;inset:0;--s:var(--dotquilt-dot-size,2px);--g:calc(var(--s) + var(--dotquilt-dot-gap,4px));background:radial-gradient(circle,var(--dotquilt-color,currentColor) calc(var(--s)/2),#0000 0) 0 0/var(--g) var(--g);opacity:.3}:host .pulse{--dotquilt-color:var(--dotquilt-accent-color,currentColor);opacity:0;mask:linear-gradient(90deg,transparent,#000,transparent) 0 0/35% 100% no-repeat}:host [data-dotquilt-dissolve] circle{r:calc(var(--dotquilt-dot-size,2px)/2)}:host(dotquilt-skeleton-text) [data-dotquilt-dissolve] > svg{border-radius:999px}:host([hidden]){display:none}:host > svg{position:absolute;inset:0;width:100%;height:100%;fill:var(--dotquilt-color,currentColor)}@media(forced-colors:none){:host([data-custom]) .surface{visibility:hidden}}@media(hover:hover) and (pointer:fine){:host([pointer-response=lift][data-moving][data-pointer]) .pulse{translate:0 -1px;opacity:.6!important;transition:translate .1s}}@media(forced-colors:active){:host .surface{border:1px dotted CanvasText}:host .pulse,:host > svg{display:none}}`,
+  unstyledHold,
 ]);
 // The layers are slots (`display: contents` until styled), so they need boxes.
 // The `:state(unstyled)` rules apply in the document while a region's external

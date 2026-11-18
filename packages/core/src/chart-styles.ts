@@ -1,5 +1,7 @@
+import { unstyledHold } from './internal/unstyled.js';
 export const chartStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
   ':host{display:block;position:relative;width:100%;height:12rem;overflow:hidden}:host([hidden]){display:none}:host .surface{position:absolute;inset:0;gap:var(--dotquilt-dot-gap,4px);--s:var(--dotquilt-dot-size,2px);--g:calc(var(--s) + var(--dotquilt-dot-gap,4px));background:radial-gradient(circle,var(--dotquilt-color,currentColor) calc(var(--s)/2),#0000 0) 0 0/var(--g) var(--g);opacity:.25}:host > svg{position:relative;display:block;width:100%;height:100%;pointer-events:none}:host([data-custom]) .surface{visibility:hidden}:host [data-dotquilt-react-static]{display:none}@media(forced-colors:active){:host .surface{visibility:visible;border:1px dotted CanvasText}:host > svg{display:none}}:host canvas[data-dotquilt-bitmap]{display:block;width:100%;height:100%;pointer-events:none}',
+  unstyledHold,
 ]);
 // Static rules also apply while the element's external stylesheet loads
 // (`:state(unstyled)`); browsers without custom states ignore that part.
