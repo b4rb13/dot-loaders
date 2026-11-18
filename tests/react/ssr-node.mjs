@@ -54,8 +54,15 @@ for (const [current, other] of [
   [a, b],
   [b, a],
 ]) {
-  assert.ok(current.chunks.length >= 2);
-  assert.ok(current.chunks[0].includes('Waiting for detail'));
+  // The fallback streams with the shell, before the resolved detail. React
+  // writes the shell in fixed-size buffers, so it may span several chunks.
+  const fallbackAt = current.chunks.findIndex((c) =>
+    c.includes('Waiting for detail'),
+  );
+  const detailAt = current.chunks.findIndex((c) =>
+    c.includes(`${current.nonce} detail`),
+  );
+  assert.ok(fallbackAt >= 0 && fallbackAt < detailAt);
   assert.ok(current.html.includes(`${current.nonce} detail`));
   assert.ok(current.html.includes(`nonce="${current.nonce}"`));
   assert.ok(!current.html.includes(other.nonce));
