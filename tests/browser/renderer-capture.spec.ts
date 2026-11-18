@@ -112,13 +112,29 @@ for (const dpr of [1, 2, 3])
       const rows = [];
       const container = document.getElementById('bench');
       if (!container) throw Error('Missing scrolling fixture');
+      const frame = () =>
+        new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      const unpainted = (ids: readonly string[]) =>
+        ids.filter((id) => {
+          const host = document.getElementById(id);
+          if (!host) throw Error('Missing visible catalog host');
+          return (
+            /chart|table|text-loader/.test(host.localName) &&
+            !host.shadowRoot?.querySelector('[data-dotquilt-painter]')
+          );
+        });
       for (const top of [0, 960, 2400, 4320, 2400, 0]) {
         container.scrollTop = top;
-        await new Promise<void>((resolve) =>
-          requestAnimationFrame(() =>
-            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-          ),
-        );
+        // Newly visible surfaces get their painter within a few frames; a
+        // slow runner may need more than three.
+        for (let waited = 0; waited < 30; waited++) {
+          await frame();
+          if (
+            waited >= 2 &&
+            !unpainted(window.catalogFixture.snapshot().visibleIds).length
+          )
+            break;
+        }
         const snapshot = window.catalogFixture.snapshot();
         const visible = new Set(snapshot.visibleIds);
         rows.push({
@@ -126,14 +142,7 @@ for (const dpr of [1, 2, 3])
           visible: snapshot.visible,
           ledger: snapshot.ledger,
           canvases: snapshot.canvases,
-          missing: snapshot.visibleIds.filter((id) => {
-            const host = document.getElementById(id);
-            if (!host) throw Error('Missing visible catalog host');
-            return (
-              /chart|table|text-loader/.test(host.localName) &&
-              !host.shadowRoot?.querySelector('[data-dotquilt-painter]')
-            );
-          }),
+          missing: unpainted(snapshot.visibleIds),
           offscreen: [...document.querySelectorAll('.catalog-surface')]
             .filter(
               (host) =>
