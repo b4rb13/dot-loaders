@@ -97,6 +97,53 @@ for (const name of ['core', 'react'] as const) {
     expect(files).toContain('dist/index.js');
   }, 30_000);
 
+  test(`${name}: dist imports stay inside the package and reach only allowed packages`, async () => {
+    const dist = resolve(directory, 'dist');
+    const core = require(resolve(root, 'packages/core/package.json')) as {
+      exports: Record<string, unknown>;
+    };
+    const problems: string[] = [];
+    let scanned = 0;
+    for await (const file of new Bun.Glob('**/*.{js,d.ts}').scan({
+      cwd: dist,
+      onlyFiles: true,
+    })) {
+      const path = resolve(dist, file);
+      const code = await readFile(path, 'utf8');
+      scanned++;
+      for (const [, specifier = ''] of code.matchAll(
+        /(?:from\s*|import\s*\(\s*)['"]([^'"]+)['"]/g,
+      )) {
+        if (specifier.startsWith('.')) {
+          const target = resolve(path, '..', specifier);
+          if (
+            !target.startsWith(`${dist}/`) ||
+            !(await Bun.file(target).exists())
+          )
+            problems.push(`${file}: ${specifier} escapes dist or is missing`);
+        } else if (
+          name === 'react' &&
+          specifier.startsWith('@dotquilt-internal/core')
+        ) {
+          const entry = specifier.slice('@dotquilt-internal/core'.length);
+          if (!Object.hasOwn(core.exports, entry ? `.${entry}` : '.'))
+            problems.push(`${file}: ${specifier} is not a core export`);
+        } else if (
+          name === 'core' ||
+          ![
+            'react',
+            'react/jsx-runtime',
+            'react-dom',
+            'react-dom/client',
+          ].includes(specifier)
+        )
+          problems.push(`${file}: unexpected dependency ${specifier}`);
+      }
+    }
+    expect(scanned).toBeGreaterThan(10);
+    expect(problems).toEqual([]);
+  });
+
   test(`${name}: every JavaScript export imports in Node and Bun; private paths do not`, async () => {
     const subpaths = Object.keys(manifest.exports)
       .filter((key) => !key.includes('*') && !key.endsWith('.css'))

@@ -1,10 +1,9 @@
-// Runs the older browser/SSR suites that test packed tarballs installed into
-// clean temporary consumers (several React and Next versions included).
-// They are slow (npm installs, Next builds) and are being ported into
-// tests/e2e component by component; each ported suite is deleted here.
+// The remaining checks that need the packed tarballs installed into clean
+// consumers: the React suite rerun on React 19.0 (the oldest supported
+// version) and catalog SSR under Node and Bun on React 19.3 and 19.0.
+// Everything else runs in the main Playwright config and the unit suites.
 //
-//   bun run test:legacy              all suites, Chromium only
-//   bun run test:legacy m4 table     only the named suites
+//   bun run test:legacy              both suites, Chromium only
 //   ALL_BROWSERS=1 bun run test:legacy
 //
 // Run `bun run build` first.
@@ -42,20 +41,13 @@ const suites: Record<string, Suite> = {
       },
     ],
     env: { DOTQUILT_REACT_FLOOR: '1' },
-  },
-  m4: {
-    prepare: [['bun', 'run', 'scripts/prepare-m4.ts']],
-    configs: [{ file: 'playwright.m4.config.ts', chromium: 'chromium' }],
-    checks: [
-      ['bun', 'run', 'scripts/verify-boundaries.ts'],
-      ['bun', 'run', 'scripts/verify-catalog-ssr.ts'],
-    ],
+    // Catalog SSR under Node and Bun with React 19.3 and 19.0.
+    checks: [['bun', 'run', 'scripts/verify-catalog-ssr.ts']],
   },
 };
 // Suites reuse consumers that earlier suites install.
 const requires: Record<string, string[]> = {
   react: ['native'],
-  m4: ['react'],
 };
 
 const requested = process.argv.slice(2);

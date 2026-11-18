@@ -1,6 +1,7 @@
 import type { ChartLoader } from '@dotquilt-internal/core/chart';
 import type { LoadingRegion } from '@dotquilt-internal/core/region';
 import { expect, test } from '@playwright/test';
+import { expectPaint, paintCount, readPaint } from '../paint-output';
 
 declare global {
   interface Window {
@@ -43,13 +44,14 @@ declare global {
     };
   }
 }
-const dots = '#chart [data-dotquilt-painter] circle';
+// The chart's painted dots: Canvas commands or SVG circles (tests/paint-output).
+const chart = '#chart';
 for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
   test(`native chart static enhancement, actual geometry and CSP: ${mode}`, async ({
     page,
   }) => {
     await page.goto(`/chart?mode=${mode}`);
-    await expect(page.locator(dots).first()).toBeVisible();
+    await expectPaint(page.locator(chart));
     expect(await page.evaluate(() => window.m4Chart.calls())).toBe(0);
     await page.evaluate(() => window.m4Chart.ready());
     await expect(page.locator('#chart-region')).toHaveAttribute(
@@ -68,13 +70,13 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
         identity: window.m4Chart.identity(),
       })),
     ).toEqual({ errors: [], csp: [], identity: true });
-    await expect(page.locator(dots)).toHaveCount(0);
+    await expect.poll(() => paintCount(page.locator(chart))).toBe(0);
   });
   test(`React chart hydration/property bridge and owned content identity: ${mode}`, async ({
     page,
   }) => {
     await page.goto(`/chart-react?mode=${mode}`);
-    await expect(page.locator(dots).first()).toBeVisible();
+    await expectPaint(page.locator(chart));
     expect(await page.evaluate(() => window.m4ChartReact.ref())).toBe(
       'dotquilt-chart-loader',
     );
@@ -111,22 +113,18 @@ test('all six idle silhouettes and all three final geometries: fixed progress an
     'scatter',
     'cycle',
   ] as const;
-  // Natural-speed recordings supplement deterministic captures; owner review remains required.
+  // Natural-speed playback in its own context, so motion is not restricted.
   const context = await browser.newContext({
     baseURL: testInfo.project.use.baseURL ?? 'http://127.0.0.1:4194',
     reducedMotion: 'no-preference',
     viewport: { width: 640, height: 480 },
-    recordVideo: {
-      dir: testInfo.outputPath('chart-motion'),
-      size: { width: 640, height: 480 },
-    },
   });
   try {
     const live = await context.newPage();
     for (const variant of ['line', 'bar', 'scatter'])
       for (const name of names) {
         await live.goto(`/chart?variant=${variant}`);
-        await expect(live.locator(dots).first()).toBeVisible();
+        await expectPaint(live.locator(chart));
         await live.evaluate((n) => window.m4Chart.recipe(n), name);
         await live.waitForTimeout(150);
         await live.evaluate(() => window.m4Chart.ready());
@@ -199,7 +197,7 @@ test('provider null retries twice, invalid/throwing/oversize settles with bounde
     ['valid', 1],
   ] as const) {
     await page.goto('/chart');
-    await expect(page.locator(dots).first()).toBeVisible();
+    await expectPaint(page.locator(chart));
     await page.evaluate((m) => window.m4Chart.provider(m), mode);
     await page.evaluate(() => window.m4Chart.ready());
     await expect(page.locator('#chart-region')).toHaveAttribute(
@@ -217,7 +215,7 @@ test('custom authoring gets immutable semantic input and inferred prepared state
   page,
 }) => {
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   await page.evaluate(() => window.m4Chart.custom());
   await expect
     .poll(() => page.evaluate(() => window.m4Chart.customFrames()))
@@ -248,7 +246,7 @@ test('focus wins during reveal; refreshing retains interactive useful content an
   page,
 }) => {
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   await page.evaluate(() => window.m4Chart.ready(1500));
   await expect(page.locator('#chart-region')).toHaveAttribute(
     'data-presentation',
@@ -278,7 +276,7 @@ test('supersession and removal cancel once with no old completion or scheduling;
   page,
 }) => {
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   // These actions test cancellation before completion. Protocol round trips
   // between them must not consume the bounded real loading window.
   const result = await page.evaluate(async () => {
@@ -353,13 +351,13 @@ test('reduced motion, pause, forced colors and four-second exhaustion remain sta
   await page.emulateMedia({ forcedColors: 'active' });
   await page.goto('/chart');
   await page.clock.runFor(50);
-  await expect(page.locator(dots)).toHaveCount(0);
+  await expect.poll(() => paintCount(page.locator(chart))).toBe(0);
 });
 test('content mutation, resize and provider reentrancy discard stale plans; normal option changes remain captured', async ({
   page,
 }) => {
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   await page.evaluate(() => window.m4Chart.ready(1500));
   await expect(page.locator('#chart-region')).toHaveAttribute(
     'data-presentation',
@@ -378,7 +376,7 @@ test('content mutation, resize and provider reentrancy discard stale plans; norm
     'ready',
   );
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   await page.locator('#chart').evaluate((e) => {
     (e as ChartLoader).targetProvider = () => {
       (document.getElementById('chart-region') as LoadingRegion).update({
@@ -405,7 +403,7 @@ test('preset precedence, removed overrides, standalone no sampling, pointer poli
   page,
 }) => {
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   await page.evaluate(() => window.m4Chart.preset());
   expect(
     await page
@@ -487,7 +485,7 @@ test('ready on mount, zero duration and a short remaining window never delay the
     ]),
   ).toEqual([0, 0]);
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   await page.evaluate(() => window.m4Chart.ready(0));
   await expect(page.locator('#chart-region')).toHaveAttribute(
     'data-presentation',
@@ -512,7 +510,7 @@ test('actual CSS content-box geometry, density and surface part survive border/p
   page,
 }) => {
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   await page.addStyleTag({
     content:
       '#chart{box-sizing:border-box;width:360px;height:240px;border:5px solid;padding:15px;--dotquilt-dot-size:4px;--dotquilt-dot-gap:0px}',
@@ -538,14 +536,14 @@ test('actual CSS content-box geometry, density and surface part survive border/p
     'ready',
   );
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   await page.addStyleTag({ content: '#chart{width:2000px;height:2000px}' });
   await page.locator('#chart').evaluate((e) => (e as ChartLoader).refresh());
-  await expect(page.locator(dots)).toHaveCount(0);
+  await expect.poll(() => paintCount(page.locator(chart))).toBe(0);
   await page.addStyleTag({ content: '#chart{width:320px;height:200px}' });
   await page.locator('#chart').evaluate((e) => (e as ChartLoader).refresh());
-  await expect(page.locator(dots).first()).toBeVisible();
-  expect(await page.locator(dots).count()).toBeLessThanOrEqual(4096);
+  await expectPaint(page.locator(chart));
+  expect(await paintCount(page.locator(chart))).toBeLessThanOrEqual(4096);
 });
 test('pre-upgrade properties, provider replacement and adoption release document resources safely', async ({
   page,
@@ -557,7 +555,7 @@ test('pre-upgrade properties, provider replacement and adoption release document
     Reflect.set(e, 'pointerResponse', 'lift');
   });
   await page.evaluate(() => import(String('/chart.js')));
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   expect(
     await page
       .locator('#chart')
@@ -598,37 +596,19 @@ test('CSS rem and calc dot lengths resolve like their pixel equivalents, includi
     });
     await page.locator('#chart').evaluate((e) => (e as ChartLoader).refresh());
     await page.clock.runFor(0);
-    const relative = await page
-      .locator(dots)
-      .evaluateAll((nodes) =>
-        nodes.map((n) => [
-          n.getAttribute('cx'),
-          n.getAttribute('cy'),
-          n.getAttribute('r'),
-          n.getAttribute('opacity'),
-        ]),
-      );
+    const relative = await page.locator(chart).evaluate(readPaint);
     expect(relative.length).toBeGreaterThan(0);
-    expect(
-      Number(relative.find((n) => n[0] !== relative[0]?.[0])?.[0]) -
-        Number(relative[0]?.[0]),
-    ).toBe(7);
+    const first = relative[0]?.x ?? 0;
+    expect((relative.find((dot) => dot.x !== first)?.x ?? first) - first).toBe(
+      7,
+    );
     await page.locator('#chart').evaluate((e) => {
       e.classList.remove('relative-dots');
       e.classList.add('pixel-dots');
     });
     await page.locator('#chart').evaluate((e) => (e as ChartLoader).refresh());
     await page.clock.runFor(0);
-    const pixels = await page
-      .locator(dots)
-      .evaluateAll((nodes) =>
-        nodes.map((n) => [
-          n.getAttribute('cx'),
-          n.getAttribute('cy'),
-          n.getAttribute('r'),
-          n.getAttribute('opacity'),
-        ]),
-      );
+    const pixels = await page.locator(chart).evaluate(readPaint);
     expect(pixels).toEqual(relative);
   }
 });
@@ -636,7 +616,7 @@ test('real fine-hover input reaches an inert region placeholder through its owni
   page,
 }) => {
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   await page.evaluate(() => window.m4Chart.update({ pointerResponse: 'lift' }));
   const bounds = await page.locator('#chart').boundingBox();
   if (!bounds) throw new Error('Missing chart bounds');
@@ -696,7 +676,7 @@ test('preparation failure releases captured buffers even when its diagnostic sup
   page,
 }) => {
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   await page.evaluate(() => {
     window.m4Chart.broken();
     document.getElementById('chart-region')?.addEventListener(
@@ -734,7 +714,7 @@ test('removing the chart in the start handler never resurrects its painter and s
   page,
 }) => {
   await page.goto('/chart');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   await page.evaluate(() => {
     const chart = document.getElementById('chart') as ChartLoader;
     Reflect.set(window, 'removedChart', chart);
@@ -771,7 +751,7 @@ test('external chart CSS preserves ordinary application surfaces and SVG pointer
   page,
 }) => {
   await page.goto('/chart?mode=external');
-  await expect(page.locator(dots).first()).toBeVisible();
+  await expectPaint(page.locator(chart));
   const styles = await page.evaluate(() => {
     const surface = document.createElement('div');
     surface.className = 'surface';
