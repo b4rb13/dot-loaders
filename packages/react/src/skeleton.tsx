@@ -7,9 +7,10 @@ import {
 } from '@dotquilt-internal/core/skeleton';
 import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
-import { reactSkeletonStyles } from './server.js';
+import { reactSkeletonMarkStyles, reactSkeletonStyles } from './server.js';
 import {
   initialPolicy,
+  markSheet,
   policyAttributes,
   sheet,
   useStyleNonce,
@@ -63,6 +64,13 @@ export const SkeletonBlock = /* @__PURE__ */ forwardRef<
   return (
     <>
       {sheet(reactSkeletonStyles, initial.policy, 'skeleton', nonce)}
+      {markSheet(
+        reactSkeletonMarkStyles,
+        initial.policy,
+        'skeleton',
+        nonce,
+        attributes.mark,
+      )}
       <dotquilt-skeleton-block
         {...attributes}
         {...policyAttributes(initial.policy, nonce)}

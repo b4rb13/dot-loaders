@@ -5,24 +5,31 @@ import { expect, type Page, test } from '@playwright/test';
 // from a property, update() or an attribute. update() only applies the
 // element's own options and reports any other key as `unknown-option`.
 const invalid: Record<string, Record<string, unknown>> = {
-  'dotquilt-skeleton-block': { speed: 'fast', pointerResponse: 'wiggle' },
-  'dotquilt-skeleton-text': { speed: 0, lines: 2.5 },
-  'dotquilt-typing-dots': { speed: -1, count: 0 },
+  'dotquilt-skeleton-block': {
+    speed: 'fast',
+    pointerResponse: 'wiggle',
+    mark: 'star',
+  },
+  'dotquilt-skeleton-text': { speed: 0, lines: 2.5, mark: 'star' },
+  'dotquilt-typing-dots': { speed: -1, count: 0, mark: 'star' },
   'dotquilt-text-loader': {
     speed: 'fast',
     pointerResponse: 'wiggle',
     state: 'loading',
+    mark: 'star',
   },
   'dotquilt-chart-loader': {
     speed: 'fast',
     pointerResponse: 'wiggle',
     variant: 'pie',
+    mark: 'star',
   },
   'dotquilt-table-loader': {
     speed: 'fast',
     pointerResponse: 'wiggle',
     rows: -1,
     rowHeight: 0,
+    mark: 'star',
   },
   'dotquilt-region': { state: 'loading', motion: 'fast' },
 };
@@ -106,3 +113,49 @@ for (const tag of Object.keys(invalid))
       ),
     ).toBe(false);
   });
+
+test('mark reflects dot, dash and square on every mark-drawing element; a region rejects it', async ({
+  page,
+}) => {
+  const result = await page.evaluate(() => {
+    const tags = [
+      'dotquilt-skeleton-block',
+      'dotquilt-skeleton-line',
+      'dotquilt-skeleton-circle',
+      'dotquilt-skeleton-text',
+      'dotquilt-typing-dots',
+      'dotquilt-text-loader',
+      'dotquilt-chart-loader',
+      'dotquilt-table-loader',
+    ];
+    const marks = tags.map((tag) => {
+      const element = document.createElement(tag) as HTMLElement & {
+        mark: string;
+        update(patch: object): void;
+      };
+      document.getElementById('stage')?.append(element);
+      const seen = [element.mark];
+      element.mark = 'dash';
+      seen.push(element.getAttribute('mark') ?? '', element.mark);
+      element.update({ mark: 'square' });
+      seen.push(element.mark);
+      element.setAttribute('mark', 'star');
+      seen.push(element.mark);
+      element.remove();
+      return seen;
+    });
+    const region = document.createElement('dotquilt-region') as HTMLElement & {
+      update(patch: object): void;
+    };
+    const errors: { code: string; field: string }[] = [];
+    region.addEventListener('dotquilt-error', (event) =>
+      errors.push((event as CustomEvent).detail),
+    );
+    document.getElementById('stage')?.append(region);
+    region.update({ mark: 'dash' });
+    return { marks, errors };
+  });
+  for (const seen of result.marks)
+    expect(seen).toEqual(['dot', 'dash', 'dash', 'square', 'dot']);
+  expect(result.errors).toEqual([{ code: 'unknown-option', field: 'mark' }]);
+});

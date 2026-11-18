@@ -2,8 +2,11 @@ import {
   dotGrid,
   lineHeight,
   markColor,
+  markLineHeights,
+  markShapes,
   restOpacity,
   typingGap,
+  typingShapes,
   typingSize,
 } from './internal/marks.js';
 
@@ -27,4 +30,38 @@ export const staticTextStyles: readonly string[] =
 export const staticTypingStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
     `dotquilt-typing-dots{display:inline-flex;align-items:center;height:1em}dotquilt-typing-dots [data-dotquilt-static]{display:inline-flex;align-items:center;gap:${typingGap}}dotquilt-typing-dots .dot{display:block;width:${typingSize};height:${typingSize};border-radius:50%;background:${markColor};opacity:.3}@media(forced-colors:active){dotquilt-typing-dots .dot{background:CanvasText}}`,
+  ]);
+
+// A mark's rules ship only with markup that uses it (renderStatic), so pages
+// without squares or dashes don't carry them.
+export const staticLineMarkStyles: readonly string[] =
+  /* @__PURE__ */ Object.freeze([
+    markShapes(
+      (mark) => `dotquilt-skeleton-line[mark=${mark}]`,
+      '[data-dotquilt-static]',
+      '0 0',
+    ) + markLineHeights((mark) => `dotquilt-skeleton-line[mark=${mark}]`),
+  ]);
+export const staticCircleMarkStyles: readonly string[] =
+  /* @__PURE__ */ Object.freeze([
+    markShapes(
+      (mark) => `dotquilt-skeleton-circle[mark=${mark}]`,
+      '[data-dotquilt-static]',
+    ),
+  ]);
+export const staticTextMarkStyles: readonly string[] =
+  /* @__PURE__ */ Object.freeze([
+    markShapes(
+      (mark) => `dotquilt-skeleton-text[mark=${mark}]`,
+      '[data-dotquilt-static-line]',
+      '0 0',
+    ) +
+      markLineHeights(
+        (mark) =>
+          `dotquilt-skeleton-text[mark=${mark}] [data-dotquilt-static-line]`,
+      ),
+  ]);
+export const staticTypingMarkStyles: readonly string[] =
+  /* @__PURE__ */ Object.freeze([
+    typingShapes((mark) => `dotquilt-typing-dots[mark=${mark}]`, '.dot'),
   ]);

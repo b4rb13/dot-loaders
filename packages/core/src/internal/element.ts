@@ -1,4 +1,4 @@
-import type { Motion, StylePolicy } from '../types.js';
+import { type Mark, type Motion, marks, type StylePolicy } from '../types.js';
 import {
   BaseElement,
   emit,
@@ -35,7 +35,7 @@ interface Hold {
 export abstract class ManagedElement<
   K extends PresetKind = 'skeleton',
 > extends BaseElement {
-  static observedAttributes = ['motion'];
+  static observedAttributes = ['motion', 'mark'];
   protected policy: StylePolicy = { mode: 'inline' };
   protected ownActivity: Activity = { started: undefined };
   protected resources: ReturnType<typeof subscribe> | undefined;
@@ -72,6 +72,15 @@ export abstract class ManagedElement<
   set motion(value: Motion | undefined) {
     if (value === undefined) this.removeAttribute('motion');
     else this.setAttribute('motion', String(value));
+  }
+  /** The shape this loader draws. Styles and painters read the attribute. */
+  get mark(): Mark {
+    const value = this.getAttribute('mark');
+    return marks.includes(value as Mark) ? (value as Mark) : 'dot';
+  }
+  set mark(value: Mark | undefined) {
+    if (value === undefined) this.removeAttribute('mark');
+    else this.setAttribute('mark', String(value));
   }
   /** Forgets values cached between environment changes. */
   protected forget(): void {
@@ -266,6 +275,8 @@ export abstract class ManagedElement<
       !['system', 'paused'].includes(value)
     )
       this.invalidOption('motion');
+    if (name === 'mark' && value !== null && !marks.includes(value as Mark))
+      this.invalidOption('mark');
     if (name === 'motion') this.#motionChanged();
     else this.requestRender();
   }
@@ -298,7 +309,7 @@ export abstract class ManagedElement<
 
   /** The property names update() applies; subclasses add their own. */
   protected get optionNames(): readonly string[] {
-    return ['motion', 'stylePolicy', 'preset'];
+    return ['motion', 'mark', 'stylePolicy', 'preset'];
   }
   /**
    * Applies the keys of `patch` that are options of this element. Any other

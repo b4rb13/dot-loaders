@@ -7,9 +7,10 @@ import {
 } from '@dotquilt-internal/core/text';
 import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
-import { reactTextStyles } from './server.js';
+import { reactTextMarkStyles, reactTextStyles } from './server.js';
 import {
   initialPolicy,
+  markSheet,
   policyAttributes,
   sheet,
   useStyleNonce,
@@ -89,6 +90,13 @@ export const TextLoader = /* @__PURE__ */ forwardRef<
   return (
     <>
       {sheet(reactTextStyles, initial.policy, 'text', nonce)}
+      {markSheet(
+        reactTextMarkStyles,
+        initial.policy,
+        'text',
+        nonce,
+        attributes.mark,
+      )}
       <dotquilt-text-loader
         {...attributes}
         {...upgraded}

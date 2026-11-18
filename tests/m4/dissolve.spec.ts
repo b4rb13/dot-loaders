@@ -151,6 +151,81 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
   });
 }
 
+// Squares and dashes leave as themselves, from where the CSS drew them: each
+// pattern cell is one tile of the mark's own pitch, with the mark centred.
+const spec = {
+  dash: { width: 9.4, height: 3.4, radius: 1.7, across: 13, down: 9.5 },
+  square: { width: 4, height: 4, radius: 1.1, across: 8.5, down: 8.5 },
+} as const;
+// The family stylesheet scopes each shape's mark rules to its own tag.
+for (const mode of ['hash', 'external-family'] as const)
+  for (const mark of ['dash', 'square'] as const)
+    test(`${mark} marks dissolve as ${mark}es on the CSS grid under ${mode} styles`, async ({
+      page,
+    }) => {
+      await page.goto(`/native?mode=${mode}&mark=${mark}`);
+      await page.evaluate(() => {
+        Reflect.set(window, 'violations', []);
+        document.addEventListener('securitypolicyviolation', (event) =>
+          Reflect.get(window, 'violations').push(event.violatedDirective),
+        );
+        window.m4.ready();
+        queueMicrotask(() => {
+          for (const host of document.querySelectorAll('[data-host]'))
+            for (const animation of host.shadowRoot?.getAnimations() ?? []) {
+              animation.pause();
+              animation.currentTime = 0;
+            }
+        });
+      });
+      await expect(page.locator(field)).toHaveCount(4);
+      const fields = await page.evaluate(() =>
+        ['block', 'line', 'circle', 'multiline'].map((id) => {
+          const root = document.getElementById(id)?.shadowRoot;
+          const pattern = root?.querySelector(
+            '[data-dotquilt-dissolve] pattern',
+          );
+          const glyph = pattern?.firstElementChild;
+          const number = (element: Element | null | undefined, name: string) =>
+            Number(element?.getAttribute(name));
+          return {
+            id,
+            glyph: glyph?.localName,
+            cell: [number(pattern, 'width'), number(pattern, 'height')],
+            mark: ['x', 'y', 'width', 'height', 'rx'].map((name) =>
+              number(glyph, name),
+            ),
+          };
+        }),
+      );
+      const { width, height, radius, across, down } = spec[mark];
+      for (const {
+        id,
+        glyph,
+        cell,
+        mark: [x, y, w, h, rx],
+      } of fields) {
+        expect(glyph, id).toBe('rect');
+        expect([w, h, rx], id).toEqual([width, height, radius]);
+        const [cellWidth = 0, cellHeight = 0] = cell;
+        // Centred in its cell.
+        expect((x ?? 0) * 2 + width, id).toBeCloseTo(cellWidth, 5);
+        expect((y ?? 0) * 2 + height, id).toBeCloseTo(cellHeight, 5);
+        // Lines repeat at the pitch; blocks and circles spread whole tiles out.
+        if (id === 'line' || id === 'multiline')
+          expect(cell, id).toEqual([across, down]);
+        else {
+          expect(cellWidth, id).toBeGreaterThanOrEqual(across);
+          expect(cellWidth, id).toBeLessThan(across * 2);
+          expect(cellHeight, id).toBeGreaterThanOrEqual(down);
+          expect(cellHeight, id).toBeLessThan(down * 2);
+        }
+      }
+      expect(
+        await page.evaluate(() => Reflect.get(window, 'violations')),
+      ).toEqual([]);
+    });
+
 test('dissolve captures fall options, handles geometry invalidation and cancels stale cycles', async ({
   page,
 }) => {

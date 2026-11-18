@@ -42,9 +42,12 @@ export function chartPainter(configure?: ChartShader): IdlePaint {
       full = surface.height,
       h = Math.max(0, full - 25),
       t = still ? 0 : timeMs / 1000;
-    const { pitch = 9, scale = 2.2 } =
-      (Reflect.get(surface, chartAppearance) as Appearance | undefined) ?? {};
-    if (Math.ceil(w / pitch) * Math.ceil(full / pitch) > 4096)
+    const {
+      pitch = 9,
+      rows = pitch,
+      scale = 2.2,
+    } = (Reflect.get(surface, chartAppearance) as Appearance | undefined) ?? {};
+    if (Math.ceil(w / pitch) * Math.ceil(full / rows) > 4096)
       throw new TypeError();
     const shader = configure?.(options, timeMs, still, w, h, t);
     const amplitude = (options.amplitude as number | undefined) ?? 0.24,
@@ -52,14 +55,14 @@ export function chartPainter(configure?: ChartShader): IdlePaint {
         0.2 * (((options.highlightWidth as number | undefined) ?? 90) / 90),
       breath = still ? 1 : 0.93 + 0.07 * Math.sin((2 * Math.PI * t) / 3.2),
       glowAt = -0.5 + 2 * sineInOut((t / 2.8) % 1),
-      band = pitch * 1.45;
+      band = rows * 1.45;
     // Scratch belongs to this invocation: nested paints cannot overwrite it.
     const base: ChartStyle = [0, 0, 0, 0];
     let count = 0;
     for (let x = pitch / 2; x < w; x += pitch) {
       const u = x / Math.max(1, w),
         ridge = shader ? shader[0](x) : ridgeHeight(u, h, t, amplitude);
-      for (let y = pitch / 2; y < full; y += pitch) {
+      for (let y = rows / 2; y < full; y += rows) {
         const distance = y - ridge,
           c = Math.exp(-((distance / band) ** 2)),
           area = distance > 0 && y < h ? 0.26 : 0,

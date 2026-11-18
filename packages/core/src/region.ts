@@ -10,6 +10,10 @@ import type { TableLoader } from './table.js';
 import type { LoadingState } from './types.js';
 import type { TypingDots } from './typing.js';
 export class LoadingRegion extends LoadingController<'region'> {
+  /** A region draws no marks of its own; its placeholder takes `mark`. */
+  protected override get optionNames(): readonly string[] {
+    return super.optionNames.filter((name) => name !== 'mark');
+  }
   protected override contentChanged(): void {
     this.refresh();
   }

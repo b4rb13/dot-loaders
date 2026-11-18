@@ -1,5 +1,8 @@
 export type LoadingState = 'pending' | 'refreshing' | 'ready';
 export type Motion = 'system' | 'paused';
+/** The shape loaders draw: round dots (default), dashes or squares (design/SPEC.md). */
+export type Mark = 'dot' | 'dash' | 'square';
+export const marks: readonly Mark[] = Object.freeze(['dot', 'dash', 'square']);
 export type StylePolicy =
   | Readonly<{ mode: 'inline'; nonce?: string }>
   | Readonly<{ mode: 'external'; href: string }>;

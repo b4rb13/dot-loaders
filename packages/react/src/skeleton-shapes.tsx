@@ -17,12 +17,16 @@ import {
 } from 'react';
 import { useHost } from './host.js';
 import {
+  reactCircleMarkStyles,
   reactCircleStyles,
+  reactLineMarkStyles,
   reactLineStyles,
+  reactTextSkeletonMarkStyles,
   reactTextSkeletonStyles,
 } from './server.js';
 import {
   initialPolicy,
+  markSheet,
   policyAttributes,
   sheet,
   useStyleNonce,
@@ -50,6 +54,7 @@ function component<
   name: string,
   register: () => void,
   css: readonly string[],
+  markCss: readonly string[],
   multiline = false,
 ) {
   return forwardRef<
@@ -116,6 +121,7 @@ function component<
     return (
       <>
         {sheet(css, initial.policy, name, nonce)}
+        {markSheet(markCss, initial.policy, name, nonce, attributes.mark)}
         <Host
           {...attributes}
           {...policyAttributes(initial.policy, nonce)}
@@ -153,6 +159,7 @@ export const SkeletonLine: ForwardRefExoticComponent<
   'skeleton-line',
   registerSkeletonLine,
   reactLineStyles,
+  reactLineMarkStyles,
 );
 export const SkeletonCircle: ForwardRefExoticComponent<
   SkeletonCircleProps & RefAttributes<NativeSkeletonCircle>
@@ -160,10 +167,12 @@ export const SkeletonCircle: ForwardRefExoticComponent<
   'skeleton-circle',
   registerSkeletonCircle,
   reactCircleStyles,
+  reactCircleMarkStyles,
 );
 export const SkeletonText = /* @__PURE__ */ component<NativeSkeletonText>(
   'skeleton-text',
   registerSkeletonText,
   reactTextSkeletonStyles,
+  reactTextSkeletonMarkStyles,
   true,
 );

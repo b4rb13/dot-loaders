@@ -1,6 +1,7 @@
 import type {
   HandoffDetail,
   LoaderErrorDetail,
+  Mark,
   Motion,
   StylePolicy,
 } from '@dotquilt-internal/core';
@@ -27,11 +28,14 @@ export interface HostProps<E extends HTMLElement>
   style?: DotquiltStyle | undefined;
   stylePolicy?: StylePolicy | undefined;
   motion?: Motion | undefined;
+  /** The shape the loader draws (design/SPEC.md); passed as the `mark` attribute. */
+  mark?: Mark | undefined;
 }
 export type {
   HandoffDetail,
   LoaderErrorDetail,
   LoadingState,
+  Mark,
   Motion,
   StylePolicy,
   Timing,

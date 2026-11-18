@@ -44,6 +44,187 @@ export function dotGrid(position?: string): string {
 }
 
 /**
+ * The alternative marks (design/SPEC.md): width, height and the pitch across
+ * and down. Squares are crisp at small sizes; dashes suit text lines and rows.
+ */
+export const shapes = {
+  square: { width: 4, height: 4, across: 8.5, down: 8.5, radius: 1.1 },
+  dash: { width: 9.4, height: 3.4, across: 13, down: 9.5, radius: 1.7 },
+} as const;
+
+/** A length in px, rounded so the CSS stays short. */
+const px = (value: number) => `${Math.round(value * 100) / 100}px`;
+
+/**
+ * One mask layer: a band between `from` and `to` px, with a 1 px soft edge.
+ * Without an angle it runs down the tile.
+ */
+function band(from: number, to: number, angle = ''): string {
+  return `linear-gradient(${angle}#0000 ${px(from - 0.5)},#000 ${px(from + 0.5)},#000 ${px(to - 0.5)},#0000 ${px(to + 0.5)})`;
+}
+
+interface Shape {
+  readonly width: number;
+  readonly height: number;
+  readonly across: number;
+  readonly down: number;
+  readonly radius: number;
+}
+
+/**
+ * A grid of `shape` marks painted with CSS masks, so it needs no image and
+ * passes a strict CSP. A square is a horizontal band intersected with a
+ * vertical one; a dash adds two round caps, so its ends are round.
+ */
+function maskGrid(
+  mark: keyof typeof shapes,
+  shape: Shape,
+  place: { position: string; repeat: string },
+  color: string,
+): string {
+  const { width, height, across, down } = shape;
+  const x = (across - width) / 2,
+    y = (down - height) / 2;
+  const rows = band(y, y + height);
+  const layers =
+    mark === 'square'
+      ? [rows, band(x, x + width, '90deg,')]
+      : [
+          ...[x + height / 2, x + width - height / 2].map(
+            (cx) =>
+              `radial-gradient(circle at ${px(cx)} ${px(down / 2)},#000 ${px(height / 2 - 0.5)},#0000 ${px(height / 2 + 0.5)})`,
+          ),
+          rows,
+          band(x + height / 2, x + width - height / 2, '90deg,'),
+        ];
+  const composite = mark === 'square' ? 'intersect' : 'add,add,intersect';
+  const size = `${px(across)} ${px(down)}`;
+  // Every layer shares one tile. The fill carries it too, so code that reads
+  // the grid from the background (the dissolve, the chart and table fields)
+  // finds the same marks.
+  return `background:${color} ${place.position}/${size} ${place.repeat};mask:${layers.join(',')};mask-size:${size};mask-position:${place.position};mask-repeat:${place.repeat};mask-composite:${composite}`;
+}
+
+/**
+ * Squares or dashes for a skeleton or chart surface. `position` works like
+ * dotGrid's: `space` (whole marks only) unless a position is given.
+ */
+export function shapeGrid(
+  mark: keyof typeof shapes,
+  position?: string,
+): string {
+  return maskGrid(
+    mark,
+    shapes[mark],
+    position
+      ? { position, repeat: 'repeat' }
+      : { position: 'center', repeat: 'space' },
+    markColor,
+  );
+}
+
+/**
+ * TextLoader's placeholder has 2 px dots at a 6 px pitch; squares and dashes
+ * keep that weight. Dashes read as hatching here (design/SPEC.md), but an app
+ * that asks for them still gets them.
+ */
+const textShapes = {
+  square: { width: 2, height: 2, across: 6, down: 6, radius: 0.5 },
+  dash: { width: 4.2, height: 1.6, across: 6, down: 6, radius: 0.8 },
+} as const;
+
+/** Rules that draw TextLoader's placeholder with squares or dashes. */
+export function textMarkShapes(
+  host: (mark: keyof typeof shapes) => string,
+  surface: string,
+): string {
+  return (['square', 'dash'] as const)
+    .map(
+      (mark) =>
+        `${host(mark)} ${surface}{${maskGrid(mark, textShapes[mark], { position: '0 0', repeat: 'repeat' }, 'var(--dotquilt-color,currentColor)')}}`,
+    )
+    .join('');
+}
+
+/**
+ * TypingDots shapes, from the spec's mockup: a square is 90% of the dot size,
+ * and a dash is 80% of it tall and 2.7 times as wide as it is tall.
+ */
+export function typingShapes(
+  host: (mark: keyof typeof shapes) => string,
+  dot: string,
+): string {
+  return `${host('square')} ${dot}{width:calc(${typingSize}*.9);height:calc(${typingSize}*.9);border-radius:calc(${typingSize}*.25)}${host('dash')} ${dot}{width:calc(${typingSize}*2.16);height:calc(${typingSize}*.8);border-radius:999px}`;
+}
+
+/** Rules that give a painted surface its mark's pitch, for the fields that read it. */
+export function markPitches(
+  host: (mark: keyof typeof shapes) => string,
+  surface: string,
+): string {
+  return (['square', 'dash'] as const)
+    .map(
+      (mark) =>
+        `${host(mark)} ${surface}{background-size:${shapes[mark].across}px ${shapes[mark].down}px}`,
+    )
+    .join('');
+}
+
+/**
+ * A drawn mark: the public `Mark` type. It is spelled out here so build
+ * scripts that read these styles from source don't load the element types.
+ */
+export type Mark = 'dot' | keyof typeof shapes;
+
+/** The host's mark; a missing or unknown value draws dots. */
+export function markOf(host: Element): Mark {
+  const value = host.getAttribute('mark');
+  return value === 'dash' || value === 'square' ? value : 'dot';
+}
+
+/** The default dot's radius. Painter commands give a radius; other marks scale from it. */
+export const dotRadius = 2.2;
+
+/**
+ * The box a painter draws for a command of radius `r`: a circle for a dot,
+ * and for squares and dashes the spec's shape scaled by `r` against the
+ * default dot, so the default radius draws them at their spec size.
+ */
+export function markBox(
+  mark: Mark,
+  r: number,
+): { width: number; height: number; radius: number } {
+  if (mark === 'dot') return { width: 2 * r, height: 2 * r, radius: r };
+  const shape = shapes[mark];
+  const scale = r / dotRadius;
+  return {
+    width: shape.width * scale,
+    height: shape.height * scale,
+    radius: shape.radius * scale,
+  };
+}
+
+/** Rules that draw `surface` with squares or dashes when `host(mark)` matches. */
+export function markShapes(
+  host: (mark: keyof typeof shapes) => string,
+  surface: string,
+  position?: string,
+): string {
+  return (['square', 'dash'] as const)
+    .map((mark) => `${host(mark)} ${surface}{${shapeGrid(mark, position)}}`)
+    .join('');
+}
+
+/** Line placeholders are two rows of the host's mark tall. */
+export function markLineHeights(
+  host: (mark: keyof typeof shapes) => string,
+): string {
+  return (['square', 'dash'] as const)
+    .map((mark) => `${host(mark)}{height:${2 * shapes[mark].down}px}`)
+    .join('');
+}
+
+/**
  * The idle glow's profile across the field: a Gaussian, exp(-d²) for d in
  * [-3.2, 3.2] standard deviations, in mask alpha. The mask is 128% of the
  * field wide, because one deviation is 20% of the field.

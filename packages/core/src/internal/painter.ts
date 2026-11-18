@@ -1,7 +1,7 @@
 import type { Dot } from '../animations.js';
 import { paintLayer } from './dom.js';
 import { lease } from './ledger.js';
-import { glowColor, markColor } from './marks.js';
+import { glowColor, type Mark, markBox, markColor, markOf } from './marks.js';
 import { clamp } from './math.js';
 export interface Painter {
   draw(callback: (dot: (value: Dot) => void) => void): void;
@@ -15,26 +15,25 @@ export type PaintEntry = Partial<Record<0 | 1 | 2 | 3, number>> & {
 // Optional authoring support, reached only through an imported custom definition.
 // The engine creates/disposes this painter. Author callbacks see bounded commands only.
 export const pointer: unique symbol = Symbol.for('dotquilt.pointer.v1');
-type Index = 0 | 1 | 2 | 3;
-type Entry = SVGCircleElement &
-  Partial<Record<Index, number>> & { 4?: boolean };
-type Channel = [attribute: string, value?: number, text?: string];
-type Channels = [Channel, Channel, Channel, Channel];
-function write(
-  entry: Entry,
-  index: Index,
-  value: number,
-  channels: Channels,
-): void {
-  if (entry[index] === value) return;
-  const channel = channels[index];
-  if (channel[1] !== value) {
-    channel[2] = String(value);
-    channel[1] = value;
+/** A drawn mark; the indexes cache x, y, radius, opacity and accent. */
+type Entry = SVGElement &
+  Partial<Record<0 | 1 | 2 | 3, number>> & { 4?: boolean };
+const svgns = 'http://www.w3.org/2000/svg';
+
+/** Places a dot as a circle, or a square or dash as a rounded rectangle. */
+function place(entry: Entry, mark: Mark, x: number, y: number, r: number) {
+  if (mark === 'dot') {
+    entry.setAttribute('cx', String(x));
+    entry.setAttribute('cy', String(y));
+    entry.setAttribute('r', String(r));
+    return;
   }
-  // A matching finite value is observed only after its text is stored.
-  entry.setAttribute(channel[0], channel[2] as string);
-  entry[index] = value;
+  const box = markBox(mark, r);
+  entry.setAttribute('x', String(x - box.width / 2));
+  entry.setAttribute('y', String(y - box.height / 2));
+  entry.setAttribute('width', String(box.width));
+  entry.setAttribute('height', String(box.height));
+  entry.setAttribute('rx', String(box.radius));
 }
 export function createPainter(
   host: HTMLElement,
@@ -48,7 +47,7 @@ export function createPainter(
     report(code === 'dots-limit' ? 'document-dot-limit' : code),
   );
   let disposed = false;
-  const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const svg = doc.createElementNS(svgns, 'svg');
   svg.setAttribute('aria-hidden', 'true');
   if (part) svg.setAttribute('part', part);
   svg.setAttribute('data-dotquilt-painter', '');
@@ -56,10 +55,8 @@ export function createPainter(
   host.setAttribute('data-custom', '');
   // Remember only the primitives written by this painter, bounded by admitted nodes.
   const dots: Entry[] = [];
-  // Four numeric formatting slots retain no commands and cannot grow with scene size.
-  const channels = ['cx', 'cy', 'r', 'opacity'].map(
-    (name): Channel => [name],
-  ) as Channels;
+  // The mark the entries draw; a new mark replaces them.
+  let shape: Mark = 'dot';
   return {
     points: dots,
     draw(callback) {
@@ -69,6 +66,12 @@ export function createPainter(
       const position = Reflect.get(host, pointer) as
         | { x: number; y: number }
         | undefined;
+      const mark = markOf(host);
+      if (mark !== shape) {
+        for (const entry of dots.splice(0)) entry.remove();
+        budget.set('dots', 0);
+        shape = mark;
+      }
       try {
         callback((value) => {
           if (!active || disposed) return;
@@ -93,14 +96,25 @@ export function createPainter(
           let entry = dots[count - 1];
           if (!entry) {
             if (!budget.set('dots', dots.length + 1)) return;
-            entry = doc.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            entry = doc.createElementNS(
+              svgns,
+              mark === 'dot' ? 'circle' : 'rect',
+            ) as Entry;
             dots.push(entry);
             svg.append(entry);
           }
-          write(entry, 0, x, channels);
-          write(entry, 1, y, channels);
-          write(entry, 2, clamp(size, 0, 32), channels);
-          write(entry, 3, clamp(opacity), channels);
+          const r = clamp(size, 0, 32);
+          if (entry[0] !== x || entry[1] !== y || entry[2] !== r) {
+            place(entry, mark, x, y, r);
+            entry[0] = x;
+            entry[1] = y;
+            entry[2] = r;
+          }
+          opacity = clamp(opacity);
+          if (entry[3] !== opacity) {
+            entry.setAttribute('opacity', String(opacity));
+            entry[3] = opacity;
+          }
           const accent = tone === 'accent';
           if (entry[4] !== accent) {
             entry.setAttribute('fill', accent ? glowColor : markColor);
