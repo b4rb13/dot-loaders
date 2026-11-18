@@ -7,6 +7,7 @@ import type {
 import { definitionOf } from './internal/binding.js';
 import {
   ancestors,
+  media,
   node,
   register,
   upgradeProperties,
@@ -67,6 +68,7 @@ export class TextLoader extends LoadingController<'text'> {
     return super.animations;
   }
   override set animations(value: Animations<'text'> | undefined) {
+    this.configurationChanged();
     super.animations = value;
     this.#runner?.reset?.();
   }
@@ -207,11 +209,13 @@ export class TextLoader extends LoadingController<'text'> {
       this.pointerResponse !== 'lift' ||
       !this.hasAttribute('data-moving') ||
       event.pointerType === 'touch' ||
-      !this.ownerDocument.defaultView?.matchMedia(
-        '(hover:hover) and (pointer:fine)',
-      ).matches
-    )
+      !media(this.ownerDocument.defaultView, '(hover:hover) and (pointer:fine)')
+    ) {
+      // Lift no longer applies (touch, no hover, paused): drop the old position
+      // so the drawing does not stay lifted at a stale point.
+      Reflect.deleteProperty(this, pointer);
       return;
+    }
     const rect = this.getBoundingClientRect();
     Reflect.set(this, pointer, {
       x: event.clientX - rect.left,
@@ -390,8 +394,7 @@ export class TextLoader extends LoadingController<'text'> {
     if (
       !surface.input.precise ||
       !surface.input.mask.length ||
-      this.ownerDocument.defaultView?.matchMedia('(forced-colors: active)')
-        .matches
+      media(this.ownerDocument.defaultView, '(forced-colors: active)')
     ) {
       this.#stopIdle();
       return;

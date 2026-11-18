@@ -19,6 +19,9 @@ export abstract class ManagedElement<
   protected deadline: ReturnType<typeof setTimeout> | undefined;
   #queued = false;
   #issues = new Set<string>();
+  // Cached between environment changes so animation frames don't walk ancestors.
+  #restricted: boolean | undefined;
+  #owner: { value: unknown } | undefined;
   #preset: Preset<K> | undefined;
   protected abstract capturePreset(value: Preset<K>): Preset<K>;
   protected presetChanged(): void {}
@@ -33,6 +36,7 @@ export abstract class ManagedElement<
       this.#preset = undefined;
       this.report('invalid-preset', 'preset');
     }
+    this.configurationChanged();
     this.presetChanged();
     this.#motionChanged();
   }
@@ -45,7 +49,25 @@ export abstract class ManagedElement<
     if (value === undefined) this.removeAttribute('motion');
     else this.setAttribute('motion', String(value));
   }
+  /**
+   * Configuration changed (attributes, preset, animations, reconnection):
+   * problems already reported may be reported again if they recur.
+   */
+  protected configurationChanged(): void {
+    this.#issues.clear();
+  }
+  /** Forgets values cached between environment changes. */
+  protected forget(): void {
+    this.#restricted = undefined;
+    this.#owner = undefined;
+  }
+  /** The owning region (or other owner), computed once per environment change. */
+  protected cachedOwner<T>(compute: () => T): T {
+    this.#owner ??= { value: compute() };
+    return this.#owner.value as T;
+  }
   #motionChanged(): void {
+    this.forget();
     this.toggleAttribute(
       'data-dotquilt-paused',
       !this.hasAttribute('motion') && this.#preset?.motion === 'paused',
@@ -88,16 +110,22 @@ export abstract class ManagedElement<
         href !== null
           ? { mode: 'external', href }
           : { mode: 'inline', nonce: this.nonce };
+    this.forget();
+    this.configurationChanged();
     this.upgrade();
     this.resources = subscribe({
       host: this,
-      changed: () => this.environmentChanged(),
+      changed: () => {
+        this.forget();
+        this.environmentChanged();
+      },
     });
     this.#motionChanged();
   }
   protected abstract upgrade(): void;
 
   disconnectedCallback(): void {
+    this.forget();
     this.resources?.release();
     this.resources = undefined;
     this.clearDeadline();
@@ -113,6 +141,8 @@ export abstract class ManagedElement<
     _old: string | null,
     value: string | null,
   ): void {
+    this.forget();
+    this.configurationChanged();
     if (
       name === 'motion' &&
       value !== null &&
@@ -143,7 +173,8 @@ export abstract class ManagedElement<
   protected allowed(activity: Activity): boolean {
     if (!this.resources?.eligible() || remaining(this, activity) <= 0)
       return false;
-    return !motionRestricted(this);
+    this.#restricted ??= motionRestricted(this);
+    return !this.#restricted;
   }
 
   protected report(code: string, field: string): void {

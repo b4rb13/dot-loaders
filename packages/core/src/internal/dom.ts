@@ -105,3 +105,17 @@ export function activeWithin(host: HTMLElement): boolean {
     (active === host || ancestors(active as HTMLElement).includes(host))
   );
 }
+
+const mediaQueries = new WeakMap<Window, Map<string, MediaQueryList>>();
+/** Whether a media query matches, reusing one MediaQueryList per window and query. */
+export function media(win: Window | null | undefined, query: string): boolean {
+  if (!win) return false;
+  const queries = mediaQueries.get(win) ?? new Map<string, MediaQueryList>();
+  mediaQueries.set(win, queries);
+  let list = queries.get(query);
+  if (!list) {
+    list = win.matchMedia(query);
+    queries.set(query, list);
+  }
+  return list.matches;
+}

@@ -70,6 +70,8 @@ export function subscribe(client: Client): Subscription {
       subtree: true,
       attributeFilter: [
         'motion',
+        'slot',
+        'data-dotquilt-disabled',
         'data-dotquilt-paused',
         'data-presentation',
         'hidden',

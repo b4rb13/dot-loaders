@@ -101,8 +101,9 @@ export abstract class LoadingController<
         ? 'refreshing'
         : 'pending';
   }
-  set state(value: LoadingState) {
-    this.setAttribute('state', String(value));
+  set state(value: LoadingState | undefined) {
+    if (value === undefined) this.removeAttribute('state');
+    else this.setAttribute('state', String(value));
   }
   get cycle(): string | undefined {
     return this.getAttribute('cycle') ?? undefined;
@@ -138,6 +139,7 @@ export abstract class LoadingController<
     return this.#bindings as OwnerAnimations<F>;
   }
   set animations(value: OwnerAnimations<F> | undefined) {
+    this.configurationChanged();
     try {
       if (
         this.family === 'region' &&
