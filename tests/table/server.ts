@@ -1,20 +1,27 @@
-import { readFile } from 'node:fs/promises';
+// Serves the TableLoader fixture against the workspace build (packages/*/dist).
 import { resolve } from 'node:path';
+import * as server from '@dotquilt-internal/core/server';
+import * as reactServer from '@dotquilt-internal/react/server';
+import { createElement as h } from 'react';
+import { renderToString } from 'react-dom/server';
+import { TableFixture } from './react.js';
 
-const root = resolve(import.meta.dir, '../..'),
-  output = resolve(root, '.artifacts/m4'),
-  consumer = (await readFile(resolve(output, 'consumer-path'), 'utf8')).trim();
-const core = resolve(consumer, 'node_modules/@dotquilt-internal/core'),
-  react = resolve(consumer, 'node_modules/@dotquilt-internal/react');
-const server = await import(resolve(core, 'dist/server.js')),
-  reactServer = await import(resolve(react, 'dist/server.js'));
-const { renderToString } = await import(
-    resolve(consumer, 'node_modules/react-dom/server.bun.js')
-  ),
-  { createElement: h } = await import(
-    resolve(consumer, 'node_modules/react/index.js')
-  );
-const { TableFixture } = await import(resolve(consumer, 'table-react.tsx'));
+const root = resolve(import.meta.dir, '../..');
+const clients = new Map<string, string>();
+for (const [file, path] of [
+  ['client.ts', '/table.js'],
+  ['react.tsx', '/table-react.js'],
+] as const) {
+  const build = await Bun.build({
+    entrypoints: [resolve(import.meta.dir, file)],
+    minify: true,
+    target: 'browser',
+    format: 'esm',
+  });
+  if (!build.success || !build.outputs[0])
+    throw new Error(`Cannot build the table client ${file}`);
+  clients.set(path, await build.outputs[0].text());
+}
 const css = [...Object.values(server), ...Object.values(reactServer)]
   .filter(Array.isArray)
   .flat() as string[];
@@ -39,65 +46,19 @@ Bun.serve({
   async fetch(req) {
     const url = new URL(req.url),
       path = url.pathname;
-    if (['/table.js', '/table-react.js'].includes(path))
-      return new Response(Bun.file(resolve(output, path.slice(1))), {
+    const client = clients.get(path);
+    if (client)
+      return new Response(client, {
         headers: { 'content-type': 'text/javascript' },
       });
     const asset = /^\/(core|react)\/(table|region)\.css$/.exec(path);
     if (asset)
       return new Response(
-        Bun.file(
-          resolve(asset[1] === 'core' ? core : react, `dist/${asset[2]}.css`),
-        ),
+        Bun.file(resolve(root, `packages/${asset[1]}/dist/${asset[2]}.css`)),
         { headers: { 'content-type': 'text/css' } },
       );
     if (path === '/app.css')
       return new Response(appCSS, { headers: { 'content-type': 'text/css' } });
-    if (
-      /^\/table-options-(firstParty|custom)-(root|family)-(native|react)-production\.js$/.test(
-        path,
-      )
-    )
-      return new Response(Bun.file(resolve(output, path.slice(1))), {
-        headers: { 'content-type': 'text/javascript' },
-      });
-    if (/^\/table-(root|family)-(native|react)-production\.js$/.test(path))
-      return new Response(Bun.file(resolve(output, path.slice(1))), {
-        headers: { 'content-type': 'text/javascript' },
-      });
-    if (path === '/production') {
-      const entry =
-          url.searchParams.get('entry') === 'family' ? 'family' : 'root',
-        framework =
-          url.searchParams.get('framework') === 'react' ? 'react' : 'native';
-      return new Response(
-        `<!doctype html><html lang="en"><meta charset="utf-8"><title>Private default TableLoader closure</title><link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/core/table.css"><link rel="stylesheet" href="/core/region.css"><body><script type="module" src="/table-${entry}-${framework}-production.js"></script></body></html>`,
-        {
-          headers: {
-            'content-type': 'text/html',
-            'content-security-policy': `default-src 'none';script-src 'self';style-src 'self' ${hashes};style-src-attr 'none';object-src 'none';base-uri 'none';require-trusted-types-for 'script'`,
-          },
-        },
-      );
-    }
-    if (path === '/options') {
-      const fixture =
-          url.searchParams.get('fixture') === 'custom'
-            ? 'custom'
-            : 'firstParty',
-        entry = url.searchParams.get('entry') === 'family' ? 'family' : 'root',
-        framework =
-          url.searchParams.get('framework') === 'react' ? 'react' : 'native';
-      return new Response(
-        `<!doctype html><html lang="en"><meta charset="utf-8"><title>Private complete table closure</title><link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/core/table.css"><link rel="stylesheet" href="/core/region.css"><body><script type="module" src="/table-options-${fixture}-${entry}-${framework}-production.js"></script></body></html>`,
-        {
-          headers: {
-            'content-type': 'text/html',
-            'content-security-policy': `default-src 'none';script-src 'self';style-src 'self' ${hashes};style-src-attr 'none';object-src 'none';base-uri 'none';require-trusted-types-for 'script'`,
-          },
-        },
-      );
-    }
     if (path === '/recovery')
       return new Response(
         '<!doctype html><html lang="en"><h1>Current table</h1><p>Ada: 0, New, 2026</p></html>',
@@ -108,9 +69,9 @@ Bun.serve({
     const mode = url.searchParams.get('mode') ?? 'inline',
       policy = (name: string) =>
         mode === 'external'
-          ? { mode: 'external', href: `/core/${name}.css` }
+          ? { mode: 'external' as const, href: `/core/${name}.css` }
           : {
-              mode: 'inline',
+              mode: 'inline' as const,
               ...(mode === 'nonce' ? { nonce: 'table-fixture' } : {}),
             };
     const rows = [

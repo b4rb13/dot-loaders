@@ -17,6 +17,7 @@ const suites: {
 }[] = [
   { name: 'coordination', port: 4201, viewport: { width: 1100, height: 1600 } },
   { name: 'presets', port: 4198 },
+  { name: 'table', port: 4197 },
 ];
 const browsers = (
   process.env.ALL_BROWSERS ? ['chromium', 'firefox', 'webkit'] : ['chromium']

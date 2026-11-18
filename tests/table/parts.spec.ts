@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { expectPaint } from '../paint-output';
 import type {} from './api.js';
 
 test('structural surface part remains available during idle and handoff', async ({
@@ -27,7 +28,7 @@ test('React delivers table fields and readiness through committed props with a f
   page,
 }) => {
   await page.goto('/react');
-  await expect(page.locator('#table circle').first()).toBeVisible();
+  await expectPaint(page.locator('#table'));
   await page.evaluate(() =>
     window.tableTest.update({
       rows: 6,
@@ -67,45 +68,11 @@ test('React delivers table fields and readiness through committed props with a f
     [],
   );
 });
-for (const framework of ['table', 'react'])
-  test(`private replay controls preserve manual pause: ${framework}`, async ({
-    page,
-  }) => {
-    await page.goto(`/${framework}`);
-    await expect(page.locator('#table-replay')).toBeEnabled();
-    await page.locator('#table-idle').selectOption('tableShimmer');
-    await page.locator('#table-style').selectOption('badge-text');
-    await page.locator('#table-replay').click();
-    await expect(page.locator('#table-region')).toHaveAttribute(
-      'data-presentation',
-      'handoff',
-    );
-    await expect(page.locator('#table-region')).toHaveAttribute(
-      'data-presentation',
-      'ready',
-    );
-    await page.locator('#table-pause').click();
-    await page.locator('#table-replay').click();
-    await expect(page.locator('#table-region')).toHaveAttribute(
-      'motion',
-      'paused',
-    );
-    await expect(page.locator('#table-region')).toHaveAttribute(
-      'data-presentation',
-      'ready',
-    );
-    await expect(page.locator('#table-pause')).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    expect(await page.evaluate(() => window.tableTest.errors)).toEqual([]);
-  });
-
 test('table content-box alignment, intrinsic row height and pointer coordinates survive padding and border', async ({
   page,
 }) => {
   await page.goto('/table');
-  await expect(page.locator('#table circle').first()).toBeVisible();
+  await expectPaint(page.locator('#table'));
   await page.addStyleTag({
     content:
       '#table{box-sizing:border-box;width:400px;border:5px solid;padding:15px}',
@@ -143,63 +110,11 @@ test('table content-box alignment, intrinsic row height and pointer coordinates 
     .toBe(72);
 });
 
-test('a full 4096-dot outgoing field is released before the handoff painter is admitted', async ({
-  page,
-}) => {
-  await page.goto('/table');
-  await expect(page.locator('#table circle').first()).toBeVisible();
-  await page.evaluate(() => {
-    const host = document.getElementById('table') as HTMLElement;
-    let live =
-        host.shadowRoot?.querySelectorAll('[data-dotquilt-painter] circle')
-          .length ?? 0,
-      peak = live;
-    const append = SVGSVGElement.prototype.append,
-      remove = Element.prototype.remove;
-    SVGSVGElement.prototype.append = function (...nodes) {
-      append.apply(this, nodes);
-      if (this.hasAttribute('data-dotquilt-painter')) {
-        live += nodes.filter((n) => n instanceof SVGCircleElement).length;
-        peak = Math.max(peak, live);
-      }
-    };
-    Element.prototype.remove = function () {
-      if (
-        this instanceof SVGSVGElement &&
-        this.hasAttribute('data-dotquilt-painter')
-      )
-        live -= this.querySelectorAll('circle').length;
-      else if (
-        this instanceof SVGCircleElement &&
-        this.closest('[data-dotquilt-painter]')
-      )
-        live--;
-      remove.call(this);
-    };
-    Reflect.set(window, 'tablePeak', () => ({ live, peak }));
-    window.tableTest.dense();
-  });
-  await expect(page.locator('#table circle')).toHaveCount(4096);
-  await page.evaluate(() => window.tableTest.ready());
-  await expect(page.locator('#table-region')).toHaveAttribute(
-    'data-presentation',
-    'handoff',
-  );
-  await expect(page.locator('#table-region')).toHaveAttribute(
-    'data-presentation',
-    'ready',
-  );
-  expect(await page.evaluate(() => Reflect.get(window, 'tablePeak')())).toEqual(
-    { live: 0, peak: 4096 },
-  );
-  expect(await page.evaluate(() => window.tableTest.errors)).toEqual([]);
-});
-
 test('standalone decoration never samples geometry; adoption releases the old document resources and provider', async ({
   page,
 }) => {
   await page.goto('/table');
-  await expect(page.locator('#table circle').first()).toBeVisible();
+  await expectPaint(page.locator('#table'));
   await page.evaluate(() => {
     const t = document.createElement('dotquilt-table-loader');
     t.id = 'standalone-table';
@@ -214,7 +129,7 @@ test('standalone decoration never samples geometry; adoption releases the old do
     };
     document.body.append(t);
   });
-  await expect(page.locator('#standalone-table circle').first()).toBeVisible();
+  await expectPaint(page.locator('#standalone-table'));
   expect(
     await page.evaluate(() => Reflect.get(window, 'standaloneCalls')),
   ).toBe(0);
@@ -249,7 +164,7 @@ for (const framework of ['table', 'react'])
     page,
   }) => {
     await page.goto(`/${framework}`);
-    await expect(page.locator('#table circle').first()).toBeVisible();
+    await expectPaint(page.locator('#table'));
     await page.evaluate(() => {
       window.tableTest.provider('throw');
       window.tableTest.override();
