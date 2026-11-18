@@ -22,9 +22,9 @@
     }
   },
   "globalPassThroughEnv": [
+    "DOTQUILT_REACT_FLOOR",
     "ALL_BROWSERS",
     "DOTQUILT_BROWSER_REPORT",
-    "DOTQUILT_PACKED",
     "DOTQUILT_TEST_PORT",
     "E2E_PORT"
   ]

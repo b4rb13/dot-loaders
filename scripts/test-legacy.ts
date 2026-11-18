@@ -1,10 +1,9 @@
-// Runs the older browser/SSR suites that test packed tarballs installed into
-// clean temporary consumers (several React and Next versions included).
-// They are slow (npm installs, Next builds) and are being ported into
-// tests/e2e component by component; each ported suite is deleted here.
+// The remaining checks that need the packed tarballs installed into clean
+// consumers: the React suite rerun on React 19.0 (the oldest supported
+// version) and catalog SSR under Node and Bun on React 19.3 and 19.0.
+// Everything else runs in the main Playwright config and the unit suites.
 //
-//   bun run test:legacy              all suites, Chromium only
-//   bun run test:legacy m4 table     only the named suites
+//   bun run test:legacy              both suites, Chromium only
 //   ALL_BROWSERS=1 bun run test:legacy
 //
 // Run `bun run build` first.
@@ -12,8 +11,8 @@
 interface Suite {
   /** Commands that prepare packed consumers and fixtures. */
   prepare: string[][];
-  /** Playwright configs to run, with the Chromium-only project filter. */
-  configs?: { file: string; chromium: string }[];
+  /** Playwright configs to run, with Chromium-only and all-browser project filters. */
+  configs?: { file: string; chromium: string; all?: string }[];
   /** Extra non-Playwright checks. */
   checks?: string[][];
   /** Extra environment for Playwright. */
@@ -21,83 +20,34 @@ interface Suite {
 }
 
 const suites: Record<string, Suite> = {
+  // Packs and installs the tarballs the other suites consume. Packaging is
+  // checked by scripts/pack-smoke.test.ts; the browser suite already runs
+  // against the same dist files, so it is not rerun here.
   native: {
     prepare: [['bun', 'run', 'scripts/verify-packed.ts']],
-    configs: [{ file: 'playwright.config.ts', chromium: 'native-chromium' }],
-    env: { DOTQUILT_PACKED: '1' },
   },
   react: {
     prepare: [
       ['bun', 'run', 'scripts/verify-react.ts'],
       ['bun', 'run', 'scripts/verify-react-ssr.ts'],
     ],
-    configs: [{ file: 'playwright.react.config.ts', chromium: 'chromium-*' }],
-  },
-  next: {
-    prepare: [['bun', 'run', 'scripts/prepare-next.ts']],
-    configs: [{ file: 'playwright.next.config.ts', chromium: 'chromium-*' }],
-  },
-  m4: {
-    prepare: [['bun', 'run', 'scripts/prepare-m4.ts']],
+    // The fast suite runs these tests on the workspace React; this reruns
+    // them once on React 19.0, the oldest supported version.
     configs: [
-      { file: 'playwright.m4.config.ts', chromium: 'chromium' },
-      { file: 'playwright.chart-production.config.ts', chromium: 'chromium' },
-      { file: 'playwright.motion-review.config.ts', chromium: 'chromium' },
+      {
+        file: 'playwright.config.ts',
+        chromium: 'react-chromium',
+        all: 'react-*',
+      },
     ],
-    checks: [
-      ['bun', 'run', 'scripts/verify-boundaries.ts'],
-      ['bun', 'run', 'scripts/verify-catalog-ssr.ts'],
-    ],
-  },
-  table: {
-    prepare: [['bun', 'run', 'scripts/prepare-table.ts']],
-    configs: [
-      { file: 'playwright.table.config.ts', chromium: 'chromium' },
-      { file: 'playwright.table-options.config.ts', chromium: 'chromium' },
-      { file: 'playwright.table-parts.config.ts', chromium: 'chromium' },
-    ],
-  },
-  presets: {
-    prepare: [['bun', 'run', 'scripts/prepare-presets.ts']],
-    configs: [{ file: 'playwright.presets.config.ts', chromium: 'chromium' }],
-  },
-  coordination: {
-    prepare: [['bun', 'run', 'scripts/prepare-coordination.ts']],
-    configs: [
-      { file: 'playwright.coordination.config.ts', chromium: 'chromium' },
-    ],
-  },
-  'shared-wrapper': {
-    prepare: [['bun', 'run', 'scripts/prepare-shared-wrapper.ts']],
-    configs: [
-      { file: 'playwright.shared-wrapper.config.ts', chromium: 'chromium' },
-    ],
-  },
-  api: {
-    prepare: [['bun', 'run', 'scripts/prepare-api.ts']],
-    configs: [{ file: 'playwright.api.config.ts', chromium: 'chromium' }],
-  },
-  copies: {
-    prepare: [['bun', 'run', 'scripts/prepare-copies.ts']],
-    configs: [{ file: 'playwright.copies.config.ts', chromium: 'chromium' }],
-  },
-  layout: {
-    prepare: [['bun', 'run', 'scripts/prepare-layout.ts']],
-    configs: [{ file: 'playwright.layout.config.ts', chromium: 'chromium' }],
+    env: { DOTQUILT_REACT_FLOOR: '1' },
+    // Catalog SSR under Node and Bun with React 19.3 and 19.0.
+    checks: [['bun', 'run', 'scripts/verify-catalog-ssr.ts']],
   },
 };
 // Suites reuse consumers that earlier suites install.
 const requires: Record<string, string[]> = {
   react: ['native'],
-  next: ['react'],
-  m4: ['react'],
-  table: ['m4'],
-  presets: ['m4'],
-  coordination: ['m4'],
-  'shared-wrapper': ['m4'],
-  api: ['m4'],
-  copies: ['m4'],
-  layout: ['m4'],
 };
 
 const requested = process.argv.slice(2);
@@ -133,7 +83,8 @@ for (const name of selected) {
     if (ok) {
       const args = ['bunx', '--no-install', 'playwright', 'test'];
       args.push(`--config=${config.file}`);
-      if (!process.env.ALL_BROWSERS) args.push(`--project=${config.chromium}`);
+      const project = process.env.ALL_BROWSERS ? config.all : config.chromium;
+      if (project) args.push(`--project=${project}`);
       if (!(await run(args, suite.env))) failed.push(`${name}: ${config.file}`);
     }
   for (const command of suite.checks ?? [])

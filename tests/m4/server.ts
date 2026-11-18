@@ -1,24 +1,33 @@
-import { readFile } from 'node:fs/promises';
+// Serves the m4 catalog, text and chart fixtures against the workspace build
+// (packages/*/dist) and the workspace React.
 import { resolve } from 'node:path';
+import * as server from '@dotquilt-internal/core/server';
+import * as reactServer from '@dotquilt-internal/react/server';
+import { createElement as h } from 'react';
+import { renderToString } from 'react-dom/server';
+import { ChartFixture } from './chart-react.js';
+import { Fixture } from './react.js';
+import { TextFixture } from './text-react.js';
 
 const root = resolve(import.meta.dir, '../..');
-const output = resolve(root, '.artifacts/m4');
-const consumer = (
-  await readFile(resolve(output, 'consumer-path'), 'utf8')
-).trim();
-const core = resolve(consumer, 'node_modules/@dotquilt-internal/core');
-const react = resolve(consumer, 'node_modules/@dotquilt-internal/react');
-const server = await import(resolve(core, 'dist/server.js'));
-const reactServer = await import(resolve(react, 'dist/server.js'));
-const { renderToString } = await import(
-  resolve(consumer, 'node_modules/react-dom/server.bun.js')
-);
-const { createElement: h } = await import(
-  resolve(consumer, 'node_modules/react/index.js')
-);
-const { ChartFixture } = await import(resolve(consumer, 'chart-react.tsx'));
-const { TextFixture } = await import(resolve(consumer, 'text-react.tsx'));
-const { Fixture } = await import(resolve(consumer, 'react.tsx'));
+const clients = new Map<string, string>();
+for (const [file, path] of [
+  ['client.ts', '/native.js'],
+  ['react.tsx', '/react.js'],
+  ['text-client.ts', '/text.js'],
+  ['text-react.tsx', '/text-react.js'],
+  ['chart-client.ts', '/chart.js'],
+  ['chart-react.tsx', '/chart-react.js'],
+] as const) {
+  const build = await Bun.build({
+    entrypoints: [resolve(import.meta.dir, file)],
+    format: 'esm',
+    target: 'browser',
+  });
+  if (!build.success || !build.outputs[0])
+    throw new Error(`Cannot build the m4 client ${file}`);
+  clients.set(path, await build.outputs[0].text());
+}
 const css = Object.values(server)
   .filter(
     (value) =>
@@ -42,79 +51,18 @@ Bun.serve({
   port: 4194,
   async fetch(request) {
     const url = new URL(request.url);
-    if (
-      url.pathname.endsWith('.js') &&
-      [
-        '/native.js',
-        '/react.js',
-        '/text.js',
-        '/text-react.js',
-        '/chart.js',
-        '/chart-react.js',
-      ].includes(url.pathname)
-    )
-      return new Response(Bun.file(resolve(output, url.pathname.slice(1))), {
+    const client = clients.get(url.pathname);
+    if (client)
+      return new Response(client, {
         headers: { 'content-type': 'text/javascript' },
       });
-    const optional =
-      /^\/chart-options-(firstParty|custom)-(root|family)-(native|react)-production\.js$/.exec(
-        url.pathname,
-      );
-    if (optional)
-      return new Response(Bun.file(resolve(output, url.pathname.slice(1))), {
-        headers: { 'content-type': 'text/javascript' },
-      });
-    if (url.pathname === '/chart-options-production') {
-      const fixture =
-          url.searchParams.get('fixture') === 'custom'
-            ? 'custom'
-            : 'firstParty',
-        entry = url.searchParams.get('entry') === 'family' ? 'family' : 'root',
-        framework =
-          url.searchParams.get('framework') === 'react' ? 'react' : 'native';
-      return new Response(
-        `<!doctype html><html lang="en"><meta charset="utf-8"><title>Private complete ChartLoader closure</title><link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/core/styles/chart.css"><link rel="stylesheet" href="/core/styles/region.css"><body><script type="module" src="/chart-options-${fixture}-${entry}-${framework}-production.js"></script></body></html>`,
-        {
-          headers: {
-            'content-type': 'text/html',
-            'content-security-policy': `default-src 'none';script-src 'self';style-src 'self' ${hashes};style-src-attr 'none';object-src 'none';base-uri 'none';require-trusted-types-for 'script'`,
-          },
-        },
-      );
-    }
-    const production =
-      /^\/chart-(root|family)-(native|react)-production\.js$/.exec(
-        url.pathname,
-      );
-    if (production)
-      return new Response(Bun.file(resolve(output, url.pathname.slice(1))), {
-        headers: { 'content-type': 'text/javascript' },
-      });
-    if (url.pathname === '/chart-production') {
-      const entry =
-          url.searchParams.get('entry') === 'family' ? 'family' : 'root',
-        framework =
-          url.searchParams.get('framework') === 'react' ? 'react' : 'native';
-      return new Response(
-        `<!doctype html><html lang="en"><meta charset="utf-8"><title>Private optimized ChartLoader consumer</title><link rel="stylesheet" href="/app.css"><body><script type="module" src="/chart-${entry}-${framework}-production.js"></script></body></html>`,
-        {
-          headers: {
-            'content-type': 'text/html',
-            'content-security-policy':
-              "default-src 'none';script-src 'self';style-src 'self' 'unsafe-inline';style-src-attr 'none';object-src 'none';base-uri 'none';require-trusted-types-for 'script'",
-          },
-        },
-      );
-    }
     const asset =
       /^\/(core|react)\/styles\/(skeleton|skeleton-family|line|circle|skeleton-text|typing|region|text|chart)\.css$/.exec(
         url.pathname,
       );
     if (asset)
       return new Response(
-        Bun.file(
-          resolve(asset[1] === 'core' ? core : react, `dist/${asset[2]}.css`),
-        ),
+        Bun.file(resolve(root, `packages/${asset[1]}/dist/${asset[2]}.css`)),
         { headers: { 'content-type': 'text/css' } },
       );
     if (url.pathname === '/recovery')
@@ -149,16 +97,20 @@ Bun.serve({
     const policy = (name: string) =>
       mode.startsWith('external')
         ? {
-            mode: 'external',
+            mode: 'external' as const,
             href: `/core/styles/${mode === 'external-family' && name !== 'region' && name !== 'typing' && name !== 'text' && name !== 'chart' ? 'skeleton-family' : name}.css`,
           }
         : {
-            mode: 'inline',
+            mode: 'inline' as const,
             ...(mode === 'nonce' ? { nonce: 'm4-fixture' } : {}),
           };
     const surface = (kind: string, id: string, name: string, extra = {}) =>
       server
-        .renderStatic({ kind, stylePolicy: policy(name), ...extra })
+        .renderStatic({
+          kind,
+          stylePolicy: policy(name),
+          ...extra,
+        } as Parameters<typeof server.renderStatic>[0])
         .replace(
           /^(<[^ >]+)/,
           `$1 id="${id}" data-host data-css="${name}" class="${id === 'multiline' ? 'multiline' : name}"`,
@@ -195,7 +147,7 @@ Bun.serve({
       url.pathname === '/chart'
         ? chartNative
         : url.pathname === '/chart-react'
-          ? `<div id="app">${renderToString(h(ChartFixture, { mode, variant: url.searchParams.get('variant') ?? 'line' }))}</div>`
+          ? `<div id="app">${renderToString(h(ChartFixture, { mode, variant: (url.searchParams.get('variant') ?? 'line') as 'line' | 'bar' | 'scatter' }))}</div>`
           : url.pathname === '/text'
             ? server
                 .renderStatic({

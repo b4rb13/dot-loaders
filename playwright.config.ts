@@ -1,29 +1,51 @@
-import { existsSync, readFileSync } from 'node:fs';
 import { defineConfig } from '@playwright/test';
 
 // Main browser suite. Runs against the workspace build: `bun run build` first.
 //   bun run test:e2e                 Chromium only (day to day)
 //   ALL_BROWSERS=1 bun run test:e2e  Chromium, Firefox and WebKit
-//   DOTQUILT_PACKED=1 ...            native project against the packed tarball
-//                                    (run `bun run verify:packed` first)
 // Projects:
 //   e2e     tests/e2e: every component's pending/ready behaviour, layout and
 //           screenshots on plain fixture pages
 //   native  tests/browser: detailed runtime behaviour (focus, events, motion
 //           restrictions, CSP, static output, cleanup)
+// Suites ported from the legacy runner. Each keeps its own fixture server,
+// which builds its client from the workspace packages at startup.
+const suites: {
+  name: string;
+  port: number;
+  viewport?: { width: number; height: number };
+  /** One worker: the suite measures layout shifts that CPU contention skews. */
+  serial?: boolean;
+}[] = [
+  { name: 'coordination', port: 4201, viewport: { width: 1100, height: 1600 } },
+  { name: 'presets', port: 4198 },
+  { name: 'table', port: 4197 },
+  {
+    name: 'shared-wrapper',
+    port: 4202,
+    viewport: { width: 1100, height: 1600 },
+  },
+  { name: 'api', port: 4203 },
+  { name: 'react', port: 4191 },
+  { name: 'm4', port: 4194 },
+  { name: 'copies', port: 4206 },
+  {
+    name: 'layout',
+    port: 4207,
+    viewport: { width: 320, height: 2400 },
+    serial: true,
+  },
+];
 const browsers = (
   process.env.ALL_BROWSERS ? ['chromium', 'firefox', 'webkit'] : ['chromium']
 ) as ('chromium' | 'firefox' | 'webkit')[];
-const packedReport = '.artifacts/packed-report.json';
-const packed =
-  process.env.DOTQUILT_PACKED && existsSync(packedReport)
-    ? JSON.parse(readFileSync(packedReport, 'utf8'))
-    : undefined;
 
 export default defineConfig({
-  metadata: { artifactSha256: packed?.sha256 ?? 'workspace' },
+  metadata: { artifactSha256: 'workspace' },
   timeout: 20000,
   forbidOnly: !!process.env.CI,
+  // CI runners have 2 cores; the default would use one worker.
+  ...(process.env.CI ? { workers: 2 } : {}),
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   // Screenshot baselines are generated on macOS; CI on Linux renders fonts
   // differently, so CI skips pixel comparisons and keeps layout assertions.
@@ -42,10 +64,22 @@ export default defineConfig({
     {
       name: `native-${browserName}`,
       testDir: './tests/browser',
-      // Several native tests observe frame timing and shared document state.
-      workers: 1,
+      // Pages share nothing: ledgers and frame clocks live on each document.
+      fullyParallel: true,
       use: { browserName, baseURL: 'http://127.0.0.1:4181' },
     },
+    ...suites.map((suite) => ({
+      name: `${suite.name}-${browserName}`,
+      testDir: `./tests/${suite.name}`,
+      testMatch: '*.spec.ts',
+      fullyParallel: !suite.serial,
+      ...(suite.serial ? { workers: 1 } : {}),
+      use: {
+        browserName,
+        baseURL: `http://127.0.0.1:${suite.port}`,
+        ...(suite.viewport ? { viewport: suite.viewport } : {}),
+      },
+    })),
   ]),
   webServer: [
     {
@@ -59,5 +93,10 @@ export default defineConfig({
       port: 4181,
       reuseExistingServer: false,
     },
+    ...suites.map((suite) => ({
+      command: `bun tests/${suite.name}/server.ts`,
+      port: suite.port,
+      reuseExistingServer: false,
+    })),
   ],
 });

@@ -1,3 +1,10 @@
+// Serves the React fixtures against the workspace build (packages/*/dist)
+// and the workspace React.
+//
+// DOTQUILT_REACT_FLOOR=1 (legacy runner only) renders and hydrates with the
+// oldest supported React (19.0) from the packed consumer that
+// scripts/verify-react.ts installed. React 19.0-19.2 take a different nonce
+// hydration path (packages/react/src/static.tsx).
 import { createHash } from 'node:crypto';
 import { cp, readFile } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
@@ -6,19 +13,14 @@ import * as reactCss from '../../packages/react/dist/server.js';
 import type { FixtureOptions } from './fixture';
 
 const root = resolve(import.meta.dir, '../..');
-const packed = await Bun.file(
-  resolve(root, '.artifacts/m3/packed-react-report.json'),
-).json();
-const renderers = new Map<
-  string,
-  {
-    render(options: FixtureOptions): string;
-    stream(options: FixtureOptions): Promise<ReadableStream<Uint8Array>>;
-  }
->();
-const bundles = new Map<string, Uint8Array>();
-for (const line of ['current', 'floor', 'minor1', 'minor2']) {
-  const consumer = packed.consumers[line];
+const floor: string | undefined = process.env.DOTQUILT_REACT_FLOOR
+  ? (
+      await Bun.file(
+        resolve(root, '.artifacts/m3/packed-react-report.json'),
+      ).json()
+    ).consumers.floor
+  : undefined;
+if (floor)
   for (const file of [
     'fixture.tsx',
     'catalog.tsx',
@@ -26,24 +28,34 @@ for (const line of ['current', 'floor', 'minor1', 'minor2']) {
     'ssr.tsx',
     'early.ts',
   ])
-    await cp(resolve(import.meta.dir, file), resolve(consumer, file));
-  renderers.set(line, await import(String(resolve(consumer, 'ssr.tsx'))));
-  for (const entry of ['client', 'early']) {
-    const build = await Bun.build({
-      entrypoints: [
-        resolve(consumer, `${entry}.${entry === 'early' ? 'ts' : 'tsx'}`),
-      ],
-      format: 'iife',
-      target: 'browser',
-      define: { 'process.env.NODE_ENV': JSON.stringify('development') },
-    });
-    if (!build.success || !build.outputs[0])
-      throw new Error('React fixture build failed');
-    bundles.set(
-      `${line}/${entry}`,
-      new Uint8Array(await build.outputs[0].arrayBuffer()),
+    await cp(resolve(import.meta.dir, file), resolve(floor, file));
+if (floor) {
+  const { version } = await import(
+    String(resolve(floor, 'node_modules/react/index.js'))
+  );
+  if (!/^19\.0\./.test(version))
+    throw new Error(
+      `Expected React 19.0 in the floor consumer, got ${version}`,
     );
-  }
+  console.log(`React fixtures use React ${version}`);
+}
+const source = floor ?? import.meta.dir;
+const renderer: typeof import('./ssr.js') = await import(
+  floor ? String(resolve(floor, 'ssr.tsx')) : './ssr.js'
+);
+const bundles = new Map<string, Uint8Array>();
+for (const entry of ['client', 'early']) {
+  const build = await Bun.build({
+    entrypoints: [
+      resolve(source, `${entry}.${entry === 'early' ? 'ts' : 'tsx'}`),
+    ],
+    format: 'iife',
+    target: 'browser',
+    define: { 'process.env.NODE_ENV': JSON.stringify('development') },
+  });
+  if (!build.success || !build.outputs[0])
+    throw new Error('React fixture build failed');
+  bundles.set(entry, new Uint8Array(await build.outputs[0].arrayBuffer()));
 }
 const hash = (css: string) =>
   `'sha256-${createHash('sha256').update(css).digest('base64')}'`;
@@ -63,11 +75,7 @@ const server = Bun.serve({
   port: 4191,
   async fetch(request) {
     const url = new URL(request.url),
-      line = ['floor', 'minor1', 'minor2'].includes(
-        url.searchParams.get('line') ?? '',
-      )
-        ? (url.searchParams.get('line') as string)
-        : 'current';
+      line = 'current';
     if (url.pathname === '/app.css')
       return new Response(appCss, { headers: { 'Content-Type': 'text/css' } });
     if (url.pathname === '/snapshot.js')
@@ -82,15 +90,14 @@ const server = Bun.serve({
       );
     if (url.pathname === '/client.js' || url.pathname === '/early.js')
       return new Response(
-        bundles.get(`${line}/${url.pathname.slice(1, -3)}`)?.slice().buffer,
+        bundles.get(url.pathname.slice(1, -3))?.slice().buffer,
         { headers: { 'Content-Type': 'text/javascript' } },
       );
     if (url.pathname.startsWith('/pkg/')) {
       const [kind, ...segments] = url.pathname.slice(5).split('/');
-      const directory = resolve(
-          packed.consumers[line],
-          `node_modules/@dotquilt-internal/${kind}`,
-        ),
+      const directory = floor
+          ? resolve(floor, `node_modules/@dotquilt-internal/${kind}`)
+          : resolve(root, 'packages', kind ?? ''),
         file = resolve(directory, ...segments);
       if (!file.startsWith(directory + sep))
         return new Response('Not found', { status: 404 });
@@ -127,8 +134,6 @@ const server = Bun.serve({
       skeletonOnly: url.searchParams.has('skeleton'),
       empty: url.searchParams.has('empty'),
     };
-    const renderer = renderers.get(line);
-    if (!renderer) return new Response('Missing renderer', { status: 500 });
     const early = url.searchParams.has('early')
       ? `<script src="/early.js?line=${line}"></script>`
       : '';

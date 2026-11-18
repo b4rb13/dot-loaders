@@ -1,20 +1,19 @@
-import { readFile } from 'node:fs/promises';
+// Serves two copies of the workspace build (packages/core/dist) side by side.
 import { resolve, sep } from 'node:path';
+import { createElement as h } from 'react';
+import { renderToString } from 'react-dom/server';
+import { initial, Scene } from './scene.js';
 
 const root = resolve(import.meta.dir, '../..');
-const consumer = (
-  await readFile(resolve(root, '.artifacts/m4/consumer-path'), 'utf8')
-).trim();
-const core = resolve(consumer, 'node_modules/@dotquilt-internal/core/dist');
-const { createElement: h } = (await import(
-  resolve(consumer, 'node_modules/react/index.js')
-)) as typeof import('react');
-const { renderToString } = (await import(
-  resolve(consumer, 'node_modules/react-dom/server.js')
-)) as typeof import('react-dom/server');
-const { Scene, initial } = (await import(
-  resolve(consumer, 'copies/scene.tsx')
-)) as typeof import('./scene');
+const core = resolve(root, 'packages/core/dist');
+const build = await Bun.build({
+  entrypoints: [resolve(import.meta.dir, 'client.tsx')],
+  format: 'esm',
+  target: 'browser',
+});
+if (!build.success || !build.outputs[0])
+  throw new Error('Cannot build the copies client');
+const client = await build.outputs[0].text();
 Bun.serve({
   hostname: '127.0.0.1',
   port: 4206,
@@ -32,10 +31,9 @@ Bun.serve({
       });
     }
     if (url.pathname === '/client.js')
-      return new Response(
-        Bun.file(resolve(root, '.artifacts/m4-copies/client.js')),
-        { headers: { 'content-type': 'text/javascript' } },
-      );
+      return new Response(client, {
+        headers: { 'content-type': 'text/javascript' },
+      });
     if (url.pathname === '/app.css')
       return new Response(Bun.file(resolve(root, 'tests/copies/app.css')), {
         headers: { 'content-type': 'text/css' },

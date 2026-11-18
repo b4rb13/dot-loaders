@@ -1,20 +1,20 @@
-import { readFile } from 'node:fs/promises';
+// Serves the layout fixture against the workspace build (packages/*/dist).
 import { resolve } from 'node:path';
-import { type Profile, policy, profiles, sourceProps } from './scene';
+import { renderStatic } from '@dotquilt-internal/core/server';
+import { createElement as h } from 'react';
+import { renderToString } from 'react-dom/server';
+import { type Profile, policy, profiles, Scene, sourceProps } from './scene';
 
 const root = resolve(import.meta.dir, '../..');
-const consumer = (
-  await readFile(resolve(root, '.artifacts/m4/consumer-path'), 'utf8')
-).trim();
-const core = resolve(consumer, 'node_modules/@dotquilt-internal/core/dist');
-const { renderStatic } = await import(resolve(core, 'server.js'));
-const { createElement: h } = await import(
-  resolve(consumer, 'node_modules/react/index.js')
-);
-const { renderToString } = await import(
-  resolve(consumer, 'node_modules/react-dom/server.js')
-);
-const { Scene } = await import(resolve(consumer, 'layout/scene.tsx'));
+const core = resolve(root, 'packages/core/dist');
+const build = await Bun.build({
+  entrypoints: [resolve(import.meta.dir, 'client.tsx')],
+  format: 'esm',
+  target: 'browser',
+});
+if (!build.success || !build.outputs[0])
+  throw new Error('Cannot build the layout client');
+const client = await build.outputs[0].text();
 Bun.serve({
   hostname: '127.0.0.1',
   port: 4207,
@@ -23,10 +23,9 @@ Bun.serve({
     if (url.pathname === '/favicon.ico')
       return new Response(null, { status: 204 });
     if (url.pathname === '/client.js')
-      return new Response(
-        Bun.file(resolve(root, '.artifacts/m4-layout/client.js')),
-        { headers: { 'content-type': 'text/javascript' } },
-      );
+      return new Response(client, {
+        headers: { 'content-type': 'text/javascript' },
+      });
     if (url.pathname === '/app.css')
       return new Response(Bun.file(resolve(root, 'tests/layout/app.css')), {
         headers: { 'content-type': 'text/css' },
@@ -36,9 +35,7 @@ Bun.serve({
       return new Response(
         Bun.file(
           resolve(
-            sheet[1]
-              ? resolve(consumer, 'node_modules/@dotquilt-internal/react/dist')
-              : core,
+            sheet[1] ? resolve(root, 'packages/react/dist') : core,
             `${sheet[2]}.css`,
           ),
         ),

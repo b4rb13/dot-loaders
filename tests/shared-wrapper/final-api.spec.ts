@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { paintCount } from '../paint-output';
 
 async function open(page: Page, framework: string, extra = '') {
   await page.clock.install();
@@ -68,12 +69,7 @@ for (const framework of ['native', 'react']) {
             })),
           ).toEqual({ chart: 1, table: 1 });
           for (const id of ['chart', 'table'])
-            expect(
-              await page
-                .locator(`#${id}`)
-                .locator('[data-dotquilt-painter] circle')
-                .count(),
-            ).toBeGreaterThan(0);
+            expect(await paintCount(page.locator(`#${id}`))).toBeGreaterThan(0);
           for (const id of ['row-a', 'row-b'])
             expect(
               await page
