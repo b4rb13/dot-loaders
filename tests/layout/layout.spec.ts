@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
-import { layoutScore } from '../../scripts/bench/trace';
 import { type Profile, profiles } from './scene';
+import { layoutScore } from './score';
 
 // Install before navigation: raw entries include recent-input shifts; CLS uses
 // session windows and excludes recent input. Geometry is independently sampled.

@@ -4,7 +4,6 @@ import type {
   TableLoader,
   TextLoader,
 } from '../../packages/core/dist/index';
-import type { Painter } from '../../packages/core/dist/internal/painter';
 import {
   type CatalogFamily,
   catalogCounts,
@@ -15,27 +14,17 @@ import {
 const native = (await import(
   String('/pkg/dist/index.js')
 )) as typeof import('../../packages/core/dist/index');
-const { candidatePainter } = (await import(
-  String('/pkg/dist/internal/dense/painter.js')
-)) as typeof import('../../packages/core/dist/internal/dense/painter');
-const { usePainterForProof } = (await import(
-  String('/pkg/dist/internal/painter.js')
-)) as typeof import('../../packages/core/dist/internal/painter');
 const query = new URL(location.href).searchParams;
 const profile = query.get('profile') ?? 'normal';
 const phase = query.get('phase') ?? 'idle';
-const candidate = query.get('candidate') ?? 'native';
 const family = (query.get('family') ?? 'chart-line') as CatalogFamily;
 const container = document.getElementById('bench') as HTMLElement;
 const hosts: HTMLElement[] = [],
   regions: LoadingRegion[] = [],
   texts: TextLoader[] = [];
-const families: CatalogFamily[] = [],
-  releases: (() => void)[] = [];
+const families: CatalogFamily[] = [];
 const identities = new Map<HTMLElement, Node>();
 let discarded: { kind: 'host' | 'content'; ref: WeakRef<Node> }[] = [];
-const committed: Record<string, number[]> = {},
-  signatures = new Map<HTMLElement, number>();
 const errors: { code: string; at: number }[] = [],
   violations: string[] = [];
 const shifts: { value: number; startTime: number; hadRecentInput: boolean }[] =
@@ -124,39 +113,6 @@ for (const register of [
 ])
   register();
 
-function probe(host: HTMLElement) {
-  if (candidate === 'native') return;
-  const factory = candidatePainter(candidate as 'canvas' | 'svg' | 'dom');
-  // Native proof attachment is private and never a consumer renderer option.
-  releases.push(
-    // biome-ignore lint/correctness/useHookAtTopLevel: This native proof API is not a React hook.
-    usePainterForProof(host, (element, report): Painter => {
-      const painter = factory(element, report);
-      return {
-        dispose: () => painter.dispose(),
-        draw(produce) {
-          let signature = 0,
-            dots = 0;
-          painter.draw((emit) =>
-            produce((v) => {
-              dots++;
-              signature = Math.imul(
-                signature ^ Math.round(v.x * 16 + v.y * 32 + v.opacity * 1024),
-                16777619,
-              );
-              emit(v);
-            }),
-          );
-          if (measuring && dots && signatures.get(host) !== signature) {
-            committed[host.id] ??= [];
-            committed[host.id]?.push(performance.now());
-          }
-          signatures.set(host, signature);
-        },
-      };
-    }),
-  );
-}
 function outcome(kind: CatalogFamily, id: string) {
   const article = document.createElement('article');
   article.className = 'catalog-outcome';
@@ -300,8 +256,6 @@ function create(kind: CatalogFamily): HTMLElement {
   }
   hosts.push(host);
   families.push(kind);
-  committed[host.id] = [];
-  probe(host);
   return host;
 }
 function group(kinds: readonly CatalogFamily[], parent: HTMLElement) {
@@ -333,7 +287,6 @@ function group(kinds: readonly CatalogFamily[], parent: HTMLElement) {
   region.append(placeholder, content);
   parent.append(region);
   regions.push(region);
-  probe(region);
 }
 function visibleHosts() {
   const clip = container.getBoundingClientRect();
@@ -534,7 +487,6 @@ const api = {
     return {
       windowMs,
       start,
-      committed,
       opportunities,
       initialRects,
       final: api.snapshot(),
@@ -547,9 +499,7 @@ const api = {
         observations: [...observations],
         terminal: [...terminal],
         cadenceScope:
-          candidate === 'native'
-            ? 'Sampled native decoration/effect states; not optical presentation or per-surface frame proof'
-            : 'Bounded-command commit probes plus sampled native effects; not optical presentation',
+          'Sampled native decoration/effect states; not optical presentation or per-surface frame proof',
       },
     };
   },
@@ -581,17 +531,9 @@ const api = {
     measuring = false;
     cancelAnimationFrame(request);
     container.replaceChildren();
-    for (const release of releases) release();
-    hosts.length =
-      regions.length =
-      texts.length =
-      releases.length =
-      families.length =
-        0;
+    hosts.length = regions.length = texts.length = families.length = 0;
     identities.clear();
-    signatures.clear();
     container.scrollTop = 0;
-    for (const key of Object.keys(committed)) delete committed[key];
     shifts.length =
       errors.length =
       violations.length =
