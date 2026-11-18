@@ -1,0 +1,47 @@
+{
+  "name": "dotquilt-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.3",
+  "engines": {
+    "bun": ">=1.4.0",
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "check": "turbo run check && tsc --noEmit -p tsconfig.json",
+    "lint": "biome check apps packages scripts tests examples package.json turbo.json tsconfig.json biome.json playwright*.config.ts .changeset --error-on-warnings",
+    "format": "biome check --write apps packages scripts tests examples package.json turbo.json tsconfig.json biome.json playwright*.config.ts .changeset",
+    "test": "turbo run test && bun test tests/bench scripts",
+    "test:e2e": "playwright test",
+    "test:e2e:all": "ALL_BROWSERS=1 playwright test",
+    "test:legacy": "bun run scripts/test-legacy.ts",
+    "size": "bun run scripts/size.ts",
+    "verify": "bun run lint && bun run check && bun run test && bun run build && bun run size && bun run test:e2e",
+    "verify:packed": "bun run scripts/verify-packed.ts",
+    "bench": "bun run scripts/bench/run.ts",
+    "changeset": "changeset",
+    "dev:website": "bun run --cwd apps/website dev",
+    "build:website": "turbo run build --filter=@dotquilt/website",
+    "check:website": "bun run --cwd apps/website check"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@changesets/cli": "3.0.3",
+    "@playwright/test": "1.64.1",
+    "@types/bun": "1.4.3",
+    "turbo": "2.11.8",
+    "typescript": "7.0.2",
+    "typescript-min": "npm:typescript@5.7.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@dotquilt-internal/core": "workspace:*",
+    "@dotquilt-internal/react": "workspace:*"
+  }
+}

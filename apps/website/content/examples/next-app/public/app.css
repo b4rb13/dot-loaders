@@ -1,0 +1,55 @@
+:root {
+  color-scheme: dark;
+}
+body {
+  margin: 3rem auto;
+  padding: 0 1.25rem;
+  max-width: 44rem;
+  background: #080808;
+  color: #f1f1f0;
+  font: 1rem / 1.65 system-ui;
+}
+button,
+input {
+  font: inherit;
+  padding: 0.5rem;
+  max-width: 100%;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+}
+a {
+  color: inherit;
+  display: block;
+  margin-block: 1rem;
+}
+label {
+  display: block;
+}
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.region {
+  display: block;
+  min-height: 12rem;
+  margin-block: 1.5rem;
+}
+.skeleton {
+  display: block;
+  width: 100%;
+  height: 12rem;
+}
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+/* Before native definition, application CSS guards pending content and keeps its space. */
+dotquilt-region:not(:defined)[state="pending"]
+> :not([slot]):not(style):not(link) {
+  visibility: hidden;
+}

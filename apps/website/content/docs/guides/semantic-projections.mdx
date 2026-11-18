@@ -1,0 +1,58 @@
+---
+title: Semantic projections
+description: Connect decorative dots to real chart and table data without turning the loading engine into a chart or grid library.
+---
+
+<section id="meaning">
+
+## Keep the meaning in application content [#meaning]
+
+A semantic reveal uses your application's final geometry. It does not make a placeholder into the accessible chart or table. Keep the actual SVG or chart widget, text equivalent, table caption, column headers and row headers in the real content. The example keeps a meaningful usage label and textual sample values beside a normal project-status table. Those remain the source of truth when animation is restricted or unavailable.
+
+The complete example has native and React entry points using the same illustrative data, providers and recipes. It is a client-only React mount or native enhancement over useful static content, not React SSR. Use the separate [SSR](/docs/guides/server-rendering) and [Next.js](/docs/guides/nextjs) apps to study hydration.
+
+</section>
+
+<section id="chart">
+
+## Project the chart in its content box [#chart]
+
+`ChartLoader.targetProvider(bounds)` receives the placeholder surface's width and height in CSS pixels. Return the matching discriminated data: line points plus baseline, bar rectangles plus baseline, or scatter points. Coordinates are local to that surface, not page coordinates, device pixels or normalized percentages. The example's pure `chartGeometry` function scales its six data points into those supplied bounds. The real SVG uses the same data and an explicitly matching view box.
+
+Change the geometry selector to compare line, bar and scatter. A framework chart integration must map its actual plot area, axes, padding and transforms into this coordinate system; copying the sample dimensions is not a universal adapter. Missing or invalid geometry takes a simple reveal. It must never create fake data just to preserve a morph.
+
+</section>
+
+<section id="table">
+
+## Tie table cells to owned rows [#table]
+
+Table projections describe each cell's bounds, text, baseline, semantic kind, tone, row ID, row index, column index and glyph rectangles. This example measures only explicitly marked application text spans. It subtracts the placeholder's viewport origin from each cell/glyph rectangle, so the result is relative CSS-pixel geometry. Its baseline is a documented approximation for this plain-span sample, not a font metrics API.
+
+Register the corresponding current row elements through the owning region's `revealTargets`. IDs are prefixed with `report-`, match projected row IDs and remain distinct. Arrays of row positions alone do not establish ownership. Do not query a third-party grid's internals, measure hidden display-none layouts, or reuse targets recycled by virtualization.
+
+The sample has three weighted columns: text, badge and number. Its `rows()` handoff first converges dots to semantic cell/glyph data, then reveals the owned rows. The real table remains mounted; an uncontrolled report note survives configuration changes and handoff.
+
+</section>
+
+<section id="fallback">
+
+## Preserve unsupported text and fall back [#fallback]
+
+The frozen semantic-table input accepts printable ASCII text and one-character ASCII glyphs. It does not accept arbitrary international shaping or emoji projections. The `international` case keeps `Café 東京` in the application table and returns `null` from the table provider. It does not transliterate, split surrogate pairs or invent glyph positions. The engine can still reveal the original useful content without the precise row morph.
+
+Finite geometry and bounded cell/glyph counts are required. Current limits include 1,000 table cells, a shared 2,048-item cell/glyph projection cap and 100 reveal targets. They are safety limits, not performance claims. The example stays far below them. These pages describe the exact private preview; they do not amend the approved text/accessibility contract or close qualification gates.
+
+</section>
+
+<section id="complete-example">
+
+## Run the shared semantic report [#complete-example]
+
+Save the complete files and the reviewed private tarballs, then run `bun install --ignore-scripts`, `bun run build`, `bun run check` and `bun run start`. Open `http://127.0.0.1:4236/?integration=react` or `?integration=native`. Click Load report, then Reveal report promptly to inspect the real chart/table handoff within the engine's motion window.
+
+<IntegrationExample name="semantic-mixed" />
+
+Read [mixed components](/docs/guides/mixed-components) for shared ownership and [geometry providers](/docs/guides/providers) for setup, retries, faults and invalidation. These examples use exact private packages, not public npm releases or a selected production renderer. M2/M4 and #34 remain open; publishing stays disabled.
+
+</section>

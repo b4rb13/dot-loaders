@@ -1,0 +1,90 @@
+#content {
+  min-width: 0;
+}
+html {
+  font: 16px / 20px monospace;
+}
+body {
+  margin: 8px;
+}
+* {
+  box-sizing: border-box;
+}
+#stage {
+  width: 100%;
+  max-width: 640px;
+  min-width: 0;
+}
+#before,
+#after {
+  height: 24px;
+  margin: 0;
+}
+#owner {
+  display: grid;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: var(--reserve);
+  font: inherit;
+  overflow-wrap: anywhere;
+}
+#owner > div[slot="placeholder"] {
+  position: absolute;
+  inset: 0;
+}
+#owner:not(:defined) > #content {
+  grid-area: 1 / 1;
+}
+#source {
+  display: block;
+  width: 100%;
+  height: var(--reserve);
+  min-width: 0;
+}
+dotquilt-skeleton-circle#source {
+  display: block;
+  width: 80px;
+}
+input {
+  font: inherit;
+  width: 160px;
+  height: 24px;
+}
+#content p {
+  margin: 0;
+}
+#owner.natural {
+  height: auto;
+  min-height: 20px;
+}
+#owner.natural #content {
+  height: var(--content-height, 40px);
+}
+body.inline #source {
+  display: inline-flex;
+}
+#owner.natural #source {
+  display: block;
+  height: 40px;
+}
+#stage.font-change {
+  font-family: serif;
+  font-size: 20px;
+  line-height: 24px;
+}
+#stage.font-change #source {
+  display: block;
+  font: inherit;
+}
+#owner {
+  --dotquilt-dot-size: 2px;
+  --dotquilt-dot-gap: 4px;
+}
+
+#owner.natural #content.grown {
+  height: 400px;
+}
+#owner:not(:defined)[state="pending"] > #content {
+  visibility: hidden;
+}

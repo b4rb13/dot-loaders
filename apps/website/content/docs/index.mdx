@@ -1,0 +1,57 @@
+---
+title: Quickstart
+description: Compose a placeholder, keep your content in place, and decide when it’s ready. Dotquilt handles the handoff.
+---
+
+<h1>Make loading<br />part of your interface.</h1>
+
+<p className="lead">Compose a placeholder, keep your content in place, and decide when it’s ready. Dotquilt handles the handoff.</p>
+
+Use native Web Components or the thin React adapter. Start with a loading region and a few lines of skeleton text.
+
+<section id="setup">
+
+## Set up the private preview [#setup]
+
+This version is not on npm. Use the reviewed private package files; a public installation command will appear after the package identity and release are verified.
+
+1. Get the frozen core and React tarballs from your reviewed local build.
+2. Open [Complete example](#complete-example) below and save each file under its shown path.
+3. Place the tarballs in the example’s `vendor/` directory. Run `bun install`, `bun run build` and `bun run start`.
+
+<ArtifactIdentities />
+
+</section>
+
+<section id="readiness">
+
+## Your application owns readiness [#readiness]
+
+Start a new `cycle` when a request begins. Set `state="pending"` to show the placeholder and `state="ready"` when your real content can be presented. Keep the same content nodes throughout.
+
+The example uses buttons so you can inspect the two states. It doesn’t fetch data, infer readiness from a value or keep loading while you read.
+
+</section>
+
+<section id="example">
+<div className="section-heading">
+
+## Try the handoff [#example]
+
+[Open in playground <span aria-hidden="true">→</span>](/playground)
+
+</div>
+
+<Workbench />
+
+</section>
+
+<section id="boundaries">
+
+## What this preview covers [#boundaries]
+
+This Quickstart covers LoadingRegion with SkeletonText. The [component catalog](/docs/components) adds all nine references and real rich-motion controls. Further guides, Gallery, local search and version navigation follow.
+
+The current runtime is frozen. Size, rendering, browser-floor and manual accessibility qualification remain open in M2/M4; renderer choices are provisional. This page does not claim a production-ready release or verified performance targets.
+
+</section>

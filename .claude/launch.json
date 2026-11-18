@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "website-prod",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "apps/website", "start"],
+      "port": 4210,
+      "url": "http://127.0.0.1:4210"
+    },
+    {
+      "name": "e2e-fixture",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["tests/e2e/server.ts"],
+      "port": 4310,
+      "url": "http://127.0.0.1:4310"
+    }
+  ]
+}

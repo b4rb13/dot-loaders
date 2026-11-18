@@ -1,0 +1,7 @@
+These controls apply to both integrations. Native scalar attributes use kebab-case; arrays, callbacks, presets and animation bindings are JavaScript properties. React uses camelCase props and commits them to the same native host.
+
+<PublicControls component={props.component} />
+
+Clear an optional override with `undefined`. Explicit properties take priority over a preset, then built-in defaults. Equivalent configuration, idle speed, theme and code-integration edits do not create a new cycle. Loading owners also accept `timing.duration` in milliseconds and `timing.easing`; zero is an immediate handoff. Timing overrides replace the complete handoff.
+
+Native hosts expose `update(patch)` and `refresh()`; use exported `refreshStyles(scope)` when caller-owned layout/CSS changes. React supports a native host ref. Lifecycle events are `dotquilt-handoff-start`, `dotquilt-handoff-end` and `dotquilt-handoff-cancel` on the loading owner. Their details include cycle, handoffId, animation and optional reason. React maps these to `onHandoffStart`, `onHandoffEnd`, `onHandoffCancel`. `dotquilt-error` / `onLoaderError` reports code and field. Decoration-only hosts do not own readiness events.

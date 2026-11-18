@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><link rel="icon" href="data:,"><title>Dotquilt · Motion directions</title>
+<style>
+:root{--paper:#faf9f6;--panel:#fff;--ink:#242521;--muted:#62665e;--line:#dedfd7;--soft:#f1f2ec;--accent:#3558b7;--dots:#69785f;font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.6}h1,h2,h3,p{margin:0}h1{font-size:clamp(28px,4vw,42px);font-weight:550;letter-spacing:-.035em;line-height:1.15}h2{font-size:21px;font-weight:550;letter-spacing:-.025em}h3{font-size:15px;font-weight:600}p{color:var(--muted)}button,input,select{font:inherit;color:inherit}button{cursor:pointer;touch-action:manipulation}button:active{transform:scale(.98)}button:disabled{cursor:default;opacity:.45}a{color:inherit;text-underline-offset:4px}button,select{min-height:40px}button{padding:7px 13px;border:1px solid var(--line);background:var(--panel);border-radius:6px}button.primary{background:var(--ink);border-color:var(--ink);color:white}:focus-visible{outline:3px solid var(--accent);outline-offset:4px}[hidden]{display:none!important}::selection{background:#d9e3ff;color:#18274f}input{accent-color:var(--accent)}
+.skip{position:fixed;top:8px;left:8px;z-index:20;transform:translateY(-150%);background:white;padding:10px}.skip:focus{transform:none}header{border-bottom:1px solid var(--line)}.header-inner{max-width:1192px;margin:auto;padding:18px 36px;display:flex;align-items:center;gap:24px}.brand{font-size:21px;font-weight:650;letter-spacing:-.03em;text-decoration:none}.header-inner p{font-size:12px;margin-left:auto}.pause{display:flex;gap:8px;align-items:center;min-height:40px;font-size:12px}.pause input{width:16px;height:16px}
+main{max-width:1192px;padding:35px 36px 120px;margin:auto}.intro{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:25px}.intro p{max-width:430px;font-size:13px}.workspace{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}.toolbar{padding:15px 22px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;border-bottom:1px solid var(--line)}.family{border:0;background:transparent;color:var(--muted);padding:5px 12px}.family[aria-pressed=true]{color:var(--ink);background:var(--soft)}.toolbar label{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px}select{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 10px}.specimen{padding:34px 42px 28px;min-height:370px;display:grid;align-content:start}.specimen-head{display:flex;justify-content:space-between;gap:16px;align-items:start;margin-bottom:22px}.specimen-head p{font-size:12px}.state{font-size:12px;color:var(--muted);padding:3px 8px;background:var(--soft);border-radius:4px;white-space:nowrap}.stage-frame{position:relative;height:220px;min-width:0;isolation:isolate;color:var(--dots)}canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.stage-frame[data-track=true]{cursor:default}.content{position:absolute;inset:0;color:var(--ink);opacity:1}.content>div{height:100%}.profile{display:flex;align-items:center;gap:16px;margin:12px 0 24px}.avatar{width:50px;height:50px;border-radius:50%;background:#e9eddf;display:grid;place-items:center;color:#415435;font-weight:600;font-size:16px}.profile h3{font-size:19px}.profile p{font-size:13px}.profile-copy{font-size:16px;max-width:560px}.profile-link{display:inline-block;margin-top:20px;font-size:12px;color:var(--accent)}.number{font-size:clamp(42px,7vw,68px);font-weight:500;line-height:1.15;letter-spacing:-.035em;font-variant-numeric:tabular-nums;margin-top:26px}.text-caption{margin-top:15px;font-size:14px}.actual-chart{width:100%;height:190px;overflow:visible}.chart-axis{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}.chart-line{stroke:#52664a;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}.chart-bars{fill:#69785f}.chart-grid{stroke:var(--line);stroke-width:1}.actual-table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}.actual-table th{font-weight:500;font-size:12px;color:var(--muted);text-align:left;padding:7px 0}.actual-table td{height:39px;border-top:1px solid var(--line);padding:7px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.actual-table th:first-child{width:44%}.actual-table td:last-child,.actual-table th:last-child{text-align:right}.tag{color:#415435;background:#eef1e9;border-radius:3px;padding:3px 6px;font-size:12px}.typing-copy{display:flex;align-items:center;gap:12px;margin-top:74px;font-size:16px}.refresh-note{position:absolute;right:0;top:0;color:var(--accent);font-size:12px}.static-fallback{position:absolute;inset:0;display:none;align-items:center;gap:8px;color:CanvasText}.static-fallback i{height:12px;width:28%;border:2px dotted currentColor}.stage-frame.forced-pending .static-fallback{display:flex}.stage-frame.forced-pending canvas{display:none}.stage-frame[data-family=region] .content{padding:12px 0}.region-title{font-size:20px;margin-bottom:12px}.region-copy{max-width:560px;font-size:14px}.region-total{font-size:28px;margin-top:18px;font-variant-numeric:tabular-nums}.error-outcome{position:absolute;inset:0;display:grid;align-content:center;gap:10px;color:var(--ink)}.status{font-size:12px;color:var(--muted);min-height:24px;margin-top:17px}.actions{border-top:1px solid var(--line);padding:15px 22px;display:flex;gap:8px;flex-wrap:wrap}.settings{display:flex;align-items:center;flex-wrap:wrap;gap:18px;border-top:1px solid var(--line);padding:16px 22px;font-size:12px}.settings label{display:flex;align-items:center;gap:7px;min-height:32px}.settings input{width:15px;height:15px}.settings .text-choice{margin-left:auto}.settings select{min-height:34px;font-size:12px;max-width:190px}.below{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:25px}.below h2{font-size:15px;margin-bottom:8px;letter-spacing:0}.below p{font-size:12px;max-width:65ch}.event-log{padding:0;margin:0;list-style:none;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:65px}.event-log li{display:flex;gap:12px}.event-log time{min-width:42px}.note{font-size:12px;margin-top:25px;max-width:80ch}.hint{font-size:12px;color:var(--muted);margin-top:12px}.pointer-note{font-size:12px;color:var(--muted);margin-top:8px;min-height:18px}.no-js{max-width:700px;margin:50px auto;padding:30px}.direction-name{color:var(--ink);font-weight:550}
+@media(hover:hover) and (pointer:fine){button:hover:not(:disabled){border-color:#87917e}.family:hover{background:var(--soft)}}
+@media(max-width:700px){.header-inner{padding:12px 20px;gap:12px;flex-wrap:wrap}.header-inner p{display:none}.pause{margin-left:auto}main{padding:25px 20px 110px}.intro{display:block}.intro p{margin-top:14px}.toolbar{padding:10px;gap:2px}.toolbar label{width:100%;margin-left:8px;margin-top:7px}.family{padding:5px 10px;font-size:12px;min-height:36px}.specimen{padding:24px 20px;min-height:350px}.stage-frame{height:210px}.specimen-head{margin-bottom:18px}.specimen-head h2{font-size:18px}.specimen-head p{font-size:12px}.actions{padding:12px;gap:6px}.actions button{font-size:12px;padding:7px 9px}.settings{padding:12px;gap:10px 16px}.settings .text-choice{margin-left:0;width:100%}.below{grid-template-columns:1fr;gap:20px}.profile-copy{font-size:14px}.actual-table{font-size:12px}.actual-table th:first-child{width:42%}.tag{font-size:12px}.text-caption{font-size:12px}}
+@media(prefers-reduced-motion:reduce){button:active{transform:none}}
+@media(forced-colors:active){.stage-frame canvas{display:none}.stage-frame.forced-pending .static-fallback{display:flex}.chart-line{stroke:CanvasText}.chart-bars{fill:CanvasText}.chart-grid{stroke:GrayText}.avatar,.tag{border:1px solid CanvasText}.state{border:1px solid CanvasText}.primary{forced-color-adjust:auto}}
+.proto-picker {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.82);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 8px 24px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.proto-picker-highlight {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  will-change: transform;
+}
+
+/* The slide is enabled only after first paint (data-ready), so load doesn't animate. */
+.proto-picker[data-ready] .proto-picker-highlight {
+  transition:
+    transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+    width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proto-picker[data-ready] .proto-picker-highlight { transition: none; }
+}
+
+.proto-picker-item {
+  position: relative; /* sits above the highlight */
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  cursor: pointer;
+  transition: color 150ms ease-out;
+}
+
+.proto-picker-item:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.proto-picker-item:active {
+  transform: scale(0.97);
+}
+
+.proto-picker-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+.proto-picker-item[data-active] {
+  color: #fff;
+}
+
+.proto-picker-divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.proto-picker-replay {
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.proto-picker[data-position="top"] {
+  bottom: auto;
+  top: 24px;
+}
+</style></head><body>
+<a class="skip" href="#main">Skip to motion comparison</a>
+<header><div class="header-inner"><a class="brand" href="http://127.0.0.1:4177/">Dotquilt</a><p>Motion study · isolated planning prototype</p><label class="pause"><input id="pause" type="checkbox">Pause animations</label></div></header>
+<main id="main"><div class="intro"><h1>While we wait.<br>When it’s ready.</h1><p>Compare three motion directions on the same loading surfaces. Start a cycle, move across the dots, then reveal the content.</p></div>
+<div id="stage"></div>
+<p class="note">Synthetic demo content. This study uses a small canvas model, not the package or copied m37 code. Visual selection does not establish bundle size, rendering budgets, browser support or accessibility conformance.</p>
+<p class="hint">Switch: 1–3 or arrow keys · Replay: R · The bottom picker is review chrome.</p>
+</main>
+<nav class="proto-picker" aria-label="Prototype variants">
+  <span class="proto-picker-highlight" aria-hidden="true"></span>
+  <button class="proto-picker-item" data-active aria-current="true">Quiet</button>
+  <button class="proto-picker-item">Flow</button>
+  <button class="proto-picker-item">Tactile</button>
+  <span class="proto-picker-divider" aria-hidden="true"></span>
+  <button class="proto-picker-item proto-picker-replay" aria-label="Replay animation (R)">↻</button>
+</nav>
+<noscript><section class="no-js"><h2>Motion comparison needs JavaScript</h2><p>The planned library must also support useful static content. Here is the example outcome: May revenue, $12,480.00, up 8.2% from April. Nothing has been published or deployed.</p></section></noscript>
+<script src="motion.js"></script>
+<script>
+// `variants` is an array of render functions, one per variant, in picker order.
+const stage = document.getElementById('stage');
+const picker = document.querySelector('.proto-picker');
+const highlight = picker.querySelector('.proto-picker-highlight');
+const items = [...picker.querySelectorAll('.proto-picker-item:not(.proto-picker-replay)')];
+const replay = picker.querySelector('.proto-picker-replay');
+let current = 0;
+
+function moveHighlight() {
+  const el = items[current];
+  highlight.style.width = el.offsetWidth + 'px';
+  highlight.style.transform = `translateX(${el.offsetLeft}px)`;
+}
+
+function mount(i) {
+  stage.innerHTML = '';
+  // Clear first, render next frame, so entrance animations re-run.
+  requestAnimationFrame(() => { stage.innerHTML = variants[i](); });
+}
+
+function setActive(i) {
+  if (i < 0 || i >= variants.length) return;
+  current = i;
+  items.forEach((el, j) => {
+    el.toggleAttribute('data-active', j === i);
+    if (j === i) el.setAttribute('aria-current', 'true');
+    else el.removeAttribute('aria-current');
+  });
+  moveHighlight();
+  const url = new URL(location);
+  url.searchParams.set('v', i + 1);
+  history.replaceState(null, '', url);
+  mount(i);
+}
+
+items.forEach((el, i) => el.addEventListener('click', () => setActive(i)));
+replay?.addEventListener('click', () => mount(current));
+window.addEventListener('resize', moveHighlight);
+
+document.addEventListener('keydown', (e) => {
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const num = parseInt(e.key, 10);
+  if (num >= 1 && num <= variants.length) setActive(num - 1);
+  else if (e.key === 'ArrowRight') setActive((current + 1) % variants.length);
+  else if (e.key === 'ArrowLeft') setActive((current - 1 + variants.length) % variants.length);
+  else if (e.key === 'r' || e.key === 'R') mount(current);
+});
+
+setActive((parseInt(new URLSearchParams(location.search).get('v'), 10) || 1) - 1);
+// Enable the slide only after first paint, so load doesn't animate.
+requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute('data-ready', '')));
+</script>
+</body></html>

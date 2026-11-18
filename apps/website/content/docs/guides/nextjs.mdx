@@ -1,0 +1,50 @@
+---
+title: Next.js App Router
+description: Compose server content with a small client loading boundary and keep the document’s style policy stable across navigation.
+---
+
+<section id="composition">
+
+## Keep server work outside the loading engine [#composition]
+
+The runnable app uses a Server Component page and a client `Account` boundary. The server passes initial scalar state and a server-rendered child. The client owns request presentation, cycle, pause and interaction. Provider callbacks, animation functions and element refs stay in client modules; they are not serialized through an RSC payload.
+
+The example streams a deferred server detail through `Suspense`. Its fallback is a server-delivery boundary. Dotquilt's `pending` / `ready` state remains application-owned; it does not inspect Suspense, a promise or returned content to decide readiness. Choose these two boundaries for their separate jobs.
+
+Next documents this composition in [Server and Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components). This example pins Next `16.4.2` and React `19.3.1`; it is not a claim that all framework versions have been requalified.
+
+</section>
+
+<section id="document-policy">
+
+## Set policy at the document lifetime [#document-policy]
+
+The root layout reads the request headers and passes the initial `StylePolicy` to an application-owned client context. That provider captures the value once. A client navigation may return a new nonce in its RSC response, but the existing HTML document still enforces its original CSP. Do not adopt that later response's nonce or switch CSS mode on already-connected hosts. A full reload creates a new document and a new policy.
+
+External mode assigns `/dotquilt/region.css` to the region and `/dotquilt/skeleton.css` to its placeholder. Inline nonce mode passes the current document's nonce to both. Configure each participating component before its styles are installed; the package does not fetch a global theme or retrofit a later policy.
+
+</section>
+
+<section id="rendering">
+
+## Use dynamic rendering for nonce documents [#rendering]
+
+The production `proxy.ts` creates an unpredictable nonce for each request, overwrites incoming policy headers, supplies the same CSP to Next's renderer and the response, and marks the document private/no-store. `headers()` in the layout requires request-time rendering. Never cache or reuse nonce-bearing HTML across visitors.
+
+This app deliberately tests `next build` and `next start`. Development evaluation has different CSP requirements; it is not enabled by this production policy. No `unsafe-eval` or `unsafe-inline` is added. See the [Next CSP guide](https://nextjs.org/docs/app/guides/content-security-policy) for framework-specific details and tradeoffs.
+
+</section>
+
+<section id="complete-example">
+
+## Run the complete App Router example [#complete-example]
+
+Save all files, place the two reviewed private tarballs in `vendor/`, then run `bun install --ignore-scripts`, `bun run build`, `bun run check` and `bun run start`. Use Bun `1.4.3` and Node `24.14.0`. Open `http://127.0.0.1:4234/?mode=external` or `?mode=nonce`; add `&state=pending` for pending SSR.
+
+<IntegrationExample name="next-app" />
+
+Check the initial server output, streamed detail, disabled pre-hydration controls, current input/counter identity, refresh and reveal, and navigation to the second account. Without JavaScript, the server-content recovery link remains outside the pending guard. Application error/cancellation/data authorization and localized announcements still need your product's implementation.
+
+This example does not configure a production deployment, a static Next strict-CSP/SRI pipeline, or qualify every streaming/navigation/browser combination. M2/M4 remain open and npm publishing stays disabled. [SSR boundaries](/docs/guides/server-rendering) and [CSP policies](/docs/guides/csp) explain the remaining choices.
+
+</section>

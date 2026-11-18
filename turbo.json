@@ -1,0 +1,31 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "globalDependencies": [
+    "tsconfig.json",
+    "scripts/build.ts",
+    "scripts/build-react.ts",
+    "scripts/skeleton-sheet.ts"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "check": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": [],
+      "cache": false
+    }
+  },
+  "globalPassThroughEnv": [
+    "ALL_BROWSERS",
+    "DOTQUILT_BROWSER_REPORT",
+    "DOTQUILT_PACKED",
+    "DOTQUILT_TEST_PORT",
+    "E2E_PORT"
+  ]
+}

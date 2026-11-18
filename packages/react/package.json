@@ -1,0 +1,83 @@
+{
+  "name": "@dotquilt-internal/react",
+  "version": "0.0.0-m2.0",
+  "description": "Private Dotquilt React adapter for the implemented native slice",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./skeleton": {
+      "types": "./dist/skeleton.d.ts",
+      "import": "./dist/skeleton.js"
+    },
+    "./region": {
+      "types": "./dist/region.d.ts",
+      "import": "./dist/region.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    },
+    "./styles/skeleton.css": "./dist/skeleton.css",
+    "./styles/region.css": "./dist/region.css",
+    "./typing": {
+      "types": "./dist/typing.d.ts",
+      "import": "./dist/typing.js"
+    },
+    "./styles/line.css": "./dist/line.css",
+    "./styles/circle.css": "./dist/circle.css",
+    "./styles/skeleton-text.css": "./dist/skeleton-text.css",
+    "./styles/typing.css": "./dist/typing.css",
+    "./styles/skeleton-family.css": "./dist/skeleton-family.css",
+    "./text": {
+      "types": "./dist/text.d.ts",
+      "import": "./dist/text.js"
+    },
+    "./styles/text.css": "./dist/text.css",
+    "./chart": {
+      "types": "./dist/chart.d.ts",
+      "import": "./dist/chart.js"
+    },
+    "./styles/chart.css": "./dist/chart.css",
+    "./table": {
+      "types": "./dist/table.d.ts",
+      "import": "./dist/table.js"
+    },
+    "./styles/table.css": "./dist/table.css"
+  },
+  "dependencies": {
+    "@dotquilt-internal/core": "0.0.0-m2.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "scripts": {
+    "build": "bun run ../../scripts/build-react.ts",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test test",
+    "prepublishOnly": "node -e \"throw new Error('npm publishing is disabled during private validation')\""
+  },
+  "author": "Derenik Khachatryan",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/b4rb13/dot-loaders.git",
+    "directory": "packages/react"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "restricted"
+  }
+}

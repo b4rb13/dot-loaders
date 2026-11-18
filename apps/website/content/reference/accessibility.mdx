@@ -1,0 +1,7 @@
+Decorations are inert and hidden from assistive technology. The actual application content is the accessible source of truth. Regions manage busy/hidden/inert presentation and preserve focus; if replacement would hide focused content, the established focus-safe behavior takes priority. Your application supplies localized status/error announcements and request outcomes.
+
+Persistent visitor pause, reduced motion, forced colors, hidden/offscreen/zero-size conditions and resource limits can make decoration static or reveal immediately. Moving activity is bounded by the inclusive four-second region window; it does not restart indefinitely while a request remains pending.
+
+<ComponentLimits component={props.component} />
+
+Malformed setup/factory options are rejected; invalid live controls diagnose and recover within the public contract. Per-surface/document dot limits are 4,096/16,384. Limits are safety boundaries, not measured performance claims. [Browser-floor, manual accessibility and performance qualification remain open.](/docs#boundaries)

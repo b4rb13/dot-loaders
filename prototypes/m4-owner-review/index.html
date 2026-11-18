@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dotquilt · owner motion review</title><link rel="stylesheet" href="/review.css">
+<body><main>
+<p class="eyebrow">Dotquilt / private M4 review</p>
+<h1>Loading into content.</h1>
+<p>Review the real packaged engine at normal speed. No virtual clock, slow motion or forced animation duration. System motion preferences apply.</p>
+<p id="packet">Checking packed pair…</p>
+<nav aria-label="Review family">
+<button data-family="skeleton" aria-pressed="true">1. Skeletons + typing</button>
+<button data-family="text" aria-pressed="false">2. Text</button>
+<button data-family="chart" aria-pressed="false">3. Chart</button>
+<button data-family="table" aria-pressed="false">4. Table</button>
+<button data-family="mixed" aria-pressed="false">5. Shared wrapper</button>
+</nav>
+<div class="workspace"><section aria-label="Animation example">
+<div id="options"></div>
+<div class="actions">
+<button id="loading">Start loading</button><button id="reveal">Reveal now</button>
+<button id="replay">Replay 700 ms request</button><button id="refresh">Refresh visible content</button>
+<button id="interrupt">Interrupt a reveal</button><button id="pause" aria-pressed="false">Pause motion</button>
+</div>
+<p id="status" role="status">Preparing example…</p>
+<iframe title="Current packed animation example" id="stage"></iframe>
+<details><summary>Recent engine events</summary><pre id="events">No events yet.</pre></details>
+</section><aside>
+<h2 id="family-title">Skeletons + typing</h2><p id="look-for"></p>
+<h2>On every example</h2>
+<ol>
+<li>Start loading. The previous cycle finishes first; watch one or two cycles: calm, legible, no harsh flash or obvious jump at a loop boundary.</li>
+<li>Reveal now. Placeholder departure and real content should feel like one transition. No blank gap or lingering dots.</li>
+<li>Replay the 700 ms request. Judge the default pace, not just a long idle.</li>
+<li>Enable pointer lift and move across the dots, then leave. The response should settle without shifting layout. It requires a fine pointer with hover.</li>
+<li>Refresh visible content. The existing content remains readable; it should not disappear behind a replacement placeholder.</li>
+<li>Interrupt a reveal. The new load must win, then resolve without stale content, stuck masking or duplicate terminal effects.</li>
+<li>Pause motion, then reveal. Content must remain available. Pause must survive subsequent loads until you resume.</li>
+</ol>
+<h2>Before approval</h2>
+<p>Long idle motion deliberately becomes still when its engine motion window expires; Start loading begins a fresh interval. Try OS reduced motion separately; compare light/dark and a narrow window. Use Tab to reach revealed content. These observations do not replace manual assistive-technology or device qualification.</p>
+<p>Record: family · recipe · action · what felt wrong. “Too slow”, “too busy”, “morph misses the target”, and “content appears late” are useful findings.</p>
+</aside></div>
+<footer>M2 open · renderers provisional · npm publishing disabled · review pending · feature freeze pending</footer>
+</main><script src="/review.js" type="module"></script></body></html>

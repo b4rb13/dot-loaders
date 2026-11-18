@@ -1,21 +1,52 @@
 # Project instructions
 
-## Current effort
+Dotquilt is a set of dot-based loading components. Placeholder dots animate while content loads, then hand off to the real content.
 
-This repository is in Wayfinder planning. The canonical map and decision tickets live in GitHub issues. Read `.agents/issue-tracker.md` before tracker operations. Do not silently turn decision tickets into implementation tasks.
+| Path | What it is |
+| --- | --- |
+| `packages/core` | Native Web Components runtime, framework-free. 9 elements: SkeletonBlock/Line/Circle/Text, TextLoader, ChartLoader, TableLoader, TypingDots, LoadingRegion. |
+| `packages/react` | Thin React 19 adapter over the same runtime, with SSR markup. |
+| `apps/website` | **Legacy** docs, playground and gallery site. Being replaced, not polished. |
+| `tests/`, `scripts/` | Browser/SSR/size tests and tooling. Many scripts are legacy and slated for deletion in Phase 1. |
+| `design/` | Design directions and specs for the visual rework. |
 
-Read the map's Destination and Notes before choosing work. Claim a ticket before investigating it. Human-in-the-loop decisions need the human's answer; agent recommendations are not approval.
+## Current plan
 
-## Source isolation
+Follow `AUDIT.md` (2026-11-18). It holds the audit findings, the phases and the open owner decisions.
 
-`/Users/derenikkhachatryan/WebstormProjects/m37-projects/m37_web` is read-only source material. Never edit it, install dependencies there, execute mutating scripts there, or commit changes to it. Extract only explicitly scoped loader files when the later migration is authorized by its implementation ticket. Do not copy secrets, application data, unrelated assets, or organization-specific policies.
+- **Runtime:** keep and refactor. Fix real bugs with regression tests, then simplify the size-golfed code. Readability beats saving bytes.
+- **Website, docs and every visual part:** rebuild from scratch after a design direction is chosen (Phase 4). Don't spend effort polishing `apps/website`.
+- **Open decisions:** listed at the end of `AUDIT.md`. Don't act as if one is decided until the owner answers it.
 
-## Research
+## Commands
 
-Use official documentation, upstream source, and standards. Put each investigation on its own `research/<name>` branch in an isolated worktree. Never switch this shared checkout to a research branch. Push research branches without PRs; do not merge them. Findings are evidence for decisions, not accepted specifications.
+Use Bun (pinned in `.bun-version`) and Node 24+.
 
-## Future implementation constraints
+- **Install:** `bun install`, then `bunx playwright install chromium` once for browser tests.
+- **Build everything:** `bun run build`. Turbo builds the packages first, then the website.
+- **Types:** `bun run check`
+- **Lint:** `bun run lint` (Biome); `bun run format` to fix.
+- **Unit tests:** `bun run test` (about 1 s). Snapshot changes: `bun test --update-snapshots`, then review the `.snap` diff.
+- **Browser tests:** `bun run test:e2e` (Chromium, against the workspace build; run `bun run build` first).
+  - `tests/e2e/` covers every component's pending/ready behaviour, layout containment and screenshots. Screenshot baselines live in `tests/e2e/__screenshots__/`; CI skips pixel comparisons.
+  - `tests/browser/` holds the detailed native runtime tests.
+  - `bun run test:e2e:all` adds Firefox and WebKit.
+- **Legacy suites:** `bun run test:legacy [suite...]`. These are packed tarballs, React/Next consumers and older M4 fixtures. They are slow; port them into `tests/e2e` by component and delete them from `scripts/test-legacy.ts`.
+- **Sizes:** `bun run size` prints gzip sizes per component. Budgets go in `scripts/size-budgets.json` once decided.
+- **Everything CI runs:** `bun run verify`
+- **Website:** `bun run dev:website`, or `bun run build:website` then `bun run --cwd apps/website start` (http://127.0.0.1:4210).
 
-Use Bun and Turborepo; keep the native custom-element core framework independent. React, Next.js, and Tailwind belong in the adapter or website rather than core runtime. Treat accessibility, motion preferences, SSR safety, cleanup, selective imports, and measured size/performance as release requirements.
+## Rules
 
-Keep the repository private. Do not publish to npm or change repository visibility without explicit user authorization.
+- **Privacy and release.** Keep the repository private. Don't publish to npm, deploy, or change visibility unless the owner asks for that specific action.
+- **Package boundaries.** Core stays framework-independent. React, Next.js and Tailwind belong only in the adapter or the website.
+- **Release requirements.** These are real requirements, not polish:
+  - accessibility: focus, inert content, reduced motion, forced colors
+  - SSR safety
+  - cleanup of listeners and observers
+  - selective imports
+- **Bug fixes.** Every fix comes with a test that fails without it. Prefer tests of user-visible behavior (states, focus, layout, screenshots) over tests that pin hashes, byte counts or private internals.
+- **Records.** Don't write evidence packets, receipts or long status logs. Normal commits, PRs and GitHub issues are the record. Keep this file short.
+- **Large artifacts.** Never commit large generated artifacts. `.artifacts/` is ignored. Historical evidence lives outside the repo in `../dot-loaders-archive/`.
+- **m37 is read-only.** `/Users/derenikkhachatryan/WebstormProjects/m37-projects/m37_web` is read-only reference material. Never edit it, install there or run mutating scripts there.
+- **Issue tracker.** GitHub issues; see `.agents/issue-tracker.md`.

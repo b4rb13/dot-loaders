@@ -1,21 +1,51 @@
-# Dot Loaders
+# Dotquilt
 
-A planned library of customizable, accessible loading experiences built on native Web Components, with React integration and a standalone documentation and demo website.
+Dot-based loading components for the web. Placeholder dots animate while your data loads, then hand off to your real content: a skeleton dissolves into text, dots converge into a chart, rows type into a table.
 
-This repository is private during development. The planned public core will use the MIT license, with optional paid templates, presets, and tooling. No npm package has been published.
+- **Native core** (`packages/core`): framework-free Web Components with nine elements:
+  - SkeletonBlock, SkeletonLine, SkeletonCircle, SkeletonText
+  - TextLoader, ChartLoader, TableLoader
+  - TypingDots
+  - LoadingRegion
+- **React adapter** (`packages/react`): thin React 19 wrappers with server-rendered markup.
+- **Website** (`apps/website`): a legacy docs/playground site, scheduled to be rebuilt from scratch.
 
-## Current stage
+**Status:** private, pre-alpha, not published to npm. See [AUDIT.md](AUDIT.md) for the current state, known bugs and the phased plan.
 
-Product discovery and architecture planning using Wayfinder. The destination is a launch-ready v1 specification and a phased implementation roadmap. Package extraction, the website, and deployment follow that planning effort.
+## Getting started
 
-The existing `@m37/loaders` package is a read-only research source. Its repository must never be modified as part of this project.
+```bash
+bun install
+```
 
-## Planning
+```bash
+bun run build
+```
 
-- [Product brief](docs/product-brief.md)
-- [Roadmap](docs/roadmap.md)
-- [Research overview and evidence](docs/research-overview.md)
-- [Product vocabulary](GLOSSARY.md)
-- [Issue tracker operations](.agents/issue-tracker.md)
+```bash
+bun run test
+```
 
-The [Wayfinder map](https://github.com/b4rb13/dot-loaders/issues/1) is the canonical index of decisions, with twelve research and decision tickets connected through native GitHub dependencies. Research branches contain supporting evidence; they are not implementation branches and should not be merged.
+```bash
+bun run test:e2e
+```
+
+```bash
+bun run dev:website
+```
+
+The site runs at http://127.0.0.1:4210.
+
+## Guides
+
+- [Native quickstart](docs/implementation/native-quickstart.md)
+- [React quickstart](docs/implementation/react-quickstart.md)
+- [Testing private tarballs](docs/implementation/private-testing.md)
+- [npm account setup](docs/implementation/npm-setup.md)
+- [Product brief](docs/product-brief.md) and [vocabulary](GLOSSARY.md)
+
+These guides predate the November 2026 cleanup and may still mention milestone history.
+
+## License
+
+MIT
