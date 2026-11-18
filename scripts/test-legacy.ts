@@ -38,7 +38,6 @@ const suites: Record<string, Suite> = {
     prepare: [['bun', 'run', 'scripts/prepare-m4.ts']],
     configs: [
       { file: 'playwright.m4.config.ts', chromium: 'chromium' },
-      { file: 'playwright.chart-production.config.ts', chromium: 'chromium' },
       { file: 'playwright.motion-review.config.ts', chromium: 'chromium' },
     ],
     checks: [

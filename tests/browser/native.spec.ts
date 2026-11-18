@@ -636,6 +636,47 @@ test('pointer lift is opt-in and suppressed for touch, pause and content handoff
   await expect.poll(translate).toBe('none');
 });
 
+test('a minified production chart bundle draws every variant and hands off under strict CSP', async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    document.addEventListener('securitypolicyviolation', (event) =>
+      Reflect.set(window, 'violations', [
+        ...(Reflect.get(window, 'violations') ?? []),
+        event.violatedDirective,
+      ]),
+    ),
+  );
+  await page.goto('/?production=chart');
+  const charts = page.locator('dotquilt-chart-loader');
+  await expect(charts).toHaveCount(3);
+  expect(
+    await charts.evaluateAll((all) =>
+      all.map((c) => c.getAttribute('variant')),
+    ),
+  ).toEqual(['line', 'bar', 'scatter']);
+  const painters = () =>
+    charts.evaluateAll(
+      (all) =>
+        all.filter((c) =>
+          c.shadowRoot?.querySelector('[data-dotquilt-painter]'),
+        ).length,
+    );
+  await expect.poll(painters).toBe(3);
+  await page.evaluate(() => {
+    for (const region of document.querySelectorAll('dotquilt-region'))
+      (region as HTMLElement & { state: string }).state = 'ready';
+  });
+  await expect(
+    page.locator('dotquilt-region[data-presentation=ready]'),
+  ).toHaveCount(3);
+  await expect.poll(painters).toBe(0);
+  await expect(page.getByText('bar chart')).toBeVisible();
+  expect(await page.evaluate(() => Reflect.get(window, 'violations'))).toBe(
+    undefined,
+  );
+});
+
 for (const family of ['skeleton', 'region'])
   test(`measured production ${family} bundle registers and renders`, async ({
     page,
