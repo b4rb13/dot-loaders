@@ -325,13 +325,8 @@ test('all recipe examples preserve typed options and custom authoring uses publi
       };
     }),
   ).toEqual({
-    count: 19,
-    textIdles: [
-      'dotquilt/scramble',
-      'dotquilt/scramble-characters',
-      'dotquilt/scramble-words',
-      'dotquilt/label-pulse',
-    ],
+    count: 13,
+    textIdles: ['dotquilt/scramble', 'dotquilt/label-pulse'],
     captured: true,
     families: ['chart', 'skeleton', 'table', 'text'],
     distance: 8,

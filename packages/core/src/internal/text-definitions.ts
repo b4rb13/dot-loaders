@@ -236,38 +236,6 @@ export const lockDefinition = /* @__PURE__ */ Object.freeze({
     });
   },
 });
-function printHandoff() {
-  return definition('print-text', 'handoff', {
-    prepare: lockDefinition.prepare,
-    duration(surface: AnimationSurface<'text'>, options: TextHandoffOptions) {
-      return surface.input.precise ? 180 + length(surface, options) / 1.5 : 150;
-    },
-    frame(
-      context: TextReveal<{ span: number; length: number }>,
-      options: TextHandoffOptions,
-    ): undefined {
-      if (!context.surface.input.precise)
-        return lockDefinition.frame(context, options);
-      const p = context.progress;
-      const time = (p * (180 + context.prepared.length / 1.5) - 180) * 1.5;
-      lockDefinition.frame(
-        {
-          ...context,
-          progress: time / context.prepared.length,
-          reveal(frame) {
-            context.reveal({
-              ...frame,
-              translateY: 2 * (1 - p),
-              clipStart: clamp(time / context.prepared.length),
-            });
-          },
-        },
-        options,
-      );
-    },
-  });
-}
-export const printDefinition = /* @__PURE__ */ printHandoff();
 export const fadeDefinition = /* @__PURE__ */ definition(
   'text-fade',
   'handoff',

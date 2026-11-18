@@ -11,14 +11,7 @@ declare global {
       update(patch: Parameters<TextLoader['update']>[0]): void;
       text(value: string): void;
       recipe(
-        name:
-          | 'scramble'
-          | 'scrambleCharacters'
-          | 'scrambleWords'
-          | 'labelPulse'
-          | 'lock'
-          | 'printText'
-          | 'fade',
+        name: 'scramble' | 'labelPulse' | 'lock' | 'fade',
         options?: object,
       ): void;
       preset(): void;
@@ -35,14 +28,7 @@ declare global {
       errors: string[];
       events: string[];
       change(state: 'ready' | 'pending' | 'refreshing'): void;
-      recipe(
-        name:
-          | 'scrambleCharacters'
-          | 'scrambleWords'
-          | 'lock'
-          | 'printText'
-          | 'fade',
-      ): void;
+      recipe(name: 'scramble' | 'labelPulse' | 'lock' | 'fade'): void;
       ref(): string;
       identity(): boolean;
       unmount(): void;
@@ -306,9 +292,9 @@ test('fixed-progress captures retain outgoing dots and overlap the incoming text
   await page.clock.runFor(32);
   for (const [idle, handoff, value] of [
     ['scramble', 'lock', '42.50'],
-    ['scramble', 'printText', 'Loading'],
+    ['scramble', 'lock', 'Loading'],
     ['labelPulse', 'lock', 'Loading'],
-    ['labelPulse', 'printText', '42.50'],
+    ['labelPulse', 'lock', '42.50'],
   ] as const) {
     await page.evaluate(
       ({ idle, handoff, value }) => {
@@ -647,7 +633,7 @@ test('idle variants, preset precedence and custom typed surface use one owned cl
     'ready',
   );
   expect(await page.evaluate(() => window.m4Text.events[0]?.animation)).toBe(
-    'dotquilt/print-text',
+    'dotquilt/lock',
   );
 });
 test('refresh keeps content visible, stale cycles cancel once and geometry settles latest', async ({
@@ -840,9 +826,9 @@ test('normal-speed rich variants complete and release all owned resources', asyn
     await page.goto('/text');
     for (const [idle, handoff] of [
       ['scramble', 'lock'],
-      ['scramble', 'printText'],
+      ['scramble', 'fade'],
       ['labelPulse', 'lock'],
-      ['labelPulse', 'printText'],
+      ['labelPulse', 'fade'],
     ] as const) {
       for (const value of ['42.50', 'Loading', 'مرحبا 👋🏽']) {
         await page.evaluate(

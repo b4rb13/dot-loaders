@@ -3,14 +3,9 @@ import {
   fadeDefinition,
   labelPulseDefinition,
   lockDefinition,
-  printDefinition,
   scrambleDefinition,
   textBinding,
 } from './internal/text-definitions.js';
-import {
-  scrambleCharactersDefinition,
-  scrambleWordsDefinition,
-} from './internal/text-scramble.js';
 import { LoaderConfigurationError } from './types.js';
 export interface ScrambleOptions {
   readonly changesPerSecond: number;
@@ -58,16 +53,6 @@ export const scramble = /* @__PURE__ */ factory<ScrambleOptions, 'idle'>(
   scrambleDefinition,
   { changesPerSecond: [1000 / 280, 0.5, 4] },
 );
-/** Independent, deterministic character phases; rate applies to each character. */
-export const scrambleCharacters = /* @__PURE__ */ factory<
-  ScrambleOptions,
-  'idle'
->(scrambleCharactersDefinition, { changesPerSecond: [2.8, 0.5, 4] });
-/** One whitespace-delimited mask word changes per step, in reading order. */
-export const scrambleWords = /* @__PURE__ */ factory<ScrambleOptions, 'idle'>(
-  scrambleWordsDefinition,
-  { changesPerSecond: [2.8, 0.5, 4] },
-);
 export const labelPulse = /* @__PURE__ */ factory<LabelPulseOptions, 'idle'>(
   labelPulseDefinition,
   { travelPxPerSecond: [70, 20, 140] },
@@ -80,10 +65,6 @@ const handoffSchema = {
 } as const;
 export const lock = /* @__PURE__ */ factory<TextHandoffOptions, 'handoff'>(
   lockDefinition,
-  handoffSchema,
-);
-export const printText = /* @__PURE__ */ factory<TextHandoffOptions, 'handoff'>(
-  printDefinition,
   handoffSchema,
 );
 export const fade = /* @__PURE__ */ factory<

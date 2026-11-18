@@ -6,15 +6,7 @@ import type {
 } from '../src/animations.js';
 import { definePreset } from '../src/animations.js';
 import type { ChartInput, TargetProvider } from '../src/chart.js';
-import {
-  bars,
-  cycle,
-  morphWipe,
-  ridge,
-  scan,
-  scatter,
-  terrain,
-} from '../src/chart-animations.js';
+import { bars, morphWipe, ridge, scatter } from '../src/chart-animations.js';
 import { definitionOf } from '../src/internal/binding.js';
 import { chartAppearance } from '../src/internal/chart-appearance.js';
 import { defaultRidge } from '../src/internal/chart-definitions.js';
@@ -157,9 +149,9 @@ const surface: AnimationSurface<'chart'> = Object.freeze({
   ),
   revealTargetIds: Object.freeze([]),
 });
-test('six silhouettes, option endpoints and static output are finite and distinct; factories reject unknown/invalid options', () => {
+test('the ridge, bars and scatter silhouettes are finite and distinct; factories reject unknown/invalid options', () => {
   const hashes = new Set<string>();
-  for (const factory of [ridge, scan, terrain, bars, scatter, cycle]) {
+  for (const factory of [ridge, bars, scatter]) {
     const binding = factory(),
       definition = definitionOf(binding) as unknown as { draw: IdlePaint },
       dots: Dot[] = [];
@@ -181,9 +173,8 @@ test('six silhouettes, option endpoints and static output are finite and distinc
     expect(() => Reflect.apply(factory, null, [{ surprise: 1 }])).toThrow();
     expect(() => Reflect.apply(factory, null, [{ amplitude: NaN }])).toThrow();
   }
-  expect(hashes.size).toBe(5); // cycle is intentionally in its initial Ridge hold at 1700ms.
+  expect(hashes.size).toBe(3);
   expect(ridge({ amplitude: -1 }).options.amplitude).toBe(0);
-  expect(scan({ trail: 999 }).options.trail).toBe(240);
   expect(morphWipe({ edge: 0 }).options.edge).toBe(4);
 });
 test('morph/wipe prepares bounded line/bar/scatter destinations and terminal decoration fully disappears', () => {
@@ -325,7 +316,7 @@ test('selective default Ridge emits identical ordered commands to the public con
       expect(a).toEqual(b);
     }
 });
-const factories = { ridge, scan, terrain, bars, scatter, cycle };
+const factories = { ridge, bars, scatter };
 type IdleCase = (typeof idleCases.cases)[number];
 /** Draws one idle case; `during` runs after the first dot to probe reentrancy. */
 function drawIdle(row: IdleCase, during?: () => void): Dot[] {
@@ -387,7 +378,7 @@ test('chart idle recipes draw finite, bounded, deterministic dots for every case
 });
 
 test('a nested chart paint during drawing leaves the outer output unchanged', () => {
-  const nested = cycle({ holdMs: 800, blendMs: 200 });
+  const nested = bars({ sway: 0.1 });
   const nestedDefinition = definitionOf(nested) as unknown as {
     draw: IdlePaint;
   };
@@ -443,46 +434,4 @@ test('numeric chart factories snapshot getters once and reject invalid plain-dat
     Object.defineProperty({}, 'extra', { value: 1 }),
   ])
     expect(() => Reflect.apply(ridge, undefined, [bad])).toThrow(TypeError);
-});
-
-test('Cycle keeps every hold/blend/wrap phase finite, including Scatter and paused frames', () => {
-  for (const options of [
-    {},
-    { holdMs: 800, blendMs: 200 },
-    { holdMs: 3200, blendMs: 600 },
-  ]) {
-    const binding = cycle(options);
-    const definition = definitionOf(binding) as unknown as { draw: IdlePaint };
-    const step = binding.options.holdMs + binding.options.blendMs;
-    for (const phase of [0, 1, 2, 3, 4, 5])
-      for (const offset of [
-        0,
-        binding.options.holdMs - 1,
-        binding.options.holdMs,
-        binding.options.holdMs + binding.options.blendMs / 2,
-        step - 1,
-      ])
-        for (const still of [false, true]) {
-          const dots: Dot[] = [];
-          definition.draw({
-            surface,
-            options: binding.options,
-            timeMs: phase * step + offset,
-            still,
-            dot: (d) => dots.push(d),
-            deltaMs: 16,
-          });
-          expect(dots.length).toBeGreaterThan(500);
-          expect(dots.length).toBeLessThanOrEqual(4096);
-          expect(
-            dots.every(
-              (d) =>
-                [d.x, d.y, d.size, d.opacity].every(Number.isFinite) &&
-                d.opacity >= 0 &&
-                d.size >= 0 &&
-                d.size <= 32,
-            ),
-          ).toBe(true);
-        }
-  }
 });
