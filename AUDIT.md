@@ -403,7 +403,7 @@ This is a rebuild, not a polish pass. The current site, docs and default visuals
 - Gallery variants are generated from data rather than as copy-pasted files.
 - Choose the stack during 4a: keep Next.js + Fumadocs, or pick something lighter.
 - Skip the exotic failure handling (CSS-fetch gates, failed-JS retry) unless it serves real users.
-- Delete `apps/website` and its tests when the new site reaches parity.
+- ~~Delete `apps/website` and its tests when the new site reaches parity.~~ Retired early on 2026-11-19 (decision 9).
 
 **4e. Visual QA before ship.**
 - Screenshot tests per page and per component at desktop and phone width, light and dark.
@@ -442,7 +442,7 @@ Performance qualification on real devices comes after there are users, against b
 6. **Process.** OK to drop the evidence/receipt/"owner authorisation" machinery and work with normal commits, PRs and tests?
 7. ~~**Visual direction.**~~ **Decided 2026-11-18:** "System, refined" (see design/SPEC.md). Dots stay as the core idea, with dot/dash/square as mark options.
 8. **Website stack.** Keep Next.js + Fumadocs for the rebuilt site, or choose something lighter?
-9. **Old site retirement.** Delete `apps/website` as soon as work on the new site starts, or keep it as a reference until parity? I recommend keeping it until parity.
+9. ~~**Old site retirement.**~~ **Decided 2026-11-19 by the owner: retire it now.** `apps/website` and its workspace, scripts and dependencies are deleted, so the old animation variants it used can be pruned (Phase 4b slice H). It stays in git history as reference; the new site is Phase 4c–4d.
 10. **How often errors repeat.** Today each loader reports a given problem once in its lifetime ("bounded diagnostics"), and legacy tests pin that. So a problem that recurs after being fixed stays silent, which weakens telemetry. Options:
     - (a) keep once per element;
     - (b) report again after the field was set to a valid value in between;

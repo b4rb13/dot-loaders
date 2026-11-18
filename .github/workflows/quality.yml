@@ -28,7 +28,7 @@ jobs:
       - run: bunx --no-install playwright install --with-deps chromium
       - name: Lint
         run: bun run lint
-      - name: Build packages and website
+      - name: Build packages
         run: bun run build
       - name: Typecheck
         run: bun run check

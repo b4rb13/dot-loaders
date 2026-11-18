@@ -10,11 +10,7 @@
       "*.json",
       "playwright*.config.ts",
       ".changeset/*.json",
-      "apps/**",
-      "!apps/**/.impeccable",
-      "!**/.next",
-      "!apps/website/public",
-      "!apps/website/next-env.d.ts"
+      "!**/.next"
     ]
   },
   "formatter": {
