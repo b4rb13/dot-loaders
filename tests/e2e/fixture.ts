@@ -3,6 +3,7 @@
 //   &theme=light|dark   page colours
 //   &hostDisplay=block  simulate app CSS that sets `display:block` on the hosts
 //   &motion=paused      pause motion on the page so screenshots are stable
+//   &mark=dash|square   draw the decoration with another mark
 import { bars, ridge } from '@dotquilt-internal/core/animations/chart';
 import { tableShimmer, typeOn } from '@dotquilt-internal/core/animations/table';
 import { registerAll } from '@dotquilt-internal/core/register-all';
@@ -157,6 +158,8 @@ function build(): Fixture {
 }
 
 window.e2e = build();
+const mark = params.get('mark');
+if (mark) window.e2e.decoration.setAttribute('mark', mark);
 // Animation factories some specs switch between.
 Object.assign(window, {
   e2eAnimations: { chart: { ridge, bars }, table: { typeOn, tableShimmer } },

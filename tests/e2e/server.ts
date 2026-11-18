@@ -53,7 +53,10 @@ Bun.serve({
     // Server-rendered regions with no JavaScript at all.
     const staticPage = /^\/static\/(native|react)$/.exec(pathname);
     if (staticPage) {
-      const state = new URL(request.url).searchParams.get('state') ?? 'pending';
+      const query = new URL(request.url).searchParams;
+      const state = query.get('state') ?? 'pending';
+      const mark = query.get('mark') as 'dash' | 'square' | null;
+      const shape = mark ? { mark } : {};
       const content =
         '<article class="card"><h2>Quarterly revenue</h2><p>Revenue grew 12%.</p><button type="button">Open report</button></article>';
       const markup =
@@ -62,7 +65,7 @@ Bun.serve({
               kind: 'region',
               state: state as 'pending' | 'ready',
               label: 'Example content',
-              placeholder: { kind: 'skeleton-text' },
+              placeholder: { kind: 'skeleton-text', ...shape },
             }).replace('</dotquilt-region>', `${content}</dotquilt-region>`)
           : renderToString(
               h(
@@ -71,7 +74,7 @@ Bun.serve({
                   state: state as 'pending' | 'ready',
                   'aria-label': 'Example content',
                   className: 'owner',
-                  placeholder: h(SkeletonText, {}),
+                  placeholder: h(SkeletonText, shape),
                 },
                 h(
                   'article',

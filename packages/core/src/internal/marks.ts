@@ -1,3 +1,5 @@
+import type { Mark } from '../types.js';
+
 /**
  * Default marks, from design/SPEC.md ("System, refined"). Every stylesheet
  * takes its dot size, spacing, colours and opacity from here, so the static
@@ -41,6 +43,100 @@ export function dotGrid(position?: string): string {
     ? `${position}/var(--g) var(--g)`
     : 'center/var(--g) var(--g) space';
   return `--s:${markSize};--g:calc(var(--s) + ${markGap});background:radial-gradient(circle,${markColor} calc(var(--s)/2 - .5px),#0000 calc(var(--s)/2 + .5px)) ${place}`;
+}
+
+/**
+ * The alternative marks (design/SPEC.md): width, height and the pitch across
+ * and down. Squares are crisp at small sizes; dashes suit text lines and rows.
+ */
+export const shapes = {
+  square: { width: 4, height: 4, across: 8.5, down: 8.5, radius: 1.1 },
+  dash: { width: 9.4, height: 3.4, across: 13, down: 9.5, radius: 1.7 },
+} as const;
+
+/** One mask layer: a band between `from` and `to` px, with a 1 px soft edge. */
+function band(angle: string, from: number, to: number, tile: string): string {
+  return `linear-gradient(${angle},#0000 ${from - 0.5}px,#000 ${from + 0.5}px,#000 ${to - 0.5}px,#0000 ${to + 0.5}px) ${tile}`;
+}
+
+/**
+ * A grid of squares or dashes painted with CSS masks, so it needs no image and
+ * passes a strict CSP. A square is a horizontal band intersected with a
+ * vertical one; a dash adds two round caps, so its ends are round. `position`
+ * works like dotGrid's: `space` (whole marks only) unless a position is given.
+ */
+export function shapeGrid(
+  mark: keyof typeof shapes,
+  position?: string,
+): string {
+  const { width, height, across, down } = shapes[mark];
+  const x = (across - width) / 2,
+    y = (down - height) / 2,
+    tile = `${position ?? 'center'}/${across}px ${down}px ${position ? 'repeat' : 'space'}`;
+  const rows = band('180deg', y, y + height, tile);
+  const layers =
+    mark === 'square'
+      ? [rows, band('90deg', x, x + width, tile)]
+      : [
+          ...[x + height / 2, x + width - height / 2].map(
+            (cx) =>
+              `radial-gradient(circle at ${cx}px ${down / 2}px,#000 ${height / 2 - 0.5}px,#0000 ${height / 2 + 0.5}px) ${tile}`,
+          ),
+          rows,
+          band('90deg', x + height / 2, x + width - height / 2, tile),
+        ];
+  const composite = mark === 'square' ? 'intersect' : 'add,add,intersect';
+  // The fill carries the tile too, so code that reads the grid from the
+  // background (the dissolve) finds the same marks as the mask draws.
+  return `background:${markColor} ${tile};mask:${layers.join(',')};mask-composite:${composite}`;
+}
+
+/** The host's mark; a missing or unknown value draws dots. */
+export function markOf(host: Element): Mark {
+  const value = host.getAttribute('mark');
+  return value === 'dash' || value === 'square' ? value : 'dot';
+}
+
+/** The default dot's radius. Painter commands give a radius; other marks scale from it. */
+const dotRadius = 2.2;
+
+/**
+ * The box a painter draws for a command of radius `r`: a circle for a dot,
+ * and for squares and dashes the spec's shape scaled by `r` against the
+ * default dot, so the default radius draws them at their spec size.
+ */
+export function markBox(
+  mark: Mark,
+  r: number,
+): { width: number; height: number; radius: number } {
+  if (mark === 'dot') return { width: 2 * r, height: 2 * r, radius: r };
+  const shape = shapes[mark];
+  const scale = r / dotRadius;
+  return {
+    width: shape.width * scale,
+    height: shape.height * scale,
+    radius: shape.radius * scale,
+  };
+}
+
+/** Rules that draw `surface` with squares or dashes when `host(mark)` matches. */
+export function markShapes(
+  host: (mark: keyof typeof shapes) => string,
+  surface: string,
+  position?: string,
+): string {
+  return (['square', 'dash'] as const)
+    .map((mark) => `${host(mark)} ${surface}{${shapeGrid(mark, position)}}`)
+    .join('');
+}
+
+/** Line placeholders are two rows of the host's mark tall. */
+export function markLineHeights(
+  host: (mark: keyof typeof shapes) => string,
+): string {
+  return (['square', 'dash'] as const)
+    .map((mark) => `${host(mark)}{height:${2 * shapes[mark].down}px}`)
+    .join('');
 }
 
 /**

@@ -167,8 +167,15 @@ export class SkeletonBlock extends ManagedElement {
           part: 'surface',
           'aria-hidden': 'true',
         }),
+        // The glow lives on a container, so a surface can take a shape mask.
         node(this.ownerDocument, 'div', {
-          class: 'surface pulse',
+          class: 'pulse',
+          'aria-hidden': 'true',
+        }),
+      );
+      root.lastElementChild?.append(
+        node(this.ownerDocument, 'div', {
+          class: 'surface',
           'aria-hidden': 'true',
         }),
       );
