@@ -15,7 +15,7 @@ import {
   emptyChartSource as empty,
   emptyChartInput as emptyInput,
 } from './internal/chart-projection.js';
-import { contentBox } from './internal/content-box.js';
+import { contentBox, surfaceEnvironment } from './internal/content-box.js';
 import { coordinatedHandoff } from './internal/coordinated-handoff.js';
 import {
   installDensePainter,
@@ -90,6 +90,7 @@ export class ChartLoader extends EventElement<'chart'> {
   #source: readonly Dot[] = empty;
   #input: ChartInput = emptyInput;
   #geometry: AnimationSurface<'chart'> | undefined;
+  #environment: string | undefined;
   get variant(): ChartVariant {
     const value = this.getAttribute('variant') ?? this.preset?.variant;
     return value === 'bar' || value === 'scatter' ? value : 'line';
@@ -337,6 +338,14 @@ export class ChartLoader extends EventElement<'chart'> {
     ];
   }
   protected override environmentChanged(): void {
+    const environment = surfaceEnvironment(this);
+    if (environment === this.#environment) {
+      // Nothing the drawing depends on changed: only re-check eligibility.
+      this.resources?.eligible(true);
+      this.requestRender();
+      return;
+    }
+    this.#environment = environment;
     this.refresh();
   }
   #clear(): void {

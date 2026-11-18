@@ -78,6 +78,7 @@ export abstract class LoadingController<
   #serial = 0;
   #batching = false;
   #previous: LoadingState = 'ready';
+  #participants: string | undefined;
   #settled = true;
   #work: Work | undefined;
   #wrappers: Layers | undefined;
@@ -272,6 +273,7 @@ export abstract class LoadingController<
       characterData: true,
     });
     this.#previous = 'ready';
+    this.#participants = undefined;
     this.requestRender();
   }
   override disconnectedCallback(): void {
@@ -411,9 +413,17 @@ export abstract class LoadingController<
         this.ownActivity.started = undefined;
         this.#settled = false;
       }
-      this.refreshParticipants();
+      // Rich placeholders rebuild when the loading state or cycle changes;
+      // other re-renders (e.g. an ancestor class change) leave them alone,
+      // since they receive their own size and style notifications.
+      const participants = `${state}|${this.cycle ?? ''}`;
+      if (participants !== this.#participants) {
+        this.#participants = participants;
+        this.refreshParticipants();
+      }
       return;
     }
+    this.#participants = undefined;
     if (prior === 'pending') this.#start(revision, w);
     else this.#settled = true;
   }

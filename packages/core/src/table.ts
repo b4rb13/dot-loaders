@@ -4,7 +4,7 @@ import {
   chartHandoff as denseHandoff,
   type RichParticipant,
 } from './internal/chart-participant.js';
-import { contentBox } from './internal/content-box.js';
+import { contentBox, surfaceEnvironment } from './internal/content-box.js';
 import { coordinatedHandoff } from './internal/coordinated-handoff.js';
 import {
   installDensePainter,
@@ -111,6 +111,7 @@ export class TableLoader extends EventElement<'table'> {
   #source: readonly Dot[] = empty;
   #input: TableInput = emptyInput;
   #geometry: AnimationSurface<'table'> | undefined;
+  #environment: string | undefined;
   #columns: readonly TableColumn[] = tableColumns(undefined);
   get columns(): readonly TableColumn[] {
     return this.#columns;
@@ -385,6 +386,14 @@ export class TableLoader extends EventElement<'table'> {
     ];
   }
   protected override environmentChanged(): void {
+    const environment = surfaceEnvironment(this);
+    if (environment === this.#environment) {
+      // Nothing the drawing depends on changed: only re-check eligibility.
+      this.resources?.eligible(true);
+      this.requestRender();
+      return;
+    }
+    this.#environment = environment;
     this.refresh();
   }
   #updateStatic(): void {

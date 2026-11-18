@@ -162,9 +162,10 @@ export class TextLoader extends LoadingController<'text'> {
     super.disconnectedCallback();
   }
   protected override environmentChanged(): void {
+    // Re-measure glyphs only when the text's size or font actually changed.
     const changed =
       this.#geometry !== undefined && this.#geometry !== this.#geometryKey();
-    this.#surface = undefined;
+    if (changed) this.#surface = undefined;
     if (changed && this.presentation === 'handoff') super.refresh();
     else super.environmentChanged();
   }
