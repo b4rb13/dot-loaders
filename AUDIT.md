@@ -31,6 +31,12 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
   - Porting the legacy suites component by component.
   - Size budgets, pending decision 1.
 
+**Phase 4a — done (2026-11-18).**
+- **Round 1** (Sashiko, Overprint, Flipdot) was rejected as not serious.
+- **Round 2:** the owner picked System from Precision, Reference and System, and asked for it to be smoother and more elegant.
+- **Locked:** the refined System is locked as [design/SPEC.md](design/SPEC.md), with [design/tokens.css](design/tokens.css). Mockups are in `design/directions*/`.
+- **Marks:** dot by default; dash and square are offered as a component option.
+
 ## TL;DR
 
 - **The product works.** All nine components exist as native elements plus React wrappers with SSR output. The website (homepage, 9 reference pages, 24-recipe gallery, playground, guides, search) builds and runs. Most loading → reveal handoffs look good.
@@ -293,6 +299,6 @@ Performance qualification on real devices comes after there are users, against b
 4. **TextLoader international text.** Is ASCII-only acceptable for v1?
 5. **Multiple library copies on one page.** Drop support? That unlocks most of the simplification.
 6. **Process.** OK to drop the evidence/receipt/"owner authorisation" machinery and work with normal commits, PRs and tests?
-7. **Visual direction.** What should Dotquilt feel like? Pick from the 4a directions. Is anything from today worth keeping, such as the dot-matrix idea itself or the "dots become content" handoff concept?
+7. ~~**Visual direction.**~~ **Decided 2026-11-18:** "System, refined" (see design/SPEC.md). Dots stay as the core idea, with dot/dash/square as mark options.
 8. **Website stack.** Keep Next.js + Fumadocs for the rebuilt site, or choose something lighter?
 9. **Old site retirement.** Delete `apps/website` as soon as work on the new site starts, or keep it as a reference until parity? I recommend keeping it until parity.

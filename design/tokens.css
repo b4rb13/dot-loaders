@@ -1,0 +1,155 @@
+/* Dotquilt design tokens: "System, refined" (locked 2026-11-18).
+   Source of truth for values: design/SPEC.md. Used by the rebuilt website and
+   docs; component defaults map their --dotquilt-* properties onto the --dq-mark
+   values below (AUDIT.md Phase 4b). */
+
+:root {
+  color-scheme: light;
+
+  /* Colour */
+  --dq-bg: #f4f5f7;
+  --dq-surface: #ffffff;
+  --dq-subtle: #f7f8fa;
+  --dq-ink: #1b2230;
+  --dq-muted: #5e6777;
+  --dq-faint: #8c94a2;
+  --dq-line: #e7eaef;
+  --dq-line-2: #d8dde4;
+  --dq-accent: #2f6f74;
+  --dq-accent-ink: #ffffff;
+  --dq-accent-soft: #eaf2f2;
+  --dq-focus: var(--dq-accent);
+  --dq-positive: #2f7656;
+  --dq-positive-soft: #eaf4ef;
+  --dq-negative: #a84a3a;
+  --dq-warning: #85601e;
+  --dq-warning-soft: #f8f1e3;
+  --dq-info: #3c5f99;
+  --dq-info-soft: #edf2f9;
+
+  /* Code */
+  --dq-code-bg: #1e2430;
+  --dq-code-fg: #e2e7ee;
+  --dq-code-keyword: #9cc9ca;
+  --dq-code-string: #c6d6ae;
+  --dq-code-type: #a9c1e8;
+  --dq-code-attr: #dcc9a2;
+  --dq-code-punct: #8892a2;
+
+  /* Marks */
+  --dq-mark: #6e7889;
+  --dq-mark-glow: #4f8f93;
+  --dq-mark-rest: 0.37;
+  --dq-mark-peak: 0.9;
+  --dq-mark-size: 4.4px;
+  --dq-mark-pitch: 9px;
+
+  /* Type */
+  --dq-font: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+  --dq-font-mono: 'DM Mono', ui-monospace, Menlo, monospace;
+  --dq-heading-weight: 500;
+  --dq-heading-tracking: -0.03em;
+  --dq-heading-leading: 1.1;
+  --dq-title-weight: 600;
+  --dq-body-size: 14.5px;
+  --dq-body-leading: 1.65;
+
+  /* Shape and elevation */
+  --dq-radius-sm: 9px;
+  --dq-radius-md: 12px;
+  --dq-radius-lg: 16px;
+  --dq-shadow:
+    0 1px 2px rgb(27 34 48 / 0.04), 0 8px 24px -14px rgb(27 34 48 / 0.14);
+  --dq-shadow-lg:
+    0 2px 4px rgb(27 34 48 / 0.03), 0 28px 56px -30px rgb(27 34 48 / 0.22);
+
+  /* Motion */
+  --dq-ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --dq-ease-fade: cubic-bezier(0.33, 0, 0.2, 1);
+  --dq-ease-sine: cubic-bezier(0.37, 0, 0.63, 1);
+  --dq-duration-ui: 320ms;
+  --dq-duration-handoff: 1100ms;
+  --dq-duration-fade: 700ms;
+  --dq-duration-rise: 910ms;
+  --dq-stagger-row: 80ms;
+  --dq-stagger-cell: 28ms;
+  --dq-idle-glow-period: 2.8s;
+  --dq-idle-breath-period: 3.2s;
+  --dq-rise-distance: 5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --dq-bg: #181d25;
+    --dq-surface: #1f2530;
+    --dq-subtle: #252c38;
+    --dq-ink: #e3e7ed;
+    --dq-muted: #9ca5b3;
+    --dq-faint: #747e8d;
+    --dq-line: #2b323e;
+    --dq-line-2: #3a4351;
+    --dq-accent: #84babb;
+    --dq-accent-ink: #132324;
+    --dq-accent-soft: #24363a;
+    --dq-positive: #7cc4a0;
+    --dq-positive-soft: #1e332a;
+    --dq-negative: #e8998a;
+    --dq-warning: #ddb572;
+    --dq-warning-soft: #382f1f;
+    --dq-info: #9db8e8;
+    --dq-info-soft: #243042;
+    --dq-code-bg: #141920;
+    --dq-code-punct: #7a8494;
+    --dq-mark: #8e99ab;
+    --dq-mark-glow: #8dc4c5;
+    --dq-mark-rest: 0.44;
+    --dq-mark-peak: 0.92;
+    --dq-shadow:
+      0 1px 2px rgb(6 9 15 / 0.22), 0 10px 28px -14px rgb(6 9 15 / 0.5);
+    --dq-shadow-lg:
+      0 2px 6px rgb(6 9 15 / 0.2), 0 30px 60px -30px rgb(6 9 15 / 0.65);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --dq-bg: #181d25;
+  --dq-surface: #1f2530;
+  --dq-subtle: #252c38;
+  --dq-ink: #e3e7ed;
+  --dq-muted: #9ca5b3;
+  --dq-faint: #747e8d;
+  --dq-line: #2b323e;
+  --dq-line-2: #3a4351;
+  --dq-accent: #84babb;
+  --dq-accent-ink: #132324;
+  --dq-accent-soft: #24363a;
+  --dq-positive: #7cc4a0;
+  --dq-positive-soft: #1e332a;
+  --dq-negative: #e8998a;
+  --dq-warning: #ddb572;
+  --dq-warning-soft: #382f1f;
+  --dq-info: #9db8e8;
+  --dq-info-soft: #243042;
+  --dq-code-bg: #141920;
+  --dq-code-punct: #7a8494;
+  --dq-mark: #8e99ab;
+  --dq-mark-glow: #8dc4c5;
+  --dq-mark-rest: 0.44;
+  --dq-mark-peak: 0.92;
+  --dq-shadow: 0 1px 2px rgb(6 9 15 / 0.22), 0 10px 28px -14px rgb(6 9 15 / 0.5);
+  --dq-shadow-lg:
+    0 2px 6px rgb(6 9 15 / 0.2), 0 30px 60px -30px rgb(6 9 15 / 0.65);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dq-duration-handoff: 240ms;
+    --dq-duration-fade: 240ms;
+    --dq-duration-rise: 0ms;
+    --dq-stagger-row: 0ms;
+    --dq-stagger-cell: 0ms;
+    --dq-rise-distance: 0px;
+  }
+}
