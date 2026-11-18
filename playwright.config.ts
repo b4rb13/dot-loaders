@@ -34,8 +34,8 @@ export default defineConfig({
     {
       name: `native-${browserName}`,
       testDir: './tests/browser',
-      // Several native tests observe frame timing and shared document state.
-      workers: 1,
+      // Pages share nothing: ledgers and frame clocks live on each document.
+      fullyParallel: true,
       use: { browserName, baseURL: 'http://127.0.0.1:4181' },
     },
   ]),
