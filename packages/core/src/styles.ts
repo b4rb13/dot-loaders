@@ -1,6 +1,15 @@
+import {
+  dotGrid,
+  glowColor,
+  glowMask,
+  markColor,
+  markSize,
+  restOpacity,
+} from './internal/marks.js';
 import { unstyledHold } from './internal/unstyled.js';
+
 export const skeletonStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
-  `:host{display:block;width:100%;height:1em;position:relative;border-radius:var(--dotquilt-radius,.375rem);overflow:hidden}:host .surface{position:absolute;inset:0;--s:var(--dotquilt-dot-size,2px);--g:calc(var(--s) + var(--dotquilt-dot-gap,4px));background:radial-gradient(circle,var(--dotquilt-color,currentColor) calc(var(--s)/2),#0000 0) 0 0/var(--g) var(--g);opacity:.3}:host .pulse{--dotquilt-color:var(--dotquilt-accent-color,currentColor);opacity:0;mask:linear-gradient(90deg,transparent,#000,transparent) 0 0/35% 100% no-repeat}:host [data-dotquilt-dissolve] circle{r:calc(var(--dotquilt-dot-size,2px)/2)}:host(dotquilt-skeleton-text) [data-dotquilt-dissolve] > svg{border-radius:999px}:host([hidden]){display:none}:host > svg{position:absolute;inset:0;width:100%;height:100%;fill:var(--dotquilt-color,currentColor)}@media(forced-colors:none){:host([data-custom]) .surface{visibility:hidden}}@media(hover:hover) and (pointer:fine){:host([pointer-response=lift][data-moving][data-pointer]) .pulse{translate:0 -1px;opacity:.6!important;transition:translate .1s}}@media(forced-colors:active){:host .surface{border:1px dotted CanvasText}:host .pulse,:host > svg{display:none}}`,
+  `:host{display:block;width:100%;height:1em;position:relative;border-radius:var(--dotquilt-radius,.375rem);overflow:hidden}:host .surface{position:absolute;inset:0;${dotGrid()};opacity:${restOpacity}}:host .pulse{--dotquilt-color:${glowColor};opacity:0;mask:${glowMask}}:host [data-dotquilt-dissolve] circle{r:calc(${markSize}/2)}:host(dotquilt-skeleton-text) [data-dotquilt-dissolve] > svg{border-radius:999px}:host([hidden]){display:none}:host > svg{position:absolute;inset:0;width:100%;height:100%;fill:${markColor}}@media(forced-colors:none){:host([data-custom]) .surface{visibility:hidden}}@media(hover:hover) and (pointer:fine){:host([pointer-response=lift][data-moving][data-pointer]) .pulse{translate:0 -1px;opacity:.6!important;transition:translate .1s}}@media(forced-colors:active){:host .surface{border:1px dotted CanvasText}:host .pulse,:host > svg{display:none}}`,
   unstyledHold,
 ]);
 // The layers are slots (`display: contents` until styled), so they need boxes.
@@ -14,5 +23,5 @@ export const regionStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
 // Static markup never runs idle, pointer or custom-drawing effects.
 export const staticSkeletonStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
-    `dotquilt-skeleton-block{display:block;width:100%;height:1em;position:relative;border-radius:var(--dotquilt-radius,.375rem);overflow:hidden}dotquilt-skeleton-block [data-dotquilt-static]{position:absolute;inset:0;--s:var(--dotquilt-dot-size,2px);--g:calc(var(--s) + var(--dotquilt-dot-gap,4px));background:radial-gradient(circle,var(--dotquilt-color,currentColor) calc(var(--s)/2),#0000 0) 0 0/var(--g) var(--g);opacity:.3}@media(forced-colors:active){dotquilt-skeleton-block [data-dotquilt-static]{border:1px dotted CanvasText}}`,
+    `dotquilt-skeleton-block{display:block;width:100%;height:1em;position:relative;border-radius:var(--dotquilt-radius,.375rem);overflow:hidden}dotquilt-skeleton-block [data-dotquilt-static]{position:absolute;inset:0;${dotGrid()};opacity:${restOpacity}}@media(forced-colors:active){dotquilt-skeleton-block [data-dotquilt-static]{border:1px dotted CanvasText}}`,
   ]);

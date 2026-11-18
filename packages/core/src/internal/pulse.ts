@@ -1,18 +1,32 @@
 import type { AnimationBinding, AnimationFamily } from '../animations.js';
+import { peakOpacity, restOpacity } from './marks.js';
 import type { Runner } from './runner.js';
 
-// WAAPI owns phase while running. Keep only its normalized position at a boundary.
+/** Sine in-out, the curve the spec gives marks and the idle glow. */
+const sine = 'cubic-bezier(.37,0,.63,1)';
+const glowPeriod = 2800;
+const breathPeriod = 3200;
+
+/**
+ * The skeleton idle (design/SPEC.md): a soft glow drifts across the field
+ * every 2.8 s, and the whole field breathes ±7% every 3.2 s. WAAPI owns the
+ * phase while running; only the normalized positions are kept at a boundary.
+ */
 export function createPulse(
   host: HTMLElement,
   report: (code: string) => void,
 ): Runner {
-  let animation: Animation | undefined;
+  let glow: Animation | undefined;
+  let breath: Animation | undefined;
   let phase = 0;
+  let breathPhase = 0;
   let failed = false;
   const stop = () => {
-    phase = animation?.effect?.getComputedTiming().progress ?? phase;
-    animation?.cancel();
-    animation = undefined;
+    phase = glow?.effect?.getComputedTiming().progress ?? phase;
+    breathPhase = breath?.effect?.getComputedTiming().progress ?? breathPhase;
+    glow?.cancel();
+    breath?.cancel();
+    glow = breath = undefined;
   };
   return {
     reset() {
@@ -32,19 +46,39 @@ export function createPulse(
         }
         const period =
           ((binding?.options as { periodMs?: number } | undefined)?.periodMs ??
-            1600) / speed;
-        if (animation?.effect?.getTiming().duration === period) return;
+            glowPeriod) / speed;
+        if (glow?.effect?.getTiming().duration === period) return;
         stop();
-        animation = host.shadowRoot?.lastElementChild?.animate(
+        // `:scope` matches nothing in ShadowRoot.querySelector; walk the children.
+        const layer = [...(host.shadowRoot?.children ?? [])].find((child) =>
+          child.classList.contains('pulse'),
+        );
+        // The glow's centre travels from half a field before the start to
+        // half a field past the end, so it enters and leaves fully.
+        // Easing goes on the keyframe, not the timing, so `progress` stays
+        // linear and a resumed glow continues from the same position.
+        glow = layer?.animate(
           [
-            { maskPosition: '-40% 0', opacity: 0 },
-            { maskPosition: '50% 0', opacity: 0.7 },
-            { maskPosition: '140% 0', opacity: 0 },
+            { maskPosition: '407% 0', opacity: peakOpacity, easing: sine },
+            { maskPosition: '-307% 0', opacity: peakOpacity },
           ],
           {
             duration: period,
             iterations: remaining / period,
             iterationStart: phase,
+          },
+        );
+        const breathing = (breathPeriod * period) / glowPeriod;
+        breath = layer?.previousElementSibling?.animate(
+          [
+            { opacity: restOpacity, easing: sine },
+            { opacity: restOpacity * 0.86, easing: sine },
+            { opacity: restOpacity },
+          ],
+          {
+            duration: breathing,
+            iterations: remaining / breathing,
+            iterationStart: breathPhase,
           },
         );
       } catch {

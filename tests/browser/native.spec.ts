@@ -574,6 +574,7 @@ test('switching custom and built-in idle keeps ownership, clears old painters an
     (document.getElementById('block') as SkeletonBlock).animations = {};
   });
   await expect(page.locator('#block svg')).toHaveCount(0);
+  // The built-in idle resumes: the glow and the field's breathing.
   await expect
     .poll(() =>
       page.evaluate(
@@ -584,7 +585,7 @@ test('switching custom and built-in idle keeps ownership, clears old painters an
             .filter((a) => a.playState === 'running').length,
       ),
     )
-    .toBe(1);
+    .toBe(2);
   await expect(page.locator('#action')).toBeHidden();
 });
 
@@ -865,7 +866,7 @@ test('equivalent idle options retain the animation and live speed retains its ph
     const block = document.getElementById('block') as SkeletonBlock;
     const animation = block.shadowRoot?.getAnimations()[0];
     const { pulse } = await import(String('/pkg/dist/skeleton-animations.js'));
-    block.animations = { idle: pulse({ periodMs: 1600 }) };
+    block.animations = { idle: pulse({ periodMs: 2800 }) };
     await Promise.resolve();
     const same = animation === block.shadowRoot?.getAnimations()[0];
     const before = animation?.effect?.getComputedTiming().progress ?? 0;
