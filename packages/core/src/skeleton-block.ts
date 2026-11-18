@@ -2,7 +2,6 @@ import type { Animations } from './animations.js';
 import { definitionOf, validateBindings } from './internal/binding.js';
 import {
   ancestors,
-  installStyles,
   node,
   register,
   upgradeProperties,
@@ -154,8 +153,7 @@ export class SkeletonBlock extends ManagedElement {
     super.connectedCallback();
     this.setAttribute('data-dotquilt-surface', '');
     if (!this.shadowRoot) {
-      const root = this.attachShadow({ mode: 'open' });
-      installStyles(root, this.styles, this.policy);
+      const root = this.attachStyledShadow(this.styles, true);
       root.append(
         node(this.ownerDocument, 'div', {
           class: 'surface',
@@ -170,10 +168,12 @@ export class SkeletonBlock extends ManagedElement {
     }
     if (!this.hasAttribute('aria-hidden'))
       this.setAttribute('aria-hidden', 'true');
-    for (const fallback of this.querySelectorAll(
-      ':scope > [data-dotquilt-static],:scope > [data-dotquilt-style]',
-    ))
-      fallback.remove();
+    this.whenStyled(() => {
+      for (const fallback of this.querySelectorAll(
+        ':scope > [data-dotquilt-static],:scope > [data-dotquilt-style]',
+      ))
+        fallback.remove();
+    });
   }
   override disconnectedCallback(): void {
     super.disconnectedCallback();

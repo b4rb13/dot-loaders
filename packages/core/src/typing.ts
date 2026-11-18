@@ -1,7 +1,6 @@
 import { typingStyles } from './catalog-styles.js';
 import {
   ancestors,
-  installStyles,
   node,
   register,
   upgradeProperties,
@@ -79,16 +78,15 @@ export class TypingDots extends ManagedElement<'typing'> {
     super.connectedCallback();
     upgradeProperties(this, ['count']);
     this.setAttribute('data-dotquilt-surface', '');
-    if (!this.shadowRoot) {
-      const root = this.attachShadow({ mode: 'open' });
-      installStyles(root, typingStyles, this.policy);
-    }
+    if (!this.shadowRoot) this.attachStyledShadow(typingStyles, true);
     if (!this.hasAttribute('aria-hidden'))
       this.setAttribute('aria-hidden', 'true');
-    for (const fallback of this.querySelectorAll(
-      ':scope > [data-dotquilt-static],:scope > [data-dotquilt-style]',
-    ))
-      fallback.remove();
+    this.whenStyled(() => {
+      for (const fallback of this.querySelectorAll(
+        ':scope > [data-dotquilt-static],:scope > [data-dotquilt-style]',
+      ))
+        fallback.remove();
+    });
   }
   override disconnectedCallback(): void {
     super.disconnectedCallback();

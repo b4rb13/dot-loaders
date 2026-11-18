@@ -116,7 +116,7 @@ Where things stand now:
 - **`bun run verify`:** about 3.8 min. It includes 791 browser tests, which run in parallel against the workspace build. Every ported suite is a project in `playwright.config.ts`.
   - Coordination, presets, table, shared-wrapper, api, copies, react and m4 were ported with their tests intact, apart from the deletions below.
   - Their previously failing tests now pass, because they read the Canvas paint.
-  - Layout runs with one worker: under CPU load, a late external stylesheet skews its layout-shift measurements.
+  - Layout runs in parallel too. A late external stylesheet is now held deterministically by its own test (see the follow-up below).
 - **`scripts/pack-smoke.test.ts`:** the packed file list, manifests, Node and Bun imports of every export, consumer types on TS 7 and 5.7, the dist import graph, the dense-renderer leak and the `'use client'` directives. `packages/react/test/table-parity.test.ts` checks native/React static table parity.
 - **`bun run test:legacy`:** under a minute. It reruns the React suite on React 19.0 (the oldest supported version, which takes a different nonce hydration path) and checks catalog SSR under Node and Bun.
 
@@ -128,7 +128,7 @@ Deleted:
 - **Hash and evidence tests:** tests that only pinned bundle hashes or wrote evidence files.
 
 Follow-ups:
-- With an external stylesheet arriving late, layout shifted by a 0.94 score under CPU load. Check whether this happens on slow devices.
+- ~~With an external stylesheet arriving late, layout shifted by a 0.94 score under CPU load.~~ Done: a real bug, not test timing. Upgraded hosts rendered their shadow tree unstyled until its `<link>` loaded, which happens on slow networks, uncached stylesheets and busy main threads. They now keep their static presentation until the stylesheet applies (`:state(unstyled)`).
 - `prototypes/m4-owner-review` read the old m4 prepare output and no longer runs.
 
 ## TL;DR

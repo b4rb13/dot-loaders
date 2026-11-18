@@ -11,7 +11,6 @@ import {
   activeWithin,
   ancestors,
   emit,
-  installStyles,
   node,
   upgradeProperties,
 } from './dom.js';
@@ -242,18 +241,19 @@ export abstract class LoadingController<
   }
   override connectedCallback(): void {
     super.connectedCallback();
-    for (const style of this.querySelectorAll(':scope > [data-dotquilt-style]'))
-      style.remove();
     for (const placeholder of this.querySelectorAll(
       ':scope > [data-dotquilt-placeholder]',
     ))
       placeholder.removeAttribute('hidden');
     if (!this.hasAttribute('role')) this.setAttribute('role', 'group');
     if (!this.shadowRoot) {
-      const root = this.attachShadow({ mode: 'open' });
-      installStyles(root, this.styles, this.policy);
+      // Layers are slots that never receive nodes, so until their stylesheet
+      // gives them boxes they render as `display: contents`: the light DOM
+      // then lays out exactly as the static markup did.
+      const root = this.attachStyledShadow(this.styles, false);
       const layer = (part: string, className: string, name?: string) => {
-        const element = node(this.ownerDocument, 'div', {
+        const element = node(this.ownerDocument, 'slot', {
+          name: 'dotquilt-layer',
           part,
           class: className,
         });
@@ -269,11 +269,20 @@ export abstract class LoadingController<
         refresh = layer('refresh-indicator', 'r', 'refresh-indicator');
       // The layers overlap inside their own grid, so the overlay survives app
       // CSS that changes the host's display (e.g. `display: block`).
-      const frame = node(this.ownerDocument, 'div', { class: 'f' });
+      const frame = node(this.ownerDocument, 'slot', {
+        name: 'dotquilt-layer',
+        class: 'f',
+      });
       frame.append(content, placeholder, refresh);
       root.append(frame);
       this.#wrappers = [content, placeholder, refresh];
     }
+    this.whenStyled(() => {
+      for (const style of this.querySelectorAll(
+        ':scope > [data-dotquilt-style]',
+      ))
+        style.remove();
+    });
     if (this.#wrappers) this.resources?.watch(this.#wrappers[0]);
     this.listen(this, 'focusin', this.#onFocus);
     this.listen(this, 'focusout', this.#onFocus);

@@ -30,7 +30,7 @@ Use Bun (pinned in `.bun-version`) and Node 24+.
 - **Browser tests:** `bun run test:e2e` runs Chromium against the workspace build, in parallel. Run `bun run build` first. Filter with `--project=<name>-chromium`.
   - `tests/e2e/` covers every component's pending/ready behaviour, layout containment and screenshots. Screenshot baselines live in `tests/e2e/__screenshots__/`; CI skips pixel comparisons.
   - `tests/browser/` holds the detailed native runtime tests.
-  - `tests/<suite>/`: coordination, presets, table, shared-wrapper, api, layout, react and m4. Each has its own fixture server, listed in `playwright.config.ts`. Layout runs with one worker, because it measures layout shifts.
+  - `tests/<suite>/`: coordination, presets, table, shared-wrapper, api, layout, react and m4. Each has its own fixture server, listed in `playwright.config.ts`.
   - `bun run test:e2e:all` adds Firefox and WebKit.
 - **Legacy suites:** `bun run test:legacy` (under a minute). Only two checks need packed tarballs: the React suite rerun on React 19.0, the oldest supported version, and catalog SSR under Node and Bun. Run them before a release or when touching the React adapter's hydration or nonce handling.
 - **Sizes:** `bun run size` prints gzip sizes per component. Budgets go in `scripts/size-budgets.json` once decided.

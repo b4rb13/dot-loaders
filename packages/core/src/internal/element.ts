@@ -2,7 +2,9 @@ import type { Motion, StylePolicy } from '../types.js';
 import {
   BaseElement,
   emit,
+  installStyles,
   motionRestricted,
+  node,
   type RefreshHost,
   styleRefresh,
 } from './dom.js';
@@ -15,6 +17,21 @@ export interface Activity {
 import { now, remaining } from './time.js';
 
 export { now, remaining } from './time.js';
+
+/** What an element keeps while its external shadow stylesheet loads. */
+interface Hold {
+  link: Element;
+  /** Renders the light-DOM static fallback, for elements that project it. */
+  slot: HTMLSlotElement | undefined;
+  observer: MutationObserver | undefined;
+  /** Shadow nodes hidden until the stylesheet applies. */
+  hidden: Set<Element>;
+  /** Work that would remove the static presentation. */
+  deferred: (() => void)[];
+  /** The pending frame that checks whether the stylesheet has loaded. */
+  frame: number | undefined;
+  loaded: (event: Event) => void;
+}
 export abstract class ManagedElement<
   K extends PresetKind = 'skeleton',
 > extends BaseElement {
@@ -25,6 +42,8 @@ export abstract class ManagedElement<
   protected deadline: ReturnType<typeof setTimeout> | undefined;
   #queued = false;
   #issues = new Set<string>();
+  #hold: Hold | undefined;
+  #internals: ElementInternals | undefined;
   // Cached between environment changes so animation frames don't walk ancestors.
   #restricted: boolean | undefined;
   #owner: { value: unknown } | undefined;
@@ -101,7 +120,109 @@ export abstract class ManagedElement<
     }
     this.policy = Object.freeze({ ...value });
   }
+  /**
+   * Attaches the shadow root with this element's styles.
+   *
+   * An external stylesheet loads asynchronously, and until it applies the
+   * shadow tree would render unstyled and shift the layout that the static
+   * (server) markup reserved. So until it loads, the element keeps its static
+   * presentation instead: it matches `:state(unstyled)`, which the static
+   * rules treat like `:not(:defined)`; with `projectFallback` it renders its
+   * light-DOM fallback through a leading slot and hides what it adds to its
+   * shadow root; motion waits; and `whenStyled` work is deferred. A stylesheet
+   * that fails to load leaves the static presentation in place.
+   *
+   * A loaded stylesheet applies before its `load` event, possibly a frame
+   * earlier, and its `display` rules then override `hidden`. So the hold also
+   * ends in the first animation frame that finds the stylesheet loaded.
+   */
+  protected attachStyledShadow(
+    css: readonly string[],
+    projectFallback: boolean,
+  ): ShadowRoot {
+    const root = this.attachShadow({ mode: 'open' });
+    installStyles(root, css, this.policy);
+    const link = root.lastElementChild;
+    if (this.policy.mode !== 'external' || !link || Reflect.get(link, 'sheet'))
+      return root;
+    try {
+      this.#internals ??= this.attachInternals();
+      this.#internals.states.add('unstyled');
+    } catch {
+      // Without custom states the static rules cannot follow the element.
+      return root;
+    }
+    const hold: Hold = {
+      link,
+      slot: undefined,
+      observer: undefined,
+      hidden: new Set(),
+      deferred: [],
+      frame: undefined,
+      loaded: (event) => {
+        if (event.target === link) this.#release();
+      },
+    };
+    if (projectFallback) {
+      const slot = node(this.ownerDocument, 'slot');
+      root.append(slot);
+      const hide = () => {
+        for (const child of root.children)
+          if (
+            child !== link &&
+            child !== slot &&
+            !child.hasAttribute('hidden')
+          ) {
+            child.setAttribute('hidden', '');
+            hold.hidden.add(child);
+          }
+      };
+      hold.slot = slot;
+      hold.observer = new MutationObserver(hide);
+      hold.observer.observe(root, { childList: true });
+    }
+    // Capturing on the root runs before the elements' own load listeners,
+    // which measure the styled tree.
+    root.addEventListener('load', hold.loaded, true);
+    this.#hold = hold;
+    this.#watch();
+    return root;
+  }
+  /** Runs `work` once the shadow stylesheet applies (now, if it has). */
+  protected whenStyled(work: () => void): void {
+    if (this.#hold) this.#hold.deferred.push(work);
+    else work();
+  }
+  /** Checks each frame, while connected, whether the stylesheet has loaded. */
+  #watch(): void {
+    const hold = this.#hold;
+    const win = this.ownerDocument.defaultView;
+    if (!hold || !win || hold.frame !== undefined) return;
+    hold.frame = win.requestAnimationFrame(() => {
+      hold.frame = undefined;
+      if (Reflect.get(hold.link, 'sheet')) this.#release();
+      else if (this.isConnected) this.#watch();
+    });
+  }
+  #release(): void {
+    const hold = this.#hold;
+    if (!hold) return;
+    this.#hold = undefined;
+    this.shadowRoot?.removeEventListener('load', hold.loaded, true);
+    if (hold.frame !== undefined)
+      this.ownerDocument.defaultView?.cancelAnimationFrame(hold.frame);
+    hold.observer?.disconnect();
+    hold.slot?.remove();
+    for (const child of hold.hidden) child.removeAttribute('hidden');
+    this.#internals?.states.delete('unstyled');
+    for (const work of hold.deferred) work();
+    this.forget();
+    this.requestRender();
+  }
   connectedCallback(): void {
+    // A stylesheet can finish loading while the element is disconnected.
+    if (this.#hold && Reflect.get(this.#hold.link, 'sheet')) this.#release();
+    else this.#watch();
     const href = this.getAttribute('data-dotquilt-style-href');
     if (!this.shadowRoot && (href !== null || this.nonce))
       this.stylePolicy =
@@ -167,6 +288,8 @@ export abstract class ManagedElement<
     );
   }
   protected allowed(activity: Activity): boolean {
+    // No motion on an unstyled shadow tree.
+    if (this.#hold) return false;
     if (!this.resources?.eligible() || remaining(this, activity) <= 0)
       return false;
     this.#restricted ??= motionRestricted(this);

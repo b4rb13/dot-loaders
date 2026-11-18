@@ -1,3 +1,4 @@
+import { unstyledHold } from './internal/unstyled.js';
 import { skeletonStyles } from './styles.js';
 
 export const skeletonLineStyles: readonly string[] =
@@ -20,4 +21,5 @@ export const skeletonTextStyles: readonly string[] =
   );
 export const typingStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
   ':host,dotquilt-typing-dots{display:inline-flex;position:relative;align-items:center;height:1em}:host .dot{display:inline-block;vertical-align:middle;width:var(--dotquilt-dot-size,2px);height:var(--dotquilt-dot-size,2px);border-radius:50%;background:var(--dotquilt-color,currentColor);opacity:.35}:host .dot+.dot{margin-inline-start:var(--dotquilt-dot-gap,4px)}:host([hidden]){display:none}@media(forced-colors:active){:host .dot{background:CanvasText}}',
+  unstyledHold,
 ]);

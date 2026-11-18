@@ -136,14 +136,17 @@ export class TextLoader extends LoadingController<'text'> {
       }
       placeholder ||= parent.slot === 'placeholder';
     }
-    const placeholderLayer = this.shadowRoot?.querySelector('.p');
-    if (placeholderLayer && !this.#mask) {
-      this.#mask = node(this.ownerDocument, 'span', {
-        class: 'mask',
-        'aria-hidden': 'true',
-      });
-      placeholderLayer.append(this.#mask);
-    }
+    // Unstyled, the mask would render as plain text beside the static one.
+    this.whenStyled(() => {
+      const placeholderLayer = this.shadowRoot?.querySelector('.p');
+      if (placeholderLayer && !this.#mask) {
+        this.#mask = node(this.ownerDocument, 'span', {
+          class: 'mask',
+          'aria-hidden': 'true',
+        });
+        placeholderLayer.append(this.#mask);
+      }
+    });
     for (const content of this.querySelectorAll(
       ':scope > [data-dotquilt-text-content]',
     )) {
@@ -265,7 +268,13 @@ export class TextLoader extends LoadingController<'text'> {
     let value = '',
       precise = true;
     for (const child of this.childNodes) {
-      if (child instanceof Element && child.hasAttribute('slot')) continue;
+      // The static stylesheet stays until the shadow stylesheet applies.
+      if (
+        child instanceof Element &&
+        (child.hasAttribute('slot') ||
+          child.hasAttribute('data-dotquilt-style'))
+      )
+        continue;
       if (child.childNodes.length > 256) return [nodes, '', false];
       const contents =
         child instanceof Element &&

@@ -30,11 +30,21 @@ async function observe(page: Page) {
             value: e.value,
             startTime: e.startTime,
             hadRecentInput: e.hadRecentInput,
-            sources: (e.sources ?? []).map((s) => ({
-              id: (s.node as Element)?.id ?? '',
-              previous: s.previousRect.toJSON(),
-              current: s.currentRect.toJSON(),
-            })),
+            sources: (e.sources ?? []).map((s) => {
+              // Name the node well enough to find it from a CI log.
+              const node = s.node as Element | undefined;
+              const element = node?.nodeType === 1 ? node : node?.parentElement;
+              const near = element?.closest('[id]');
+              return {
+                id: element?.id ?? '',
+                node: element
+                  ? `${element.localName}${element.className && typeof element.className === 'string' ? `.${element.className.trim().replace(/\s+/g, '.')}` : ''}${element.getAttribute('slot') ? `[slot=${element.getAttribute('slot')}]` : ''}`
+                  : String(node?.nodeName ?? ''),
+                in: near && near !== element ? near.id : '',
+                previous: s.previousRect.toJSON(),
+                current: s.currentRect.toJSON(),
+              };
+            }),
           });
         }
       }).observe({ type: 'layout-shift', buffered: true });
@@ -108,158 +118,179 @@ function stable(
         );
   }
 }
+// Slow frames run each animation frame's callbacks 60 ms late, so frames
+// render in between, as on a busy CI runner. An external stylesheet then
+// applies a frame or more before the element releases its static hold.
 for (const framework of ['native', 'react'])
   for (const mode of ['external', 'nonce'])
-    for (const profile of Object.keys(profiles) as Profile[]) {
-      test(`${framework} ${mode} ${profile}: maximum reserved layout across upgrade, hydration and outcomes`, async ({
-        page,
-      }, info) => {
-        const errors: string[] = [],
-          csp: string[] = [];
-        page.on('pageerror', (e) => errors.push(String(e)));
-        page.on('console', (m) => {
-          if (m.type() === 'error') errors.push(m.text());
-        });
-        await observe(page);
-        await page.goto(`/${framework}?profile=${profile}&mode=${mode}`);
-        await page.waitForFunction(() => Boolean(window.layoutTest));
-        await page.evaluate(() =>
-          document.addEventListener('securitypolicyviolation', (e) => {
-            (window as unknown as { violations: string[] }).violations ??= [];
-            (window as unknown as { violations: string[] }).violations.push(
-              `${e.violatedDirective}:${e.blockedURI}`,
-            );
-          }),
-        );
-        await settle(page);
-        const before = await snapshot(page);
-        expect(before.owner?.height).toBe(profiles[profile].height);
-        await page.evaluate(() => window.layoutProbe.start());
-        // The server description is useful before any registration or hydration.
-        expect(
-          await page.locator('#owner').evaluate((e) => e.shadowRoot),
-        ).toBeNull();
-        if (profile === 'multiline' || profile === 'multilineOverlimit') {
-          const lines = page.locator('#owner [data-dotquilt-static-line]');
-          await expect(lines).toHaveCount(50);
-          expect(
-            await lines.evaluateAll((nodes) =>
-              nodes.every((node) => node.closest('[aria-hidden="true"]')),
-            ),
-          ).toBe(true);
-        }
-        await page.evaluate(() => window.layoutTest.enhance());
-        await expect
-          .poll(() =>
-            page.locator('#owner').evaluate((e) => Boolean(e.shadowRoot)),
-          )
-          .toBe(true);
-        await settle(page);
-        stable(before, await snapshot(page));
-        if (framework === 'react') {
-          await page.evaluate(() => window.layoutTest.hydrate());
-          await expect
-            .poll(() => page.evaluate(() => window.layoutTest.commits()))
-            .toBeGreaterThan(0);
-          await settle(page);
-          stable(before, await snapshot(page));
-        }
-        const p = profiles[profile];
-        const admitted: Record<string, number | undefined> = (await page
-          .locator('#source')
-          .count())
-          ? await page.locator('#source').evaluate((e) => ({
-              lines: Reflect.get(e, 'lines'),
-              count: Reflect.get(e, 'count'),
-              rows: Reflect.get(e, 'rows'),
-              columns: Reflect.get(e, 'columns')?.length,
-              rowHeight: Reflect.get(e, 'rowHeight'),
-            }))
-          : {};
-        if ('lines' in p) expect(admitted.lines).toBe(Math.min(p.lines, 50));
-        if ('count' in p) expect(admitted.count).toBe(8);
-        if ('rows' in p) {
-          expect(admitted.rows).toBe(
-            Math.min(p.rows, 100, Math.floor(1000 / p.columns.length)),
-          );
-          expect(admitted.columns).toBe(p.columns.length);
-          expect(admitted.rowHeight).toBe(p.rowHeight);
-        }
-        if (await page.locator('#value').count())
-          await page.locator('#value').evaluate((e: HTMLInputElement) => {
-            e.value = 'retained maximum';
+    for (const profile of Object.keys(profiles) as Profile[])
+      for (const frames of ['normal', 'slow'] as const) {
+        if (
+          frames === 'slow' &&
+          (framework !== 'native' || mode !== 'external')
+        )
+          continue;
+        test(`${framework} ${mode} ${profile}${frames === 'slow' ? ' with slow frames' : ''}: maximum reserved layout across upgrade, hydration and outcomes`, async ({
+          page,
+        }, info) => {
+          if (frames === 'slow')
+            await page.addInitScript(() => {
+              const frame = window.requestAnimationFrame.bind(window);
+              window.requestAnimationFrame = (callback) =>
+                frame(() => setTimeout(() => callback(performance.now()), 60));
+            });
+          const errors: string[] = [],
+            csp: string[] = [];
+          page.on('pageerror', (e) => errors.push(String(e)));
+          page.on('console', (m) => {
+            if (m.type() === 'error') errors.push(m.text());
           });
-        for (const [state, cycle] of [
-          ['ready', 'initial'],
-          ['refreshing', 'refresh'],
-          ['ready', 'refresh'],
-          ['pending', 'replacement'],
-          ['ready', 'replacement'],
-        ] as const) {
-          await page.evaluate(([s, c]) => window.layoutTest.update(s, c), [
-            state,
-            cycle,
-          ] as const);
-          await expect(page.locator('#owner')).toHaveAttribute(
-            'data-presentation',
-            state,
-          );
-          await settle(page);
-          stable(before, await snapshot(page));
-          expect(await page.evaluate(() => window.layoutTest.identity())).toBe(
-            true,
-          );
-        }
-        if ('text' in p) {
-          expect(
-            await page.locator('[data-dotquilt-text-content]').textContent(),
-          ).toBe(p.text);
+          await observe(page);
+          await page.goto(`/${framework}?profile=${profile}&mode=${mode}`);
+          await page.waitForFunction(() => Boolean(window.layoutTest));
           await page.evaluate(() =>
-            document.getElementById('stage')?.classList.add('font-change'),
+            document.addEventListener('securitypolicyviolation', (e) => {
+              (window as unknown as { violations: string[] }).violations ??= [];
+              (window as unknown as { violations: string[] }).violations.push(
+                `${e.violatedDirective}:${e.blockedURI}`,
+              );
+            }),
           );
           await settle(page);
+          const before = await snapshot(page);
+          expect(before.owner?.height).toBe(profiles[profile].height);
+          await page.evaluate(() => window.layoutProbe.start());
+          // The server description is useful before any registration or hydration.
+          expect(
+            await page.locator('#owner').evaluate((e) => e.shadowRoot),
+          ).toBeNull();
+          if (profile === 'multiline' || profile === 'multilineOverlimit') {
+            const lines = page.locator('#owner [data-dotquilt-static-line]');
+            await expect(lines).toHaveCount(50);
+            expect(
+              await lines.evaluateAll((nodes) =>
+                nodes.every((node) => node.closest('[aria-hidden="true"]')),
+              ),
+            ).toBe(true);
+          }
+          await page.evaluate(() => window.layoutTest.enhance());
+          await expect
+            .poll(() =>
+              page.locator('#owner').evaluate((e) => Boolean(e.shadowRoot)),
+            )
+            .toBe(true);
+          await settle(page);
           stable(before, await snapshot(page));
-        }
-        await page.evaluate(() => window.layoutProbe.stop());
-        const result = await page.evaluate(() => ({
-          supported: window.layoutProbe.supported,
-          shifts: window.layoutProbe.shifts,
-          samples: window.layoutProbe.samples,
-          errors: window.layoutTest.errors,
-          csp: Reflect.get(window, 'violations') ?? [],
-        }));
-        for (const sample of result.samples) stable(before, sample);
-        const cls = result.supported ? layoutScore(result.shifts) : null;
-        if (result.supported) expect(cls).toBeLessThanOrEqual(0.01);
-        expect(result.errors).toEqual([]);
-        expect(result.csp).toEqual(csp);
-        expect(errors).toEqual([]);
-        if (await page.locator('#value').count())
-          await expect(page.locator('#value')).toHaveValue('retained maximum');
-        await info.attach('complete-scenario-layout', {
-          body: JSON.stringify({
-            framework,
-            mode,
-            profile,
-            before,
-            ...result,
-            cls,
-          }),
-          contentType: 'application/json',
+          if (framework === 'react') {
+            await page.evaluate(() => window.layoutTest.hydrate());
+            await expect
+              .poll(() => page.evaluate(() => window.layoutTest.commits()))
+              .toBeGreaterThan(0);
+            await settle(page);
+            stable(before, await snapshot(page));
+          }
+          const p = profiles[profile];
+          const admitted: Record<string, number | undefined> = (await page
+            .locator('#source')
+            .count())
+            ? await page.locator('#source').evaluate((e) => ({
+                lines: Reflect.get(e, 'lines'),
+                count: Reflect.get(e, 'count'),
+                rows: Reflect.get(e, 'rows'),
+                columns: Reflect.get(e, 'columns')?.length,
+                rowHeight: Reflect.get(e, 'rowHeight'),
+              }))
+            : {};
+          if ('lines' in p) expect(admitted.lines).toBe(Math.min(p.lines, 50));
+          if ('count' in p) expect(admitted.count).toBe(8);
+          if ('rows' in p) {
+            expect(admitted.rows).toBe(
+              Math.min(p.rows, 100, Math.floor(1000 / p.columns.length)),
+            );
+            expect(admitted.columns).toBe(p.columns.length);
+            expect(admitted.rowHeight).toBe(p.rowHeight);
+          }
+          if (await page.locator('#value').count())
+            await page.locator('#value').evaluate((e: HTMLInputElement) => {
+              e.value = 'retained maximum';
+            });
+          for (const [state, cycle] of [
+            ['ready', 'initial'],
+            ['refreshing', 'refresh'],
+            ['ready', 'refresh'],
+            ['pending', 'replacement'],
+            ['ready', 'replacement'],
+          ] as const) {
+            await page.evaluate(([s, c]) => window.layoutTest.update(s, c), [
+              state,
+              cycle,
+            ] as const);
+            await expect(page.locator('#owner')).toHaveAttribute(
+              'data-presentation',
+              state,
+            );
+            await settle(page);
+            stable(before, await snapshot(page));
+            expect(
+              await page.evaluate(() => window.layoutTest.identity()),
+            ).toBe(true);
+          }
+          if ('text' in p) {
+            expect(
+              await page.locator('[data-dotquilt-text-content]').textContent(),
+            ).toBe(p.text);
+            await page.evaluate(() =>
+              document.getElementById('stage')?.classList.add('font-change'),
+            );
+            await settle(page);
+            stable(before, await snapshot(page));
+          }
+          await page.evaluate(() => window.layoutProbe.stop());
+          const result = await page.evaluate(() => ({
+            supported: window.layoutProbe.supported,
+            shifts: window.layoutProbe.shifts,
+            samples: window.layoutProbe.samples,
+            errors: window.layoutTest.errors,
+            csp: Reflect.get(window, 'violations') ?? [],
+          }));
+          for (const sample of result.samples) stable(before, sample);
+          const cls = result.supported ? layoutScore(result.shifts) : null;
+          if (result.supported)
+            expect(
+              cls,
+              `layout shifts: ${JSON.stringify(result.shifts.filter((shift) => !shift.hadRecentInput))}`,
+            ).toBeLessThanOrEqual(0.01);
+          expect(result.errors).toEqual([]);
+          expect(result.csp).toEqual(csp);
+          expect(errors).toEqual([]);
+          if (await page.locator('#value').count())
+            await expect(page.locator('#value')).toHaveValue(
+              'retained maximum',
+            );
+          await info.attach('complete-scenario-layout', {
+            body: JSON.stringify({
+              framework,
+              mode,
+              profile,
+              before,
+              ...result,
+              cls,
+            }),
+            contentType: 'application/json',
+          });
+          await page.evaluate(() => window.layoutTest.remove());
+          await expect
+            .poll(() =>
+              page.evaluate(
+                () =>
+                  document
+                    .getAnimations()
+                    .filter((a) => a.playState === 'running').length,
+              ),
+            )
+            .toBe(0);
         });
-        await page.evaluate(() => window.layoutTest.remove());
-        await expect
-          .poll(() =>
-            page.evaluate(
-              () =>
-                document
-                  .getAnimations()
-                  .filter((a) => a.playState === 'running').length,
-            ),
-          )
-          .toBe(0);
-      });
-    }
+      }
 
 test('raw layout observer detects application resize even when recent input excludes it from CLS', async ({
   page,
@@ -521,4 +552,142 @@ for (const framework of ['native', 'react'])
         contentType: 'application/json',
       });
       await page.evaluate(() => window.layoutTest.remove());
+    });
+
+// The `external` style policy loads each upgraded host's shadow stylesheet
+// after upgrade. Until it applies, the host must keep the layout its static
+// markup reserved; rendered unstyled, long text shifted by 0.94 and inline
+// TypingDots lost their baseline. Every stylesheet requested after
+// enhancement is held, so the late arrival is deterministic.
+for (const framework of ['native', 'react'])
+  for (const profile of Object.keys(profiles) as Profile[])
+    test(`${framework} ${profile}: a late shadow stylesheet keeps the static layout until it applies`, async ({
+      page,
+    }, info) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      page.on('console', (m) => {
+        if (m.type() === 'error') errors.push(m.text());
+      });
+      let release = () => {};
+      let gate: Promise<void> | undefined;
+      await page.route(/\/(?:react-)?styles\/[^/]+\.css$/, async (route) => {
+        await gate;
+        await route.continue();
+      });
+      const shadowSheets = () =>
+        page.evaluate(() => {
+          const links = [...document.querySelectorAll('*')].flatMap((e) => [
+            ...(e.shadowRoot?.querySelectorAll('link') ?? []),
+          ]);
+          return {
+            requested: links.length,
+            loaded: links.filter((link) => link.sheet).length,
+          };
+        });
+      await observe(page);
+      await page.addInitScript(() => {
+        const reported: string[] = [];
+        Reflect.set(window, 'loaderErrors', reported);
+        document.addEventListener('dotquilt-error', (event) => {
+          const { code, field } = (event as CustomEvent).detail;
+          reported.push(`${(event.target as Element).id}:${code}:${field}`);
+        });
+      });
+      const loaderErrors = () =>
+        page.evaluate(() =>
+          [...(Reflect.get(window, 'loaderErrors') as string[])].sort(),
+        );
+      const path = (mode: string) =>
+        `/${framework}?profile=${profile}&mode=${mode}${profile === 'typing' ? '&inline=1' : ''}`;
+      // Inline styles apply at upgrade. Waiting for an external stylesheet
+      // may delay what the element reports, but must not change it.
+      await page.goto(path('nonce'));
+      await page.waitForFunction(() => Boolean(window.layoutTest));
+      await page.evaluate(() => {
+        window.layoutTest.enhance();
+        window.layoutTest.hydrate();
+      });
+      await settle(page);
+      const reported = await loaderErrors();
+      const results: Record<string, unknown> = { reported };
+      // `natural` drops the fixture's height reservation, so the static
+      // markup alone sizes every host.
+      for (const reservation of ['reserved', 'natural'] as const) {
+        if (reservation === 'natural')
+          await page.route('**/reservation.css*', (route) =>
+            route.fulfill({ contentType: 'text/css', body: '' }),
+          );
+        gate = undefined;
+        await page.goto(path('external'));
+        await page.waitForFunction(() => Boolean(window.layoutTest));
+        await settle(page);
+        const before = await snapshot(page);
+        if (reservation === 'reserved')
+          expect(before.owner?.height).toBe(profiles[profile].height);
+        gate = new Promise((resolve) => {
+          release = resolve;
+        });
+        await page.evaluate(() => {
+          window.layoutProbe.start();
+          window.layoutTest.enhance();
+          window.layoutTest.hydrate();
+        });
+        if (framework === 'react')
+          await expect
+            .poll(() => page.evaluate(() => window.layoutTest.commits()))
+            .toBeGreaterThan(0);
+        await settle(page);
+        await settle(page);
+        const held = await snapshot(page);
+        const sheets = await shadowSheets();
+        expect(sheets.requested).toBeGreaterThan(0);
+        expect(sheets.loaded).toBe(0);
+        stable(before, held);
+        // Pending content stays unavailable while the static layout holds.
+        if ('text' in profiles[profile])
+          expect(
+            await page
+              .locator('[data-dotquilt-text-content]')
+              .evaluate((e) => e.checkVisibility({ visibilityProperty: true })),
+          ).toBe(false);
+        else {
+          await page.locator('#value').evaluate((e) => e.focus());
+          await expect(page.locator('#value')).not.toBeFocused();
+        }
+        release();
+        await expect
+          .poll(async () => {
+            const { requested, loaded } = await shadowSheets();
+            return loaded === requested;
+          })
+          .toBe(true);
+        await settle(page);
+        const styled = await snapshot(page);
+        const probe = await page.evaluate(() => {
+          window.layoutProbe.stop();
+          return {
+            supported: window.layoutProbe.supported,
+            shifts: window.layoutProbe.shifts,
+            samples: window.layoutProbe.samples,
+          };
+        });
+        const cls = probe.supported ? layoutScore(probe.shifts) : null;
+        // A natural layout may still settle once styled; that is the
+        // caller's reservation to make, not the stylesheet's arrival.
+        if (reservation === 'reserved') {
+          stable(before, styled);
+          for (const sample of probe.samples) stable(before, sample);
+          if (probe.supported) expect(cls).toBeLessThanOrEqual(0.01);
+        }
+        expect(await page.evaluate(() => window.layoutTest.errors)).toEqual([]);
+        expect(await loaderErrors()).toEqual(reported);
+        results[reservation] = { before, held, styled, sheets, cls };
+        await page.evaluate(() => window.layoutTest.remove());
+      }
+      expect(errors).toEqual([]);
+      await info.attach('late-shadow-stylesheet', {
+        body: JSON.stringify({ framework, profile, ...results }),
+        contentType: 'application/json',
+      });
     });
