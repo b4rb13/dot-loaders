@@ -22,7 +22,6 @@ import {
 import {
   regionStyles,
   skeletonStyles,
-  staticRegionStyles,
   staticSkeletonStyles,
 } from './styles.js';
 import { staticTableStyles, tableStyles } from './table-styles.js';
@@ -86,12 +85,7 @@ export type DecorativeDescription =
       stylePolicy?: StylePolicy;
     }>;
 
-export {
-  regionStyles,
-  skeletonStyles,
-  staticRegionStyles,
-  staticSkeletonStyles,
-};
+export { regionStyles, skeletonStyles, staticSkeletonStyles };
 export type StaticDescription =
   | DecorativeDescription
   | Readonly<{
@@ -278,5 +272,5 @@ export function renderStatic(description: StaticDescription): string {
   const placeholder = description.placeholder
     ? `<span slot="placeholder" data-dotquilt-placeholder${state === 'ready' ? ' hidden' : ''}>${renderStatic(description.placeholder)}</span>`
     : '';
-  return `<dotquilt-region state="${state}"${description.label ? ` aria-label="${escapeHTML(description.label)}"` : ''}>${style(staticRegionStyles, description.stylePolicy)}${placeholder}</dotquilt-region>`;
+  return `<dotquilt-region state="${state}"${description.label ? ` aria-label="${escapeHTML(description.label)}"` : ''}>${style(regionStyles, description.stylePolicy)}${placeholder}</dotquilt-region>`;
 }

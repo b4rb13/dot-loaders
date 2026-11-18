@@ -49,7 +49,6 @@ Fixed, each with a regression test that fails on the old code:
   - TableLoader NaN pointer at zero size
   - the renderer not switching when the idle animation changes
   - #35 stale pointer on touch
-- **Server-rendered pending content:** it is now hidden from view, focus and screen readers before JavaScript, in both native and React output.
 - **Simple reveals:** they are no longer cut short by content updates.
 - **React hydration snapshot:** it no longer copies another root's attributes.
 
@@ -58,8 +57,14 @@ Pre-existing legacy failures, the same on the pre-Phase-2 code (they need triage
 - table-options: 8
 - table-parts: 5
 - shared-wrapper: 16
+- motion-review: does not start; its server needs table fixtures that only `prepare-table` creates, which runs later.
+- next: its build stops because Next 16.4.2 has a published security advisory. The suite needs a Next upgrade before it can run.
 
-Not done yet: React style de-duplication (one stylesheet per instance). It changes SSR markup across React 19.0–19.3 and Next, so it gets its own change.
+All other legacy suites pass: native (packed), react, chart-production, table, presets, coordination, api, copies and layout.
+
+Not done yet:
+- React style de-duplication (one stylesheet per instance). It changes SSR markup across React 19.0–19.3 and Next, so it gets its own change.
+- Hiding pending SSR content before upgrade. Tried and reverted: the legacy React suite requires pending server content to stay visible and usable without JavaScript. Now decision 11.
 
 ## TL;DR
 
@@ -123,7 +128,7 @@ Confirmed by me in source:
 
 Reported by the reviewers (high/medium confidence, not all re-verified):
 
-6. **Pending SSR content is visible before JS.** `renderStatic({kind:'region'})` emits only `:host` rules, which match nothing in light DOM. Pending content is visible and exposed to screen readers until upgrade. The no-JS test passes only because its fixture adds `hidden inert` itself (`tests/browser/server.ts:218`).
+6. **Pending SSR content is visible before JS.** `renderStatic({kind:'region'})` emits only `:host` rules, which match nothing in light DOM. Pending content is visible and exposed to screen readers until upgrade. The native no-JS test passes only because its fixture adds `hidden inert` itself (`tests/browser/server.ts:218`). *Phase 2 update:* this is a deliberate trade-off rather than a plain bug. The legacy React suite requires pending content to stay usable when JavaScript is off or fails. See decision 11.
 7. **Heavy per-frame work.** Chart, Table and Text do ancestor walks plus a fresh `matchMedia()` per element per frame. The micro-optimisation effort went to attribute-string caching instead.
 8. **Handoffs get cut short.**
    - Any content mutation or slotchange in a region ends the handoff as `geometry-changed`; React follow-up effects trigger this.
@@ -249,7 +254,7 @@ In order:
 1. TableLoader/Chart layout: make components robust when a consumer sets `display` on the host, using an internal wrapper instead of relying on `:host{display:grid}`
 2. invalidation storm
 3. per-frame work
-4. SSR pending content hiding
+4. SSR pending content hiding (blocked on decision 11)
 5. frame-loop isolation and error dedupe
 6. React document scan and style dedupe
 7. #35 stale pointer
@@ -332,3 +337,10 @@ Performance qualification on real devices comes after there are users, against b
     - (c) once per loading cycle.
 
     I recommend (b) for configuration errors and (c) for runtime failures.
+11. **Pending server content before JavaScript.** Today a server-rendered pending region shows its placeholder *and* its content until the runtime upgrades it. If JavaScript is off or fails to load, the content stays visible and usable. The cost is that, while JavaScript loads, people see both and screen readers announce content that is not ready. Hiding it with CSS until upgrade (tried in Phase 2) leaves it hidden forever when JavaScript never runs. Options:
+    - (a) keep content visible and usable (today; the legacy React tests pin this);
+    - (b) hide it only while scripting is on (`@media (scripting: enabled)`), accepting that a failed bundle hides it;
+    - (c) (b) plus a CSS-only timeout that reveals it again if the element never upgrades;
+    - (d) leave it to the app, and document `hidden`/`inert` on pending server content.
+
+    I recommend (a) as the default, with (d) documented for apps that would rather hide.

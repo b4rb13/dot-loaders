@@ -20,7 +20,6 @@ import {
 import {
   regionStyles,
   skeletonStyles,
-  staticRegionStyles,
   staticSkeletonStyles,
 } from '../packages/core/src/styles.js';
 import {
@@ -56,10 +55,7 @@ await Promise.all([
     resolve(cwd, 'dist/skeleton.css'),
     [...skeletonStyles, ...staticSkeletonStyles].join('\n'),
   ),
-  writeFile(
-    resolve(cwd, 'dist/region.css'),
-    [...regionStyles, ...staticRegionStyles].join('\n'),
-  ),
+  writeFile(resolve(cwd, 'dist/region.css'), regionStyles.join('\n')),
 ]);
 
 for (const [name, css] of Object.entries({
