@@ -8,7 +8,7 @@ import { node, register, upgradeProperties } from './internal/dom.js';
 import type { Preset } from './internal/preset.js';
 import { tablePreset } from './internal/preset.js';
 import { capturePresetData } from './internal/preset-data.js';
-import { defaultRows, defaultTypeOn } from './internal/table-definitions.js';
+import { defaultRows, defaultShimmer } from './internal/table-definitions.js';
 import { tableAppearance } from './internal/table-field.js';
 import {
   staticTableSVG,
@@ -63,7 +63,7 @@ export class TableLoader extends DenseLoader<'table', TableTargetProvider> {
   protected readonly appearanceKey = tableAppearance;
   protected readonly emptyInput = emptyTableInput;
   protected defaultIdle() {
-    return defaultTypeOn;
+    return defaultShimmer;
   }
   protected defaultHandoff() {
     return defaultRows;

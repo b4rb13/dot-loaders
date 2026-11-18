@@ -209,7 +209,8 @@ test('row choreography converges into supplied glyphs, fades decoration, reveals
       prepare: (s: typeof surface, o: object) => unknown;
       draw: HandoffPaint;
     };
-  expect(def.duration(surface, binding.options)).toBe(615);
+  // The spec's 1.1 s handoff: rows 80 ms apart, cells 28 ms apart.
+  expect(def.duration(surface, binding.options)).toBe(1100);
   const plan = def.prepare(surface, binding.options);
   expect(Object.isFrozen(plan)).toBe(true);
   const dots: Dot[] = [],
@@ -220,7 +221,7 @@ test('row choreography converges into supplied glyphs, fades decoration, reveals
     prepared: plan,
     linear: 1,
     progress: 1,
-    duration: 615,
+    duration: 1100,
     deltaMs: 0,
     dot: (d) => dots.push(d),
     reveal: () => {},
@@ -230,7 +231,7 @@ test('row choreography converges into supplied glyphs, fades decoration, reveals
   expect(dots.every((d) => d.opacity === 0)).toBe(true);
   expect(
     def.duration({ ...surface, revealTargetIds: [] }, binding.options),
-  ).toBe(150);
+  ).toBe(700); // Without row targets: the content's 700 ms fade.
 });
 test('static output is bounded, decorative, DOM-free and never serializes providers or content', () => {
   for (const d of [
@@ -303,7 +304,7 @@ test('unmatched outgoing dots fade instead of vanishing at the first frame', () 
     prepared: plan,
     linear: 0,
     progress: 0,
-    duration: 615,
+    duration: 1100,
     deltaMs: 0,
     dot: (d) => dots.push(d),
     reveal: () => {},

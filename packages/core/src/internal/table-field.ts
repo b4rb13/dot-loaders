@@ -1,11 +1,19 @@
 import type { AnimationSurface, Dot } from '../animations.js';
 import type { TypeOnOptions } from '../table-animations.js';
 import type { Appearance } from './chart-appearance.js';
+import { peakOpacity, restOpacity } from './marks.js';
 import { clamp } from './math.js';
 export const tableAppearance: unique symbol = Symbol(
   'dotquilt.table-appearance',
 );
-/** Bounded command generation, no per-frame layout or geometry discovery. */
+/**
+ * The table idle (design/SPEC.md). Each cell shows bars of marks, two rows
+ * tall, at the resting opacity; the field breathes ±7% every 3.2 s. The
+ * default (`shimmer`) keeps the bars still under a teal glow that drifts
+ * across every 2.8 s; type-on grows them instead, with an accent caret.
+ * Every mark is the same size. Bounded command generation, no per-frame
+ * layout or geometry discovery.
+ */
 export function tableField(
   surface: AnimationSurface<'table'>,
   options: Readonly<TypeOnOptions>,
@@ -17,8 +25,8 @@ export function tableField(
   const appearance = Reflect.get(surface, tableAppearance) as
       | Appearance
       | undefined,
-    pitch = appearance?.pitch ?? 6,
-    scale = appearance?.scale ?? 1;
+    pitch = appearance?.pitch ?? 9,
+    scale = appearance?.scale ?? 2.2;
   const cells = surface.input.cells;
   const area = cells.reduce(
     (n, c) =>
@@ -27,7 +35,12 @@ export function tableField(
   );
   const step = Math.max(pitch, Math.sqrt(area / 3000));
   let count = 0;
-  const t = (time * 600) / options.cadenceMs;
+  const t = (time * 600) / options.cadenceMs,
+    seconds = time / 1000,
+    breath = still ? 1 : 0.93 + 0.07 * Math.sin((2 * Math.PI * seconds) / 3.2),
+    glowAt = -0.5 + 2 * (0.5 - 0.5 * Math.cos(Math.PI * ((seconds / 2.8) % 1))),
+    fieldWidth = Math.max(1, surface.width),
+    fieldHeight = Math.max(1, surface.height);
   for (const cell of cells) {
     const b = cell.bounds,
       phase =
@@ -39,39 +52,56 @@ export function tableField(
         : 0.12 +
           0.74 * (clamp(phase / 600) - clamp((phase - 1150) / 350) * 0.85);
     const available = Math.max(0, b.width - 12),
-      width = available * run,
+      barWidth = available * run,
       kind = options.cellStyle === 'auto' ? cell.kind : options.cellStyle;
-    const band = (start: number, w: number, badge = false) => {
-      for (let x = start; x < Math.min(b.x + b.width, start + w); x += step)
-        for (
-          let y = b.y + b.height * (badge ? 0.29 : 0.4);
-          y < b.y + b.height * (badge ? 0.72 : 0.65);
-          y += step
-        ) {
+    // Two rows of marks centred on the cell, like a line placeholder.
+    const middle = b.y + b.height / 2;
+    const band = (start: number, w: number) => {
+      for (
+        let x = start + step / 2;
+        x < Math.min(b.x + b.width, start + w);
+        x += step
+      )
+        for (const y of [middle - step / 2, middle + step / 2]) {
           if (++count > 4096) return;
-          const wave = (Math.sin(x * 0.025 + y * 0.01 - t * 0.003) + 1) * 0.5,
-            caret = Math.exp(-(((x - start - w) / 9) ** 2));
+          const caret =
+            shimmer || still ? 0 : Math.exp(-(((x - start - w) / 9) ** 2));
           dot({
             x,
             y,
-            size: (badge ? 2.1 : 1.7) * scale,
-            opacity: still ? 0.28 : 0.2 + wave * 0.23 + caret * 0.25,
-            tone: caret > 0.5 && !still ? 'accent' : 'base',
+            size: scale,
+            opacity: restOpacity * breath + caret * 0.3,
+            tone: caret > 0.5 ? 'accent' : 'base',
           });
+          if (!shimmer || still) continue;
+          const d = (x / fieldWidth) * 0.8 + (y / fieldHeight) * 0.2 - glowAt,
+            glow = Math.abs(d / 0.2) > 3.2 ? 0 : Math.exp(-((d / 0.2) ** 2));
+          if (glow * peakOpacity >= 0.02 && ++count <= 4096)
+            dot({
+              x,
+              y,
+              size: scale,
+              opacity: glow * peakOpacity,
+              tone: 'accent',
+            });
         }
     };
-    if (kind === 'badge') band(b.x + 4, available * 0.45, true);
+    if (kind === 'badge') band(b.x + 4, available * 0.45);
     else if (kind === 'badge-text') {
       const w = Math.min(24, available * 0.22);
-      band(b.x + 4, w, true);
-      band(b.x + w + 12, Math.min(width, Math.max(0, available - w - 8)));
-    } else if (kind === 'text-badge') {
-      const w = Math.min(width, available * 0.58);
       band(b.x + 4, w);
-      band(b.x + w + 12, Math.min(24, Math.max(0, available - w - 8)), true);
+      band(b.x + w + 12, Math.min(barWidth, Math.max(0, available - w - 8)));
+    } else if (kind === 'text-badge') {
+      const w = Math.min(barWidth, available * 0.58);
+      band(b.x + 4, w);
+      band(b.x + w + 12, Math.min(24, Math.max(0, available - w - 8)));
     } else if (kind === 'date') {
       for (let g = 0; g < 3; g++)
         band(b.x + 4 + g * available * 0.24, available * 0.17);
-    } else band(kind === 'number' ? b.x + b.width - width - 4 : b.x + 4, width);
+    } else
+      band(
+        kind === 'number' ? b.x + b.width - barWidth - 4 : b.x + 4,
+        barWidth,
+      );
   }
 }

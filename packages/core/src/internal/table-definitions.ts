@@ -4,6 +4,7 @@ import { mix, smooth } from './chart-math.js';
 import { managedPainter } from './dense/managed-painter.js';
 import { createDenseRunner as createRunner } from './dense/runner.js';
 import { createHandoff } from './handoff.js';
+import { handoff } from './marks.js';
 import { clamp } from './math.js';
 import type { HandoffFrame, IdleFrame } from './paint.js';
 import { createRevealEffect } from './reveal-effect.js';
@@ -39,6 +40,25 @@ export const defaultTypeOn = /* @__PURE__ */ tableBinding(typeOnDefinition, {
   cadenceMs: 600,
   cellStyle: 'auto' as const,
 });
+// The spec's idle (still bars under the drifting glow) is the default.
+const shimmerDefinition = /* @__PURE__ */ tableIdle(true);
+export const shimmerFactory = /* @__PURE__ */ tableFactory<
+  'idle',
+  TypeOnOptions
+>(shimmerDefinition, { cadenceMs: [600, 250, 1200] }, true);
+export const defaultShimmer = /* @__PURE__ */ tableBinding(shimmerDefinition, {
+  cadenceMs: 600,
+  cellStyle: 'auto' as const,
+});
+/**
+ * Rows handoff timing (design/SPEC.md): rows start 80 ms apart and cells
+ * 28 ms apart, up to 7 rows and 6 columns, and each cell takes the rest of
+ * the 1.1 s handoff.
+ */
+const cellStaggerMs = 28,
+  cellWindowMs = 372;
+const rowsDuration = (o: RowsOptions) =>
+  7 * o.staggerMs + 6 * cellStaggerMs + cellWindowMs;
 const precise = (s: AnimationSurface<'table'>) =>
   s.revealTargetIds.length > 0 &&
   s.input.cells.length > 0 &&
@@ -49,6 +69,7 @@ interface CellPlan {
   readonly from: readonly Dot[];
   readonly to: readonly Dot[];
   readonly row: number;
+  readonly column: number;
   readonly tone: 'base' | 'accent';
 }
 const rowsDefinition = /* @__PURE__ */ Object.freeze({
@@ -61,7 +82,7 @@ const rowsDefinition = /* @__PURE__ */ Object.freeze({
   reveal: createRevealEffect,
   targets: createTargets,
   duration: (s: AnimationSurface<'table'>, o: RowsOptions) =>
-    precise(s) ? 7 * o.staggerMs + 370 : 150,
+    precise(s) ? rowsDuration(o) : handoff.contentFade,
   prepare(s: AnimationSurface<'table'>) {
     const used = new Set<Dot>();
     let count = 0,
@@ -91,6 +112,7 @@ const rowsDefinition = /* @__PURE__ */ Object.freeze({
             from: Object.freeze(from),
             to: Object.freeze(to),
             row: cell.rowIndex,
+            column: cell.columnIndex,
             tone: cell.tone,
           });
         });
@@ -117,26 +139,32 @@ const rowsDefinition = /* @__PURE__ */ Object.freeze({
   >): undefined {
     const plans = prepared.cells;
     if (!plans.length) {
+      // No per-row targets: the marks fade while the content fades and rises.
       const q = 1 - (1 - clamp(p)) ** 3;
       for (const d of s.source) dot({ ...d, opacity: d.opacity * (1 - q) });
-      reveal({ opacity: q });
+      reveal({ opacity: q, translateY: (1 - q) * handoff.risePx });
       return;
     }
     for (const d of prepared.rest)
       dot({ ...d, opacity: d.opacity * (1 - clamp(p)) ** 3 });
-    const ms = p * (7 * o.staggerMs + 370);
+    const ms = p * rowsDuration(o);
     reveal({ opacity: 1 });
     for (const id of s.revealTargetIds) {
       const cell = s.input.cells.find((c) => c.rowId === id);
       if (!cell) continue;
       const q = clamp(
-          (ms - Math.min(cell?.rowIndex ?? 0, 7) * o.staggerMs) / 360,
+          (ms - Math.min(cell?.rowIndex ?? 0, 7) * o.staggerMs) / cellWindowMs,
         ),
         show = 1 - (1 - clamp((q - 0.35) / 0.45)) ** 3;
       target(id, { opacity: show, translateY: (1 - show) * o.settlePx });
     }
     for (const plan of plans) {
-      const q = clamp((ms - Math.min(plan.row, 7) * o.staggerMs) / 360),
+      const q = clamp(
+          (ms -
+            Math.min(plan.row, 7) * o.staggerMs -
+            Math.min(plan.column, 6) * cellStaggerMs) /
+            cellWindowMs,
+        ),
         morph = smooth(q / 0.65),
         alpha = (1 - clamp((q - 0.45) / 0.55)) ** 3;
       for (let k = 0; k < Math.max(plan.from.length, plan.to.length); k++) {
@@ -156,9 +184,9 @@ const rowsDefinition = /* @__PURE__ */ Object.freeze({
 });
 export const rowsFactory = /* @__PURE__ */ tableFactory<'handoff', RowsOptions>(
   rowsDefinition,
-  { staggerMs: [35, 0, 50], settlePx: [4, 0, 8] },
+  { staggerMs: [80, 0, 120], settlePx: [5, 0, 8] },
 );
 export const defaultRows = /* @__PURE__ */ tableBinding(rowsDefinition, {
-  staggerMs: 35,
-  settlePx: 4,
+  staggerMs: 80,
+  settlePx: 5,
 });
