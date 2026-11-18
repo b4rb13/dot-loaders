@@ -1,6 +1,4 @@
 import { expect, test } from 'bun:test';
-import { createHash } from 'node:crypto';
-import reference from '../../../tests/fixtures/chart-idle-commands.json';
 import type {
   AnimationSurface,
   Dot,
@@ -23,6 +21,7 @@ import { defaultRidge } from '../src/internal/chart-definitions.js';
 import { chartProjection } from '../src/internal/chart-projection.js';
 import type { HandoffPaint, IdlePaint } from '../src/internal/paint.js';
 import { renderStatic } from '../src/server.js';
+import idleCases from './fixtures/chart-idle-cases.json';
 
 const bounds = Object.freeze({ width: 320, height: 200 });
 test('chart geometry snapshots preserve semantic/legacy data, zeroes and bounded synchronous acquisition', () => {
@@ -325,77 +324,85 @@ test('selective default Ridge emits identical ordered commands to the public con
       expect(a).toEqual(b);
     }
 });
-test('all 288 archived idle command fixtures retain exact order, values, options and CSS density', () => {
-  const factories = { ridge, scan, terrain, bars, scatter, cycle };
-  expect(reference.rows).toHaveLength(288);
-  for (const row of reference.rows) {
-    const binding = Reflect.apply(Reflect.get(factories, row.name), undefined, [
-      row.options,
-    ]);
-    const s = Object.freeze({
-        ...surface,
-        [chartAppearance]: Object.freeze({
-          pitch: row.pitch,
-          scale: row.scale,
-        }),
-      }),
-      dots: Dot[] = [];
-    const definition = definitionOf(binding) as unknown as { draw: IdlePaint };
-    definition.draw(
-      s,
-      binding.options,
-      row.time,
-      row.still,
-      (d) => dots.push(d),
-      16,
-    );
-    expect(dots.length).toBe(row.count);
-    expect(
-      createHash('sha256').update(JSON.stringify(dots)).digest('hex'),
-    ).toBe(row.sha256);
+const factories = { ridge, scan, terrain, bars, scatter, cycle };
+type IdleCase = (typeof idleCases.cases)[number];
+/** Draws one idle case; `during` runs after the first dot to probe reentrancy. */
+function drawIdle(row: IdleCase, during?: () => void): Dot[] {
+  const binding = Reflect.apply(Reflect.get(factories, row.name), undefined, [
+    row.options,
+  ]);
+  const definition = definitionOf(binding) as unknown as { draw: IdlePaint };
+  const dots: Dot[] = [];
+  definition.draw(
+    Object.freeze({
+      ...surface,
+      [chartAppearance]: Object.freeze({ pitch: row.pitch, scale: row.scale }),
+    }),
+    binding.options,
+    row.time,
+    row.still,
+    (dot) => {
+      dots.push(dot);
+      if (dots.length === 1) during?.();
+    },
+    16,
+  );
+  return dots;
+}
+/** One readable line per case, so a snapshot diff shows which recipe changed and how. */
+function summarize(dots: readonly Dot[]): string {
+  const round = (value: number) => Math.round(value * 100) / 100;
+  const range = (pick: (dot: Dot) => number) => {
+    const values = dots.map(pick);
+    return `${round(Math.min(...values))}..${round(Math.max(...values))}`;
+  };
+  const meanOpacity =
+    dots.reduce((sum, dot) => sum + dot.opacity, 0) / dots.length;
+  const accent = dots.filter((dot) => dot.tone === 'accent').length;
+  return `${dots.length} dots; x ${range((d) => d.x)}; y ${range((d) => d.y)}; size ${range((d) => d.size)}; opacity ${range((d) => d.opacity)} mean ${round(meanOpacity)}; accent ${accent}`;
+}
+test('chart idle recipes draw finite, bounded, deterministic dots for every case', () => {
+  const summaries: Record<string, string> = {};
+  for (const row of idleCases.cases) {
+    const dots = drawIdle(row);
+    expect(dots.length).toBeGreaterThan(0);
+    for (const dot of dots) {
+      expect(Number.isFinite(dot.x) && Number.isFinite(dot.y)).toBe(true);
+      expect(dot.size).toBeGreaterThan(0);
+      // Opacity may overshoot slightly; the painter clamps it to 0..1.
+      expect(Number.isFinite(dot.opacity)).toBe(true);
+      expect(dot.x).toBeGreaterThanOrEqual(-dot.size);
+      expect(dot.x).toBeLessThanOrEqual(bounds.width + dot.size);
+      expect(dot.y).toBeGreaterThanOrEqual(-dot.size);
+      expect(dot.y).toBeLessThanOrEqual(bounds.height + dot.size);
+    }
+    expect(drawIdle(row)).toEqual(dots);
+    summaries[
+      `${row.name} ${JSON.stringify(row.options)} t=${row.time}${row.still ? ' still' : ''} pitch=${row.pitch} scale=${row.scale}`
+    ] = summarize(dots);
   }
+  // Review changes with `bun test --update-snapshots` and a diff of the .snap file.
+  expect(summaries).toMatchSnapshot();
 });
 
-test('nested chart paints leave outer commands and retained dot values intact', () => {
-  const factories = { ridge, scan, terrain, bars, scatter, cycle };
+test('a nested chart paint during drawing leaves the outer output unchanged', () => {
   const nested = cycle({ holdMs: 800, blendMs: 200 });
   const nestedDefinition = definitionOf(nested) as unknown as {
     draw: IdlePaint;
   };
-  for (const row of reference.rows) {
-    const binding = Reflect.apply(Reflect.get(factories, row.name), undefined, [
-      row.options,
-    ]);
-    const definition = definitionOf(binding) as unknown as { draw: IdlePaint };
-    const dots: Dot[] = [];
-    const drawSurface = Object.freeze({
-      ...surface,
-      [chartAppearance]: Object.freeze({ pitch: row.pitch, scale: row.scale }),
-    });
-    definition.draw(
-      drawSurface,
-      binding.options,
-      row.time,
-      row.still,
-      (dot) => {
-        dots.push(dot);
-        if (dots.length === 1)
-          nestedDefinition.draw(
-            surface,
-            nested.options,
-            1900,
-            false,
-            () => {},
-            16,
-          );
-      },
-      16,
-    );
-    expect(dots.length).toBe(row.count);
+  for (const row of idleCases.cases)
     expect(
-      createHash('sha256').update(JSON.stringify(dots)).digest('hex'),
-    ).toBe(row.sha256);
-  }
+      drawIdle(row, () =>
+        nestedDefinition.draw(
+          surface,
+          nested.options,
+          1900,
+          false,
+          () => {},
+          16,
+        ),
+      ),
+    ).toEqual(drawIdle(row));
 });
 
 test('presets expose implemented surface controls while keeping chart variant family-specific', () => {

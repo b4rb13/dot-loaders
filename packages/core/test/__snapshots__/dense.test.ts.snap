@@ -1,0 +1,276 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`prepared recipes draw finite, deterministic dots and reveal commands 1`] = `
+[
+  {
+    "dots": 4320,
+    "family": "chart",
+    "reveals": [
+      [
+        "content",
+        {
+          "clipStart": 0,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0.04948509330905787,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0.25075386891215296,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0.9032771961766045,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 1,
+          "opacity": 1,
+        },
+      ],
+    ],
+  },
+  {
+    "dots": 4320,
+    "family": "chart",
+    "reveals": [
+      [
+        "content",
+        {
+          "clipStart": 0,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0.04948509330905787,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0.25075386891215296,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0.9032771961766045,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 1,
+          "opacity": 1,
+        },
+      ],
+    ],
+  },
+  {
+    "dots": 4320,
+    "family": "chart",
+    "reveals": [
+      [
+        "content",
+        {
+          "clipStart": 0,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0.04948509330905787,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0.25075386891215296,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 0.9032771961766045,
+          "opacity": 1,
+        },
+      ],
+      [
+        "content",
+        {
+          "clipStart": 1,
+          "opacity": 1,
+        },
+      ],
+    ],
+  },
+  {
+    "dots": 4320,
+    "family": "text",
+    "reveals": [
+      [
+        "content",
+        {
+          "opacity": 0,
+        },
+      ],
+      [
+        "content",
+        {
+          "opacity": 0,
+        },
+      ],
+      [
+        "content",
+        {
+          "opacity": 0.04948509330905787,
+        },
+      ],
+      [
+        "content",
+        {
+          "opacity": 0.25075386891215296,
+        },
+      ],
+      [
+        "content",
+        {
+          "opacity": 0.9032771961766045,
+        },
+      ],
+      [
+        "content",
+        {
+          "opacity": 1,
+        },
+      ],
+    ],
+  },
+  {
+    "dots": 4320,
+    "family": "table",
+    "reveals": [
+      [
+        "content",
+        {
+          "opacity": 1,
+        },
+      ],
+      [
+        "row",
+        {
+          "opacity": 0,
+          "translateY": 4,
+        },
+      ],
+      [
+        "content",
+        {
+          "opacity": 1,
+        },
+      ],
+      [
+        "row",
+        {
+          "opacity": 0,
+          "translateY": 4,
+        },
+      ],
+      [
+        "content",
+        {
+          "opacity": 1,
+        },
+      ],
+      [
+        "row",
+        {
+          "opacity": 0.7840000000000001,
+          "translateY": 0.8639999999999994,
+        },
+      ],
+      [
+        "content",
+        {
+          "opacity": 1,
+        },
+      ],
+      [
+        "row",
+        {
+          "opacity": 0.972,
+          "translateY": 0.1120000000000001,
+        },
+      ],
+      [
+        "content",
+        {
+          "opacity": 1,
+        },
+      ],
+      [
+        "row",
+        {
+          "opacity": 1,
+          "translateY": 0,
+        },
+      ],
+      [
+        "content",
+        {
+          "opacity": 1,
+        },
+      ],
+      [
+        "row",
+        {
+          "opacity": 1,
+          "translateY": 0,
+        },
+      ],
+    ],
+  },
+]
+`;

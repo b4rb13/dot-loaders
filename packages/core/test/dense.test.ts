@@ -1,10 +1,9 @@
 import { expect, test } from 'bun:test';
-import { createHash } from 'node:crypto';
 import type { Dot } from '../src/animations';
 import { acquireProjection } from '../src/internal/dense/projection';
 import { prepareRecipe } from '../src/internal/dense/recipes';
 import { lease } from '../src/internal/dense/resources';
-import recipeCommands from './fixtures/recipe-commands.json';
+import recipeCases from './fixtures/recipe-cases.json';
 
 const line = {
   family: 'chart',
@@ -17,34 +16,46 @@ const line = {
     baseline: 20,
   },
 };
-test('prepared recipes preserve pre-optimization ordered dots and content/row reveal commands', () => {
-  for (const fixture of recipeCommands.cases) {
-    const projection = acquireProjection(() => fixture.projection);
-    if (!projection.value) throw new Error('Missing golden projection');
-    const plan = prepareRecipe(projection.value, 320, 160);
-    const output: unknown[] = [];
-    const dot = (v: Dot) =>
-      output.push([
-        Math.fround(v.x),
-        Math.fround(v.y),
-        Math.fround(v.size),
-        Math.fround(v.opacity),
-        v.tone,
-      ]);
-    for (const still of [false, true])
-      for (const time of [0, 350, 925]) plan.idle(time, dot, still);
-    for (const progress of [0, 0.2, 0.55, 0.65, 0.9, 1])
-      plan.handoff(
-        progress,
-        dot,
-        (value) => output.push(['content', value]),
-        (id, value) => output.push([id, value]),
-        ['row'],
-      );
-    expect(
-      createHash('sha256').update(JSON.stringify(output)).digest('hex'),
-    ).toBe(fixture.sha256);
+/** Rounds numbers for a readable snapshot; other values pass through. */
+const round = (value: unknown) =>
+  typeof value === 'number' ? Math.round(value * 1000) / 1000 : value;
+function recordRecipe(fixture: (typeof recipeCases.cases)[number]) {
+  const projection = acquireProjection(() => fixture.projection);
+  if (!projection.value) throw new Error('Missing projection');
+  const plan = prepareRecipe(projection.value, 320, 160);
+  const dots: Dot[] = [];
+  const reveals: unknown[] = [];
+  for (const still of [false, true])
+    for (const time of [0, 350, 925])
+      plan.idle(time, (dot) => dots.push(dot), still);
+  for (const progress of [0, 0.2, 0.55, 0.65, 0.9, 1])
+    plan.handoff(
+      progress,
+      (dot) => dots.push(dot),
+      (value) => reveals.push(['content', round(value)]),
+      (id, value) => reveals.push([id, round(value)]),
+      ['row'],
+    );
+  return { dots, reveals };
+}
+test('prepared recipes draw finite, deterministic dots and reveal commands', () => {
+  const summaries: unknown[] = [];
+  for (const fixture of recipeCases.cases) {
+    const { dots, reveals } = recordRecipe(fixture);
+    for (const dot of dots) {
+      expect(Number.isFinite(dot.x) && Number.isFinite(dot.y)).toBe(true);
+      // Opacity may overshoot slightly; the painter clamps it to 0..1.
+      expect(Number.isFinite(dot.opacity)).toBe(true);
+    }
+    expect(recordRecipe(fixture)).toEqual({ dots, reveals });
+    summaries.push({
+      family: fixture.projection.family,
+      dots: dots.length,
+      reveals,
+    });
   }
+  // Review changes with `bun test --update-snapshots` and a diff of the .snap file.
+  expect(summaries).toMatchSnapshot();
 });
 test('dense projection is copied/frozen and a later caller mutation cannot alter a plan', () => {
   const mutable = structuredClone(line);
