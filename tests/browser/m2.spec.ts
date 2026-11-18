@@ -684,9 +684,15 @@ for (const candidate of kinds)
       await expect
         .poll(() => page.evaluate(() => window.m2.cohortState().visible))
         .toBe(profile === 'normal' ? 24 : profile === 'list' ? 20 : 100);
+      // Off-screen tiles release their dots once the IntersectionObserver
+      // reports them. With the DOM candidate the first render creates ~16k
+      // elements, and on slow CI runners that first delivery takes seconds.
       if (profile !== 'stress')
         await expect
-          .poll(() => page.evaluate(() => window.m2.cohortState().ledger?.dots))
+          .poll(
+            () => page.evaluate(() => window.m2.cohortState().ledger?.dots),
+            { timeout: 20000 },
+          )
           .toBe((profile === 'normal' ? 24 : 20) * 360);
       const state = await page.evaluate(() => window.m2.cohortState());
       results.push({ profile, ...state });
