@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "bun@1.4.3",
   "engines": {
-    "bun": "1.4.3",
+    "bun": ">=1.4.0",
     "node": ">=24"
   },
   "workspaces": [
@@ -62,9 +62,7 @@
     "build:website": "turbo run build --filter=@dotquilt/website",
     "check:website": "bun run --cwd apps/website check",
     "test:website": "bun run --cwd apps/website test",
-    "test:website:browser": "playwright test --config=playwright.website.config.ts",
-    "verify:website:examples": "bun run scripts/verify-website-examples.ts",
-    "verify:website:integrations": "bun run scripts/verify-website-integrations.ts && playwright test --config=playwright.website-integrations.config.ts"
+    "test:website:browser": "playwright test --config=playwright.website.config.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

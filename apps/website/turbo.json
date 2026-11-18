@@ -2,12 +2,12 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": [],
+      "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"],
       "env": ["NEXT_TELEMETRY_DISABLED"]
     },
-    "check": { "dependsOn": [], "outputs": [] },
-    "test": { "dependsOn": [], "outputs": [], "cache": false },
-    "dev": { "dependsOn": [], "cache": false, "persistent": true }
+    "check": { "dependsOn": ["^build"], "outputs": [] },
+    "test": { "dependsOn": ["^build"], "outputs": [], "cache": false },
+    "dev": { "dependsOn": ["^build"], "cache": false, "persistent": true }
   }
 }

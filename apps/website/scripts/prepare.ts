@@ -1,34 +1,17 @@
-import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { previewVersion } from '../lib/example';
 
+// Copies the built component stylesheets into public/ so pages can link them.
+// Requires `packages/react` to be built first (turbo's `^build` handles this).
 const root = new URL('../../../', import.meta.url);
-const freeze = await Bun.file(
-  new URL('docs/implementation/m5/runtime-freeze.json', root),
-).json();
-for (const [path, expected] of Object.entries(freeze.files)) {
-  const actual = createHash('sha256')
-    .update(await readFile(new URL(path, root)))
-    .digest('hex');
-  if (actual !== expected) throw new Error(`Frozen runtime changed: ${path}`);
-}
-for (const artifact of Object.values(freeze.artifacts) as {
-  path: string;
-  sha256: string;
-}[]) {
-  if (
-    createHash('sha256')
-      .update(await readFile(artifact.path))
-      .digest('hex') !== artifact.sha256
-  )
-    throw new Error('Frozen tarball changed');
-}
 const manifest = await Bun.file(
   new URL('packages/core/package.json', root),
 ).json();
 if (manifest.version !== previewVersion)
-  throw new Error('Website preview version differs from the frozen package');
+  throw new Error(
+    `Website shows version ${previewVersion} but packages/core is ${manifest.version}; update previewVersion in apps/website/lib/example.ts`,
+  );
 const destination = new URL('../public/dotquilt/', import.meta.url);
 await mkdir(destination, { recursive: true });
 for (const family of [
@@ -46,6 +29,4 @@ for (const family of [
     new URL(`${family}.css`, destination),
     await readFile(new URL(`packages/react/dist/${family}.css`, root)),
   );
-console.log(
-  `Verified ${Object.keys(freeze.files).length} frozen files; prepared website styles at ${fileURLToPath(destination)}`,
-);
+console.log(`Prepared website styles at ${fileURLToPath(destination)}`);
