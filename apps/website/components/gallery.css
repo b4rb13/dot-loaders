@@ -1,0 +1,92 @@
+.gallery-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 2rem;
+  align-items: start;
+  margin-top: 2.5rem;
+}
+.gallery-layout > div,
+.gallery-browser {
+  min-width: 0;
+}
+.gallery-layout #example {
+  margin-top: 0;
+}
+.gallery-specimen {
+  padding: 1.4rem;
+  border: 1px solid var(--rule);
+  background: var(--docs-specimen, var(--soft));
+  min-height: 270px;
+  min-width: 0;
+}
+.gallery-specimen h3 {
+  margin-top: 0;
+}
+.gallery-specimen a,
+.gallery-enhancement a {
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+.gallery-browser h2 {
+  font-size: 1rem;
+  margin-top: 0;
+}
+.gallery-browser ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.gallery-browser a {
+  display: block;
+  padding: 0.7rem 0.5rem;
+  text-decoration: none;
+  min-height: 44px;
+}
+.gallery-browser a span,
+.gallery-browser small {
+  display: block;
+}
+.gallery-browser small {
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  overflow-wrap: anywhere;
+}
+.gallery-browser a[aria-current="page"] {
+  background: var(--soft);
+  font-weight: 600;
+}
+.gallery-browser a:hover span {
+  text-decoration: underline;
+}
+.gallery-destinations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.gallery-specimen table {
+  width: 100%;
+}
+@media (max-width: 1100px) {
+  .gallery-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .gallery-specimen {
+    padding: 1rem;
+  }
+}
+@media (forced-colors: active) {
+  .gallery-specimen {
+    border-color: CanvasText;
+    background: Canvas;
+  }
+  .gallery-browser a[aria-current="page"] {
+    background: Highlight;
+    color: HighlightText;
+  }
+  .gallery-browser a[aria-current="page"] small {
+    color: HighlightText;
+  }
+}

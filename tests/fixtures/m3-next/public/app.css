@@ -1,0 +1,43 @@
+body {
+  font: 16px system-ui;
+  margin: 24px;
+  color: #28352d;
+}
+.region,
+.skeleton {
+  width: 420px;
+  height: 240px;
+}
+button,
+input,
+a {
+  font: inherit;
+}
+#actions {
+  display: flex;
+  gap: 12px;
+}
+#actions button {
+  min-height: 40px;
+}
+a {
+  display: block;
+  margin: 16px 0;
+}
+#catalog {
+  display: grid;
+  grid-template-columns: repeat(3, 280px);
+  gap: 16px;
+}
+.catalog-owner {
+  width: 280px;
+  height: 180px;
+}
+.catalog-surface {
+  width: 280px;
+  height: 160px;
+}
+#catalog-circle {
+  width: 64px;
+  height: 64px;
+}

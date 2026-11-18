@@ -1,0 +1,161 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><meta name="color-scheme" content="light"><title>Dotquilt · Animation engine study</title><style>
+:root{--paper:#faf9f6;--panel:#fff;--ink:#252720;--muted:#62665e;--line:#dedfd7;--soft:#f1f2ec;--accent:#3558b7;--dotquilt-color:#71796a;--dotquilt-accent-color:#3c7952;font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.6}h1,h2,h3,p{margin:0}button,select,input{font:inherit;color:inherit}button{cursor:pointer;touch-action:manipulation;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:8px 12px;min-height:40px}button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:default}a{color:inherit;text-underline-offset:4px}h1{font-size:29px;line-height:1.2;font-weight:550;letter-spacing:-.025em}h2{font-size:20px;font-weight:550;letter-spacing:-.02em}p{color:var(--muted)}small{font-size:12px}select{width:100%;min-width:0;min-height:38px;padding:6px 9px;border:1px solid var(--line);border-radius:5px;background:var(--paper)}input{accent-color:var(--accent)}input[type=range]{width:100%;height:24px}:focus-visible{outline:3px solid var(--accent);outline-offset:4px}[hidden]{display:none!important}::selection{color:#14234b;background:#dce5ff}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}.skip{position:fixed;top:10px;left:10px;z-index:99;padding:10px;background:white;transform:translateY(-180%)}.skip:focus{transform:none}
+header{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line)}.head{max-width:1280px;margin:auto;padding:12px 28px;display:flex;gap:20px;align-items:center}.brand{font-size:21px;font-weight:650;letter-spacing:-.03em;text-decoration:none}.head>span{font-size:12px;color:var(--muted)}.pause{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:12px;min-height:40px}.pause input{width:16px;height:16px}main{max-width:1280px;margin:auto;padding:26px 28px 115px}.intro{display:flex;gap:32px;align-items:end;justify-content:space-between;margin-bottom:23px}.intro p{max-width:480px;font-size:13px}.lab{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}.family-nav{padding:10px 16px;display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)}.family-nav button{border:0;background:transparent;color:var(--muted)}.family-nav button[aria-pressed=true]{background:var(--soft);color:var(--ink)}.body-grid{display:grid;grid-template-columns:minmax(0,1fr) 280px}.preview{padding:24px;min-width:0}.preview-heading{display:flex;align-items:start;justify-content:space-between;gap:15px;margin-bottom:10px}.preview-heading p{font-size:12px;margin-top:3px}.badge{background:var(--soft);padding:3px 8px;white-space:nowrap;font-size:12px;border-radius:4px}.scene{height:300px;position:relative;isolation:isolate;min-width:0;color:var(--dotquilt-color)}.content{position:absolute;inset:0;color:var(--ink);visibility:visible}.scene canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.status{font-size:12px;min-height:38px;margin-top:12px}.buttons{display:flex;flex-wrap:wrap;gap:7px;margin:13px 0}.buttons button{font-size:12px}.buttons .primary{background:var(--ink);border-color:var(--ink);color:white}.settings{padding:22px;border-left:1px solid var(--line);background:#fcfcf9}.settings h2{font-size:14px;letter-spacing:0;margin-bottom:15px}.field{margin-bottom:15px;min-width:0}.field label{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:5px}.field output{color:var(--muted);font-variant-numeric:tabular-nums}.checks{display:grid;gap:11px;font-size:12px;margin-top:20px}.checks label{display:flex;gap:8px;align-items:start}.checks input{margin-top:4px}.settings p{font-size:12px;line-height:1.6}.phase-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:12px}.phase-strip span{background:var(--soft);color:var(--muted);border-radius:4px;padding:5px 8px;font-size:12px}.phase-strip span.active{background:#e4eddf;color:#354c29}.inspector{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}.inspector summary{font-size:12px;cursor:pointer}.inspector label{display:block;font-size:12px;margin-top:10px}.inspector p{font-size:12px}.definition>section{min-width:0}#animation-options{min-width:0}.definition{margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:28px}.definition h2{font-size:15px;letter-spacing:0;margin-bottom:8px}.definition p{font-size:12px;max-width:70ch}.events{list-style:none;padding:0;margin:0;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}.events li{display:flex;gap:12px}.events time{min-width:43px}pre{white-space:pre;overflow:auto;background:var(--soft);border-radius:7px;padding:16px;font-size:12px;line-height:1.8;margin:12px 0 0;max-height:300px}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.disclosure{font-size:12px;max-width:85ch;margin-top:22px}.mode-name{font-weight:600;color:var(--ink)}
+.chart-axis{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}.actual-chart{width:100%;height:100%;display:block}.gridline{stroke:var(--line);stroke-width:1}.series{stroke:#397b50;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;fill:none}.chart-label{font-size:12px;fill:var(--muted)}.value{font-family:ui-monospace,SFMono-Regular,monospace;font-size:56px;line-height:1.2;letter-spacing:0;font-weight:500;white-space:nowrap;margin-top:65px}.value span{display:inline-block}.value-label{font-size:14px;margin-top:20px}.international{font-size:30px;white-space:normal}.label-value{font-size:34px}.actual-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;margin-top:15px}.actual-table th{font-weight:500;color:var(--muted);font-size:12px;text-align:left;padding:8px 4px}.actual-table td{height:44px;border-top:1px solid var(--line);padding:8px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.actual-table th:first-child{width:40%}.actual-table th:nth-child(2){width:22%}.actual-table th:nth-child(3){width:18%}.actual-table td:last-child,.actual-table th:last-child{text-align:right}.actual-table .paid{color:#3d613c;background:#eef3e9;padding:2px 5px;border-radius:3px;font-size:12px}.profile{padding-top:30px}.profile-head{display:flex;align-items:center;gap:15px;margin-bottom:25px}.avatar{width:48px;height:48px;border-radius:50%;background:#e5ebdf;color:#45553b;display:grid;place-items:center}.profile h3{font-size:19px;font-weight:550}.profile p{font-size:14px;max-width:55ch}.profile-link{display:inline-block;margin-top:22px;font-size:12px;color:var(--accent)}.region-content{padding-top:35px}.region-content h3{font-size:21px;font-weight:550}.region-content p{font-size:14px;max-width:55ch;margin-top:15px}.region-content strong{display:block;font-size:30px;font-weight:500;margin-top:23px;font-variant-numeric:tabular-nums}.typing-content{padding-top:110px;font-size:16px}.error{display:none;position:absolute;inset:0;align-content:center;gap:10px;color:var(--ink)}.error h3{font-size:19px;font-weight:550}.error p{font-size:13px}.is-error .error{display:grid}.forced-placeholder{display:none;position:absolute;inset:0;align-items:center;gap:10px;color:CanvasText}.forced-placeholder i{height:14px;width:25%;border:2px dotted currentColor}.static-fallback .forced-placeholder{display:flex}.static-fallback canvas{display:none}
+@media(hover:hover) and (pointer:fine){button:hover:not(:disabled){border-color:#7d8c73}.family-nav button:hover:not(:disabled){background:var(--soft)}}
+@media(max-width:960px){.body-grid{grid-template-columns:minmax(0,1fr) 245px}.settings{padding:18px}.preview{padding:20px}.actual-table th:nth-child(3),.actual-table td:nth-child(3){display:none}.actual-table th:first-child{width:46%}.actual-table th:nth-child(2){width:25%}.actual-table th:last-child{width:29%}}
+@media(max-width:700px){.head{padding:10px 18px;gap:10px}.head>span{display:none}main{padding:22px 18px 110px}.intro{display:block;margin-bottom:20px}.intro p{margin-top:12px}.body-grid{display:block}.settings{border-left:0;border-top:1px solid var(--line);padding:20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 18px}.settings h2,.settings .checks,.settings>p{grid-column:1/-1}.family-nav{padding:9px;gap:1px}.family-nav button{font-size:12px;padding:6px 10px;min-height:36px}.scene{height:260px}.preview{padding:19px}.preview h2{font-size:18px}.buttons button{font-size:12px;padding:7px 9px;min-height:36px}.definition{grid-template-columns:1fr;gap:24px}.value{font-size:38px}.value-label{font-size:12px}.label-value{font-size:25px}.actual-table{font-size:12px}.phase-strip span{font-size:12px;padding:4px}.badge{font-size:12px}}
+@media(max-width:360px){.settings{display:block}.phase-strip{grid-template-columns:1fr}.value{font-size:31px}.actual-table th:nth-child(2),.actual-table td:nth-child(2){display:none}.actual-table th:first-child{width:68%}.actual-table th:last-child{width:32%}}
+@media(prefers-reduced-motion:reduce){button:active{transform:none}}
+@media(forced-colors:active){.scene canvas{display:none}.scene.static-fallback .forced-placeholder{display:flex}.series{stroke:CanvasText}.gridline{stroke:GrayText}.chart-label{fill:CanvasText}.badge,.paid,.avatar{border:1px solid CanvasText}.phase-strip span.active{outline:1px solid CanvasText}}
+.proto-picker {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.82);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 8px 24px rgba(0, 0, 0, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.proto-picker-highlight {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  will-change: transform;
+}
+
+/* The slide is enabled only after first paint (data-ready), so load doesn't animate. */
+.proto-picker[data-ready] .proto-picker-highlight {
+  transition:
+    transform 250ms cubic-bezier(0.23, 1, 0.32, 1),
+    width 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proto-picker[data-ready] .proto-picker-highlight { transition: none; }
+}
+
+.proto-picker-item {
+  position: relative; /* sits above the highlight */
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  cursor: pointer;
+  transition: color 150ms ease-out;
+}
+
+.proto-picker-item:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.proto-picker-item:active {
+  transform: scale(0.97);
+}
+
+.proto-picker-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+.proto-picker-item[data-active] {
+  color: #fff;
+}
+
+.proto-picker-divider {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.proto-picker-replay {
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.proto-picker[data-position="top"] {
+  bottom: auto;
+  top: 24px;
+}
+</style></head><body><a class="skip" href="#main">Skip to motion lab</a><header><div class="head"><a class="brand" href="http://127.0.0.1:4177/">Dotquilt</a><span>Animation engine study · draft API</span><label class="pause"><input type="checkbox" id="pause">Pause animations</label></div></header><main id="main"><div class="intro"><h1>The dots become the data.</h1><p>Source-informed idle motion and complete content handoffs. Compare signature choreography, a simple dissolve, and your own animation.</p></div><div id="stage"></div><p class="disclosure">Isolated planning prototype with synthetic data. Newly authored from source behavior; no m37 files copied or changed. This is not the shipping engine, a published package, or evidence that release performance/accessibility budgets pass.</p></main>
+<nav class="proto-picker" aria-label="Prototype variants"><span class="proto-picker-highlight" aria-hidden="true"></span><button class="proto-picker-item" data-active aria-current="true">Signature</button><button class="proto-picker-item">Dissolve</button><button class="proto-picker-item">Custom</button><span class="proto-picker-divider" aria-hidden="true"></span><button class="proto-picker-item proto-picker-replay" aria-label="Replay animation (R)">↻</button></nav>
+<noscript><main><h2>This animation lab needs JavaScript.</h2><p>The example result is May revenue of $12,480.00, up8.2%. The production documentation must preserve useful static outcomes.</p></main></noscript>
+<script src="engine.js"></script><script src="animations.js"></script><script src="custom-motion.js"></script><script src="app.js"></script><script>// `variants` is an array of render functions, one per variant, in picker order.
+const stage = document.getElementById('stage');
+const picker = document.querySelector('.proto-picker');
+const highlight = picker.querySelector('.proto-picker-highlight');
+const items = [...picker.querySelectorAll('.proto-picker-item:not(.proto-picker-replay)')];
+const replay = picker.querySelector('.proto-picker-replay');
+let current = 0;
+
+function moveHighlight() {
+  const el = items[current];
+  highlight.style.width = el.offsetWidth + 'px';
+  highlight.style.transform = `translateX(${el.offsetLeft}px)`;
+}
+
+function mount(i) {
+  stage.innerHTML = '';
+  // Clear first, render next frame, so entrance animations re-run.
+  requestAnimationFrame(() => { stage.innerHTML = variants[i](); });
+}
+
+function setActive(i) {
+  if (i < 0 || i >= variants.length) return;
+  current = i;
+  items.forEach((el, j) => {
+    el.toggleAttribute('data-active', j === i);
+    if (j === i) el.setAttribute('aria-current', 'true');
+    else el.removeAttribute('aria-current');
+  });
+  moveHighlight();
+  const url = new URL(location);
+  url.searchParams.set('v', i + 1);
+  history.replaceState(null, '', url);
+  mount(i);
+}
+
+items.forEach((el, i) => el.addEventListener('click', () => setActive(i)));
+replay?.addEventListener('click', () => mount(current));
+window.addEventListener('resize', moveHighlight);
+
+document.addEventListener('keydown', (e) => {
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const num = parseInt(e.key, 10);
+  if (num >= 1 && num <= variants.length) setActive(num - 1);
+  else if (e.key === 'ArrowRight') setActive((current + 1) % variants.length);
+  else if (e.key === 'ArrowLeft') setActive((current - 1 + variants.length) % variants.length);
+  else if (e.key === 'r' || e.key === 'R') mount(current);
+});
+
+setActive((parseInt(new URLSearchParams(location.search).get('v'), 10) || 1) - 1);
+// Enable the slide only after first paint, so load doesn't animate.
+requestAnimationFrame(() => requestAnimationFrame(() => picker.setAttribute('data-ready', '')));</script></body></html>

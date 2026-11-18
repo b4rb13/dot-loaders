@@ -1,0 +1,8 @@
+Importing native definitions does not register tags; call the exported registrar explicitly. The React adapter owns registration at its boundary. Browser globals are not required by the DOM-free `/server` entry. Native `renderStatic` emits placeholder markup only: your template owns pending content guards and useful no-JavaScript recovery. The React adapter supplies static markup and initial state; application CSS must guard pending children before native definition, as shown in the SSR guide; providers, custom definitions and element targets stay in a client boundary and are not serialized or called by SSR.
+
+For external styling, serve each matching public `/styles/*.css` asset and set `stylePolicy` on every participating component before native enhancement. Inline mode supports request-local nonce/hash authorization. Runtime style authorization and application styles must match your CSP; these client-only examples do not certify a deployment’s policy. If enhancement fails, keep useful content/instructions and a recovery route available.
+
+The code uses exact private version `0.0.0-m2.0`. This page documents the implemented catalog; it does not claim a public npm release, final renderer selection or passed size/performance/browser-floor/manual qualification.
+
+
+See the complete [React](/docs/guides/react), [Next.js](/docs/guides/nextjs), [server rendering](/docs/guides/server-rendering) and [CSP](/docs/guides/csp) guides for runnable applications and the distinction between application guards and native presentation.

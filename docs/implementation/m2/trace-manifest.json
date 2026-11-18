@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "status": "frozen local diagnostic harness v1; no final renderer, CPU or reference qualification",
+  "source": "https://github.com/b4rb13/dot-loaders/issues/9#issuecomment-6206454654",
+  "fixture": "tests/m2/trace-client.ts; actual installed private tarball via /pkg/dist, no workspace runtime alias",
+  "categories": [
+    "toplevel",
+    "devtools.timeline",
+    "v8",
+    "blink.user_timing",
+    "disabled-by-default-devtools.timeline",
+    "disabled-by-default-devtools.timeline.frame"
+  ],
+  "collector": "Chromium CDP Tracing ReturnAsStream, 64 MiB continuous buffer, reject dataLossOccurred; exact gzip6 raw JSON and hashes retained",
+  "protocol": {
+    "warmupPairs": 3,
+    "validMeasuredPairs": 20,
+    "order": "static-first on even valid pair indices, animated-first on odd; warmups separate",
+    "fresh": "new browser context/page/instances for every presentation; prepare paused before fresh eligibility",
+    "idleWindowMs": 4000,
+    "handoffWindowMs": {
+      "line": 900,
+      "bar": 900,
+      "scatter": 900,
+      "text": 461,
+      "table": 615
+    },
+    "cooldownMs": 250,
+    "maximumInvalidAttempts": 3,
+    "invalidOnly": [
+      "browser/transport failure",
+      "missing or ambiguous phase marks / truncated trace",
+      "trace stream loss or missing main-thread task coverage"
+    ],
+    "keepValid": [
+      "GC",
+      "slow runs",
+      "throttling",
+      "resource degradation",
+      "cadence or numeric failures",
+      "functional failures"
+    ]
+  },
+  "phases": {
+    "initialization": "after warm code import/registration; mark before constructing hosts, end after two RAFs; sum traced work, elapsed separate",
+    "setup": "resume or ready patch through coalesced microtask commit; separate from complete visual duration",
+    "active": "fixed fresh idle/handoff window, clipped by start timestamp and declared duration; later static tail excluded even if finish timer is delayed",
+    "teardown": "explicit removal/release, after microtask cleanup",
+    "coldImport": "unverified; new contexts are not proof of cold browser code caches"
+  },
+  "partition": "renderer main thread is pinned by unique active:start mark pid/tid; nested X/B/E intervals assigned once to innermost classified owner; RunTask fills unclassified other overhead; preserve raw event names and all categories",
+  "clock": "trace event wall-time main-thread work proxy; includes descheduling/preemption, not hardware thread CPU; CPU qualification remains unverified",
+  "pairing": "relative frame bins from pre-run median of 120 delivered RAF intervals, fixed for entire run; additional=max(0,animated-static) per bin, signed differences retained for render and all busy time; no subtraction of sorted percentiles",
+  "cadence": "per visible surface successful changed-command commit timestamps plus delivered harness RAF intervals; instrumentation included, not physical presentation proof; headless scheduling estimate does not verify display cadence",
+  "statistics": {
+    "percentiles": "nearest-rank",
+    "perRunAndPooled": true,
+    "requiredBothPasses": "18 of 20 plus pooled p95 and p99",
+    "normalRenderMs": [
+      4,
+      8
+    ],
+    "stressRenderMs": [
+      8,
+      12
+    ],
+    "independentLongTaskMsInclusive": 50,
+    "initializationP95Ms": {
+      "individual": 8,
+      "normal": 40,
+      "list": 100,
+      "stress": 100
+    },
+    "handoffSetupP95Ms": 8,
+    "cadenceFloorHz": 30
+  },
+  "longTasks": "retain all >=50ms main-thread tasks intersecting init through teardown; record nested package script URLs and both static/animated traces; any animated long task is unresolved-or-fail pending attribution, never green from percentiles alone",
+  "geometry": "same deterministic 360-dot 30x12 field and eight-point line/eight bars/ten scatter points, numeric 42.50 (own 5x7 glyphs), six rows/three columns as prior proof; scaled from 320x160 content coordinates",
+  "profiles": {
+    "individual": {
+      "mountedSurfaces": 1,
+      "visibleSurfaces": 1,
+      "surface": [
+        320,
+        160
+      ]
+    },
+    "normal": {
+      "mountedSurfaces": 24,
+      "visibleSurfaces": 24,
+      "surface": [
+        160,
+        80
+      ],
+      "grid": [
+        6,
+        4
+      ],
+      "reserved": [
+        960,
+        320
+      ]
+    },
+    "list": {
+      "mountedSurfaces": 200,
+      "visibleSurfaces": 20,
+      "surface": [
+        180,
+        160
+      ],
+      "scrollport": [
+        900,
+        640
+      ],
+      "scrollPath": "stationary at 0; scrolling canonical fixture remains unverified"
+    },
+    "stress": {
+      "mountedSurfaces": 100,
+      "visibleSurfaces": 100,
+      "surface": [
+        120,
+        60
+      ],
+      "grid": [
+        10,
+        10
+      ],
+      "reserved": [
+        1200,
+        600
+      ]
+    }
+  },
+  "ownership": "idle profiles are standalone skeletons; handoff profiles each add one region and actual chart/text/table content (normal handoff has 48 public hosts, not canonical 30)",
+  "environment": {
+    "viewport": [
+      1280,
+      1000
+    ],
+    "dpr": 1,
+    "zoom": 1,
+    "styles": "inline-authorized native styles; external fixture CSS; strict no style attributes",
+    "font": "system-ui, table monospace; no network fonts",
+    "thermalAndPower": "uncontrolled local diagnostic; recorded as such",
+    "browser": "bundled headless Chromium, exact version and launch/runtime/OS data recorded per run"
+  },
+  "claims": "collection success is not budget qualification. Missing physical hardware, actual per-bin CPU, optical cadence, canonical full catalog, scrolling list, cold import, SSR/hydration, input latency, full heap/AT and human equal-quality review remain unverified. Renderer choices stay provisional.",
+  "smoke": "one paired presentation, zero warmups; never completes the 3/20 protocol or replaces a complete baseline",
+  "threadCpu": "Use outermost task tdur where present; fully enclosed tasks are exact, clipped phase/frame tasks get lower/upper bounds from total CPU and wall overlap, never uniform interpolation. Missing tdur is explicit unknown with wall upper bound. Preserve per-bin signed CPU intervals; do not present bounds as exact per-bin CPU."
+}

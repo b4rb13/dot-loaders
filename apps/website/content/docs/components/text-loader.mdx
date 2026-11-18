@@ -1,0 +1,73 @@
+---
+title: "TextLoader"
+description: "Turn a short label into an expressive loading state, then reveal the real text."
+---
+
+
+<section id="overview">
+
+## When to use it [#overview]
+
+<ComponentPurpose component={props.component} />
+
+TextLoader owns state, cycle and its actual text. Zero is a meaningful value. Supplying new text or a mask does not create another loading cycle.
+
+</section>
+
+<section id="example">
+
+## Try the real handoff [#example]
+
+<ComponentExample component={props.component} />
+
+</section>
+
+<section id="api">
+
+## Public controls [#api]
+
+<include>../../reference/api.mdx</include>
+
+</section>
+
+<section id="motion">
+
+## Choose each phase independently. [#motion]
+
+<ComponentPhases component={props.component} />
+
+scrambleCharacters changes individual characters at independent deterministic phases; scrambleWords changes one whitespace-delimited word per step. lock and printText use typed stagger/reel/settle/pop options. labelPulse moves a highlight across the label.
+
+Use the public defineAnimation authoring API for typed family-specific idle or handoff definitions, or definePreset for local immutable configurations. Idle supplies frame/still; handoff supplies duration, synchronous prepare and frame. Callbacks receive immutable snapshots and bounded draw/reveal commands, not a DOM/canvas context. Restrictions, cancellation and cleanup remain engine-owned. Configuration changed during a handoff applies next time; invalidated targets or geometry settle safely.
+
+CSS controls include `--dotquilt-color`, `--dotquilt-accent-color`, `--dotquilt-dot-size`, `--dotquilt-dot-gap`, host dimensions and the exposed `::part(surface)`. Skeleton hosts also expose `--dotquilt-radius`. Reserve the real content’s space in application CSS. Fine-hover pointer lift is optional and suspended for touch, handoff and motion restrictions.
+
+</section>
+
+<section id="animation-options">
+
+## Typed factory options [#animation-options]
+
+<AnimationOptions component={props.component} />
+
+### Custom definitions and local presets
+
+<include>../../reference/authoring.mdx</include>
+
+</section>
+
+<section id="accessibility">
+
+## Keep the meaning in your content. [#accessibility]
+
+<include>../../reference/accessibility.mdx</include>
+
+</section>
+
+<section id="rendering">
+
+## Static first. Enhance explicitly. [#rendering]
+
+<include>../../reference/rendering.mdx</include>
+
+</section>

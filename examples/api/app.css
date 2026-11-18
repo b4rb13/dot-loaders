@@ -1,0 +1,25 @@
+body {
+  font: 16px system-ui;
+  margin: 24px;
+}
+.summary {
+  display: block;
+  inline-size: 320px;
+  min-block-size: 120px;
+  --dotquilt-color: #596750;
+}
+dotquilt-skeleton-text {
+  display: block;
+  inline-size: 300px;
+}
+.summary [data-result] {
+  min-block-size: 32px;
+}
+.measurement {
+  border: 3px solid;
+  padding: 7px 11px;
+}
+.chart-example {
+  inline-size: 300px;
+  block-size: 140px;
+}

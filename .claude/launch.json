@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "website-prod",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "apps/website", "start"],
+      "port": 4210,
+      "url": "http://127.0.0.1:4210"
+    }
+  ]
+}

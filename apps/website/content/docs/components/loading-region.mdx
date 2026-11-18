@@ -1,0 +1,73 @@
+---
+title: "LoadingRegion"
+description: "Coordinate placeholders, real content and one explicit loading cycle."
+---
+
+
+<section id="overview">
+
+## When to use it [#overview]
+
+<ComponentPurpose component={props.component} />
+
+LoadingRegion is the loading owner: supply a placeholder and stable real content as separate inputs. It owns readiness, cycle identity, refresh, timing, focus and handoff events. Nested regions remain independent owners.
+
+</section>
+
+<section id="example">
+
+## Try the real handoff [#example]
+
+<ComponentExample component={props.component} />
+
+</section>
+
+<section id="api">
+
+## Public controls [#api]
+
+<include>../../reference/api.mdx</include>
+
+</section>
+
+<section id="motion">
+
+## Choose each phase independently. [#motion]
+
+<ComponentPhases component={props.component} />
+
+pulse(\{periodMs\}) and dissolve(\{duration,fallPx\}) belong to a child skeleton placeholder, not to the region animation map. The region coordinates that placeholder with its own handoff-only binding and timing.
+
+For a custom region handoff, use defineAnimation with family: region and phase: handoff, then bind it to animations.handoff or an immutable region preset. Idle customizations belong to the placeholder’s family. Synchronous preparation and bounded reveal commands remain subject to the same restrictions and cancellation rules. Configuration changed during a handoff applies next time; invalidated targets or geometry settle safely.
+
+Set dot color/size variables on the region to let its placeholders inherit them, then style each placeholder’s own surface. Region parts are `content`, `placeholder` and `refresh-indicator`; the region is a coordinator, not a dot surface. Reserve its content space in application CSS.
+
+</section>
+
+<section id="animation-options">
+
+## Typed factory options [#animation-options]
+
+<AnimationOptions component={props.component} />
+
+### Custom definitions and local presets
+
+<include>../../reference/authoring.mdx</include>
+
+</section>
+
+<section id="accessibility">
+
+## Keep the meaning in your content. [#accessibility]
+
+<include>../../reference/accessibility.mdx</include>
+
+</section>
+
+<section id="rendering">
+
+## Static first. Enhance explicitly. [#rendering]
+
+<include>../../reference/rendering.mdx</include>
+
+</section>

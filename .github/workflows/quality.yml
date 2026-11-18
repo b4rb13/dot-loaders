@@ -1,0 +1,60 @@
+name: Quality
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TURBO_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bunx --no-install playwright install --with-deps chromium firefox webkit
+      - run: bun run build
+      - run: bun run check && bunx --no-install tsc --noEmit -p tsconfig.json
+      - run: bun run lint && bun run test && bun run test:harness
+      - name: Packed consumers, declaration compatibility and size gates
+        run: bun run verify:packed
+      - name: Packed React consumers, declarations and CSS-mode increments
+        run: bun run verify:react-packed && bun run verify:react-ssr
+      - name: Production Next App Router consumers
+        run: bun run prepare:next
+      - name: Packed browser behavior
+        if: ${{ !cancelled() }}
+        run: bun run test:browser
+      - name: React and production Next browser integration
+        if: ${{ !cancelled() }}
+        run: bun run test:react && bun run test:next
+      - name: Clean native and React reproduction
+        run: bun run verify:clean
+      - name: Incremental M4 packed catalog behavior
+        if: ${{ !cancelled() }}
+        run: bun run prepare:m4 && bun run test:m4
+      - name: M4 catalog size gates (fail closed)
+        if: ${{ !cancelled() }}
+        run: bun run verify:m4-budgets
+      - name: Whole-render collector smoke (not performance qualification)
+        run: bun run bench:m2 --smoke && bun run bench:m2 --smoke --phase=handoff
+      - name: Retain evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-validation
+          path: |
+            .artifacts/packed-report.json
+            .artifacts/browser-results.json
+            .artifacts/m3/
+            .artifacts/m4/
+            .artifacts/m2/
+            .artifacts/m2-traces/
+            test-results/
