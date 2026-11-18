@@ -22,6 +22,7 @@
     }
   },
   "globalPassThroughEnv": [
+    "DOTQUILT_REACT_FLOOR",
     "ALL_BROWSERS",
     "DOTQUILT_BROWSER_REPORT",
     "DOTQUILT_TEST_PORT",

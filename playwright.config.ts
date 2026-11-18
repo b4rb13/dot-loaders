@@ -26,6 +26,7 @@ const suites: {
     viewport: { width: 1100, height: 1600 },
   },
   { name: 'api', port: 4203 },
+  { name: 'react', port: 4191 },
   { name: 'copies', port: 4206 },
   {
     name: 'layout',

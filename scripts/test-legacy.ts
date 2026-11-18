@@ -12,8 +12,8 @@
 interface Suite {
   /** Commands that prepare packed consumers and fixtures. */
   prepare: string[][];
-  /** Playwright configs to run, with the Chromium-only project filter. */
-  configs?: { file: string; chromium: string }[];
+  /** Playwright configs to run, with Chromium-only and all-browser project filters. */
+  configs?: { file: string; chromium: string; all?: string }[];
   /** Extra non-Playwright checks. */
   checks?: string[][];
   /** Extra environment for Playwright. */
@@ -32,7 +32,16 @@ const suites: Record<string, Suite> = {
       ['bun', 'run', 'scripts/verify-react.ts'],
       ['bun', 'run', 'scripts/verify-react-ssr.ts'],
     ],
-    configs: [{ file: 'playwright.react.config.ts', chromium: 'chromium-*' }],
+    // The fast suite runs these tests on the workspace React; this reruns
+    // them once on React 19.0, the oldest supported version.
+    configs: [
+      {
+        file: 'playwright.config.ts',
+        chromium: 'react-chromium',
+        all: 'react-*',
+      },
+    ],
+    env: { DOTQUILT_REACT_FLOOR: '1' },
   },
   m4: {
     prepare: [['bun', 'run', 'scripts/prepare-m4.ts']],
@@ -82,7 +91,8 @@ for (const name of selected) {
     if (ok) {
       const args = ['bunx', '--no-install', 'playwright', 'test'];
       args.push(`--config=${config.file}`);
-      if (!process.env.ALL_BROWSERS) args.push(`--project=${config.chromium}`);
+      const project = process.env.ALL_BROWSERS ? config.all : config.chromium;
+      if (project) args.push(`--project=${project}`);
       if (!(await run(args, suite.env))) failed.push(`${name}: ${config.file}`);
     }
   for (const command of suite.checks ?? [])

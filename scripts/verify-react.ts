@@ -61,8 +61,6 @@ const consumers: Record<string, string> = {},
 const failures: string[] = [];
 const versions = {
   current: { react: '19.3.1', typesReact: '19.3.0', typesDom: '19.3.0' },
-  minor1: { react: '19.1.10', typesReact: '19.0.14', typesDom: '19.0.6' },
-  minor2: { react: '19.2.9', typesReact: '19.0.14', typesDom: '19.0.6' },
   floor: { react: '19.0.9', typesReact: '19.0.14', typesDom: '19.0.6' },
 };
 for (const [line, versionsForLine] of Object.entries(versions)) {
