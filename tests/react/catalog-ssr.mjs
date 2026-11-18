@@ -255,6 +255,9 @@ const assets = [
   );
   return { family, bytes: css.length, gzip: gzip(css) };
 });
+// Gzip bytes the loaders add to a 24-surface page, including every external
+// stylesheet. 9 KB since the alternative marks (owner decision, 2026-11-19).
+const documentLimit = 9216;
 const documents = [],
   rawDocuments = [];
 for (const mode of ['inline', 'nonce', 'external']) {
@@ -344,8 +347,8 @@ for (const mode of ['inline', 'nonce', 'external']) {
       referenceQualification:
         'unverified: approved reference hardware unavailable; local diagnostic only',
     },
-    limit: 8192,
-    pass: additionalGzip <= 8192,
+    limit: documentLimit,
+    pass: additionalGzip <= documentLimit,
   });
 }
 function Deferred({ promise }) {
