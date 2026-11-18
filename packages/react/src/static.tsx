@@ -57,22 +57,55 @@ export function useStyleNonce(
     },
   );
 }
+const hrefs = new WeakMap<readonly string[], string>();
+/** Names one stylesheet by its CSS, so only identical CSS is shared (FNV-1a). */
+function styleHref(family: string, css: readonly string[], text: string) {
+  let href = hrefs.get(css);
+  if (!href) {
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < text.length; i++)
+      hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193);
+    href = `dotquilt-${family}-${(hash >>> 0).toString(36)}`;
+    hrefs.set(css, href);
+  }
+  return href;
+}
+
+/** The light-DOM styles a loader needs before its element upgrades. */
 export function sheet(
   css: readonly string[],
   policy: StylePolicy,
   family: string,
   nonce: string | undefined,
 ) {
-  return policy.mode === 'external' ? (
-    <link
+  // One link per loader: a `<link precedence>` would suspend rendering until
+  // the file loads, which can blank a Suspense fallback built from loaders.
+  if (policy.mode === 'external')
+    return (
+      <link
+        key={family}
+        rel="stylesheet"
+        href={policy.href}
+        data-dotquilt-react-style={family}
+      />
+    );
+  const text = css.join('\n');
+  // One style per loader: React 19.0 cannot put a nonce on a shared stylesheet.
+  if (policy.nonce !== undefined)
+    return (
+      <style key={family} nonce={nonce} data-dotquilt-react-style={family}>
+        {text}
+      </style>
+    );
+  // React keeps one copy per href in the document. A precedence per family
+  // keeps each copy's text exactly `text`, so CSP hashes of it still match.
+  return (
+    <style
       key={family}
-      rel="stylesheet"
-      href={policy.href}
-      data-dotquilt-react-style={family}
-    />
-  ) : (
-    <style key={family} nonce={nonce} data-dotquilt-react-style={family}>
-      {css.join('\n')}
+      href={styleHref(family, css, text)}
+      precedence={`dotquilt-${family}`}
+    >
+      {text}
     </style>
   );
 }

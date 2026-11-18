@@ -395,6 +395,32 @@ test('nonce styles also hydrate without a CSP header and work after a real remou
   expect(errors).toEqual([]);
 });
 
+test('repeated loaders share one stylesheet per component through hydration and remounts', async ({
+  page,
+}) => {
+  const errors = await open(page, '&state=pending&mode=hash');
+  // Two regions and one skeleton; each light-DOM sheet starts with its tag.
+  const sheets = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('style')]
+        .map((s) => /^dotquilt-[a-z-]+/.exec(s.textContent ?? '')?.[0] ?? '?')
+        .sort(),
+    );
+  expect(await sheets()).toEqual([
+    'dotquilt-region',
+    'dotquilt-skeleton-block',
+  ]);
+  await page.evaluate(() => window.fixture.unmount());
+  await update(page, { show: true });
+  await phase(page, 'pending');
+  expect(await sheets()).toEqual([
+    'dotquilt-region',
+    'dotquilt-skeleton-block',
+  ]);
+  expect(await page.evaluate(() => window.fixtureViolations)).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
 test('100 repeated React loading/mount/remove cycles release native subscriptions and adapter listeners', async ({
   page,
 }) => {
