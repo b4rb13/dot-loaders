@@ -74,13 +74,17 @@ Done, with no behaviour change; the e2e, unit and legacy suites are the safety n
   - `HandoffSource`, `HandoffRequest` and `RunningHandoff` replace the positional tuples (`work[5]`, `work[4][1]`, 9-argument factories).
   - `IdleFrame` and `HandoffFrame` replace the 6- and 10-argument paint calls.
 - **React in plain JSX.** The custom-element names are declared in `src/jsx.d.ts`, which `tsc` does not emit. The server-rendered markup is byte-identical across all components and style policies.
+- **Consistent option errors and `update()`.** Decided with the owner on 2026-11-18. This one changes behaviour on purpose.
+  - A scalar option with a disallowed value reports `invalid-option`, and the field is the property name (`speed`, `pointerResponse`, `rowHeight`, `state`, `motion` and so on), on every element. These codes are gone: `invalid-number`, `invalid-pointer-response`, `invalid-count`, `invalid-state`, `invalid-motion`, `invalid-speed`, and attribute names as fields.
+  - TextLoader now reports an invalid `speed` and `pointerResponse` the same way as the other elements.
+  - `update()` applies only the element's own options and reports any other key as `unknown-option`. Before, the skeleton family, Chart and Table stored unknown keys as expandos.
+  - Structured and limit problems keep their own codes, for example `invalid-binding`, `invalid-style-policy`, `line-limit` and `typing-limit`.
 
 Waiting on decisions:
 - Moving the M2 dense-renderer proof out of `src`: decision 2.
 - Removing the cross-copy symbol layer: decision 5.
 
 Next:
-- Consistent error codes and `update()` validation.
 - A typed table layout export to replace the React `Symbol.for` lookup.
 - Trimming the export surface.
 

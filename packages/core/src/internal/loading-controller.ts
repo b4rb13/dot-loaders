@@ -200,13 +200,7 @@ export abstract class LoadingController<
     const priorCycle = this.cycle;
     this.#batching = true;
     try {
-      for (const [key, value] of Object.entries(patch))
-        if (
-          /^(state|cycle|timing|animations|revealTargets|motion|stylePolicy|preset)$/.test(
-            key,
-          )
-        )
-          Reflect.set(this, key, value);
+      this.applyOptions(patch);
     } finally {
       this.#batching = false;
     }
@@ -216,6 +210,16 @@ export abstract class LoadingController<
     }
     this.#settleTargets();
     this.requestRender();
+  }
+  protected override get optionNames(): readonly string[] {
+    return [
+      ...super.optionNames,
+      'state',
+      'cycle',
+      'timing',
+      'animations',
+      'revealTargets',
+    ];
   }
   override attributeChangedCallback(
     name: string,
@@ -357,7 +361,7 @@ export abstract class LoadingController<
     const state = this.state;
     const attribute = this.getAttribute('state');
     const invalid = attribute !== null && attribute !== state;
-    if (invalid) this.report('invalid-state', 'state');
+    if (invalid) this.invalidOption('state');
     if (revision !== this.#revision) return;
     this.toggleAttribute('data-dotquilt-disabled', invalid);
     if (this.#work) {

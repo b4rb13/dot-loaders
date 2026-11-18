@@ -82,9 +82,10 @@ export class TextLoader extends LoadingController<'text'> {
       readonly preset?: TextPreset | undefined;
     },
   ): void {
-    for (const key of ['mask', 'speed', 'pointerResponse', 'preset'] as const)
-      if (key in patch) Reflect.set(this, key, patch[key]);
     super.update(patch);
+  }
+  protected override get optionNames(): readonly string[] {
+    return [...super.optionNames, 'mask', 'speed', 'pointerResponse'];
   }
   get mask(): string | undefined {
     return this.getAttribute('mask') ?? undefined;
@@ -236,10 +237,7 @@ export class TextLoader extends LoadingController<'text'> {
         ? !Number.isFinite(+value) || +value <= 0
         : name === 'pointer-response' && !['none', 'lift'].includes(value))
     )
-      this.report(
-        `invalid-${name}`,
-        name === 'speed' ? name : 'pointerResponse',
-      );
+      this.invalidOption(name);
     super.attributeChangedCallback(name, old, value);
   }
   override refresh(): void {

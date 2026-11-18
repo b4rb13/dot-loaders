@@ -109,7 +109,7 @@ export class TypingDots extends ManagedElement<'typing'> {
             : Number.isFinite(number))
         )
       )
-        this.report('invalid-number', name);
+        this.invalidOption(name);
       else if (name === 'count' && number > 8)
         this.report('typing-limit', 'count');
     }
@@ -122,9 +122,10 @@ export class TypingDots extends ManagedElement<'typing'> {
     readonly preset?: TypingPreset | undefined;
     readonly stylePolicy?: import('./types.js').StylePolicy;
   }): void {
-    for (const [key, value] of Object.entries(patch))
-      if (/^(count|speed|motion|stylePolicy|preset)$/.test(key))
-        Reflect.set(this, key, value);
+    this.applyOptions(patch);
+  }
+  protected override get optionNames(): readonly string[] {
+    return [...super.optionNames, 'count', 'speed'];
   }
   refresh(): void {
     this.resources?.eligible(true);

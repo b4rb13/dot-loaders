@@ -138,7 +138,7 @@ export abstract class ManagedElement<
       value !== null &&
       !['system', 'paused'].includes(value)
     )
-      this.report('invalid-motion', 'motion');
+      this.invalidOption('motion');
     if (name === 'motion') this.#motionChanged();
     else this.requestRender();
   }
@@ -167,6 +167,29 @@ export abstract class ManagedElement<
     return !this.#restricted;
   }
 
+  /** The property names update() applies; subclasses add their own. */
+  protected get optionNames(): readonly string[] {
+    return ['motion', 'stylePolicy', 'preset'];
+  }
+  /**
+   * Applies the keys of `patch` that are options of this element. Any other
+   * key is reported as `unknown-option` instead of being stored as an expando.
+   */
+  protected applyOptions(patch: object): void {
+    const names = this.optionNames;
+    for (const [key, value] of Object.entries(patch))
+      if (names.includes(key)) Reflect.set(this, key, value);
+      else this.report('unknown-option', key);
+  }
+  /** Reports a value outside an option's allowed set, by its property name. */
+  protected invalidOption(attribute: string): void {
+    this.report(
+      'invalid-option',
+      attribute.replace(/-([a-z])/g, (_, letter: string) =>
+        letter.toUpperCase(),
+      ),
+    );
+  }
   protected report(code: string, field: string): void {
     const key = `${code}:${field}`;
     if (this.#issues.has(key)) return;

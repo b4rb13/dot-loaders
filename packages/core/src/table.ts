@@ -138,7 +138,7 @@ export class TableLoader extends DenseLoader<'table', TableTargetProvider> {
         )) ||
         (name === 'row-height' && tableHeight(Number(value)) !== Number(value)))
     )
-      this.report('invalid-option', name);
+      this.invalidOption(name);
     if (old !== value && (name === 'rows' || name === 'row-height')) {
       this.clearSurface();
       this.#updateStatic();
@@ -168,8 +168,10 @@ export class TableLoader extends DenseLoader<'table', TableTargetProvider> {
       stylePolicy?: StylePolicy | undefined;
     }>,
   ): void {
-    for (const [key, value] of Object.entries(patch))
-      Reflect.set(this, key, value);
+    this.applyOptions(patch);
+  }
+  protected override get optionNames(): readonly string[] {
+    return [...super.optionNames, 'rows', 'rowHeight', 'columns'];
   }
 
   #updateStatic(): void {

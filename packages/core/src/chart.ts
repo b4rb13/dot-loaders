@@ -105,7 +105,7 @@ export class ChartLoader extends DenseLoader<'chart', TargetProvider> {
       value !== null &&
       !['line', 'bar', 'scatter'].includes(value)
     )
-      this.report('invalid-option', name);
+      this.invalidOption(name);
     super.attributeChangedCallback(name, old, value);
   }
 
@@ -121,8 +121,10 @@ export class ChartLoader extends DenseLoader<'chart', TargetProvider> {
       stylePolicy?: StylePolicy | undefined;
     }>,
   ): void {
-    for (const [key, value] of Object.entries(patch))
-      Reflect.set(this, key, value);
+    this.applyOptions(patch);
+  }
+  protected override get optionNames(): readonly string[] {
+    return [...super.optionNames, 'variant'];
   }
 }
 export function registerChartLoader(): void {

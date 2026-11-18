@@ -168,6 +168,15 @@ export abstract class DenseLoader<
     return this.owner?.activity ?? this.ownActivity;
   }
 
+  protected override get optionNames(): readonly string[] {
+    return [
+      ...super.optionNames,
+      'speed',
+      'pointerResponse',
+      'animations',
+      'targetProvider',
+    ];
+  }
   protected override presetChanged(): void {
     this.#runner?.reset?.();
   }
@@ -183,7 +192,7 @@ export abstract class DenseLoader<
         (name === 'speed' &&
           !(Number.isFinite(Number(value)) && Number(value) > 0)))
     )
-      this.report('invalid-option', name);
+      this.invalidOption(name);
     super.attributeChangedCallback(name, old, value);
   }
   override connectedCallback(): void {
