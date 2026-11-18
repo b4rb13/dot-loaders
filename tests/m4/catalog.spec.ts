@@ -517,6 +517,16 @@ for (const mode of ['hash', 'external']) {
         new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       while (region.getAttribute('data-presentation') !== 'pending')
         await frame();
+      // An unstyled region (external sheet still loading) hands off at once,
+      // so wait for the stylesheet before checking the animated handoff.
+      const unstyled = () => {
+        try {
+          return region.matches(':state(unstyled)');
+        } catch {
+          return false;
+        }
+      };
+      while (unstyled()) await frame();
       const initial =
         region.shadowRoot?.querySelector<HTMLElement>('[part=content]');
       const pending = {
