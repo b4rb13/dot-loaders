@@ -69,7 +69,18 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
   - **Motion:** a calm sine wave from 30% to 100% over 1.9 s, each dot 14% of a cycle behind, rising 1.5 px. The easing sits on the keyframes, so speed changes keep the phase.
   - **Other defaults:** skeleton lines are two rows tall (slice A), and charts keep 12rem. Their sizes already read well at the new mark size.
 - **G. Alternative marks:** a `mark: 'dot' | 'dash' | 'square'` option with the same positions and motion.
-- **H. Prune old variants.** Keep, change or drop each of the 16 built-in recipes deliberately.
+- **H. Prune old variants — done on `design/4b-prune`.** Each built-in recipe was kept, changed or dropped:
+  - **Kept as defaults** (already reworked in A–F): `pulse`, `dissolve`, `ridge`, `morphWipe`, `tableShimmer`, `rows`, `scramble`, `lock`.
+  - **Kept as options:**
+    - `bars` and `scatter`: they match those chart types; now uniform marks under the shared glow.
+    - `typeOn`: still bars that grow.
+    - `labelPulse`: a calmer text idle than the scramble.
+    - `fade`: a plain text handoff.
+  - **Dropped:**
+    - `scan`, `terrain` and `cycle`: novelty silhouettes; the spec says "No novelty".
+    - `scrambleCharacters` and `scrambleWords`: the default scramble now changes characters one at a time.
+    - `printText`: its clip print is covered by `lock`.
+  - **Tests:** the M4 text-scramble suite went with its variants, and the other tests use the kept recipes.
 
 Mapping the spec's marks onto the runtime (an open detail in the spec):
 - **Colours:** the base colour comes from `light-dark()`, so it follows the page's `color-scheme`.

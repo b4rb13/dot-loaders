@@ -4,15 +4,12 @@ import {
 } from '@dotquilt-internal/core/animations';
 import {
   bars,
-  cycle,
   morphWipe,
   ridge,
-  scan,
   scatter,
-  terrain,
 } from '@dotquilt-internal/core/animations/chart';
 
-const recipes = { ridge, scan, terrain, bars, scatter, cycle, morphWipe };
+const recipes = { ridge, bars, scatter, morphWipe };
 
 import {
   type ChartInput,
@@ -205,7 +202,7 @@ Object.assign(window, {
         kind: 'chart',
         variant: 'scatter',
         speed: 0.6,
-        animations: { idle: recipes.scan() },
+        animations: { idle: recipes.bars() },
       })),
     customFrames: () => customFrames,
     broken: () => (chart.animations = { handoff: broken() }),

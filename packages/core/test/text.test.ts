@@ -2,13 +2,7 @@ import { expect, test } from 'bun:test';
 import type { AnimationSurface, HandoffDefinition } from '../src/animations.js';
 import { definitionOf } from '../src/internal/binding.js';
 import { renderStatic } from '../src/server.js';
-import {
-  fade,
-  labelPulse,
-  lock,
-  printText,
-  scramble,
-} from '../src/text-animations.js';
+import { fade, labelPulse, lock, scramble } from '../src/text-animations.js';
 import { LoaderConfigurationError } from '../src/types.js';
 
 const surface: AnimationSurface<'text'> = {
@@ -52,7 +46,7 @@ test('text recipes validate immutable options and preserve approved ranges', () 
   ])
     expect(() => lock(options as never)).toThrow(LoaderConfigurationError);
 });
-test('lock and print totals include bounded stagger, reel, settle and tail', () => {
+test('lock totals include bounded stagger, reel, settle and tail', () => {
   const get = (binding: ReturnType<typeof lock>) =>
     definitionOf(binding) as unknown as HandoffDefinition<
       'text',
@@ -61,9 +55,6 @@ test('lock and print totals include bounded stagger, reel, settle and tail', () 
     >;
   // Ten characters: 9 × 40 ms stagger + 55 ms reel + 300 ms lock + 100 ms tail.
   expect(get(lock()).duration(surface, lock().options)).toBe(815);
-  expect(get(printText()).duration(surface, printText().options)).toBeCloseTo(
-    180 + 815 / 1.5,
-  );
   expect(
     get(lock()).duration(
       { ...surface, input: { ...surface.input, precise: false } },
@@ -119,8 +110,6 @@ test('first-party command intrinsics stay finite and bounded at every option end
   for (const binding of [
     lock({ staggerMs: 0, reelMs: 0, settleMs: 40, pop: 0 }),
     lock({ staggerMs: 40, reelMs: 100, settleMs: 180, pop: 0.3 }),
-    printText({ staggerMs: 0, reelMs: 0, settleMs: 40, pop: 0 }),
-    printText({ staggerMs: 40, reelMs: 100, settleMs: 180, pop: 0.3 }),
     fade({ duration: 0 }),
     fade({ duration: 4000 }),
   ]) {

@@ -7,10 +7,7 @@ import {
   fade,
   labelPulse,
   lock,
-  printText,
   scramble,
-  scrambleCharacters,
-  scrambleWords,
 } from '@dotquilt-internal/core/animations/text';
 import { registerLoadingRegion } from '@dotquilt-internal/core/region';
 import {
@@ -144,11 +141,8 @@ const targeted = defineAnimation({
 });
 const recipes = {
   scramble,
-  scrambleCharacters,
-  scrambleWords,
   labelPulse,
   lock,
-  printText,
   fade,
 };
 Object.assign(window, {
@@ -168,7 +162,7 @@ Object.assign(window, {
     preset: () => {
       host.preset = definePreset({
         kind: 'text',
-        animations: { idle: labelPulse(), handoff: printText() },
+        animations: { idle: labelPulse(), handoff: lock() },
       });
     },
     surface: () =>

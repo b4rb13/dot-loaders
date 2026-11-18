@@ -111,9 +111,9 @@ test('switching the chart idle animation switches its renderer', async ({
     const chart = window.e2e.decoration as HTMLElement & {
       animations: unknown;
     };
-    const { scan, ridge } = (
+    const { bars, ridge } = (
       window as unknown as {
-        e2eAnimations: { chart: { scan: () => unknown; ridge: () => unknown } };
+        e2eAnimations: { chart: { bars: () => unknown; ridge: () => unknown } };
       }
     ).e2eAnimations.chart;
     const frames = (count: number) =>
@@ -123,7 +123,7 @@ test('switching the chart idle animation switches its renderer', async ({
       });
     const kind = () =>
       chart.shadowRoot?.querySelector('canvas') ? 'canvas' : 'svg';
-    chart.animations = { idle: scan() };
+    chart.animations = { idle: bars() };
     await frames(5);
     const first = kind();
     chart.animations = { idle: ridge() };

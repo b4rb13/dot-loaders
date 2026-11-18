@@ -3,7 +3,7 @@
 //   &theme=light|dark   page colours
 //   &hostDisplay=block  simulate app CSS that sets `display:block` on the hosts
 //   &motion=paused      pause motion on the page so screenshots are stable
-import { ridge, scan } from '@dotquilt-internal/core/animations/chart';
+import { bars, ridge } from '@dotquilt-internal/core/animations/chart';
 import { tableShimmer, typeOn } from '@dotquilt-internal/core/animations/table';
 import { registerAll } from '@dotquilt-internal/core/register-all';
 import { type Fixture, type Kind, kinds, type Owner } from './kinds';
@@ -159,6 +159,6 @@ function build(): Fixture {
 window.e2e = build();
 // Animation factories some specs switch between.
 Object.assign(window, {
-  e2eAnimations: { chart: { ridge, scan }, table: { typeOn, tableShimmer } },
+  e2eAnimations: { chart: { ridge, bars }, table: { typeOn, tableShimmer } },
 });
 document.body.dataset.ready = 'true';
