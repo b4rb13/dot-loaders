@@ -2,16 +2,9 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 
 const root = resolve(import.meta.dir, '../..');
-// Default: serve the workspace build (packages/core/dist). With DOTQUILT_PACKED=1,
-// serve the tarball that `bun run verify:packed` installed into a clean consumer.
-const packagePath = process.env.DOTQUILT_PACKED
-  ? resolve(
-      (
-        await readFile(resolve(root, '.artifacts/consumer-path'), 'utf8')
-      ).trim(),
-      'node_modules/@dotquilt-internal/core',
-    )
-  : resolve(root, 'packages/core');
+// Serves the workspace build (packages/core/dist). Packaging itself is checked
+// by scripts/pack-smoke.test.ts.
+const packagePath = resolve(root, 'packages/core');
 const {
   renderStatic,
   skeletonStyles,
@@ -57,8 +50,7 @@ const hashes = [
 ]
   .map((s: string) => `'sha256-${hash(s)}'`)
   .join(' ');
-// Minified "production" consumers of the selective entries. Packed mode serves the
-// bundles `verify:packed` measured; otherwise they are built from the workspace.
+// Minified "production" consumers of the selective entries, built from the workspace.
 const productionBundles = new Map<string, Blob>();
 for (const [name, source] of [
   [
@@ -71,13 +63,6 @@ for (const [name, source] of [
   ],
 ] as const) {
   const path = `/production-${name}.js`;
-  if (process.env.DOTQUILT_PACKED) {
-    productionBundles.set(
-      path,
-      Bun.file(resolve(root, '.artifacts', `${name}-consumer.js`)),
-    );
-    continue;
-  }
   const directory = resolve(root, '.artifacts/native-server');
   await mkdir(directory, { recursive: true });
   const entry = resolve(directory, `${name}-entry.ts`);

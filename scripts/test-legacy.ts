@@ -21,10 +21,11 @@ interface Suite {
 }
 
 const suites: Record<string, Suite> = {
+  // Packs and installs the tarballs the other suites consume. Packaging is
+  // checked by scripts/pack-smoke.test.ts; the browser suite already runs
+  // against the same dist files, so it is not rerun here.
   native: {
     prepare: [['bun', 'run', 'scripts/verify-packed.ts']],
-    configs: [{ file: 'playwright.config.ts', chromium: 'native-chromium' }],
-    env: { DOTQUILT_PACKED: '1' },
   },
   react: {
     prepare: [

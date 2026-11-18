@@ -1,11 +1,8 @@
-import { existsSync, readFileSync } from 'node:fs';
 import { defineConfig } from '@playwright/test';
 
 // Main browser suite. Runs against the workspace build: `bun run build` first.
 //   bun run test:e2e                 Chromium only (day to day)
 //   ALL_BROWSERS=1 bun run test:e2e  Chromium, Firefox and WebKit
-//   DOTQUILT_PACKED=1 ...            native project against the packed tarball
-//                                    (run `bun run verify:packed` first)
 // Projects:
 //   e2e     tests/e2e: every component's pending/ready behaviour, layout and
 //           screenshots on plain fixture pages
@@ -14,14 +11,9 @@ import { defineConfig } from '@playwright/test';
 const browsers = (
   process.env.ALL_BROWSERS ? ['chromium', 'firefox', 'webkit'] : ['chromium']
 ) as ('chromium' | 'firefox' | 'webkit')[];
-const packedReport = '.artifacts/packed-report.json';
-const packed =
-  process.env.DOTQUILT_PACKED && existsSync(packedReport)
-    ? JSON.parse(readFileSync(packedReport, 'utf8'))
-    : undefined;
 
 export default defineConfig({
-  metadata: { artifactSha256: packed?.sha256 ?? 'workspace' },
+  metadata: { artifactSha256: 'workspace' },
   timeout: 20000,
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
