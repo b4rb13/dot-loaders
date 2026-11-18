@@ -136,14 +136,16 @@ export class SkeletonBlock extends ManagedElement {
     };
   }
   get owner(): Owner | undefined {
-    const owner = ancestors(this).find(
-      (e) => e.localName === 'dotquilt-region',
-    ) as Owner | undefined;
-    if (!owner) return undefined;
-    let top: Element = this;
-    while (top.parentElement && top.parentElement !== owner)
-      top = top.parentElement;
-    return top.getAttribute('slot') === 'placeholder' ? owner : undefined;
+    return this.cachedOwner(() => {
+      const owner = ancestors(this).find(
+        (e) => e.localName === 'dotquilt-region',
+      ) as Owner | undefined;
+      if (!owner) return undefined;
+      let top: Element = this;
+      while (top.parentElement && top.parentElement !== owner)
+        top = top.parentElement;
+      return top.getAttribute('slot') === 'placeholder' ? owner : undefined;
+    });
   }
   get activity(): Activity {
     return this.owner?.activity ?? this.ownActivity;

@@ -15,7 +15,7 @@ import {
   emptyChartSource as empty,
   emptyChartInput as emptyInput,
 } from './internal/chart-projection.js';
-import { contentBox } from './internal/content-box.js';
+import { contentBox, surfaceEnvironment } from './internal/content-box.js';
 import { coordinatedHandoff } from './internal/coordinated-handoff.js';
 import {
   installDensePainter,
@@ -24,6 +24,7 @@ import {
 import {
   ancestors,
   installStyles,
+  media,
   motionRestricted,
   node,
   register,
@@ -87,9 +88,11 @@ export class ChartLoader extends EventElement<'chart'> {
   #bindings: Animations<'chart'> = {};
   #provider: TargetProvider | undefined;
   #runner: Runner | undefined;
+  #createRunner: unknown;
   #source: readonly Dot[] = empty;
   #input: ChartInput = emptyInput;
   #geometry: AnimationSurface<'chart'> | undefined;
+  #environment: string | undefined;
   get variant(): ChartVariant {
     const value = this.getAttribute('variant') ?? this.preset?.variant;
     return value === 'bar' || value === 'scatter' ? value : 'line';
@@ -142,14 +145,16 @@ export class ChartLoader extends EventElement<'chart'> {
       this.report('invalid-provider', 'targetProvider');
   }
   get owner(): Owner | undefined {
-    const owner = ancestors(this).find(
-      (e) => e.localName === 'dotquilt-region',
-    ) as Owner | undefined;
-    if (!owner) return undefined;
-    let top: Element = this;
-    while (top.parentElement && top.parentElement !== owner)
-      top = top.parentElement;
-    return top.getAttribute('slot') === 'placeholder' ? owner : undefined;
+    return this.cachedOwner(() => {
+      const owner = ancestors(this).find(
+        (e) => e.localName === 'dotquilt-region',
+      ) as Owner | undefined;
+      if (!owner) return undefined;
+      let top: Element = this;
+      while (top.parentElement && top.parentElement !== owner)
+        top = top.parentElement;
+      return top.getAttribute('slot') === 'placeholder' ? owner : undefined;
+    });
   }
   get activity(): Activity {
     return this.owner?.activity ?? this.ownActivity;
@@ -337,6 +342,14 @@ export class ChartLoader extends EventElement<'chart'> {
     ];
   }
   protected override environmentChanged(): void {
+    const environment = surfaceEnvironment(this);
+    if (environment === this.#environment) {
+      // Nothing the drawing depends on changed: only re-check eligibility.
+      this.resources?.eligible(true);
+      this.requestRender();
+      return;
+    }
+    this.#environment = environment;
     this.refresh();
   }
   #clear(): void {
@@ -351,11 +364,13 @@ export class ChartLoader extends EventElement<'chart'> {
       this.pointerResponse !== 'lift' ||
       !this.hasAttribute('data-moving') ||
       event.pointerType === 'touch' ||
-      !this.ownerDocument.defaultView?.matchMedia(
-        '(hover:hover) and (pointer:fine)',
-      ).matches
-    )
+      !media(this.ownerDocument.defaultView, '(hover:hover) and (pointer:fine)')
+    ) {
+      // Lift no longer applies (touch, no hover, paused): drop the old position
+      // so the drawing does not stay lifted at a stale point.
+      this.#clearPointer();
       return;
+    }
     const r = (
       this.shadowRoot?.querySelector('svg[data-dotquilt-painter]') ?? this
     ).getBoundingClientRect();
@@ -378,10 +393,7 @@ export class ChartLoader extends EventElement<'chart'> {
       return;
     }
     const moving = this.allowed(this.activity);
-    if (
-      this.ownerDocument.defaultView?.matchMedia('(forced-colors: active)')
-        .matches
-    ) {
+    if (media(this.ownerDocument.defaultView, '(forced-colors: active)')) {
       this.#runner?.dispose();
       this.removeAttribute('data-moving');
       this.#clearPointer();
@@ -393,7 +405,14 @@ export class ChartLoader extends EventElement<'chart'> {
       this.arm(this.activity);
     const binding =
       this.#bindings.idle ?? this.preset?.animations?.idle ?? defaultRidge;
-    this.#runner ??= definitionOf(binding).runner?.(
+    const createRunner = definitionOf(binding).runner;
+    if (this.#runner && this.#createRunner !== createRunner) {
+      // A different idle definition may need a different renderer.
+      this.#runner.dispose();
+      this.#runner = undefined;
+    }
+    this.#createRunner = createRunner;
+    this.#runner ??= createRunner?.(
       this,
       (code) => this.report(code, 'animations'),
       () => this.requestRender(),

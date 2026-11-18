@@ -7,6 +7,7 @@ import type {
 import { definitionOf } from './internal/binding.js';
 import {
   ancestors,
+  media,
   node,
   register,
   upgradeProperties,
@@ -162,9 +163,10 @@ export class TextLoader extends LoadingController<'text'> {
     super.disconnectedCallback();
   }
   protected override environmentChanged(): void {
+    // Re-measure glyphs only when the text's size or font actually changed.
     const changed =
       this.#geometry !== undefined && this.#geometry !== this.#geometryKey();
-    this.#surface = undefined;
+    if (changed) this.#surface = undefined;
     if (changed && this.presentation === 'handoff') super.refresh();
     else super.environmentChanged();
   }
@@ -206,11 +208,13 @@ export class TextLoader extends LoadingController<'text'> {
       this.pointerResponse !== 'lift' ||
       !this.hasAttribute('data-moving') ||
       event.pointerType === 'touch' ||
-      !this.ownerDocument.defaultView?.matchMedia(
-        '(hover:hover) and (pointer:fine)',
-      ).matches
-    )
+      !media(this.ownerDocument.defaultView, '(hover:hover) and (pointer:fine)')
+    ) {
+      // Lift no longer applies (touch, no hover, paused): drop the old position
+      // so the drawing does not stay lifted at a stale point.
+      Reflect.deleteProperty(this, pointer);
       return;
+    }
     const rect = this.getBoundingClientRect();
     Reflect.set(this, pointer, {
       x: event.clientX - rect.left,
@@ -389,8 +393,7 @@ export class TextLoader extends LoadingController<'text'> {
     if (
       !surface.input.precise ||
       !surface.input.mask.length ||
-      this.ownerDocument.defaultView?.matchMedia('(forced-colors: active)')
-        .matches
+      media(this.ownerDocument.defaultView, '(forced-colors: active)')
     ) {
       this.#stopIdle();
       return;

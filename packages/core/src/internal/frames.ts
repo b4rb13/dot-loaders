@@ -16,7 +16,17 @@ export function frames(host: HTMLElement, callback: () => void): () => void {
       raf = 0;
       // Membership changes invalidate the next tick, not the snapshot in progress.
       snapshot ??= [...clients];
-      for (const fn of snapshot) if (clients.has(fn)) fn();
+      for (const fn of snapshot) {
+        if (!clients.has(fn)) continue;
+        try {
+          fn();
+        } catch (error) {
+          // One failing client must not stop every other loader's motion.
+          clients.delete(fn);
+          snapshot = undefined;
+          win.reportError?.(error);
+        }
+      }
       if (clients.size && !raf) raf = win.requestAnimationFrame(tick);
     };
     service = {

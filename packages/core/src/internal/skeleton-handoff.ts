@@ -1,3 +1,5 @@
+import { media } from './dom.js';
+
 /** Private compatible-copy seam. Region owns time, restrictions and terminal cleanup. */
 export type SkeletonDeparture = (
   duration: number,
@@ -27,7 +29,7 @@ export function dissolveSkeleton(
 ): { dispose(): void; check(): void } {
   const root = host.shadowRoot;
   const win = host.ownerDocument.defaultView;
-  if (!root || !win || win.matchMedia('(forced-colors: active)').matches)
+  if (!root || !win || media(win, '(forced-colors: active)'))
     return { dispose() {}, check() {} };
   const surfaces = [...root.querySelectorAll<HTMLElement>('.surface')].filter(
     (surface) => !surface.closest('.pulse'),

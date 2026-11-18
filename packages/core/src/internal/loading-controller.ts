@@ -78,6 +78,7 @@ export abstract class LoadingController<
   #serial = 0;
   #batching = false;
   #previous: LoadingState = 'ready';
+  #participants: string | undefined;
   #settled = true;
   #work: Work | undefined;
   #wrappers: Layers | undefined;
@@ -100,8 +101,9 @@ export abstract class LoadingController<
         ? 'refreshing'
         : 'pending';
   }
-  set state(value: LoadingState) {
-    this.setAttribute('state', String(value));
+  set state(value: LoadingState | undefined) {
+    if (value === undefined) this.removeAttribute('state');
+    else this.setAttribute('state', String(value));
   }
   get cycle(): string | undefined {
     return this.getAttribute('cycle') ?? undefined;
@@ -252,7 +254,11 @@ export abstract class LoadingController<
       const content = layer('content', 'c'),
         placeholder = layer('placeholder', 'p', 'placeholder'),
         refresh = layer('refresh-indicator', 'r', 'refresh-indicator');
-      root.append(content, placeholder, refresh);
+      // The layers overlap inside their own grid, so the overlay survives app
+      // CSS that changes the host's display (e.g. `display: block`).
+      const frame = node(this.ownerDocument, 'div', { class: 'f' });
+      frame.append(content, placeholder, refresh);
+      root.append(frame);
       this.#wrappers = [content, placeholder, refresh];
     }
     if (this.#wrappers) this.resources?.watch(this.#wrappers[0]);
@@ -268,6 +274,7 @@ export abstract class LoadingController<
       characterData: true,
     });
     this.#previous = 'ready';
+    this.#participants = undefined;
     this.requestRender();
   }
   override disconnectedCallback(): void {
@@ -284,6 +291,10 @@ export abstract class LoadingController<
     this.requestRender();
   }
   #onContentChange = (change: MutationRecord[] | Event): void => {
+    // A simple reveal fades the content wrapper as a whole, so content updates
+    // during it (e.g. a framework's follow-up render) must not cut it short.
+    // Rich handoffs and row reveals captured content geometry and still settle.
+    if (this.#work && !this.#work[5]?.draw && !this.#targets.length) return;
     // Simple wrapper reveals are independent of nested content. Rich/custom
     // plans may capture geometry derived from it, so keep conservative invalidation.
     if (
@@ -407,9 +418,17 @@ export abstract class LoadingController<
         this.ownActivity.started = undefined;
         this.#settled = false;
       }
-      this.refreshParticipants();
+      // Rich placeholders rebuild when the loading state or cycle changes;
+      // other re-renders (e.g. an ancestor class change) leave them alone,
+      // since they receive their own size and style notifications.
+      const participants = `${state}|${this.cycle ?? ''}`;
+      if (participants !== this.#participants) {
+        this.#participants = participants;
+        this.refreshParticipants();
+      }
       return;
     }
+    this.#participants = undefined;
     if (prior === 'pending') this.#start(revision, w);
     else this.#settled = true;
   }

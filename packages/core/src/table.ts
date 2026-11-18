@@ -4,7 +4,7 @@ import {
   chartHandoff as denseHandoff,
   type RichParticipant,
 } from './internal/chart-participant.js';
-import { contentBox } from './internal/content-box.js';
+import { contentBox, surfaceEnvironment } from './internal/content-box.js';
 import { coordinatedHandoff } from './internal/coordinated-handoff.js';
 import {
   installDensePainter,
@@ -36,7 +36,9 @@ const empty: readonly Dot[] = /* @__PURE__ */ Object.freeze([]);
 import {
   ancestors,
   installStyles,
+  media,
   motionRestricted,
+  node,
   register,
   upgradeProperties,
 } from './internal/dom.js';
@@ -108,9 +110,11 @@ export class TableLoader extends EventElement<'table'> {
   #bindings: Animations<'table'> = {};
   #provider: TableTargetProvider | undefined;
   #runner: Runner | undefined;
+  #createRunner: unknown;
   #source: readonly Dot[] = empty;
   #input: TableInput = emptyInput;
   #geometry: AnimationSurface<'table'> | undefined;
+  #environment: string | undefined;
   #columns: readonly TableColumn[] = tableColumns(undefined);
   get columns(): readonly TableColumn[] {
     return this.#columns;
@@ -180,14 +184,16 @@ export class TableLoader extends EventElement<'table'> {
       this.report('invalid-provider', 'targetProvider');
   }
   get owner(): Owner | undefined {
-    const owner = ancestors(this).find(
-      (e) => e.localName === 'dotquilt-region',
-    ) as Owner | undefined;
-    if (!owner) return undefined;
-    let top: Element = this;
-    while (top.parentElement && top.parentElement !== owner)
-      top = top.parentElement;
-    return top.getAttribute('slot') === 'placeholder' ? owner : undefined;
+    return this.cachedOwner(() => {
+      const owner = ancestors(this).find(
+        (e) => e.localName === 'dotquilt-region',
+      ) as Owner | undefined;
+      if (!owner) return undefined;
+      let top: Element = this;
+      while (top.parentElement && top.parentElement !== owner)
+        top = top.parentElement;
+      return top.getAttribute('slot') === 'placeholder' ? owner : undefined;
+    });
   }
   get activity(): Activity {
     return this.owner?.activity ?? this.ownActivity;
@@ -228,7 +234,14 @@ export class TableLoader extends EventElement<'table'> {
     if (!this.shadowRoot) {
       const root = this.attachShadow({ mode: 'open' });
       installStyles(root, tableStyles, this.policy);
-      root.append(
+      // The outline and the painters share one grid cell inside a frame that
+      // spans exactly the content box, so padding or an app's display rule
+      // never shifts the dots away from the geometry they were measured for.
+      const frame = node(this.ownerDocument, 'div', {
+        class: 'f',
+        'data-dotquilt-frame': '',
+      });
+      frame.append(
         staticTableSVG(
           this.ownerDocument,
           this.rows,
@@ -236,6 +249,7 @@ export class TableLoader extends EventElement<'table'> {
           this.columns,
         ),
       );
+      root.append(frame);
     }
     for (const child of this.querySelectorAll(
       ':scope > [data-dotquilt-style],:scope > [data-dotquilt-static]',
@@ -385,6 +399,14 @@ export class TableLoader extends EventElement<'table'> {
     ];
   }
   protected override environmentChanged(): void {
+    const environment = surfaceEnvironment(this);
+    if (environment === this.#environment) {
+      // Nothing the drawing depends on changed: only re-check eligibility.
+      this.resources?.eligible(true);
+      this.requestRender();
+      return;
+    }
+    this.#environment = environment;
     this.refresh();
   }
   #updateStatic(): void {
@@ -411,14 +433,17 @@ export class TableLoader extends EventElement<'table'> {
       this.pointerResponse !== 'lift' ||
       !this.hasAttribute('data-moving') ||
       event.pointerType === 'touch' ||
-      !this.ownerDocument.defaultView?.matchMedia(
-        '(hover:hover) and (pointer:fine)',
-      ).matches
-    )
+      !media(this.ownerDocument.defaultView, '(hover:hover) and (pointer:fine)')
+    ) {
+      // Lift no longer applies (touch, no hover, paused): drop the old position
+      // so the drawing does not stay lifted at a stale point.
+      this.#clearPointer();
       return;
+    }
     const r = (
       this.shadowRoot?.querySelector('svg[data-dotquilt-painter]') ?? this
     ).getBoundingClientRect();
+    if (!r.width || !r.height) return;
     Reflect.set(this, pointer, {
       x:
         (event.clientX - r.left) *
@@ -438,10 +463,7 @@ export class TableLoader extends EventElement<'table'> {
       return;
     }
     const moving = this.allowed(this.activity);
-    if (
-      this.ownerDocument.defaultView?.matchMedia('(forced-colors: active)')
-        .matches
-    ) {
+    if (media(this.ownerDocument.defaultView, '(forced-colors: active)')) {
       this.#runner?.dispose();
       this.removeAttribute('data-moving');
       this.#clearPointer();
@@ -453,7 +475,14 @@ export class TableLoader extends EventElement<'table'> {
       this.arm(this.activity);
     const binding =
       this.#bindings.idle ?? this.preset?.animations?.idle ?? defaultTypeOn;
-    this.#runner ??= definitionOf(binding).runner?.(
+    const createRunner = definitionOf(binding).runner;
+    if (this.#runner && this.#createRunner !== createRunner) {
+      // A different idle definition may need a different renderer.
+      this.#runner.dispose();
+      this.#runner = undefined;
+    }
+    this.#createRunner = createRunner;
+    this.#runner ??= createRunner?.(
       this,
       (code) => this.report(code, 'animations'),
       () => this.requestRender(),

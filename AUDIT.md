@@ -37,6 +37,35 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
 - **Locked:** the refined System is locked as [design/SPEC.md](design/SPEC.md), with [design/tokens.css](design/tokens.css). Mockups are in `design/directions*/`.
 - **Marks:** dot by default; dash and square are offered as a component option.
 
+**Phase 2 — in progress on `fix/phase-2-runtime-bugs` (2026-11-18).**
+
+Fixed, each with a regression test that fails on the old code:
+- **Layout under app `display` rules:** regions and TextLoader overlay their layers inside their own grid; TableLoader and TypingDots no longer rely on the host's display.
+- **Page-wide invalidation:** changes to unrelated elements now cost zero layout reads (before: 60–1,200 per loader); ancestor changes cost a small, bounded check.
+- **Per-frame work:** the owner and motion restriction are cached, and media queries are reused.
+- **Frame loop:** one throwing client no longer stops all animation.
+- **Small bugs:**
+  - `state = undefined`
+  - TableLoader NaN pointer at zero size
+  - the renderer not switching when the idle animation changes
+  - #35 stale pointer on touch
+- **Simple reveals:** they are no longer cut short by content updates.
+- **React hydration snapshot:** it no longer copies another root's attributes.
+
+Pre-existing legacy failures, the same on the pre-Phase-2 code (they need triage while porting):
+- M4: 12
+- table-options: 8
+- table-parts: 5
+- shared-wrapper: 16
+- motion-review: does not start; its server needs table fixtures that only `prepare-table` creates, which runs later.
+- next: its build stops because Next 16.4.2 has a published security advisory. The suite needs a Next upgrade before it can run.
+
+All other legacy suites pass: native (packed), react, chart-production, table, presets, coordination, api, copies and layout.
+
+Not done yet:
+- React style de-duplication (one stylesheet per instance). It changes SSR markup across React 19.0–19.3 and Next, so it gets its own change.
+- Hiding pending SSR content before upgrade. Tried and reverted: the legacy React suite requires pending server content to stay visible and usable without JavaScript. Now decision 11.
+
 ## TL;DR
 
 - **The product works.** All nine components exist as native elements plus React wrappers with SSR output. The website (homepage, 9 reference pages, 24-recipe gallery, playground, guides, search) builds and runs. Most loading → reveal handoffs look good.
@@ -99,7 +128,7 @@ Confirmed by me in source:
 
 Reported by the reviewers (high/medium confidence, not all re-verified):
 
-6. **Pending SSR content is visible before JS.** `renderStatic({kind:'region'})` emits only `:host` rules, which match nothing in light DOM. Pending content is visible and exposed to screen readers until upgrade. The no-JS test passes only because its fixture adds `hidden inert` itself (`tests/browser/server.ts:218`).
+6. **Pending SSR content is visible before JS.** `renderStatic({kind:'region'})` emits only `:host` rules, which match nothing in light DOM. Pending content is visible and exposed to screen readers until upgrade. The native no-JS test passes only because its fixture adds `hidden inert` itself (`tests/browser/server.ts:218`). *Phase 2 update:* this is a deliberate trade-off rather than a plain bug. The legacy React suite requires pending content to stay usable when JavaScript is off or fails. See decision 11.
 7. **Heavy per-frame work.** Chart, Table and Text do ancestor walks plus a fresh `matchMedia()` per element per frame. The micro-optimisation effort went to attribute-string caching instead.
 8. **Handoffs get cut short.**
    - Any content mutation or slotchange in a region ends the handoff as `geometry-changed`; React follow-up effects trigger this.
@@ -225,7 +254,7 @@ In order:
 1. TableLoader/Chart layout: make components robust when a consumer sets `display` on the host, using an internal wrapper instead of relying on `:host{display:grid}`
 2. invalidation storm
 3. per-frame work
-4. SSR pending content hiding
+4. SSR pending content hiding (blocked on decision 11)
 5. frame-loop isolation and error dedupe
 6. React document scan and style dedupe
 7. #35 stale pointer
@@ -302,3 +331,16 @@ Performance qualification on real devices comes after there are users, against b
 7. ~~**Visual direction.**~~ **Decided 2026-11-18:** "System, refined" (see design/SPEC.md). Dots stay as the core idea, with dot/dash/square as mark options.
 8. **Website stack.** Keep Next.js + Fumadocs for the rebuilt site, or choose something lighter?
 9. **Old site retirement.** Delete `apps/website` as soon as work on the new site starts, or keep it as a reference until parity? I recommend keeping it until parity.
+10. **How often errors repeat.** Today each loader reports a given problem once in its lifetime ("bounded diagnostics"), and legacy tests pin that. So a problem that recurs after being fixed stays silent, which weakens telemetry. Options:
+    - (a) keep once per element;
+    - (b) report again after the field was set to a valid value in between;
+    - (c) once per loading cycle.
+
+    I recommend (b) for configuration errors and (c) for runtime failures.
+11. **Pending server content before JavaScript.** Today a server-rendered pending region shows its placeholder *and* its content until the runtime upgrades it. If JavaScript is off or fails to load, the content stays visible and usable. The cost is that, while JavaScript loads, people see both and screen readers announce content that is not ready. Hiding it with CSS until upgrade (tried in Phase 2) leaves it hidden forever when JavaScript never runs. Options:
+    - (a) keep content visible and usable (today; the legacy React tests pin this);
+    - (b) hide it only while scripting is on (`@media (scripting: enabled)`), accepting that a failed bundle hides it;
+    - (c) (b) plus a CSS-only timeout that reveals it again if the element never upgrades;
+    - (d) leave it to the app, and document `hidden`/`inert` on pending server content.
+
+    I recommend (a) as the default, with (d) documented for apps that would rather hide.

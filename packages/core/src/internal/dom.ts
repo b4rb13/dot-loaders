@@ -105,3 +105,26 @@ export function activeWithin(host: HTMLElement): boolean {
     (active === host || ancestors(active as HTMLElement).includes(host))
   );
 }
+
+const mediaQueries = new WeakMap<Window, Map<string, MediaQueryList>>();
+/** Whether a media query matches, reusing one MediaQueryList per window and query. */
+export function media(win: Window | null | undefined, query: string): boolean {
+  if (!win) return false;
+  const queries = mediaQueries.get(win) ?? new Map<string, MediaQueryList>();
+  mediaQueries.set(win, queries);
+  let list = queries.get(query);
+  if (!list) {
+    list = win.matchMedia(query);
+    queries.set(query, list);
+  }
+  return list.matches;
+}
+/**
+ * Where painters append their drawing: the host's frame when it has one (a
+ * grid spanning exactly the content box), otherwise the shadow root itself.
+ */
+export function paintLayer(root: ShadowRoot): ParentNode {
+  for (const child of root.children)
+    if (child.hasAttribute('data-dotquilt-frame')) return child;
+  return root;
+}

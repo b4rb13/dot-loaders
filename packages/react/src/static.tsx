@@ -83,6 +83,19 @@ export function sheet(
       );
 }
 
+/**
+ * The server-rendered host carrying this component's `useId`, or undefined.
+ * `useId` is only unique within one React root, so when several elements match
+ * (multiple roots without `identifierPrefix`) none is trusted.
+ */
+function hydratingHost(id: string): Element | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const matches = document.querySelectorAll(
+    `[data-dotquilt-react-host="${CSS.escape(id)}"]`,
+  );
+  return matches.length === 1 ? (matches[0] ?? undefined) : undefined;
+}
+
 /** Match native-owned attributes after an early upgrade, then leave them native-owned.
  * The immutable snapshot never rewrites later presentation changes on React commits.
  */
@@ -96,12 +109,7 @@ export function useUpgradeAttributes(
   );
   const snapshot = () => {
     if (!captured.current) {
-      const host =
-        typeof document === 'undefined'
-          ? undefined
-          : [...document.querySelectorAll('[data-dotquilt-react-host]')].find(
-              (node) => node.getAttribute('data-dotquilt-react-host') === id,
-            );
+      const host = hydratingHost(id);
       captured.current = Object.freeze(
         Object.fromEntries(
           fields.map((field) => [
@@ -125,16 +133,7 @@ export function useCustomAttribute(): Readonly<Record<string, string | null>> {
   const captured = useRef<string | null | undefined>(undefined);
   const snapshot = () => {
     if (captured.current === undefined) {
-      captured.current = null;
-      if (typeof document !== 'undefined')
-        for (const host of document.querySelectorAll(
-          '[data-dotquilt-react-host]',
-        )) {
-          if (host.getAttribute('data-dotquilt-react-host') === id) {
-            captured.current = host.getAttribute('data-custom');
-            break;
-          }
-        }
+      captured.current = hydratingHost(id)?.getAttribute('data-custom') ?? null;
     }
     return captured.current;
   };
