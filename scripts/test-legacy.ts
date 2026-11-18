@@ -44,12 +44,6 @@ const suites: Record<string, Suite> = {
       ['bun', 'run', 'scripts/verify-catalog-ssr.ts'],
     ],
   },
-  'shared-wrapper': {
-    prepare: [['bun', 'run', 'scripts/prepare-shared-wrapper.ts']],
-    configs: [
-      { file: 'playwright.shared-wrapper.config.ts', chromium: 'chromium' },
-    ],
-  },
   api: {
     prepare: [['bun', 'run', 'scripts/prepare-api.ts']],
     configs: [{ file: 'playwright.api.config.ts', chromium: 'chromium' }],
@@ -67,7 +61,6 @@ const suites: Record<string, Suite> = {
 const requires: Record<string, string[]> = {
   react: ['native'],
   m4: ['react'],
-  'shared-wrapper': ['m4'],
   api: ['m4'],
   copies: ['m4'],
   layout: ['m4'],

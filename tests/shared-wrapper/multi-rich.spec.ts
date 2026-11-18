@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { paintCount } from '../paint-output';
 
 const pageErrors = new WeakMap<Page, string[]>();
 test.beforeEach(async ({ page }) => {
@@ -100,12 +101,7 @@ for (const framework of ['native', 'react']) {
         ),
       ).toBe(variant);
       for (const id of ['chart', 'table'])
-        expect(
-          await page
-            .locator(`#${id}`)
-            .locator('[data-dotquilt-painter] circle')
-            .count(),
-        ).toBeGreaterThan(0);
+        expect(await paintCount(page.locator(`#${id}`))).toBeGreaterThan(0);
       await page.clock.runFor(1000);
       await expect(page.locator('#owner')).toHaveAttribute(
         'data-presentation',
@@ -511,10 +507,14 @@ for (const framework of ['native', 'react']) {
     const counts = await page
       .locator('dotquilt-chart-loader,dotquilt-table-loader')
       .evaluateAll((hosts) =>
+        // Painted dots per host, from the Canvas backend or SVG circles.
         hosts.map(
           (host) =>
+            Reflect.get(host, Symbol.for('dotquilt.painter.v1'))?.capture?.()
+              ?.length ||
             host.shadowRoot?.querySelectorAll('[data-dotquilt-painter] circle')
-              .length ?? 0,
+              .length ||
+            0,
         ),
       );
     expect(counts).toHaveLength(5);
