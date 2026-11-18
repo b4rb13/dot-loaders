@@ -22,12 +22,18 @@ Follow `AUDIT.md` (2026-11-18). It holds the audit findings, the phases and the 
 
 Use Bun (pinned in `.bun-version`) and Node 24+.
 
-- **Install:** `bun install`
+- **Install:** `bun install`, then `bunx playwright install chromium` once for browser tests.
 - **Build everything:** `bun run build`. Turbo builds the packages first, then the website.
 - **Types:** `bun run check`
 - **Lint:** `bun run lint` (Biome); `bun run format` to fix.
-- **Unit tests:** `bun run test`, or `bun test packages/core/test` for core only.
-- **Browser tests:** `bun run test:browser`, plus the other `test:*` scripts. Most need `bun run verify:packed` or a `prepare:*` script first. Phase 1 replaces this setup.
+- **Unit tests:** `bun run test` (about 1 s). Snapshot changes: `bun test --update-snapshots`, then review the `.snap` diff.
+- **Browser tests:** `bun run test:e2e` (Chromium, against the workspace build; run `bun run build` first).
+  - `tests/e2e/` covers every component's pending/ready behaviour, layout containment and screenshots. Screenshot baselines live in `tests/e2e/__screenshots__/`; CI skips pixel comparisons.
+  - `tests/browser/` holds the detailed native runtime tests.
+  - `bun run test:e2e:all` adds Firefox and WebKit.
+- **Legacy suites:** `bun run test:legacy [suite...]`. These are packed tarballs, React/Next consumers and older M4 fixtures. They are slow; port them into `tests/e2e` by component and delete them from `scripts/test-legacy.ts`.
+- **Sizes:** `bun run size` prints gzip sizes per component. Budgets go in `scripts/size-budgets.json` once decided.
+- **Everything CI runs:** `bun run verify`
 - **Website:** `bun run dev:website`, or `bun run build:website` then `bun run --cwd apps/website start` (http://127.0.0.1:4210).
 
 ## Rules

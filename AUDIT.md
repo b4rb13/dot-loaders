@@ -2,6 +2,35 @@
 
 What I checked: build, typecheck, lint and all unit tests (run locally); the production website (run, clicked through every page at desktop and phone width); a code read of the runtime (`packages/core`), the React adapter (`packages/react`), the website (`apps/website`), and the tests/scripts/tooling. GitHub issues were reviewed too. Spot-checks of the reviewers' main claims are noted where I confirmed them.
 
+## Progress
+
+**Phase 0 — done (2026-11-18).**
+- The code is committed on `chore/phase-0-baseline` and pushed.
+- Evidence is archived in `../dot-loaders-archive/`.
+- The freeze gate is removed and `AGENTS.md`/`README` are rewritten.
+
+**Phase 1 — mostly done (2026-11-18).**
+- **Commands:**
+  - `bun run test`: unit tests only, about 1 s
+  - `bun run test:e2e`: Chromium against the workspace build, no tarballs
+  - `bun run verify`: everything CI runs, about 3 min locally
+- **New `tests/e2e`:** all 9 components get pending/ready/layout checks plus light/dark screenshots. It reproduces the TableLoader overflow as a known failure.
+- **Native suite:** `tests/browser` runs against the workspace build. A hash-mode CSP fixture bug is fixed.
+- **Legacy suites:** all slow suites now run through one `bun run test:legacy`.
+- **Deleted:**
+  - about 40 evidence scripts
+  - 5 orphan configs
+  - the micro-cost specs
+  - the old website tests
+  - the old budget machinery
+- **Hash goldens:** replaced by invariants plus readable snapshots.
+- **Size:** `bun run size` reports sizes without enforcing budgets.
+- **CI:** `quality.yml` runs the checks above; `legacy.yml` runs on demand.
+- **Left over:**
+  - React adapter client tests in the fast suite. The React tests still live only in the legacy suites.
+  - Porting the legacy suites component by component.
+  - Size budgets, pending decision 1.
+
 ## TL;DR
 
 - **The product works.** All nine components exist as native elements plus React wrappers with SSR output. The website (homepage, 9 reference pages, 24-recipe gallery, playground, guides, search) builds and runs. Most loading → reveal handoffs look good.

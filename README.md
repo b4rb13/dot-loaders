@@ -27,6 +27,10 @@ bun run test
 ```
 
 ```bash
+bun run test:e2e
+```
+
+```bash
 bun run dev:website
 ```
 
