@@ -234,3 +234,59 @@ for (const idle of ['typeOn', 'tableShimmer'] as const)
       await page.evaluate(() => window.e2e.events.map((e) => e.type)),
     ).not.toContain('dotquilt-error');
   });
+
+// The pointer lift must land where the pointer is over the content, whether
+// the host is plain, padded and bordered, or transformed.
+for (const kind of ['chart-loader', 'table-loader'] as const)
+  for (const profile of ['plain', 'padded', 'scaled'] as const)
+    test(`${kind} ${profile}: the pointer lift follows the pointer over the content`, async ({
+      page,
+    }) => {
+      await open(page, `component=${kind}`);
+      const target = await page.evaluate(
+        async ({ kind, profile }) => {
+          const host = document.createElement(
+            `dotquilt-${kind}`,
+          ) as HTMLElement & {
+            pointerResponse: string;
+          };
+          host.id = 'probe';
+          const edge = profile === 'plain' ? 0 : 20;
+          host.style.cssText = `display:block;position:absolute;left:40px;top:40px;box-sizing:border-box;width:360px;height:200px;${profile === 'plain' ? '' : 'border:5px solid;padding:15px;'}${profile === 'scaled' ? 'transform:scale(.75,1.25);transform-origin:top left;' : ''}`;
+          host.pointerResponse = 'lift';
+          document.body.append(host);
+          for (let i = 0; i < 120 && !host.hasAttribute('data-moving'); i++)
+            await new Promise(requestAnimationFrame);
+          const surface = Reflect.get(
+            host,
+            Symbol.for('dotquilt.surface.v1'),
+          ).call(host, kind === 'chart-loader' ? 'chart' : 'table');
+          const r = host.getBoundingClientRect();
+          const sx = r.width / 360,
+            sy = r.height / 200;
+          return {
+            x: r.left + (edge + 0.25 * surface.width) * sx,
+            y: r.top + (edge + 0.4 * surface.height) * sy,
+            width: surface.width,
+            height: surface.height,
+          };
+        },
+        { kind, profile },
+      );
+      await page.mouse.move(target.x, target.y);
+      const pointer = () =>
+        page.evaluate(
+          (key) =>
+            Reflect.get(
+              document.getElementById('probe') as object,
+              Symbol.for(key),
+            ),
+          pointerKey,
+        );
+      await expect
+        .poll(async () => (await pointer())?.x ?? -1)
+        .toBeCloseTo(target.width * 0.25, 0);
+      expect((await pointer())?.y).toBeCloseTo(target.height * 0.4, 0);
+      await page.mouse.move(900, 700);
+      await expect.poll(pointer).toBeUndefined();
+    });
