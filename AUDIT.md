@@ -80,9 +80,13 @@ Done, with no behaviour change; the e2e, unit and legacy suites are the safety n
   - `update()` applies only the element's own options and reports any other key as `unknown-option`. Before, the skeleton family, Chart and Table stored unknown keys as expandos.
   - Structured and limit problems keep their own codes, for example `invalid-binding`, `invalid-style-policy`, `line-limit` and `typing-limit`.
 
-Waiting on decisions:
-- Moving the M2 dense-renderer proof out of `src`: decision 2.
-- Removing the cross-copy symbol layer: decision 5.
+Following decisions 2 and 5 (decided 2026-11-18, see the decisions list):
+- **Renderer proof removed.** Done on `refactor/renderer-proof`.
+  - The four benchmark-only modules in `src/internal/dense/` (`painter`, `view`, `projection`, `recipes`, 768 lines) and the `usePainterForProof` hook are deleted.
+  - The M2 proof suite (`tests/browser/m2.spec.ts` with its `/m2` pages) and the renderer benchmark (`scripts/bench`, `tests/bench`, the trace manifests) go with them. They only ever ran the proof candidates, never the shipped painters.
+  - A new test runs both shipped painters, SVG and Canvas: the 4,096-dot cap, invalid and late dots, and releasing every reservation.
+  - The `/m2/catalog` page stays: the renderer and layout tests use it with the real loaders.
+- **Cross-copy layer:** next.
 
 - **Typed table layout.** `staticTableLayout()` is a typed export of `@dotquilt-internal/core/table`. It replaces the `Symbol.for('dotquilt.table.static.v1')` hook that React read off the `TableLoader` class. The dead `react/src/internal/table-static` build is deleted. React's server markup is byte-identical.
 
@@ -378,10 +382,19 @@ Performance qualification on real devices comes after there are users, against b
 ## Decisions only you can make
 
 1. **Size budgets.** Are the 6 KiB / 8 KiB / 2 KiB-increment ceilings real requirements? I'd replace them with a total gzipped budget per entry with ~15–20% headroom.
-2. **Renderer.** Is Canvas worth it, or SVG only? SVG-only removes ~400 lines and the raster-parity issue.
+2. ~~**Renderer.**~~ **Decided 2026-11-18 (delegated to the agent): Canvas for ChartLoader and TableLoader, SVG for everything else.**
+   - **Why Canvas stays:** the archived M2 study measured 6.5–9.9 ms of main-thread rendering per frame (p95) for SVG against 1.3–1.8 ms for Canvas, with ten dense loaders drawing 1,106 dots on a desktop. On a phone several times slower, the SVG cost alone fills a 16.7 ms frame. Loaders animate while the page is busiest: hydrating and receiving data.
+   - **Cost for basic loaders:** none. Only the chart and table entries import Canvas.
+   - **Rejected, SVG only:** it would save about 490 lines (the managed painter and its resource budget), but every user's device would pay for it on every load.
+   - **What goes instead:** the 768 lines of benchmark-only proof code in `src/` and its comparison hook. The proof answered its question.
+   - **Kept:** the SVG fallback for bitmaps that can't be allocated, lost contexts and dot CSS that Canvas can't honour. Revisit those conditions with the mark-styling API in Phase 4.
 3. **4-second motion cap.** Keep it fixed, make it configurable, or drop it?
 4. **TextLoader international text.** Is ASCII-only acceptable for v1?
-5. **Multiple library copies on one page.** Drop support? That unlocks most of the simplification.
+5. ~~**Multiple library copies on one page.**~~ **Decided 2026-11-18 (delegated to the agent): one copy per page.** A second copy reports a registration error instead of sharing.
+   - **The registry is global:** each tag can be defined once per document, so a second copy never owns its own elements. "Support" was glue: about 13 global symbols, ~56 `Reflect` calls, four dot ledgers and an 84-test suite.
+   - **Only one case was supported:** registration already rejects a copy of another version. What remained was the same version bundled twice, which bundlers deduplicate and micro-frontends avoid by sharing the dependency.
+   - **Same as peers:** React fails with a duplicate copy, and Lit warns about one in development.
+   - **Timing:** nothing is published, so dropping it now breaks no one. After 1.0 it would be a breaking change.
 6. **Process.** OK to drop the evidence/receipt/"owner authorisation" machinery and work with normal commits, PRs and tests?
 7. ~~**Visual direction.**~~ **Decided 2026-11-18:** "System, refined" (see design/SPEC.md). Dots stay as the core idea, with dot/dash/square as mark options.
 8. **Website stack.** Keep Next.js + Fumadocs for the rebuilt site, or choose something lighter?

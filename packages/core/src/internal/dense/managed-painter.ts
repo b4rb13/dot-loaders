@@ -1,12 +1,7 @@
 import type { Dot } from '../../animations.js';
 import { capturePainter } from '../capture.js';
 import { ancestors, paintLayer } from '../dom.js';
-import {
-  createPainter,
-  type Painter,
-  painterForProof,
-  pointer,
-} from '../painter.js';
+import { createPainter, type Painter, pointer } from '../painter.js';
 import { available, lease } from './resources.js';
 
 type Capture = (limit?: number) => readonly Dot[];
@@ -90,8 +85,6 @@ export function managedPainter(
   part?: string,
   idle = false,
 ): Painter {
-  const proof = painterForProof(host);
-  if (proof) return proof(host, report, part);
   installDensePainter(host);
   return Reflect.get(host, factoryKey)(host, report, part, idle);
 }

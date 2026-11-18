@@ -10,22 +10,6 @@ export interface Painter {
 export type PaintEntry = Partial<Record<0 | 1 | 2 | 3, number>> & {
   4?: boolean;
 };
-type Factory = (
-  host: HTMLElement,
-  report: (code: string) => void,
-  part?: string,
-) => Painter;
-const proofFactories = new WeakMap<HTMLElement, Factory>();
-// Private comparison seam; no package export, component prop or renderer registry.
-export function usePainterForProof(
-  host: HTMLElement,
-  factory: Factory,
-): () => void {
-  proofFactories.set(host, factory);
-  return () => {
-    if (proofFactories.get(host) === factory) proofFactories.delete(host);
-  };
-}
 // Optional authoring support, reached only through an imported custom definition.
 // The engine creates/disposes this painter. Author callbacks see bounded commands only.
 interface Ledger {
@@ -55,16 +39,11 @@ function write(
   entry.setAttribute(channel[0], channel[2] as string);
   entry[index] = value;
 }
-export function painterForProof(host: HTMLElement): Factory | undefined {
-  return proofFactories.get(host);
-}
 export function createPainter(
   host: HTMLElement,
   report: (code: string) => void,
   part?: string,
 ): Painter {
-  const proof = proofFactories.get(host);
-  if (proof) return proof(host, report, part);
   const doc = host.ownerDocument;
   const ledger = (Reflect.get(doc, ledgerKey) as Ledger | undefined) ?? {
     dots: 0,

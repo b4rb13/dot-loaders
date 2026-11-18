@@ -4,7 +4,7 @@ import type {} from '../m2/catalog-client';
 test('refresh coalesces eligibility reads until the pending render', async ({
   page,
 }) => {
-  await page.goto('/m2/catalog?profile=normal&phase=idle&candidate=native');
+  await page.goto('/m2/catalog?profile=normal&phase=idle');
   await page.waitForFunction(() => !!window.catalogFixture);
   const result = await page.evaluate(async () => {
     await window.catalogFixture.prepare();
@@ -42,9 +42,7 @@ test('refresh coalesces eligibility reads until the pending render', async ({
 test('table appearance refresh retains its static tree and structural changes still update it', async ({
   page,
 }) => {
-  await page.goto(
-    '/m2/catalog?profile=individual&phase=idle&candidate=native&family=table',
-  );
+  await page.goto('/m2/catalog?profile=individual&phase=idle&family=table');
   await page.waitForFunction(() => !!window.catalogFixture);
   const result = await page.evaluate(async () => {
     await window.catalogFixture.prepare();

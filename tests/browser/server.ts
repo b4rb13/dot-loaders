@@ -12,25 +12,6 @@ const {
   staticSkeletonStyles,
   textStyles,
 } = await import(resolve(packagePath, 'dist/server.js'));
-const { denseStyles } = await import(
-  resolve(packagePath, 'dist/internal/dense/painter.js')
-);
-const proofClient = await Bun.build({
-  entrypoints: [resolve(root, 'tests/m2/client.ts')],
-  target: 'browser',
-  format: 'esm',
-});
-if (!proofClient.success || !proofClient.outputs[0])
-  throw new Error('M2 proof client build failed');
-const proofScript = await proofClient.outputs[0].text();
-const traceClient = await Bun.build({
-  entrypoints: [resolve(root, 'tests/m2/trace-client.ts')],
-  target: 'browser',
-  format: 'esm',
-});
-if (!traceClient.success || !traceClient.outputs[0])
-  throw new Error('Trace fixture build failed');
-const traceScript = await traceClient.outputs[0].text();
 const catalogClient = await Bun.build({
   entrypoints: [resolve(root, 'tests/m2/catalog-client.ts')],
   target: 'browser',
@@ -46,7 +27,6 @@ const hashes = [
   ...regionStyles,
   ...staticSkeletonStyles,
   ...textStyles,
-  ...denseStyles,
 ]
   .map((s: string) => `'sha256-${hash(s)}'`)
   .join(' ');
@@ -105,63 +85,6 @@ Bun.serve({
             'content-type': 'text/html',
             'content-security-policy':
               "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'none'; base-uri 'none'; object-src 'none'; require-trusted-types-for 'script'",
-          },
-        },
-      );
-    }
-    if (url.pathname === '/m2/trace.js')
-      return new Response(traceScript, {
-        headers: { 'content-type': 'text/javascript' },
-      });
-    if (url.pathname === '/m2/trace') {
-      const profile = url.searchParams.get('profile') ?? 'normal';
-      if (!['individual', 'normal', 'list', 'stress'].includes(profile))
-        return new Response('Invalid profile', { status: 400 });
-      return new Response(
-        `<!doctype html><html lang="en"><meta charset="utf-8"><title>Private whole-render fixture</title><link rel="stylesheet" href="/m2/app.css"><link rel="stylesheet" href="/m2/trace.css"><div id="before">Before</div><div id="bench" class="m2-cohort ${profile}"></div><div id="after">After</div><script type="module" src="/m2/trace.js"></script></html>`,
-        {
-          headers: {
-            'content-type': 'text/html',
-            'content-security-policy':
-              "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'none'; require-trusted-types-for 'script'",
-          },
-        },
-      );
-    }
-    if (url.pathname === '/m2/trace.css')
-      return new Response(
-        'body{margin:0}#before,#after{height:20px}#bench.normal{height:320px}#bench.stress{height:600px}#bench.individual{width:320px;height:160px;grid-template-columns:320px;grid-template-rows:160px}.trace-region{min-height:0;overflow:hidden}.trace-content{height:100%;overflow:hidden}.trace-content svg{display:block;width:100%;height:100%;fill:currentColor}.trace-content table{width:100%;height:100%;font:12px monospace}',
-        { headers: { 'content-type': 'text/css' } },
-      );
-    if (url.pathname === '/m2/client.js')
-      return new Response(proofScript, {
-        headers: { 'content-type': 'text/javascript' },
-      });
-    if (url.pathname === '/m2/dense.css')
-      return new Response(denseStyles.join('\n'), {
-        headers: { 'content-type': 'text/css' },
-      });
-    if (url.pathname === '/m2/app.css')
-      return new Response(
-        '.m2-cohort{display:grid;gap:0}.m2-cohort .m2-tile{width:100%;height:100%}.m2-cohort.normal{grid-template-columns:repeat(6,160px);grid-auto-rows:80px;width:960px}.m2-cohort.list{grid-template-columns:repeat(5,180px);grid-auto-rows:160px;width:900px;height:640px;overflow:auto}.m2-cohort.stress{grid-template-columns:repeat(10,120px);grid-auto-rows:60px;width:1200px}body{font:16px system-ui;margin:32px;color:#405047}button{font:inherit;margin:8px}#m2-stage{margin-top:24px}.m2-region{width:320px;min-height:160px}.m2-block{width:320px;height:160px}#proof-content{position:relative;width:320px;min-height:160px}#proof-content>button{position:absolute;right:0;bottom:0}#proof-content svg{display:block;width:320px;height:160px;fill:currentColor}#proof-content p{margin:45px 0 0 20px;font:30px monospace}table{border-collapse:collapse;width:300px;table-layout:fixed}td{height:23px;padding:0 0 0 20px;font:16px monospace}',
-        { headers: { 'content-type': 'text/css' } },
-      );
-    if (url.pathname === '/m2') {
-      const mode = url.searchParams.get('mode') ?? 'inline';
-      const style =
-        mode === 'nonce'
-          ? "'self' 'nonce-fixture-nonce'"
-          : mode === 'hash'
-            ? `'self' ${hashes}`
-            : mode === 'external'
-              ? "'self'"
-              : "'self' 'unsafe-inline'";
-      return new Response(
-        '<!doctype html><html lang="en"><meta charset="utf-8"><title>M2 private renderer proof</title><link rel="stylesheet" href="/m2/app.css"><h1>M2 renderer comparison</h1><p>Private diagnostic fixture. Renderer selection and reference qualification remain provisional.</p><p role="status" aria-live="polite">Loading the current outcome</p><button id="reveal">Reveal content</button><button id="pending">New loading cycle</button><button id="pause">Pause motion</button><section id="m2-stage"></section><script type="module" src="/m2/client.js"></script></html>',
-        {
-          headers: {
-            'content-type': 'text/html',
-            'content-security-policy': `default-src 'none'; script-src 'self'; style-src ${style}; style-src-attr 'none'; base-uri 'none'; object-src 'none'; require-trusted-types-for 'script'`,
           },
         },
       );

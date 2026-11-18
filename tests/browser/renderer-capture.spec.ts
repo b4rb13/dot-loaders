@@ -100,9 +100,7 @@ for (const dpr of [1, 2, 3])
       reducedMotion: 'no-preference',
     });
     const page = await context.newPage();
-    await page.goto(
-      'http://127.0.0.1:4181/m2/catalog?candidate=native&profile=list&phase=idle',
-    );
+    await page.goto('http://127.0.0.1:4181/m2/catalog?profile=list&phase=idle');
     await page.waitForFunction(() => !!window.catalogFixture);
     const result = await page.evaluate(async () => {
       const errors: unknown[] = [];
@@ -183,9 +181,7 @@ for (const fallback of ['context', 'bitmap', 'buffer'] as const)
         HTMLCanvasElement.prototype.getContext = (() =>
           null) as typeof HTMLCanvasElement.prototype.getContext;
       });
-    await page.goto(
-      '/m2/catalog?candidate=native&profile=normal&phase=handoff',
-    );
+    await page.goto('/m2/catalog?profile=normal&phase=handoff');
     await page.waitForFunction(() => !!window.catalogFixture);
     const result = await page.evaluate(async (reason) => {
       const ledgerKey = Symbol.for('dotquilt.v1.dot-ledger');
@@ -239,7 +235,7 @@ test('a lost Canvas context releases its bitmap and continues rich motion in SVG
   page,
 }) => {
   await page.goto(
-    '/m2/catalog?candidate=native&profile=individual&family=chart-line&phase=idle',
+    '/m2/catalog?profile=individual&family=chart-line&phase=idle',
   );
   await page.waitForFunction(() => !!window.catalogFixture);
   await page.evaluate(async () => {
@@ -281,7 +277,7 @@ for (const family of ['chart-line', 'table'])
     const start = new Date('2026-10-21T00:00:00Z');
     await page.clock.install({ time: start });
     await page.goto(
-      `/m2/catalog?candidate=native&profile=individual&family=${family}&phase=handoff`,
+      `/m2/catalog?profile=individual&family=${family}&phase=handoff`,
     );
     await page.waitForFunction(() => !!window.catalogFixture);
     await page.clock.pauseAt(new Date(start.getTime() + 1000));
@@ -324,7 +320,7 @@ for (const customization of [
     page,
   }) => {
     await page.goto(
-      '/m2/catalog?candidate=native&profile=individual&family=chart-line&phase=idle',
+      '/m2/catalog?profile=individual&family=chart-line&phase=idle',
     );
     await page.waitForFunction(() => !!window.catalogFixture);
     await page.addStyleTag({
@@ -575,4 +571,102 @@ for (const conflict of ['none', 'target', 'pseudo', 'unrelated'])
         result.errors.some((error) => error.code === 'animation-failed'),
       ).toBe(true);
     else expect(result.errors).toEqual([]);
+  });
+
+for (const backend of ['svg', 'canvas'] as const)
+  test(`the ${backend} painter caps dots, rejects invalid and late dots and releases its reservations`, async ({
+    page,
+  }) => {
+    await page.goto('/m2/catalog?profile=individual&family=chart-line');
+    await page.waitForFunction(() => !!window.catalogFixture);
+    const result = await page.evaluate(async (backend) => {
+      const { createPainter } = (await import(
+        String('/pkg/dist/internal/painter.js')
+      )) as typeof import('../../packages/core/dist/internal/painter');
+      const { managedPainter } = (await import(
+        String('/pkg/dist/internal/dense/managed-painter.js')
+      )) as typeof import('../../packages/core/dist/internal/dense/managed-painter');
+      type Dot = import('../../packages/core/dist/animations').Dot;
+      const key = Symbol.for('dotquilt.v1.dot-ledger');
+      const ledger = () => ({ ...Reflect.get(document, key) });
+      const host = document.createElement('div');
+      Object.assign(host.style, {
+        position: 'fixed',
+        inset: '0 auto auto 0',
+        width: '320px',
+        height: '160px',
+      });
+      const shadow = host.attachShadow({ mode: 'open' });
+      document.body.append(host);
+      const before = ledger();
+      const issues: string[] = [];
+      const report = (code: string) => issues.push(code);
+      const painter =
+        backend === 'svg'
+          ? createPainter(host, report)
+          : managedPainter(host, report);
+      const dot = (x: number): Dot => ({
+        x,
+        y: 10,
+        size: 2,
+        opacity: 0.5,
+        tone: 'base',
+      });
+      painter.draw((emit) => emit(dot(10)));
+      let thrown = false;
+      try {
+        painter.draw((emit) => {
+          emit(dot(50));
+          throw new Error('author failure');
+        });
+      } catch {
+        thrown = true;
+      }
+      painter.draw((emit) => emit({ ...dot(1), x: Number.NaN }));
+      let late: ((value: Dot) => void) | undefined;
+      painter.draw((emit) => {
+        late = emit;
+        for (let i = 0; i < 4097; i++) emit(dot(i % 300));
+      });
+      const during = ledger();
+      const bitmap = shadow.querySelector<HTMLCanvasElement>(
+        'canvas[data-dotquilt-bitmap]',
+      );
+      const canvas = !!bitmap?.width;
+      const drawn =
+        painter.capture?.().length ??
+        shadow.querySelectorAll('svg[data-dotquilt-painter] circle').length;
+      late?.(dot(1));
+      const afterLate =
+        painter.capture?.().length ??
+        shadow.querySelectorAll('svg[data-dotquilt-painter] circle').length;
+      painter.dispose();
+      painter.dispose();
+      const left = shadow.querySelectorAll('[data-dotquilt-painter]').length;
+      // Disposing frees the bitmap before the element is dropped.
+      const bitmapFreed = !bitmap || bitmap.width * bitmap.height === 0;
+      host.remove();
+      return {
+        thrown,
+        canvas,
+        bitmapFreed,
+        reserved: (during.dots ?? 0) - (before.dots ?? 0),
+        released: (ledger().dots ?? 0) - (before.dots ?? 0),
+        drawn,
+        afterLate,
+        left,
+        issues,
+      };
+    }, backend);
+    expect(result).toEqual({
+      thrown: true,
+      canvas: backend === 'canvas',
+      bitmapFreed: true,
+      reserved: 4096,
+      released: 0,
+      drawn: 4096,
+      afterLate: 4096,
+      left: 0,
+      issues: ['invalid-dot', 'dot-limit'],
+    });
   });
