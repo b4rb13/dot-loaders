@@ -19,6 +19,13 @@ export const restOpacity = 0.37;
 /** Opacity of the glow at its centre. */
 export const peakOpacity = 0.9;
 
+/**
+ * TypingDots are larger than the field marks so they read as a status, not a
+ * speck (the spec's mockup: 8 px dots, 6 px apart).
+ */
+export const typingSize = 'var(--dotquilt-dot-size,8px)';
+export const typingGap = 'var(--dotquilt-dot-gap,6px)';
+
 /** A line placeholder is two rows of marks tall, as in the spec's mockup. */
 export const lineHeight = `calc(2*(${markSize} + ${markGap}))`;
 

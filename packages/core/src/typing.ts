@@ -10,6 +10,7 @@ import {
   ManagedElement,
   remaining,
 } from './internal/element.js';
+import { curves } from './internal/marks.js';
 import type { Preset } from './internal/preset.js';
 import { typingPreset } from './internal/preset.js';
 import { capturePresetData } from './internal/preset-data.js';
@@ -162,7 +163,8 @@ export class TypingDots extends ManagedElement<'typing'> {
       return;
     }
     if (activity.started === undefined || !this.deadline) this.arm(activity);
-    const period = 1200 / this.speed;
+    // design/SPEC.md: a calm wave, 1.9 s per cycle, each dot 14% behind.
+    const period = 1900 / this.speed;
     if (this.#effects[0]?.effect?.getTiming().duration === period) return;
     this.#stop();
     try {
@@ -170,16 +172,14 @@ export class TypingDots extends ManagedElement<'typing'> {
         this.#effects.push(
           dot.animate(
             [
-              { opacity: 0.35, translate: '0 0' },
-              { opacity: 0.85, translate: '0 -.15em', offset: 0.35 },
-              { opacity: 0.35, translate: '0 0', offset: 0.7 },
-              { opacity: 0.35, translate: '0 0' },
+              { opacity: 0.3, translate: '0 0', easing: curves.sine },
+              { opacity: 1, translate: '0 -1.5px', easing: curves.sine },
+              { opacity: 0.3, translate: '0 0' },
             ],
             {
               duration: period,
               iterations: remaining(this, activity) / period,
-              iterationStart: (this.#phase + 1 - index / this.#count) % 1,
-              easing: 'ease-in-out',
+              iterationStart: (this.#phase + 1 - ((index * 0.14) % 1)) % 1,
             },
           ),
         );

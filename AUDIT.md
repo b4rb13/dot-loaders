@@ -64,7 +64,10 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
   - **Idle:** each character changes about every 280 ms, offset slightly per character so they don't flip together, and cross-fades over 260 ms. Unlit glyph pixels show faintly, and the teal glow drifts across every 2.8 s.
   - **Lock handoff:** characters lock left to right across at most 460 ms (40 ms each), each easing from the reel into the real character over 300 ms, with no pop (`pop` 0). A 10-character lock takes 815 ms.
   - **Colours:** the glyphs draw in slate through the painter default (slice C).
-- **F. TypingDots and default sizes.**
+- **F. TypingDots and default sizes — done on `design/4b-typing`.**
+  - **Size:** TypingDots are 8 px slate dots, 6 px apart (the mockup's size), so they read as a status rather than a speck. They use `--dotquilt-dot-size` and `--dotquilt-dot-gap` with their own defaults.
+  - **Motion:** a calm sine wave from 30% to 100% over 1.9 s, each dot 14% of a cycle behind, rising 1.5 px. The easing sits on the keyframes, so speed changes keep the phase.
+  - **Other defaults:** skeleton lines are two rows tall (slice A), and charts keep 12rem. Their sizes already read well at the new mark size.
 - **G. Alternative marks:** a `mark: 'dot' | 'dash' | 'square'` option with the same positions and motion.
 - **H. Prune old variants.** Keep, change or drop each of the 16 built-in recipes deliberately.
 
