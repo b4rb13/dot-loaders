@@ -69,6 +69,7 @@ test('a second copy of the library is refused while the first copy keeps working
     await page.evaluate(async () => {
       const first = await import(String('/pkg/dist/index.js'));
       const second = await import(String('/pkg-copy/dist/index.js'));
+      const secondAll = await import(String('/pkg-copy/dist/register-all.js'));
       const { pulse } = await import(
         String('/pkg-copy/dist/skeleton-animations.js')
       );
@@ -84,7 +85,7 @@ test('a second copy of the library is refused while the first copy keeps working
         first: refused(first.registerSkeletonBlock),
         again: refused(first.registerSkeletonBlock),
         second: refused(second.registerSkeletonBlock),
-        secondAll: refused(second.registerAll),
+        secondAll: refused(secondAll.registerAll),
       };
       const block = document.getElementById('block') as SkeletonBlock;
       const errors: string[] = [];

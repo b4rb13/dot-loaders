@@ -579,8 +579,10 @@ test('approved custom drift and fanReveal examples play on the engine clock and 
 }) => {
   await page.goto('/');
   await page.evaluate(async () => {
-    const { app, drift, fanReveal } = await import(String('/native.js'));
-    const { registerChartLoader } = await import(String('/copy-one/chart.js'));
+    // One copy: the chart comes from the same bundle as the region and animations.
+    const { app, drift, fanReveal, registerChartLoader } = await import(
+      String('/native.js')
+    );
     registerChartLoader();
     const chart = document.createElement('dotquilt-chart-loader');
     chart.className = 'chart-example';
