@@ -88,7 +88,6 @@ export class SkeletonBlock extends ManagedElement {
     return this.#bindings;
   }
   set animations(value: Animations<'skeleton'> | undefined) {
-    this.configurationChanged();
     try {
       validateBindings(value, 'skeleton');
       this.#bindings = Object.freeze({ ...value });

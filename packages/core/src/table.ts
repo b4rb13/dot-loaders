@@ -161,7 +161,6 @@ export class TableLoader extends EventElement<'table'> {
     return this.#bindings;
   }
   set animations(value: Animations<'table'> | undefined) {
-    this.configurationChanged();
     try {
       validateBindings(value, 'table');
       this.#bindings = Object.freeze({ ...value });

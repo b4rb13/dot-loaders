@@ -1,6 +1,11 @@
 // Serves the e2e fixture against the workspace build (packages/*/dist).
 // Run `bun run build` first; no packing or temp installs are involved.
 import { resolve } from 'node:path';
+import { renderStatic } from '@dotquilt-internal/core/server';
+import { LoadingRegion } from '@dotquilt-internal/react/region';
+import { SkeletonText } from '@dotquilt-internal/react/skeleton';
+import { createElement as h } from 'react';
+import { renderToString } from 'react-dom/server';
 
 const port = Number(process.env.E2E_PORT ?? 4310);
 // Bundled per request so a reused server always serves the current build.
@@ -45,6 +50,43 @@ Bun.serve({
       return new Response(await fixtureScript(), {
         headers: { 'content-type': 'text/javascript' },
       });
+    // Server-rendered regions with no JavaScript at all.
+    const staticPage = /^\/static\/(native|react)$/.exec(pathname);
+    if (staticPage) {
+      const state = new URL(request.url).searchParams.get('state') ?? 'pending';
+      const content =
+        '<article class="card"><h2>Quarterly revenue</h2><p>Revenue grew 12%.</p><button type="button">Open report</button></article>';
+      const markup =
+        staticPage[1] === 'native'
+          ? renderStatic({
+              kind: 'region',
+              state: state as 'pending' | 'ready',
+              label: 'Example content',
+              placeholder: { kind: 'skeleton-text' },
+            }).replace('</dotquilt-region>', `${content}</dotquilt-region>`)
+          : renderToString(
+              h(
+                LoadingRegion,
+                {
+                  state: state as 'pending' | 'ready',
+                  'aria-label': 'Example content',
+                  className: 'owner',
+                  placeholder: h(SkeletonText, {}),
+                },
+                h(
+                  'article',
+                  { className: 'card' },
+                  h('h2', null, 'Quarterly revenue'),
+                  h('p', null, 'Revenue grew 12%.'),
+                  h('button', { type: 'button' }, 'Open report'),
+                ),
+              ),
+            );
+      return new Response(
+        `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Static region</title><style>${css}</style></head><body><button type="button">Before</button><main id="stage">${markup}</main><button type="button">After</button></body></html>`,
+        { headers: { 'content-type': 'text/html' } },
+      );
+    }
     if (pathname === '/')
       return new Response(
         `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Dotquilt e2e fixture</title><link rel="icon" href="data:,"><style>${css}</style></head><body><main id="stage"></main><div id="unrelated" class="unrelated"></div><script type="module" src="/fixture.js"></script></body></html>`,

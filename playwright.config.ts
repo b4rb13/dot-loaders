@@ -51,7 +51,8 @@ export default defineConfig({
     {
       command: 'bun tests/e2e/server.ts',
       port: 4310,
-      reuseExistingServer: !process.env.CI,
+      // The server imports the built packages at startup; never reuse a stale one.
+      reuseExistingServer: false,
     },
     {
       command: 'bun tests/browser/server.ts',

@@ -8,27 +8,6 @@ async function open(page: Page, query: string) {
 }
 const pointerKey = 'dotquilt.pointer.v1';
 
-test('a recurring problem is reported again after the configuration changes', async ({
-  page,
-}) => {
-  await open(page, 'component=skeleton-block');
-  const codes = await page.evaluate(async () => {
-    const block = window.e2e.decoration;
-    const codes: string[] = [];
-    block.addEventListener('dotquilt-error', (event) =>
-      codes.push((event as CustomEvent<{ code: string }>).detail.code),
-    );
-    block.setAttribute('speed', 'fast');
-    block.setAttribute('speed', '1');
-    block.setAttribute('speed', 'fast');
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    return codes;
-  });
-  // Before the fix the second invalid value was silent forever.
-  expect(codes).toHaveLength(2);
-  expect(codes[0]).toBe(codes[1]);
-});
-
 test('state = undefined restores the default (ready), not a disabled state', async ({
   page,
 }) => {
@@ -152,4 +131,33 @@ test('switching the chart idle animation switches its renderer', async ({
     return [first, kind()];
   });
   expect(renderers).toEqual(['svg', 'canvas']);
+});
+
+test('content updates during a simple reveal do not cut the reveal short', async ({
+  page,
+}) => {
+  await open(page, 'component=region');
+  const ended = await page.evaluate(async () => {
+    const region = window.e2e.owner;
+    const done = new Promise<string>((resolve) =>
+      region.addEventListener(
+        'dotquilt-handoff-end',
+        (event) =>
+          resolve((event as CustomEvent<{ reason: string }>).detail.reason),
+        { once: true },
+      ),
+    );
+    region.addEventListener(
+      'dotquilt-handoff-start',
+      () => {
+        // A framework's follow-up render updating text right after `ready`.
+        const paragraph = window.e2e.content.querySelector('p');
+        if (paragraph) paragraph.textContent = 'Revenue grew 14% this quarter.';
+      },
+      { once: true },
+    );
+    region.state = 'ready';
+    return done;
+  });
+  expect(ended).toBe('complete');
 });

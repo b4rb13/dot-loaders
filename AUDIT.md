@@ -37,6 +37,30 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
 - **Locked:** the refined System is locked as [design/SPEC.md](design/SPEC.md), with [design/tokens.css](design/tokens.css). Mockups are in `design/directions*/`.
 - **Marks:** dot by default; dash and square are offered as a component option.
 
+**Phase 2 — in progress on `fix/phase-2-runtime-bugs` (2026-11-18).**
+
+Fixed, each with a regression test that fails on the old code:
+- **Layout under app `display` rules:** regions and TextLoader overlay their layers inside their own grid; TableLoader and TypingDots no longer rely on the host's display.
+- **Page-wide invalidation:** changes to unrelated elements now cost zero layout reads (before: 60–1,200 per loader); ancestor changes cost a small, bounded check.
+- **Per-frame work:** the owner and motion restriction are cached, and media queries are reused.
+- **Frame loop:** one throwing client no longer stops all animation.
+- **Small bugs:**
+  - `state = undefined`
+  - TableLoader NaN pointer at zero size
+  - the renderer not switching when the idle animation changes
+  - #35 stale pointer on touch
+- **Server-rendered pending content:** it is now hidden from view, focus and screen readers before JavaScript, in both native and React output.
+- **Simple reveals:** they are no longer cut short by content updates.
+- **React hydration snapshot:** it no longer copies another root's attributes.
+
+Pre-existing legacy failures, the same on the pre-Phase-2 code (they need triage while porting):
+- M4: 12
+- table-options: 8
+- table-parts: 5
+- shared-wrapper: 16
+
+Not done yet: React style de-duplication (one stylesheet per instance). It changes SSR markup across React 19.0–19.3 and Next, so it gets its own change.
+
 ## TL;DR
 
 - **The product works.** All nine components exist as native elements plus React wrappers with SSR output. The website (homepage, 9 reference pages, 24-recipe gallery, playground, guides, search) builds and runs. Most loading → reveal handoffs look good.
@@ -302,3 +326,9 @@ Performance qualification on real devices comes after there are users, against b
 7. ~~**Visual direction.**~~ **Decided 2026-11-18:** "System, refined" (see design/SPEC.md). Dots stay as the core idea, with dot/dash/square as mark options.
 8. **Website stack.** Keep Next.js + Fumadocs for the rebuilt site, or choose something lighter?
 9. **Old site retirement.** Delete `apps/website` as soon as work on the new site starts, or keep it as a reference until parity? I recommend keeping it until parity.
+10. **How often errors repeat.** Today each loader reports a given problem once in its lifetime ("bounded diagnostics"), and legacy tests pin that. So a problem that recurs after being fixed stays silent, which weakens telemetry. Options:
+    - (a) keep once per element;
+    - (b) report again after the field was set to a valid value in between;
+    - (c) once per loading cycle.
+
+    I recommend (b) for configuration errors and (c) for runtime failures.

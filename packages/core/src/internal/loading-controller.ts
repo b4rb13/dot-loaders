@@ -139,7 +139,6 @@ export abstract class LoadingController<
     return this.#bindings as OwnerAnimations<F>;
   }
   set animations(value: OwnerAnimations<F> | undefined) {
-    this.configurationChanged();
     try {
       if (
         this.family === 'region' &&
@@ -292,6 +291,10 @@ export abstract class LoadingController<
     this.requestRender();
   }
   #onContentChange = (change: MutationRecord[] | Event): void => {
+    // A simple reveal fades the content wrapper as a whole, so content updates
+    // during it (e.g. a framework's follow-up render) must not cut it short.
+    // Rich handoffs and row reveals captured content geometry and still settle.
+    if (this.#work && !this.#work[5]?.draw && !this.#targets.length) return;
     // Simple wrapper reveals are independent of nested content. Rich/custom
     // plans may capture geometry derived from it, so keep conservative invalidation.
     if (

@@ -72,6 +72,7 @@ export function subscribe(client: Client): Subscription {
         'motion',
         'slot',
         'data-dotquilt-disabled',
+        'data-dotquilt-offscreen',
         'data-dotquilt-paused',
         'data-presentation',
         'hidden',

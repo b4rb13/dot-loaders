@@ -36,7 +36,6 @@ export abstract class ManagedElement<
       this.#preset = undefined;
       this.report('invalid-preset', 'preset');
     }
-    this.configurationChanged();
     this.presetChanged();
     this.#motionChanged();
   }
@@ -48,13 +47,6 @@ export abstract class ManagedElement<
   set motion(value: Motion | undefined) {
     if (value === undefined) this.removeAttribute('motion');
     else this.setAttribute('motion', String(value));
-  }
-  /**
-   * Configuration changed (attributes, preset, animations, reconnection):
-   * problems already reported may be reported again if they recur.
-   */
-  protected configurationChanged(): void {
-    this.#issues.clear();
   }
   /** Forgets values cached between environment changes. */
   protected forget(): void {
@@ -111,7 +103,6 @@ export abstract class ManagedElement<
           ? { mode: 'external', href }
           : { mode: 'inline', nonce: this.nonce };
     this.forget();
-    this.configurationChanged();
     this.upgrade();
     this.resources = subscribe({
       host: this,
@@ -142,7 +133,6 @@ export abstract class ManagedElement<
     value: string | null,
   ): void {
     this.forget();
-    this.configurationChanged();
     if (
       name === 'motion' &&
       value !== null &&

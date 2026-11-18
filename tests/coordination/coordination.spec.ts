@@ -162,7 +162,7 @@ for (const framework of ['native', 'react']) {
       true,
     );
   });
-  test(`${framework}: direct supplied-content changes still invalidate the parent plan`, async ({
+  test(`${framework}: direct supplied-content changes let a simple parent reveal complete`, async ({
     page,
   }) => {
     await open(page, framework);
@@ -174,7 +174,9 @@ for (const framework of ['native', 'react']) {
         .getElementById('parent-content')
         ?.append(document.createTextNode('New application content')),
     );
-    await page.clock.runFor(40);
+    // A simple reveal fades the content as a whole; new content during it
+    // (e.g. a framework's follow-up render) must not cut it short.
+    await page.clock.runFor(1000);
     await presentation(page, 'parent', 'ready');
     expect(
       await page.evaluate(
@@ -182,7 +184,7 @@ for (const framework of ['native', 'react']) {
           window.coordination.events.filter((e) => e.id === 'parent').at(-1)
             ?.reason,
       ),
-    ).toBe('geometry-changed');
+    ).toBe('complete');
   });
   test(`${framework}: supersession cancels once without disturbing another rich region`, async ({
     page,

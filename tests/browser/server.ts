@@ -16,6 +16,7 @@ const {
   renderStatic,
   skeletonStyles,
   regionStyles,
+  staticRegionStyles,
   staticSkeletonStyles,
   textStyles,
 } = await import(resolve(packagePath, 'dist/server.js'));
@@ -52,6 +53,7 @@ const hashes = [
   ...skeletonStyles,
   ...regionStyles,
   ...staticSkeletonStyles,
+  ...staticRegionStyles,
   ...textStyles,
   ...denseStyles,
 ]

@@ -123,7 +123,6 @@ export class ChartLoader extends EventElement<'chart'> {
     return this.#bindings;
   }
   set animations(value: Animations<'chart'> | undefined) {
-    this.configurationChanged();
     try {
       validateBindings(value, 'chart');
       this.#bindings = Object.freeze({ ...value });

@@ -6,6 +6,17 @@ export const regionStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
   regionCss,
 ]);
 
+/**
+ * Region markup before the element is defined (server-rendered or while
+ * JavaScript loads): pending content is hidden from view, focus and assistive
+ * technology until the runtime takes over. `visibility` keeps its space, so
+ * the layout does not shift when the element upgrades.
+ */
+export const staticRegionStyles: readonly string[] =
+  /* @__PURE__ */ Object.freeze([
+    'dotquilt-region:not(:defined)[state=pending]>:not([slot]){visibility:hidden}',
+  ]);
+
 // Static markup never runs idle, pointer or custom-drawing effects.
 export const staticSkeletonStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([

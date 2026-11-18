@@ -16,7 +16,7 @@ export const reactSkeletonStyles: readonly string[] =
   ]);
 export const reactRegionStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
-    'dotquilt-region:not(:defined){display:flow-root;position:relative}dotquilt-region:not(:defined)[hidden]{display:none}dotquilt-region:not(:defined)>[data-dotquilt-react-slot]{position:absolute;inset:0;pointer-events:none}dotquilt-region:not(:defined):not([state=pending])>[slot=placeholder],dotquilt-region:not(:defined):not([state=refreshing])>[slot=refresh-indicator]{display:none}dotquilt-region:not(:defined)[state=pending][data-dotquilt-react-empty]::before{content:"";position:absolute;inset:0;min-height:1em;border:1px dotted currentColor}',
+    'dotquilt-region:not(:defined){display:flow-root;position:relative}dotquilt-region:not(:defined)[hidden]{display:none}dotquilt-region:not(:defined)>[data-dotquilt-react-slot]{position:absolute;inset:0;pointer-events:none}dotquilt-region:not(:defined):not([state=pending])>[slot=placeholder],dotquilt-region:not(:defined):not([state=refreshing])>[slot=refresh-indicator]{display:none}dotquilt-region:not(:defined)[state=pending][data-dotquilt-react-empty]::before{content:"";position:absolute;inset:0;min-height:1em;border:1px dotted currentColor}dotquilt-region:not(:defined)[state=pending]>:not([slot]){visibility:hidden}',
   ]);
 
 import {

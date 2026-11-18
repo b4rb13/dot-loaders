@@ -68,7 +68,6 @@ export class TextLoader extends LoadingController<'text'> {
     return super.animations;
   }
   override set animations(value: Animations<'text'> | undefined) {
-    this.configurationChanged();
     super.animations = value;
     this.#runner?.reset?.();
   }
