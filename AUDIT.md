@@ -95,6 +95,19 @@ Waiting on decisions:
 Next:
 - React style de-duplication: one `<style>` per instance.
 
+**Test rework — in progress on `test/rework-suites` (2026-11-18).**
+
+Goal: port the legacy suites into the fast suites and delete them. All 41 known legacy failures traced to stale tests: they waited for SVG `<circle>` elements that the Canvas renderer no longer draws, or ran on stale build artifacts. The triage also found one real product bug, a TableLoader painter offset from the content box, now fixed on PR #41.
+
+Done:
+- **`tests/browser` runs in parallel:** about 40 s instead of 2.4 min.
+- **`scripts/pack-smoke.test.ts` replaces the packed rerun of `tests/browser`.** It checks the file list, manifests, Node and Bun imports of every export, consumer types on TS 7 and 5.7, the dense-renderer leak, and the React `'use client'` directives.
+- **Deleted:**
+  - `next`: could not build. It is the only suite that checked that new owners keep the document's nonce or stylesheet after a soft client navigation; that remains uncovered.
+  - `chart-production`, `table-options` and `motion-review`, each replaced by fast tests.
+
+Still to port: react, m4 (chart, catalog, text, scramble, dissolve), table and parts, presets, coordination, shared-wrapper, api, layout. Copies waits for decision 5.
+
 ## TL;DR
 
 - **The product works.** All nine components exist as native elements plus React wrappers with SSR output. The website (homepage, 9 reference pages, 24-recipe gallery, playground, guides, search) builds and runs. Most loading → reveal handoffs look good.
