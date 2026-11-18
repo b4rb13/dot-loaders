@@ -51,16 +51,6 @@ const suites: Record<string, Suite> = {
       { file: 'playwright.table-parts.config.ts', chromium: 'chromium' },
     ],
   },
-  presets: {
-    prepare: [['bun', 'run', 'scripts/prepare-presets.ts']],
-    configs: [{ file: 'playwright.presets.config.ts', chromium: 'chromium' }],
-  },
-  coordination: {
-    prepare: [['bun', 'run', 'scripts/prepare-coordination.ts']],
-    configs: [
-      { file: 'playwright.coordination.config.ts', chromium: 'chromium' },
-    ],
-  },
   'shared-wrapper': {
     prepare: [['bun', 'run', 'scripts/prepare-shared-wrapper.ts']],
     configs: [
@@ -85,8 +75,6 @@ const requires: Record<string, string[]> = {
   react: ['native'],
   m4: ['react'],
   table: ['m4'],
-  presets: ['m4'],
-  coordination: ['m4'],
   'shared-wrapper': ['m4'],
   api: ['m4'],
   copies: ['m4'],

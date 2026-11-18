@@ -1,9 +1,15 @@
 import { resolve } from 'node:path';
 
+// Serves the coordination fixture against the workspace build (packages/*/dist).
 const root = resolve(import.meta.dir, '../..');
-const consumer = (
-  await Bun.file(resolve(root, '.artifacts/m4/consumer-path')).text()
-).trim();
+const build = await Bun.build({
+  entrypoints: [resolve(root, 'tests/coordination/client.tsx')],
+  format: 'esm',
+  target: 'browser',
+});
+if (!build.success || !build.outputs[0])
+  throw new Error('Cannot build the coordination client');
+const client = await build.outputs[0].text();
 Bun.serve({
   hostname: '127.0.0.1',
   port: 4201,
@@ -15,19 +21,12 @@ Bun.serve({
         { headers: { 'content-type': 'image/svg+xml' } },
       );
     if (path === '/client.js')
-      return new Response(
-        Bun.file(resolve(root, '.artifacts/m4-coordination/client.js')),
-        { headers: { 'content-type': 'text/javascript' } },
-      );
+      return new Response(client, {
+        headers: { 'content-type': 'text/javascript' },
+      });
     if (/^\/styles\/[\w-]+\.css$/.test(path))
       return new Response(
-        Bun.file(
-          resolve(
-            consumer,
-            'node_modules/@dotquilt-internal/core/dist',
-            path.slice(8),
-          ),
-        ),
+        Bun.file(resolve(root, 'packages/core/dist', path.slice(8))),
         { headers: { 'content-type': 'text/css' } },
       );
     if (path === '/app.css')

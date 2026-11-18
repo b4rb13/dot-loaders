@@ -8,6 +8,16 @@ import { defineConfig } from '@playwright/test';
 //           screenshots on plain fixture pages
 //   native  tests/browser: detailed runtime behaviour (focus, events, motion
 //           restrictions, CSP, static output, cleanup)
+// Suites ported from the legacy runner. Each keeps its own fixture server,
+// which builds its client from the workspace packages at startup.
+const suites: {
+  name: string;
+  port: number;
+  viewport?: { width: number; height: number };
+}[] = [
+  { name: 'coordination', port: 4201, viewport: { width: 1100, height: 1600 } },
+  { name: 'presets', port: 4198 },
+];
 const browsers = (
   process.env.ALL_BROWSERS ? ['chromium', 'firefox', 'webkit'] : ['chromium']
 ) as ('chromium' | 'firefox' | 'webkit')[];
@@ -38,6 +48,17 @@ export default defineConfig({
       fullyParallel: true,
       use: { browserName, baseURL: 'http://127.0.0.1:4181' },
     },
+    ...suites.map((suite) => ({
+      name: `${suite.name}-${browserName}`,
+      testDir: `./tests/${suite.name}`,
+      testMatch: '*.spec.ts',
+      fullyParallel: true,
+      use: {
+        browserName,
+        baseURL: `http://127.0.0.1:${suite.port}`,
+        ...(suite.viewport ? { viewport: suite.viewport } : {}),
+      },
+    })),
   ]),
   webServer: [
     {
@@ -51,5 +72,10 @@ export default defineConfig({
       port: 4181,
       reuseExistingServer: false,
     },
+    ...suites.map((suite) => ({
+      command: `bun tests/${suite.name}/server.ts`,
+      port: suite.port,
+      reuseExistingServer: false,
+    })),
   ],
 });

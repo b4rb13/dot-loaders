@@ -1,21 +1,26 @@
-import { readFile } from 'node:fs/promises';
+// Serves the preset fixture against the workspace build (packages/*/dist).
 import { resolve } from 'node:path';
+import { renderStatic } from '@dotquilt-internal/core/server';
+import { createElement as h } from 'react';
+import { renderToString } from 'react-dom/server';
+import { PresetFixture } from './react.js';
+import { presets } from './shared.js';
 
-const root = resolve(import.meta.dir, '../..'),
-  output = resolve(root, '.artifacts/m4-presets');
-const consumer = (
-  await readFile(resolve(root, '.artifacts/m4/consumer-path'), 'utf8')
-).trim();
-const core = resolve(consumer, 'node_modules/@dotquilt-internal/core');
-const { renderStatic } = await import(resolve(core, 'dist/server.js'));
-const { presets } = await import(resolve(consumer, 'presets/shared.ts'));
-const { PresetFixture } = await import(resolve(consumer, 'presets/react.tsx'));
-const { createElement: h } = await import(
-  resolve(consumer, 'node_modules/react/index.js')
-);
-const { renderToString } = await import(
-  resolve(consumer, 'node_modules/react-dom/server.bun.js')
-);
+const root = resolve(import.meta.dir, '../..');
+const clients = new Map<string, string>();
+for (const name of ['native.ts', 'react.tsx']) {
+  const build = await Bun.build({
+    entrypoints: [resolve(import.meta.dir, name)],
+    format: 'esm',
+    target: 'browser',
+  });
+  if (!build.success || !build.outputs[0])
+    throw new Error(`Cannot build the preset client ${name}`);
+  clients.set(
+    `/${name.replace(/\.tsx?$/, '')}.js`,
+    await build.outputs[0].text(),
+  );
+}
 const assetNames = [
   'skeleton',
   'line',
@@ -32,19 +37,15 @@ Bun.serve({
   port: 4198,
   fetch(request) {
     const url = new URL(request.url);
-    if (url.pathname === '/native.js' || url.pathname === '/react.js')
-      return new Response(Bun.file(resolve(output, url.pathname.slice(1))), {
+    const client = clients.get(url.pathname);
+    if (client)
+      return new Response(client, {
         headers: { 'content-type': 'text/javascript' },
       });
     const asset = /^\/(core|react)\/styles\/([\w-]+)\.css$/.exec(url.pathname);
     if (asset && assetNames.includes(asset[2] ?? ''))
       return new Response(
-        Bun.file(
-          resolve(
-            consumer,
-            `node_modules/@dotquilt-internal/${asset[1]}/dist/${asset[2]}.css`,
-          ),
-        ),
+        Bun.file(resolve(root, `packages/${asset[1]}/dist/${asset[2]}.css`)),
         { headers: { 'content-type': 'text/css' } },
       );
     if (url.pathname === '/app.css')
@@ -55,7 +56,7 @@ Bun.serve({
     if (url.pathname !== '/native' && url.pathname !== '/react')
       return new Response('not found', { status: 404 });
     const policy = (asset: string) => ({
-      mode: 'external',
+      mode: 'external' as const,
       href: `/core/styles/${asset}.css`,
     });
     const decorative = (
@@ -67,7 +68,7 @@ Bun.serve({
         kind,
         preset: presets[family],
         stylePolicy: policy(asset),
-      })
+      } as Parameters<typeof renderStatic>[0])
         .replace('<dotquilt-', `<dotquilt-`)
         .replace(
           /^(<dotquilt-[\w-]+)/,
