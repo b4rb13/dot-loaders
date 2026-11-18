@@ -1,9 +1,10 @@
+import { dotGrid, lineHeight } from './internal/marks.js';
 import { skeletonStyles } from './styles.js';
 
 export const skeletonLineStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze(
     /* @__PURE__ */ skeletonStyles.concat(
-      ':host{height:.875em;border-radius:999px}',
+      `:host{height:${lineHeight};border-radius:999px}:host .surface{${dotGrid('0 0')}}`,
     ),
   );
 export const skeletonCircleStyles: readonly string[] =
@@ -15,7 +16,7 @@ export const skeletonCircleStyles: readonly string[] =
 export const skeletonTextStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze(
     /* @__PURE__ */ skeletonStyles.concat(
-      ':host{height:auto;overflow:visible;display:grid;gap:.5em;border-radius:0}:host .lines{display:grid;gap:inherit}:host .lines.pulse{position:absolute;inset:0}:host .line{box-sizing:border-box;height:.875em;position:relative;border-radius:999px;overflow:hidden}',
+      `:host{height:auto;overflow:visible;display:grid;gap:.5em;border-radius:0}:host .lines{display:grid;gap:inherit}:host .lines.pulse{position:absolute;inset:0}:host .line{box-sizing:border-box;height:${lineHeight};position:relative;border-radius:999px;overflow:hidden;${dotGrid('0 0')}}`,
     ),
   );
 export const typingStyles: readonly string[] = /* @__PURE__ */ Object.freeze([

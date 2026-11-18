@@ -103,7 +103,7 @@ export class SkeletonText extends SkeletonBlock {
           line.setAttribute('class', 'line surface');
           line.setAttribute('part', 'surface');
           line.setAttribute('width', `${width * 100}%`);
-          line.setAttribute('height', '14');
+          line.setAttribute('height', '18');
           layer.append(line);
         }
         this.shadowRoot.append(layer);

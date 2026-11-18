@@ -12,6 +12,15 @@ export const skeletonHandoff: unique symbol = Symbol(
   'dotquilt.skeleton-handoff',
 );
 
+/** The offset of a repeating tile of `tile` px placed at `position` in `box` px. */
+function gridOffset(position: string, box: number, tile: number): number {
+  const value = parseFloat(position) || 0;
+  const px = position.trim().endsWith('%')
+    ? (value / 100) * (box - tile)
+    : value;
+  return tile > 0 ? ((px % tile) + tile) % tile : 0;
+}
+
 /** Nine interleaved dot fields share one clock; no per-dot loop or animation. */
 export function dissolveSkeleton(
   host: HTMLElement,
@@ -33,12 +42,16 @@ export function dissolveSkeleton(
   const measure = (surface: HTMLElement, bounds: DOMRect) => {
     const box = surface.getBoundingClientRect();
     const css = win.getComputedStyle(surface);
+    const gap = parseFloat(css.backgroundSize);
     return {
       x: box.left - bounds.left,
       y: box.top - bounds.top,
       width: box.width,
       height: box.height,
-      gap: parseFloat(css.backgroundSize),
+      gap,
+      // Where the CSS grid starts, so the fields line up with the static marks.
+      offsetX: gridOffset(css.backgroundPositionX, box.width, gap),
+      offsetY: gridOffset(css.backgroundPositionY, box.height, gap),
     };
   };
   const shapes = surfaces.map((surface) => measure(surface, bounds));
@@ -120,6 +133,8 @@ export function dissolveSkeleton(
         const pattern = node('pattern', {
           id,
           patternUnits: 'userSpaceOnUse',
+          x: shape.offsetX,
+          y: shape.offsetY,
           width: shape.gap * 3,
           height: shape.gap * 3,
         });

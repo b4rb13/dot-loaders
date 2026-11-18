@@ -60,7 +60,8 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
       }));
     });
     expect(measured.map((row) => row.patterns)).toEqual([9, 9, 9, 36]);
-    expect(measured.every((row) => row.radius === '1px')).toBe(true);
+    // Half the default 4.4 px mark.
+    expect(measured.every((row) => row.radius === '2.2px')).toBe(true);
     const reservation = await page.evaluate(ledger);
     expect(reservation.dots).toBeGreaterThan(0);
     expect(reservation.dots).toBeLessThanOrEqual(16384);

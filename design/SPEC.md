@@ -112,10 +112,24 @@ Composed and unhurried; data settles into place instead of snapping.
 - **Themes:** light and dark at parity, following the system setting, with a manual switch.
 - **Dependencies:** Google Fonts are the only external dependency.
 
+## How marks map onto the runtime (decided in 4b, 2026-11-19)
+
+The defaults live in `packages/core/src/internal/marks.ts`; each family adopts them as its 4b slice lands (see AUDIT.md). Apps override them with these custom properties:
+
+| Property | Default | Notes |
+| --- | --- | --- |
+| `--dotquilt-dot-size` | 4.4px | mark diameter |
+| `--dotquilt-dot-gap` | 4.6px | space between marks; pitch = size + gap = 9 px |
+| `--dotquilt-color` | `light-dark(#6E7889, #A3AFC2)` | resting mark colour |
+| `--dotquilt-accent-color` | `light-dark(#4F8F93, #8DC4C5)` | the idle glow |
+
+- **Theme switching:** colours follow the page's `color-scheme`. An app with a dark theme sets `color-scheme: dark` on it (or on the loaders) to get the dark marks.
+- **One resting opacity:** CSS can't switch a number between themes, so both use 37%. The dark mark #A3AFC2 at 37% matches #8E99AB at 44% on the dark surface. The glow peaks at 90% in both.
+- **Lines:** a line placeholder (SkeletonLine and each SkeletonText line) is two rows of marks tall, 18 px by default.
+
 ## Open details (decide during 4b–4d, then record here)
 
 - Spacing scale and the exact docs grid.
 - Icon set.
 - Logo mark. The mockup uses a placeholder 2×2 dot glyph.
 - Default mark per component, if it should differ from the global dot (e.g. dash for SkeletonText and TableLoader).
-- How the marks' CSS variables map onto the runtime's `--dotquilt-*` custom properties.

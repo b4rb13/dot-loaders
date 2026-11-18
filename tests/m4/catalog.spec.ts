@@ -35,7 +35,8 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
       );
     });
     const before = await page.locator('#multiline').boundingBox();
-    expect(before?.height).toBe(80);
+    // Four two-row lines (18 px) with three .5em gaps.
+    expect(before?.height).toBe(96);
     await page.evaluate(async () => {
       const path: string = '/native.js';
       await import(path);
@@ -62,7 +63,8 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
     await expect(page.locator('#line')).toHaveAttribute('aria-hidden', 'true');
     const line = await page.locator('#line').boundingBox();
     const circle = await page.locator('#circle').boundingBox();
-    expect(line?.height).toBe(14);
+    // Two rows of 4.4 px marks on a 9 px pitch.
+    expect(line?.height).toBe(18);
     expect(circle?.width).toBe(40);
     expect(circle?.height).toBe(40);
     expect(await page.evaluate(() => Reflect.get(window, 'csp'))).toEqual([]);
@@ -339,7 +341,8 @@ for (const mode of ['inline', 'external-family']) {
       )
       .toBe(8);
     const before = await page.locator('#multiline').boundingBox();
-    expect(before?.height).toBe(80);
+    // Four two-row lines (18 px) with three .5em gaps.
+    expect(before?.height).toBe(96);
     const borders = await page.locator('#multiline').evaluate((host) =>
       [
         ...(host.shadowRoot?.querySelectorAll('.lines:not(.pulse) .line') ??

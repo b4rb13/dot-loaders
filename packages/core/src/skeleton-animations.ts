@@ -23,7 +23,7 @@ export const pulse: AnimationFactory<'skeleton', 'idle', PulseOptions> = (
     family: 'skeleton',
     phase: 'idle',
     options: Object.freeze({
-      periodMs: Math.max(800, Math.min(4000, options.periodMs ?? 1600)),
+      periodMs: Math.max(800, Math.min(4000, options.periodMs ?? 2800)),
     }),
     [brand]: pulseDefinition,
   }) as unknown as AnimationBinding<'skeleton', 'idle', PulseOptions>;

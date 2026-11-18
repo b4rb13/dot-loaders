@@ -37,6 +37,25 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
 - **Locked:** the refined System is locked as [design/SPEC.md](design/SPEC.md), with [design/tokens.css](design/tokens.css). Mockups are in `design/directions*/`.
 - **Marks:** dot by default; dash and square are offered as a component option.
 
+**Phase 4b — in progress (2026-11-19).** The components' default look, built to [design/SPEC.md](design/SPEC.md). Phase 3 is done; its last item, one renderer per element, is settled by decision 2. Slices go by family, so each PR leaves its family consistent:
+- **A. Marks and the skeleton family — done on `design/4b-skeleton`.**
+  - **One marks module:** `internal/marks.ts` holds the default mark size (4.4 px), gap (4.6 px), colours, resting opacity (37%), glow peak (90%) and the CSS dot grid.
+  - **Static look:** skeleton blocks, lines, circles and text use it, both before upgrade and after.
+  - **Idle:** a soft teal glow drifts across every 2.8 s on a sine curve, with a Gaussian edge, while the field breathes −14% to 0 every 3.2 s.
+  - **Lines are two rows of marks tall** (18 px by default, was 0.875em), as in the mockup, so no row is clipped in half. Blocks and circles centre their grid.
+  - **Handoff:** the skeleton dissolve fields start on the same grid offset as the CSS, so marks don't jump when the handoff begins.
+- **B. Handoff, every family.** Marks dim, shrink 30% and drift up 3 px. Content rises 5 px while fading in over 700 ms and a 2 px blur clears. 1.1 s in total, with row and cell staggers. Reduced motion becomes a 240 ms fade.
+- **C. ChartLoader.** The glow idle, then on ready the field glides onto the line (~570 ms) and the line draws in (~570 ms).
+- **D. TableLoader.** The glow idle; the handoff staggers by row and cell.
+- **E. TextLoader.** Characters cross-fade every 280 ms and lock left to right over 300 ms.
+- **F. TypingDots and default sizes.**
+- **G. Alternative marks:** a `mark: 'dot' | 'dash' | 'square'` option with the same positions and motion.
+- **H. Prune old variants.** Keep, change or drop each of the 16 built-in recipes deliberately.
+
+Mapping the spec's marks onto the runtime (an open detail in the spec):
+- **Colours:** the base colour comes from `light-dark()`, so it follows the page's `color-scheme`.
+- **One resting opacity:** CSS can't switch a number between light and dark, so both themes use 37%. The dark mark is #A3AFC2, which at 37% on the dark surface matches the spec's #8E99AB at 44%. The glow peaks at 90% in both themes.
+
 **Phase 2 — in progress on `fix/phase-2-runtime-bugs` (2026-11-18).**
 
 Fixed, each with a regression test that fails on the old code:
