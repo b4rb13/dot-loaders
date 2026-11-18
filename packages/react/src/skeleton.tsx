@@ -5,7 +5,7 @@ import {
   registerSkeletonBlock,
   type SkeletonPreset,
 } from '@dotquilt-internal/core/skeleton';
-import { createElement, Fragment, forwardRef, useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
 import { reactSkeletonStyles } from './server.js';
 import {
@@ -60,28 +60,24 @@ export const SkeletonBlock = /* @__PURE__ */ forwardRef<
     },
     { onHandoffStart, onHandoffEnd, onHandoffCancel, onLoaderError },
   );
-  return createElement(
-    Fragment,
-    null,
-    sheet(reactSkeletonStyles, initial.policy, 'skeleton', nonce),
-    createElement(
-      'dotquilt-skeleton-block',
-      {
-        ...attributes,
-        ...policyAttributes(initial.policy, nonce),
-        'aria-hidden': attributes['aria-hidden'] ?? true,
-        'data-dotquilt-surface': '',
-        motion: 'paused',
-        speed: initial.speed,
-        'pointer-response': initial.pointerResponse,
-        ref: host,
-      },
-      createElement(
-        'span',
-        { 'data-dotquilt-react-static': '', 'aria-hidden': true },
-        createElement('span', { 'data-dotquilt-static': '' }),
-      ),
-    ),
+  return (
+    <>
+      {sheet(reactSkeletonStyles, initial.policy, 'skeleton', nonce)}
+      <dotquilt-skeleton-block
+        {...attributes}
+        {...policyAttributes(initial.policy, nonce)}
+        aria-hidden={attributes['aria-hidden'] ?? true}
+        data-dotquilt-surface=""
+        motion="paused"
+        speed={initial.speed}
+        pointer-response={initial.pointerResponse}
+        ref={host}
+      >
+        <span data-dotquilt-react-static="" aria-hidden>
+          <span data-dotquilt-static="" />
+        </span>
+      </dotquilt-skeleton-block>
+    </>
   );
 });
 export type {

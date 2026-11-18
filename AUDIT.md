@@ -66,6 +66,35 @@ Not done yet:
 - React style de-duplication (one stylesheet per instance). It changes SSR markup across React 19.0–19.3 and Next, so it gets its own change.
 - Hiding pending SSR content before upgrade. Tried and reverted: the legacy React suite requires pending server content to stay visible and usable without JavaScript. Now decision 11.
 
+**Phase 3 — in progress on `refactor/phase-3-degolf` (2026-11-18).**
+
+Done, with no behaviour change; the e2e, unit and legacy suites are the safety net:
+- **Shared Chart/Table base.** `internal/dense-loader.ts` holds the shared behaviour. `chart.ts` and `table.ts` keep only their family-specific hooks: defaults, projection, surface and extra attributes.
+- **Named handoff types.**
+  - `HandoffSource`, `HandoffRequest` and `RunningHandoff` replace the positional tuples (`work[5]`, `work[4][1]`, 9-argument factories).
+  - `IdleFrame` and `HandoffFrame` replace the 6- and 10-argument paint calls.
+- **React in plain JSX.** The custom-element names are declared in `src/jsx.d.ts`, which `tsc` does not emit. The server-rendered markup is byte-identical across all components and style policies.
+- **Consistent option errors and `update()`.** Decided with the owner on 2026-11-18. This one changes behaviour on purpose.
+  - A scalar option with a disallowed value reports `invalid-option`, and the field is the property name (`speed`, `pointerResponse`, `rowHeight`, `state`, `motion` and so on), on every element. These codes are gone: `invalid-number`, `invalid-pointer-response`, `invalid-count`, `invalid-state`, `invalid-motion`, `invalid-speed`, and attribute names as fields.
+  - TextLoader now reports an invalid `speed` and `pointerResponse` the same way as the other elements.
+  - `update()` applies only the element's own options and reports any other key as `unknown-option`. Before, the skeleton family, Chart and Table stored unknown keys as expandos.
+  - Structured and limit problems keep their own codes, for example `invalid-binding`, `invalid-style-policy`, `line-limit` and `typing-limit`.
+
+Waiting on decisions:
+- Moving the M2 dense-renderer proof out of `src`: decision 2.
+- Removing the cross-copy symbol layer: decision 5.
+
+- **Typed table layout.** `staticTableLayout()` is a typed export of `@dotquilt-internal/core/table`. It replaces the `Symbol.for('dotquilt.table.static.v1')` hook that React read off the `TableLoader` class. The dead `react/src/internal/table-static` build is deleted. React's server markup is byte-identical.
+
+- **Export surface.** Decided with the owner on 2026-11-18.
+  - The ten stylesheet entries in each package's export map are now one `./styles/*.css` pattern onto the top-level `dist/*.css` files. The public paths are unchanged.
+  - Core goes from 24 to 15 entries, React from 18 to 9.
+  - The JavaScript entries stay as they are. Each one keeps imports selective or keeps server code apart.
+  - `scripts/package-exports.test.ts` checks that every stylesheet resolves and that the pattern cannot reach anything else.
+
+Next:
+- React style de-duplication: one `<style>` per instance.
+
 ## TL;DR
 
 - **The product works.** All nine components exist as native elements plus React wrappers with SSR output. The website (homepage, 9 reference pages, 24-recipe gallery, playground, guides, search) builds and runs. Most loading → reveal handoffs look good.

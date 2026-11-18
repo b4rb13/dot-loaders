@@ -63,7 +63,7 @@ export class SkeletonText extends SkeletonBlock {
     if (name === 'lines' && value !== null) {
       const count = Number(value);
       if (!Number.isInteger(count) || count <= 0 || !Number.isFinite(count))
-        this.report('invalid-count', 'lines');
+        this.invalidOption('lines');
       else if (count > 50) this.report('line-limit', 'lines');
     }
     super.attributeChangedCallback(name, old, value);
@@ -75,6 +75,9 @@ export class SkeletonText extends SkeletonBlock {
     },
   ): void {
     super.update(patch);
+  }
+  protected override get optionNames(): readonly string[] {
+    return [...super.optionNames, 'lines', 'widths'];
   }
   protected override render(): void {
     const widths = lineWidths(this.lines, this.#widths);

@@ -28,7 +28,7 @@ export type ChartShader = (
 ];
 
 export function chartPainter(configure?: ChartShader): IdlePaint {
-  return (rawSurface, rawOptions, timeMs, still, dot) => {
+  return ({ surface: rawSurface, options: rawOptions, timeMs, still, dot }) => {
     const surface = rawSurface as AnimationSurface<'chart'>,
       options = rawOptions as Readonly<Record<string, number>>;
     const w = surface.width,

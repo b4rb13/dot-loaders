@@ -12,6 +12,7 @@ import {
   register,
   upgradeProperties,
 } from './internal/dom.js';
+import type { HandoffSource } from './internal/handoff.js';
 import { LoadingController } from './internal/loading-controller.js';
 import { pointer } from './internal/painter.js';
 import type { Preset } from './internal/preset.js';
@@ -46,10 +47,12 @@ export class TextLoader extends LoadingController<'text'> {
   protected override get styles(): readonly string[] {
     return textStyles;
   }
-  protected override handoffSource(): ReturnType<
-    LoadingController<'text'>['handoffSource']
-  > {
-    return [this.preset?.animations?.handoff ?? handoff, this, 'dotquilt/fade'];
+  protected override handoffSource(): HandoffSource {
+    return {
+      binding: this.preset?.animations?.handoff ?? handoff,
+      host: this,
+      animation: 'dotquilt/fade',
+    };
   }
   #runner: Runner | undefined;
   #runnerDefinition: unknown;
@@ -79,9 +82,10 @@ export class TextLoader extends LoadingController<'text'> {
       readonly preset?: TextPreset | undefined;
     },
   ): void {
-    for (const key of ['mask', 'speed', 'pointerResponse', 'preset'] as const)
-      if (key in patch) Reflect.set(this, key, patch[key]);
     super.update(patch);
+  }
+  protected override get optionNames(): readonly string[] {
+    return [...super.optionNames, 'mask', 'speed', 'pointerResponse'];
   }
   get mask(): string | undefined {
     return this.getAttribute('mask') ?? undefined;
@@ -233,10 +237,7 @@ export class TextLoader extends LoadingController<'text'> {
         ? !Number.isFinite(+value) || +value <= 0
         : name === 'pointer-response' && !['none', 'lift'].includes(value))
     )
-      this.report(
-        `invalid-${name}`,
-        name === 'speed' ? name : 'pointerResponse',
-      );
+      this.invalidOption(name);
     super.attributeChangedCallback(name, old, value);
   }
   override refresh(): void {

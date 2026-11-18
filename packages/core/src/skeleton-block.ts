@@ -70,13 +70,13 @@ export class SkeletonBlock extends ManagedElement {
       value !== null &&
       !(+value > 0 && Number.isFinite(+value))
     )
-      this.report('invalid-number', 'speed');
+      this.invalidOption('speed');
     if (
       name === 'pointer-response' &&
       value !== null &&
       !['none', 'lift'].includes(value)
     )
-      this.report('invalid-pointer-response', 'pointerResponse');
+      this.invalidOption('pointer-response');
     super.attributeChangedCallback(name, old, value);
   }
 
@@ -189,8 +189,10 @@ export class SkeletonBlock extends ManagedElement {
     readonly preset?: SkeletonPreset | undefined;
     readonly stylePolicy?: import('./types.js').StylePolicy;
   }): void {
-    for (const [key, value] of Object.entries(patch))
-      Reflect.set(this, key, value);
+    this.applyOptions(patch);
+  }
+  protected override get optionNames(): readonly string[] {
+    return [...super.optionNames, 'speed', 'pointerResponse', 'animations'];
   }
   refresh(): void {
     this.resources?.eligible(true);

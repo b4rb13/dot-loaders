@@ -1,16 +1,16 @@
-// biome-ignore-all assist/source/organizeImports: Preserve verified inert import order for complete gzip budgets; see docs/implementation/m4/configuration-size-progress.md.
 'use client';
 import type { Animations } from '@dotquilt-internal/core';
-import type { HostProps } from './types.js';
-import { useHost } from './host.js';
 import {
-  TableLoader as NativeTableLoader,
+  type TableLoader as NativeTableLoader,
   registerTableLoader,
+  staticTableLayout,
   type TableColumn,
   type TablePreset,
   type TableTargetProvider,
 } from '@dotquilt-internal/core/table';
-import { createElement, forwardRef, useState } from 'react';
+import { forwardRef, useState } from 'react';
+import { useHost } from './host.js';
+import { reactTableStyles } from './server.js';
 import {
   initialPolicy,
   policyAttributes,
@@ -18,18 +18,7 @@ import {
   useCustomAttribute,
   useStyleNonce,
 } from './static.js';
-import { reactTableStyles } from './server.js';
-
-/** Private native/adapter capability, independent of DOM and registration. */
-type StaticTableLayout = (
-  rows: number | undefined,
-  rowHeight: number | undefined,
-  columns: readonly TableColumn[] | undefined,
-) => {
-  rows: number;
-  rowHeight: number;
-  parts: readonly Readonly<Record<string, string>>[];
-};
+import type { HostProps } from './types.js';
 
 export interface TableLoaderProps extends HostProps<NativeTableLoader> {
   rows?: number | undefined;
@@ -66,48 +55,45 @@ export const TableLoader = /* @__PURE__ */ forwardRef<
   ref,
 ) {
   // Capture the inert native layout once; React continues to own its SVG nodes.
-  const [[policy, initialRows, initialHeight, content]] = useState(() => {
+  const [initial] = useState(() => {
     const policy = initialPolicy(stylePolicy);
     const {
       rows: count,
       rowHeight: height,
       parts,
-    } = (
-      (NativeTableLoader as unknown as Record<symbol, StaticTableLayout>)[
-        Symbol.for('dotquilt.table.static.v1')
-      ] as StaticTableLayout
-    )(rows, rowHeight, columns);
-    return [
+    } = staticTableLayout(rows, rowHeight, columns);
+    return {
       policy,
-      count,
+      rows: count,
       height,
-      createElement(
-        'span',
-        { 'data-dotquilt-react-static': '', 'aria-hidden': true },
-        createElement(
-          'svg',
-          {
-            'data-dotquilt-static': '',
-            width: '100%',
-            height: count * height,
-            viewBox: `0 0 100 ${count * height}`,
-            preserveAspectRatio: 'none',
-            fill: 'none',
-            stroke: 'currentColor',
-            opacity: 0.25,
-          },
-          ...parts.map((attrs, key) =>
-            createElement('path', {
-              key,
-              d: attrs.d,
-              strokeWidth: attrs['stroke-width'],
-              strokeDasharray: attrs['stroke-dasharray'],
-            }),
-          ),
-        ),
+      content: (
+        <span data-dotquilt-react-static="" aria-hidden>
+          {/* biome-ignore lint/a11y/noSvgWithoutTitle: decoration inside an aria-hidden wrapper */}
+          <svg
+            data-dotquilt-static=""
+            width="100%"
+            height={count * height}
+            viewBox={`0 0 100 ${count * height}`}
+            preserveAspectRatio="none"
+            fill="none"
+            stroke="currentColor"
+            opacity={0.25}
+          >
+            {parts.map((attrs, index) => (
+              <path
+                // biome-ignore lint/suspicious/noArrayIndexKey: fixed decorative rules that never reorder
+                key={index}
+                d={attrs.d}
+                strokeWidth={attrs['stroke-width']}
+                strokeDasharray={attrs['stroke-dasharray']}
+              />
+            ))}
+          </svg>
+        </span>
       ),
-    ] as const;
+    };
   });
+  const { policy } = initial;
   const nonce = useStyleNonce(policy, 'table');
   const upgraded = useCustomAttribute();
   const host = useHost(
@@ -127,23 +113,22 @@ export const TableLoader = /* @__PURE__ */ forwardRef<
     },
     { onHandoffStart, onHandoffEnd, onHandoffCancel, onLoaderError },
   );
-  return [
-    sheet(reactTableStyles, policy, 'table', nonce),
-    createElement(
-      'dotquilt-table-loader',
-      {
-        key: 'host',
-        ...attributes,
-        ...upgraded,
-        ...policyAttributes(policy, nonce),
-        'aria-hidden': true,
-        'data-dotquilt-surface': '',
-        motion: 'paused',
-        rows: initialRows,
-        'row-height': initialHeight,
-        ref: host,
-      },
-      content,
-    ),
-  ];
+  return (
+    <>
+      {sheet(reactTableStyles, policy, 'table', nonce)}
+      <dotquilt-table-loader
+        {...attributes}
+        {...upgraded}
+        {...policyAttributes(policy, nonce)}
+        aria-hidden
+        data-dotquilt-surface=""
+        motion="paused"
+        rows={initial.rows}
+        row-height={initial.height}
+        ref={host}
+      >
+        {initial.content}
+      </dotquilt-table-loader>
+    </>
+  );
 });

@@ -19,6 +19,7 @@ export interface HandoffScope {
   reveal(frame: RevealFrame): void;
   target(id: string, frame: RevealFrame): void;
 }
+/** A running handoff, as the loading controller drives it frame by frame. */
 export interface HandoffDriver {
   duration: number;
   restricted?: (() => boolean) | undefined;
@@ -27,17 +28,65 @@ export interface HandoffDriver {
   activate(callback: () => void): void;
   dispose(): void;
 }
-export function createHandoff(
-  binding: AnimationBinding<AnimationFamily, 'handoff'>,
-  host: HTMLElement,
-  content: HTMLElement,
-  targets: readonly RevealTarget[],
-  requestedDuration: number | undefined,
-  current: () => boolean,
-  own: (animation: Animation) => void,
-  report: (code: string) => void,
-  scope?: HandoffScope,
+export type HandoffBinding = AnimationBinding<AnimationFamily, 'handoff'>;
+/** What the loading controller gives a handoff when the region becomes ready. */
+export interface HandoffRequest {
+  /** The element whose surface the handoff draws on. */
+  readonly host: HTMLElement;
+  /** The region's content layer, which the handoff reveals. */
+  readonly content: HTMLElement;
+  readonly targets: readonly RevealTarget[];
+  /** The caller's `timing.duration`; undefined lets the definition decide. */
+  readonly duration: number | undefined;
+  /** False once this handoff has been superseded or cancelled. */
+  readonly current: () => boolean;
+  /** Registers a Web Animation so it is cancelled with the handoff. */
+  readonly own: (animation: Animation) => void;
+  readonly report: (code: string) => void;
+  /** Set when a coordinated handoff merges several sources' output. */
+  readonly scope?: HandoffScope | undefined;
+}
+export type HandoffFactory = (
+  binding: HandoffBinding,
+  request: HandoffRequest,
+) => HandoffDriver;
+/** Where a region's handoff comes from: a placeholder, or the region itself. */
+export interface HandoffSource {
+  /** Used when neither the region nor its preset picks a handoff. */
+  readonly binding: HandoffBinding | undefined;
+  readonly host: HTMLElement;
+  /** Reported in handoff events when no binding is in use. */
+  readonly animation: string;
+  /** Replaces the binding's own factory (rich, skeleton and coordinated sources). */
+  readonly prepare?: (
+    binding: HandoffBinding | undefined,
+    request: HandoffRequest,
+  ) => HandoffDriver;
+}
+/** Starts a source's handoff; throws when no factory can run it. */
+export function runHandoff(
+  prepare: HandoffSource['prepare'],
+  binding: HandoffBinding | undefined,
+  request: HandoffRequest,
 ): HandoffDriver {
+  if (prepare) return prepare(binding, request);
+  const factory = binding && definitionOf(binding).handoff;
+  if (!binding || !factory) throw new TypeError();
+  return factory(binding, request);
+}
+export const createHandoff: HandoffFactory = (
+  binding,
+  {
+    host,
+    content,
+    targets,
+    duration: requestedDuration,
+    current,
+    own,
+    report,
+    scope,
+  },
+) => {
   const definition = definitionOf(binding) as HandoffDefinition<
     AnimationFamily,
     object,
@@ -84,29 +133,29 @@ export function createHandoff(
     const deltaMs = (p - lastProgress) * total;
     lastProgress = p;
     painter.draw((dot) =>
-      definition.draw(
+      definition.draw({
         surface,
-        binding.options,
+        options: binding.options,
         prepared,
-        p,
-        eased,
-        total,
+        linear: p,
+        progress: eased,
+        duration: total,
         deltaMs,
         dot,
-        (frame) => {
+        reveal(frame) {
           if (current()) {
             if (scope) scope.reveal(frame);
             else (reveal as ReturnType<typeof definition.reveal>).draw(frame);
           }
         },
-        (id, frame) => {
+        revealTarget(id, frame) {
           if (current()) {
             if (scope) return scope.target(id, frame);
             if (!targetMap.draw) throw new TypeError();
             targetMap.draw(id, frame);
           }
         },
-      ),
+      }),
     );
   };
   return {
@@ -141,4 +190,4 @@ export function createHandoff(
       for (const element of bounds.keys()) resize.observe(element);
     },
   };
-}
+};

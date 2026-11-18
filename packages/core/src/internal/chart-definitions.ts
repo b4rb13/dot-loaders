@@ -1,4 +1,4 @@
-import type { AnimationSurface, Dot, RevealFrame } from '../animations.js';
+import type { AnimationSurface, Dot } from '../animations.js';
 import type { ChartInput } from '../chart.js';
 import { chartBinding, chartFactory } from './chart-factory.js';
 import { chartPainter } from './chart-field.js';
@@ -7,6 +7,7 @@ import { managedPainter } from './dense/managed-painter.js';
 import { createDenseRunner as createRunner } from './dense/runner.js';
 import { createHandoff } from './handoff.js';
 import { clamp } from './math.js';
+import type { HandoffFrame } from './paint.js';
 import { createRevealEffect } from './reveal-effect.js';
 import { nativeSurface } from './surface.js';
 import { createTargetTracker } from './target-tracker.js';
@@ -111,17 +112,18 @@ const morphDefinition = /* @__PURE__ */ Object.freeze({
       }),
     );
   },
-  draw(
-    surface: AnimationSurface<'chart'>,
-    options: Readonly<MorphWipeOptions>,
-    prepared: readonly Destination[],
-    _linear: number,
-    p: number,
-    _duration: number,
-    _deltaMs: number,
-    dot: (value: Dot) => void,
-    reveal: (value: RevealFrame) => void,
-  ): undefined {
+  draw({
+    surface,
+    options,
+    prepared,
+    progress: p,
+    dot,
+    reveal,
+  }: HandoffFrame<
+    'chart',
+    MorphWipeOptions,
+    readonly Destination[]
+  >): undefined {
     if (!geometry(surface.input).length) {
       const q = smooth(p);
       for (const d of surface.source)

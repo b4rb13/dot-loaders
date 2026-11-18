@@ -27,23 +27,6 @@ const compiler = Bun.spawn(
   { cwd, stdout: 'inherit', stderr: 'inherit' },
 );
 if (await compiler.exited) throw new Error('React build failed');
-// Share the native source at build time; the distributed adapter imports only
-// its own pure data module, never an unexported native implementation path.
-const staticTable = await Bun.build({
-  entrypoints: [resolve(cwd, 'src/internal/table-static.ts')],
-  target: 'browser',
-  format: 'esm',
-});
-if (!staticTable.success || staticTable.outputs.length !== 1)
-  throw new Error('Private Table layout build failed');
-await writeFile(
-  resolve(cwd, 'dist/internal/table-static.js'),
-  new Uint8Array(await (staticTable.outputs[0] as Blob).arrayBuffer()),
-);
-// The generated forwarding declaration is build-only and not referenced by any
-// public declaration. Do not ship a declaration that escapes the package.
-await rm(resolve(cwd, 'dist/internal/table-static.d.ts'));
-
 await writeFile(
   resolve(cwd, 'dist/skeleton.css'),
   [...skeletonStyles, ...reactSkeletonStyles].join('\n'),

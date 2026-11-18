@@ -374,16 +374,15 @@ test('M2 handoff: repeated reveal styles avoid effect writes without bypassing v
         revealTarget('row', { opacity: 0.5, translateY: -20 - frame.progress });
       },
     })();
-    const driver = createHandoff(
-      binding,
+    const driver = createHandoff(binding, {
       host,
       content,
-      [{ id: 'row', element: target }],
-      300,
-      () => true,
-      (animation: Animation) => effects.push(animation),
-      () => {},
-    );
+      targets: [{ id: 'row', element: target }],
+      duration: 300,
+      current: () => true,
+      own: (animation: Animation) => effects.push(animation),
+      report: () => {},
+    });
     driver.draw(0);
     let writes = 0;
     for (const animation of effects) {

@@ -163,14 +163,14 @@ test('six silhouettes, option endpoints and static output are finite and distinc
     const binding = factory(),
       definition = definitionOf(binding) as unknown as { draw: IdlePaint },
       dots: Dot[] = [];
-    definition.draw(
+    definition.draw({
       surface,
-      binding.options,
-      1700,
-      false,
-      (d) => dots.push(d),
-      16,
-    );
+      options: binding.options,
+      timeMs: 1700,
+      still: false,
+      dot: (d) => dots.push(d),
+      deltaMs: 16,
+    });
     expect(dots.length).toBeGreaterThan(500);
     expect(dots.length).toBeLessThanOrEqual(4096);
     expect(
@@ -213,18 +213,18 @@ test('morph/wipe prepares bounded line/bar/scatter destinations and terminal dec
     expect(definition.duration(s, binding.options)).toBe(900);
     for (const p of [0, 0.25, 0.5, 0.85, 1]) {
       const dots: Dot[] = [];
-      definition.draw(
-        s,
-        binding.options,
+      definition.draw({
+        surface: s,
+        options: binding.options,
         prepared,
-        p,
-        p,
-        900,
-        16,
-        (d) => dots.push(d),
-        () => {},
-        () => {},
-      );
+        linear: p,
+        progress: p,
+        duration: 900,
+        deltaMs: 16,
+        dot: (d) => dots.push(d),
+        reveal: () => {},
+        revealTarget: () => {},
+      });
       expect(
         dots.every((d) => [d.x, d.y, d.size, d.opacity].every(Number.isFinite)),
       ).toBe(true);
@@ -305,22 +305,22 @@ test('selective default Ridge emits identical ordered commands to the public con
     for (const still of [true, false]) {
       const a: Dot[] = [],
         b: Dot[] = [];
-      aDefinition.draw(
+      aDefinition.draw({
         surface,
-        defaultRidge.options,
+        options: defaultRidge.options,
         timeMs,
         still,
-        (d) => a.push(d),
-        16,
-      );
-      bDefinition.draw(
+        dot: (d) => a.push(d),
+        deltaMs: 16,
+      });
+      bDefinition.draw({
         surface,
-        binding.options,
+        options: binding.options,
         timeMs,
         still,
-        (d) => b.push(d),
-        16,
-      );
+        dot: (d) => b.push(d),
+        deltaMs: 16,
+      });
       expect(a).toEqual(b);
     }
 });
@@ -333,20 +333,20 @@ function drawIdle(row: IdleCase, during?: () => void): Dot[] {
   ]);
   const definition = definitionOf(binding) as unknown as { draw: IdlePaint };
   const dots: Dot[] = [];
-  definition.draw(
-    Object.freeze({
+  definition.draw({
+    surface: Object.freeze({
       ...surface,
       [chartAppearance]: Object.freeze({ pitch: row.pitch, scale: row.scale }),
     }),
-    binding.options,
-    row.time,
-    row.still,
-    (dot) => {
+    options: binding.options,
+    timeMs: row.time,
+    still: row.still,
+    dot: (dot) => {
       dots.push(dot);
       if (dots.length === 1) during?.();
     },
-    16,
-  );
+    deltaMs: 16,
+  });
   return dots;
 }
 /** One readable line per case, so a snapshot diff shows which recipe changed and how. */
@@ -393,14 +393,14 @@ test('a nested chart paint during drawing leaves the outer output unchanged', ()
   for (const row of idleCases.cases)
     expect(
       drawIdle(row, () =>
-        nestedDefinition.draw(
+        nestedDefinition.draw({
           surface,
-          nested.options,
-          1900,
-          false,
-          () => {},
-          16,
-        ),
+          options: nested.options,
+          timeMs: 1900,
+          still: false,
+          dot: () => {},
+          deltaMs: 16,
+        }),
       ),
     ).toEqual(drawIdle(row));
 });
@@ -463,14 +463,14 @@ test('Cycle keeps every hold/blend/wrap phase finite, including Scatter and paus
       ])
         for (const still of [false, true]) {
           const dots: Dot[] = [];
-          definition.draw(
+          definition.draw({
             surface,
-            binding.options,
-            phase * step + offset,
+            options: binding.options,
+            timeMs: phase * step + offset,
             still,
-            (d) => dots.push(d),
-            16,
-          );
+            dot: (d) => dots.push(d),
+            deltaMs: 16,
+          });
           expect(dots.length).toBeGreaterThan(500);
           expect(dots.length).toBeLessThanOrEqual(4096);
           expect(

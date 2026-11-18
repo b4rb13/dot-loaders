@@ -1,10 +1,11 @@
-import type { AnimationSurface, Dot, RevealFrame } from '../animations.js';
+import type { AnimationSurface, Dot } from '../animations.js';
 import type { RowsOptions, TypeOnOptions } from '../table-animations.js';
 import { mix, smooth } from './chart-math.js';
 import { managedPainter } from './dense/managed-painter.js';
 import { createDenseRunner as createRunner } from './dense/runner.js';
 import { createHandoff } from './handoff.js';
 import { clamp } from './math.js';
+import type { HandoffFrame, IdleFrame } from './paint.js';
 import { createRevealEffect } from './reveal-effect.js';
 import { nativeSurface } from './surface.js';
 import { tableBinding, tableFactory } from './table-factory.js';
@@ -19,13 +20,14 @@ export function tableIdle(shimmer = false) {
     phase: 'idle' as const,
     runner: createRunner,
     snapshot: nativeSurface,
-    draw: (
-      surface: AnimationSurface<'table'>,
-      options: TypeOnOptions,
-      time: number,
-      still: boolean,
-      dot: (d: Dot) => void,
-    ) => tableField(surface, options, time, still, dot, shimmer),
+    draw: ({
+      surface,
+      options,
+      timeMs,
+      still,
+      dot,
+    }: IdleFrame<'table', TypeOnOptions>) =>
+      tableField(surface, options, timeMs, still, dot, shimmer),
   });
 }
 const typeOnDefinition = /* @__PURE__ */ tableIdle();
@@ -100,18 +102,19 @@ const rowsDefinition = /* @__PURE__ */ Object.freeze({
       rest: Object.freeze(rest),
     });
   },
-  draw(
-    s: AnimationSurface<'table'>,
-    o: RowsOptions,
-    prepared: Readonly<{ cells: readonly CellPlan[]; rest: readonly Dot[] }>,
-    _linear: number,
-    p: number,
-    _duration: number,
-    _delta: number,
-    dot: (d: Dot) => void,
-    reveal: (f: RevealFrame) => void,
-    target: (id: string, f: RevealFrame) => void,
-  ): undefined {
+  draw({
+    surface: s,
+    options: o,
+    prepared,
+    progress: p,
+    dot,
+    reveal,
+    revealTarget: target,
+  }: HandoffFrame<
+    'table',
+    RowsOptions,
+    Readonly<{ cells: readonly CellPlan[]; rest: readonly Dot[] }>
+  >): undefined {
     const plans = prepared.cells;
     if (!plans.length) {
       const q = 1 - (1 - clamp(p)) ** 3;

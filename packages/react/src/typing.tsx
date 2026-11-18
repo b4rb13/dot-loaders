@@ -4,7 +4,7 @@ import {
   registerTypingDots,
   type TypingPreset,
 } from '@dotquilt-internal/core/typing';
-import { Fragment, forwardRef, createElement as h, useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
 import { reactTypingStyles } from './server.js';
 import {
@@ -60,33 +60,28 @@ export const TypingDots = /* @__PURE__ */ forwardRef<
     },
     { onHandoffStart, onHandoffEnd, onHandoffCancel, onLoaderError },
   );
-  return h(
-    Fragment,
-    null,
-    sheet(reactTypingStyles, initial.policy, 'typing', nonce),
-    h(
-      'dotquilt-typing-dots',
-      {
-        ...attributes,
-        ...policyAttributes(initial.policy, nonce),
-        'aria-hidden': attributes['aria-hidden'] ?? true,
-        'data-dotquilt-surface': '',
-        count: initial.count,
-        speed: initial.speed,
-        motion: 'paused',
-        ref: host,
-      },
-      h(
-        'span',
-        { 'data-dotquilt-react-static': '', 'aria-hidden': true },
-        h(
-          'span',
-          { 'data-dotquilt-static': '' },
-          Array.from({ length: initial.count }, (_, index) =>
-            h('i', { key: index, className: 'dot' }),
-          ),
-        ),
-      ),
-    ),
+  return (
+    <>
+      {sheet(reactTypingStyles, initial.policy, 'typing', nonce)}
+      <dotquilt-typing-dots
+        {...attributes}
+        {...policyAttributes(initial.policy, nonce)}
+        aria-hidden={attributes['aria-hidden'] ?? true}
+        data-dotquilt-surface=""
+        count={initial.count}
+        speed={initial.speed}
+        motion="paused"
+        ref={host}
+      >
+        <span data-dotquilt-react-static="" aria-hidden>
+          <span data-dotquilt-static="">
+            {Array.from({ length: initial.count }, (_, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed decorative dots that never reorder
+              <i key={index} className="dot" />
+            ))}
+          </span>
+        </span>
+      </dotquilt-typing-dots>
+    </>
   );
 });

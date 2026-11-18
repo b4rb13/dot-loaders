@@ -6,7 +6,5 @@ export interface RichParticipant extends HTMLElement {
   [chartHandoff](
     owner: import('../region.js').LoadingRegion,
     participants?: readonly RichParticipant[],
-  ): ReturnType<
-    import('./loading-controller.js').LoadingController['handoffSource']
-  >;
+  ): import('./handoff.js').HandoffSource;
 }

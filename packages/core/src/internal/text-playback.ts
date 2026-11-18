@@ -5,7 +5,7 @@ import { capturePainter } from './capture.js';
 import { createEffect } from './effect.js';
 import { now } from './element.js';
 import { frames } from './frames.js';
-import type { createHandoff } from './handoff.js';
+import type { HandoffFactory } from './handoff.js';
 import { createPainter, type Painter } from './painter.js';
 import type { Runner } from './runner.js';
 import { readSurface } from './surface.js';
@@ -90,15 +90,9 @@ export function createTextRunner(
     },
   };
 }
-export const createTextHandoff: typeof createHandoff = (
+export const createTextHandoff: HandoffFactory = (
   binding,
-  host,
-  content,
-  targets,
-  requestedDuration,
-  current,
-  own,
-  report,
+  { host, content, targets, duration: requestedDuration, current, own, report },
 ) => {
   if (targets.length) throw new TypeError();
   const definition = definitionOf(binding) as unknown as HandoffRecipe;

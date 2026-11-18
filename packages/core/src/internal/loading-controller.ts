@@ -6,7 +6,7 @@ import type {
   StylePolicy,
   Timing,
 } from '../types.js';
-import { definitionOf, validateBindings } from './binding.js';
+import { validateBindings } from './binding.js';
 import {
   activeWithin,
   ancestors,
@@ -17,12 +17,16 @@ import {
 } from './dom.js';
 import { ManagedElement, now, remaining } from './element.js';
 import { EventElement } from './event-element.js';
+import {
+  type HandoffDriver,
+  type HandoffSource,
+  runHandoff,
+} from './handoff.js';
 import { clamp } from './math.js';
 import type { Preset } from './preset.js';
 import { regionPreset } from './preset.js';
 import { capturePresetData } from './preset-data.js';
 
-type Tail<T extends unknown[]> = T extends [unknown, ...infer R] ? R : never;
 type OwnerAnimations<F extends 'region' | 'text'> = F extends 'region'
   ? Pick<Animations<F>, 'handoff'>
   : Animations<F>;
@@ -33,14 +37,19 @@ type Layers = [
   refresh: HTMLElement,
 ];
 
-type Work = [
-  revision: number,
-  detail: HandoffDetail,
-  started: number,
-  duration: number,
-  animations: Animation[],
-  driver: import('./handoff.js').HandoffDriver | undefined,
-];
+/** The handoff currently running, from ready until it ends or is cancelled. */
+interface RunningHandoff {
+  /** Render revision it belongs to; a newer revision makes it stale. */
+  readonly revision: number;
+  readonly detail: HandoffDetail;
+  readonly started: number;
+  readonly duration: number;
+  /** Every Web Animation it owns, cancelled when it finishes. */
+  readonly animations: Animation[];
+  /** The content fade, whose eased progress rich drivers follow. */
+  incoming?: Animation;
+  readonly driver: HandoffDriver | undefined;
+}
 
 export abstract class LoadingController<
   F extends 'region' | 'text' = 'region',
@@ -80,7 +89,7 @@ export abstract class LoadingController<
   #previous: LoadingState = 'ready';
   #participants: string | undefined;
   #settled = true;
-  #work: Work | undefined;
+  #work: RunningHandoff | undefined;
   #wrappers: Layers | undefined;
   #bindings: Animations<F> = {};
   #targets: readonly RevealTarget[] = [];
@@ -174,7 +183,7 @@ export abstract class LoadingController<
     this.requestRender();
   }
   #settleTargets(): void {
-    if (!this.#batching && this.#work?.[5]?.targetsChanged?.(this.#targets))
+    if (!this.#batching && this.#work?.driver?.targetsChanged?.(this.#targets))
       this.#finish('end', 'targets-changed');
   }
   update(patch: {
@@ -191,13 +200,7 @@ export abstract class LoadingController<
     const priorCycle = this.cycle;
     this.#batching = true;
     try {
-      for (const [key, value] of Object.entries(patch))
-        if (
-          /^(state|cycle|timing|animations|revealTargets|motion|stylePolicy|preset)$/.test(
-            key,
-          )
-        )
-          Reflect.set(this, key, value);
+      this.applyOptions(patch);
     } finally {
       this.#batching = false;
     }
@@ -207,6 +210,16 @@ export abstract class LoadingController<
     }
     this.#settleTargets();
     this.requestRender();
+  }
+  protected override get optionNames(): readonly string[] {
+    return [
+      ...super.optionNames,
+      'state',
+      'cycle',
+      'timing',
+      'animations',
+      'revealTargets',
+    ];
   }
   override attributeChangedCallback(
     name: string,
@@ -294,12 +307,12 @@ export abstract class LoadingController<
     // A simple reveal fades the content wrapper as a whole, so content updates
     // during it (e.g. a framework's follow-up render) must not cut it short.
     // Rich handoffs and row reveals captured content geometry and still settle.
-    if (this.#work && !this.#work[5]?.draw && !this.#targets.length) return;
+    if (this.#work && !this.#work.driver?.draw && !this.#targets.length) return;
     // Simple wrapper reveals are independent of nested content. Rich/custom
     // plans may capture geometry derived from it, so keep conservative invalidation.
     if (
       !Array.isArray(change) ||
-      this.#work?.[5]?.draw ||
+      this.#work?.driver?.draw ||
       change.some(({ target }) => {
         const element =
           target.nodeType === 1
@@ -337,19 +350,8 @@ export abstract class LoadingController<
     }
   }
   protected refreshParticipants(): void {}
-  protected abstract handoffSource(): [
-    binding: Animations<
-      'skeleton' | 'region' | 'text' | 'chart' | 'table'
-    >['handoff'],
-    host: HTMLElement,
-    animation: string,
-    prepare?: (
-      binding: Animations<
-        'skeleton' | 'region' | 'text' | 'chart' | 'table'
-      >['handoff'],
-      ...args: Tail<Parameters<typeof import('./handoff.js').createHandoff>>
-    ) => import('./handoff.js').HandoffDriver,
-  ];
+  /** Where the handoff comes from when this element becomes ready. */
+  protected abstract handoffSource(): HandoffSource;
 
   protected override render(): void {
     const w = this.#wrappers;
@@ -359,11 +361,11 @@ export abstract class LoadingController<
     const state = this.state;
     const attribute = this.getAttribute('state');
     const invalid = attribute !== null && attribute !== state;
-    if (invalid) this.report('invalid-state', 'state');
+    if (invalid) this.invalidOption('state');
     if (revision !== this.#revision) return;
     this.toggleAttribute('data-dotquilt-disabled', invalid);
     if (this.#work) {
-      if (!this.allowed(this.activity) || this.#work[5]?.restricted?.())
+      if (!this.allowed(this.activity) || this.#work.driver?.restricted?.())
         this.#finish('end', 'restricted');
       return;
     }
@@ -435,30 +437,27 @@ export abstract class LoadingController<
   #start(revision: number, [content, placeholder]: Layers): void {
     const timing = this.timing;
     const easing = timing.easing ?? 'ease-out';
-    const [sourceBinding, sourceHost, sourceAnimation, prepare] =
-      this.handoffSource();
+    const source = this.handoffSource();
     const binding =
       this.#bindings.handoff ??
       this.preset?.animations?.handoff ??
-      sourceBinding;
+      source.binding;
     let duration = 0;
-    let driver: Work[5];
+    let driver: HandoffDriver | undefined;
     try {
-      const factory = prepare ?? (binding && definitionOf(binding).handoff);
-      if (!factory) throw new TypeError();
-      driver = factory(
-        binding as NonNullable<typeof binding>,
-        sourceHost,
+      driver = runHandoff(source.prepare, binding, {
+        host: source.host,
         content,
-        this.#targets,
-        timing.duration,
-        () => this.#work?.[0] === revision,
-        (animation) => {
-          if (this.#work?.[0] === revision) this.#work[4].push(animation);
+        targets: this.#targets,
+        duration: timing.duration,
+        current: () => this.#work?.revision === revision,
+        own: (animation) => {
+          if (this.#work?.revision === revision)
+            this.#work.animations.push(animation);
           else animation.cancel();
         },
-        (code) => this.report(code, 'animations'),
-      );
+        report: (code) => this.report(code, 'animations'),
+      });
       duration = driver.duration;
       if (!Number.isFinite(duration) || duration < 0) throw new TypeError();
     } catch {
@@ -483,15 +482,22 @@ export abstract class LoadingController<
     const detail: HandoffDetail = {
       cycle: this.cycle,
       handoffId: ++this.#serial,
-      animation: binding?.id ?? sourceAnimation,
+      animation: binding?.id ?? source.animation,
     };
-    this.#work = [revision, detail, now(this), duration, [], driver];
+    this.#work = {
+      revision,
+      detail,
+      started: now(this),
+      duration,
+      animations: [],
+      driver,
+    };
     this.setAttribute('data-presentation', 'handoff');
     this.refreshParticipants();
     emit(this, 'dotquilt-handoff-start', detail);
     if (
       !this.#work ||
-      this.#work[0] !== revision ||
+      this.#work.revision !== revision ||
       revision !== this.#revision ||
       !this.isConnected
     )
@@ -517,12 +523,14 @@ export abstract class LoadingController<
       };
       const outgoing = placeholder.animate({ opacity: [1, 0] }, options);
       const incoming = content.animate({ opacity: [0, 1] }, options);
-      this.#work[4].push(outgoing, incoming);
+      this.#work.animations.push(outgoing, incoming);
+      this.#work.incoming = incoming;
       outgoing.onfinish = () => {
-        if (this.#work?.[0] === revision) this.#finish('end', 'complete');
+        if (this.#work?.revision === revision) this.#finish('end', 'complete');
       };
       driver?.draw?.(0);
-      if (this.#work?.[0] === revision) driver?.activate(() => this.frame());
+      if (this.#work?.revision === revision)
+        driver?.activate(() => this.frame());
     } catch {
       this.report('animation-failed', 'animations');
       this.#finish('end', 'fallback');
@@ -531,15 +539,15 @@ export abstract class LoadingController<
   protected frame(): void {
     const work = this.#work;
     if (!work) return;
-    if (!this.allowed(this.activity) || work[5]?.restricted?.()) {
+    if (!this.allowed(this.activity) || work.driver?.restricted?.()) {
       this.#finish('end', 'restricted');
       return;
     }
-    const p = Math.min(1, (now(this) - work[2]) / work[3]);
+    const p = Math.min(1, (now(this) - work.started) / work.duration);
     try {
-      work[5]?.draw?.(
+      work.driver?.draw?.(
         p,
-        clamp(work[4][1]?.effect?.getComputedTiming().progress ?? p),
+        clamp(work.incoming?.effect?.getComputedTiming().progress ?? p),
       );
     } catch {
       this.report('animation-failed', 'animations');
@@ -552,21 +560,21 @@ export abstract class LoadingController<
     const work = this.#work;
     if (!work) return;
     this.#work = undefined;
-    work[5]?.dispose();
-    for (const animation of work[4]) {
+    work.driver?.dispose();
+    for (const animation of work.animations) {
       animation.onfinish = null;
       animation.cancel();
     }
     this.settled();
     if (
       outcome === 'end' &&
-      work[0] === this.#revision &&
+      work.revision === this.#revision &&
       this.state === 'ready'
     ) {
       this.setAttribute('data-presentation', 'ready');
       this.#settled = true;
       this.clearDeadline();
     }
-    emit(this, `dotquilt-handoff-${outcome}`, { ...work[1], reason });
+    emit(this, `dotquilt-handoff-${outcome}`, { ...work.detail, reason });
   }
 }

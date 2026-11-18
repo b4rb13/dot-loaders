@@ -2,13 +2,7 @@ import {
   LoaderConfigurationError,
   type StylePolicy,
 } from '@dotquilt-internal/core';
-import {
-  createElement,
-  useId,
-  useRef,
-  useSyncExternalStore,
-  version,
-} from 'react';
+import { useId, useRef, useSyncExternalStore, version } from 'react';
 export function initialPolicy(value: StylePolicy | undefined): StylePolicy {
   const policy = value ?? { mode: 'inline' };
   if (
@@ -69,18 +63,18 @@ export function sheet(
   family: string,
   nonce: string | undefined,
 ) {
-  return policy.mode === 'external'
-    ? createElement('link', {
-        key: family,
-        rel: 'stylesheet',
-        href: policy.href,
-        'data-dotquilt-react-style': family,
-      })
-    : createElement(
-        'style',
-        { key: family, nonce, 'data-dotquilt-react-style': family },
-        css.join('\n'),
-      );
+  return policy.mode === 'external' ? (
+    <link
+      key={family}
+      rel="stylesheet"
+      href={policy.href}
+      data-dotquilt-react-style={family}
+    />
+  ) : (
+    <style key={family} nonce={nonce} data-dotquilt-react-style={family}>
+      {css.join('\n')}
+    </style>
+  );
 }
 
 /**

@@ -1,46 +1,28 @@
 import type { LoadingRegion } from '../region.js';
 import type { SkeletonBlock } from '../skeleton-block.js';
 import { definitionOf } from './binding.js';
-import type { HandoffDriver } from './handoff.js';
-import type { LoadingController } from './loading-controller.js';
+import type { HandoffDriver, HandoffSource } from './handoff.js';
 import { skeletonHandoff } from './skeleton-handoff.js';
 import { targetChanges } from './target-changes.js';
 export function createSkeletonSource(
   child: SkeletonBlock | undefined,
   owner: LoadingRegion,
   participants: readonly HTMLElement[],
-): ReturnType<LoadingController['handoffSource']> {
+): HandoffSource {
   const launches = participants.flatMap((participant) =>
     skeletonHandoff in participant
       ? [(participant as SkeletonBlock)[skeletonHandoff]()]
       : [],
   );
   const easing = owner.timing.easing ?? 'ease-out';
-  return [
-    child?.animations.handoff ?? child?.preset?.animations?.handoff,
-    child ?? owner,
-    child ? 'dotquilt/dissolve' : 'dotquilt/fade',
-    (
-      binding,
-      host,
-      content,
-      targets,
-      requestedDuration,
-      current,
-      own,
-      report,
-    ) => {
+  return {
+    binding: child?.animations.handoff ?? child?.preset?.animations?.handoff,
+    host: child ?? owner,
+    animation: child ? 'dotquilt/dissolve' : 'dotquilt/fade',
+    prepare(binding, request) {
+      const { targets, duration: requestedDuration, current, own } = request;
       const definition = binding && definitionOf(binding);
-      const driver = definition?.handoff?.(
-        binding as NonNullable<typeof binding>,
-        host,
-        content,
-        targets,
-        requestedDuration,
-        current,
-        own,
-        report,
-      );
+      const driver = binding && definition?.handoff?.(binding, request);
       // The controller validates a missing/malformed custom fade driver and settles
       // with the same animation-failed diagnostic as the original strict route.
       if (!child && binding) return driver as HandoffDriver;
@@ -74,5 +56,5 @@ export function createSkeletonSource(
         },
       };
     },
-  ];
+  };
 }

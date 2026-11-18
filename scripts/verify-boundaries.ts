@@ -20,10 +20,15 @@ const graphs = [];
 for (const name of ['core', 'react']) {
   const directory = resolve(consumer, 'node_modules/@dotquilt-internal', name),
     manifest = await Bun.file(resolve(directory, 'package.json')).json();
+  // The only wildcard is the public stylesheet pattern, mapped onto the
+  // top-level stylesheets in dist (scripts/package-exports.test.ts).
   if (
     !manifest.private ||
-    Object.keys(manifest.exports).some(
-      (p) => p.includes('internal') || p.includes('*'),
+    Object.entries(manifest.exports).some(
+      ([p, target]) =>
+        p.includes('internal') ||
+        (p.includes('*') &&
+          !(p === './styles/*.css' && target === './dist/*.css')),
     )
   )
     throw Error('Private/wildcard export exposed');
@@ -58,7 +63,13 @@ for (const name of ['core', 'react']) {
         if (!Object.hasOwn(native.exports, entry ? `.${entry}` : '.'))
           throw Error(`Unexported core dependency: ${specifier}`);
       } else if (
-        !['react', 'react-dom', 'react-dom/client'].includes(specifier)
+        // react/jsx-runtime is part of the react peer dependency (compiled JSX).
+        ![
+          'react',
+          'react/jsx-runtime',
+          'react-dom',
+          'react-dom/client',
+        ].includes(specifier)
       )
         throw Error(`Unexpected external dependency ${specifier}`);
     }
