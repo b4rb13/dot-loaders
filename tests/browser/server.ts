@@ -2,12 +2,23 @@ import { readFile } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 
 const root = resolve(import.meta.dir, '../..');
-const consumer = (
-  await readFile(resolve(root, '.artifacts/consumer-path'), 'utf8')
-).trim();
-const packagePath = resolve(consumer, 'node_modules/@dotquilt-internal/core');
-const { renderStatic, skeletonStyles, regionStyles, staticSkeletonStyles } =
-  await import(resolve(packagePath, 'dist/server.js'));
+// Default: serve the workspace build (packages/core/dist). With DOTQUILT_PACKED=1,
+// serve the tarball that `bun run verify:packed` installed into a clean consumer.
+const packagePath = process.env.DOTQUILT_PACKED
+  ? resolve(
+      (
+        await readFile(resolve(root, '.artifacts/consumer-path'), 'utf8')
+      ).trim(),
+      'node_modules/@dotquilt-internal/core',
+    )
+  : resolve(root, 'packages/core');
+const {
+  renderStatic,
+  skeletonStyles,
+  regionStyles,
+  staticSkeletonStyles,
+  textStyles,
+} = await import(resolve(packagePath, 'dist/server.js'));
 const { denseStyles } = await import(
   resolve(packagePath, 'dist/internal/dense/painter.js')
 );
@@ -41,6 +52,7 @@ const hashes = [
   ...skeletonStyles,
   ...regionStyles,
   ...staticSkeletonStyles,
+  ...textStyles,
   ...denseStyles,
 ]
   .map((s: string) => `'sha256-${hash(s)}'`)

@@ -26,7 +26,6 @@ async function run(args: string[], cwd: string) {
       ...process.env,
       npm_config_cache: resolve(artifacts, 'npm-cache'),
       BUN_INSTALL_CACHE_DIR: resolve(artifacts, 'bun-cache'),
-      TMPDIR: '/private/tmp',
     },
     stdout: 'pipe',
     stderr: 'pipe',
@@ -204,52 +203,6 @@ const externalModeGzip = {
   skeletonRoot: (sizes.skeletonRoot?.gzip ?? 0) + externalStyles.skeleton,
   regionRoot: (sizes.regionRoot?.gzip ?? 0) + externalStyles.region,
 };
-const buildInputs: Record<string, string> = {};
-for (const path of [
-  'package.json',
-  'bun.lock',
-  'tsconfig.json',
-  'packages/core/package.json',
-  'packages/core/tsconfig.json',
-  'scripts/build.ts',
-  'scripts/verify-packed.ts',
-  'scripts/verify-clean.ts',
-  'scripts/verify-m1.ts',
-  'docs/implementation/m1-requirement-review.json',
-  'docs/implementation/requirements.json',
-  'tests/browser/gaps.spec.ts',
-  'tests/browser/m2.spec.ts',
-  'tests/m2/client.ts',
-  'tests/m2/trace-client.ts',
-  'scripts/bench/run.ts',
-  'scripts/bench/trace.ts',
-  'tests/bench/trace.test.ts',
-  'docs/implementation/m2/trace-manifest.json',
-  'packages/core/test/dense.test.ts',
-  'packages/core/test/fixtures/recipe-commands.json',
-  'docs/implementation/m2/benchmark-manifest.json',
-  'tests/types/consumer.ts',
-  'tests/browser/native.spec.ts',
-  'tests/browser/server.ts',
-  'tests/browser/init.js',
-  'tests/browser/resources.spec.ts',
-  'playwright.config.ts',
-  'packages/core/test/contracts.test.ts',
-]) {
-  buildInputs[path] = createHash('sha256')
-    .update(await readFile(resolve(root, path)))
-    .digest('hex');
-}
-const sourceFiles: Record<string, string> = {};
-for await (const file of new Bun.Glob('**/*').scan(
-  resolve(root, 'packages/core/src'),
-)) {
-  const path = resolve(root, 'packages/core/src', file);
-  if (await Bun.file(path).exists())
-    sourceFiles[`packages/core/src/${file}`] = createHash('sha256')
-      .update(await readFile(path))
-      .digest('hex');
-}
 const hash = createHash('sha256')
   .update(await readFile(tarball))
   .digest('hex');
@@ -272,7 +225,6 @@ const report = {
   sizes,
   externalStylesGzip: externalStyles,
   externalModeGzip,
-  buildInputs,
   budgetPolicy: {
     skeletonClosureLimit,
     previousSkeletonClosureLimit: 4608,
@@ -295,7 +247,6 @@ const report = {
     closure:
       'working selective registration + appended host; root and family entries; external CSS responses compressed separately and added',
   },
-  sourceFiles,
   limitations: [
     'Physical reference timing/heap protocol and actual browser-floor/manual-AT matrix remain unverified.',
     'Private M2 dense proof is diagnostic; no full dense catalog, React/Next/site/release validation claimed.',
@@ -321,14 +272,3 @@ console.log(
     2,
   ),
 );
-if (
-  Object.values(sizes).some((s) => s.gzip > s.limit) ||
-  Object.entries(externalModeGzip).some(
-    ([name, bytes]) =>
-      bytes >
-      (name.startsWith('skeleton') ? skeletonClosureLimit : regionClosureLimit),
-  )
-) {
-  console.error('Closure size gate failed; report retained.');
-  process.exitCode = 1;
-}

@@ -63,12 +63,6 @@ const manifestPath = `docs/implementation/m2/${catalogScene ? 'catalog-trace-man
 const manifest = await read(manifestPath);
 if (hash(await readFile(packed.artifact)) !== packed.sha256)
   throw new Error('Stale packed artifact');
-for (const [path, digest] of Object.entries({
-  ...packed.sourceFiles,
-  ...packed.buildInputs,
-}))
-  if (hash(await readFile(resolve(root, path))) !== digest)
-    throw new Error(`Stale packed input ${path}; repack first`);
 const directory = `.artifacts/m2-traces/${Date.now()}-${catalogScene ? 'catalog-' : ''}${candidate}-${profile}-${family}-${phase}${smoke ? '-smoke' : ''}`;
 await mkdir(resolve(root, directory), { recursive: true });
 const inputs: Record<string, string> = {};

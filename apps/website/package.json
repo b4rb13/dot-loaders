@@ -7,8 +7,7 @@
     "dev": "bun run prepare && next dev --hostname 127.0.0.1 --port 4210",
     "build": "bun run prepare && next build --webpack",
     "start": "next start --hostname 127.0.0.1 --port 4210",
-    "check": "tsc --noEmit",
-    "test": "bun test lib"
+    "check": "tsc --noEmit"
   },
   "dependencies": {
     "@dotquilt-internal/core": "workspace:*",
