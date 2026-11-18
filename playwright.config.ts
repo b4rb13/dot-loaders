@@ -44,6 +44,8 @@ export default defineConfig({
   metadata: { artifactSha256: 'workspace' },
   timeout: 20000,
   forbidOnly: !!process.env.CI,
+  // CI runners have 2 cores; the default would use one worker.
+  workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   // Screenshot baselines are generated on macOS; CI on Linux renders fonts
   // differently, so CI skips pixel comparisons and keeps layout assertions.

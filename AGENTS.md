@@ -26,12 +26,13 @@ Use Bun (pinned in `.bun-version`) and Node 24+.
 - **Build everything:** `bun run build`. Turbo builds the packages first, then the website.
 - **Types:** `bun run check`
 - **Lint:** `bun run lint` (Biome); `bun run format` to fix.
-- **Unit tests:** `bun run test` (about 1 s). Snapshot changes: `bun test --update-snapshots`, then review the `.snap` diff.
-- **Browser tests:** `bun run test:e2e` (Chromium, against the workspace build; run `bun run build` first).
+- **Unit tests:** `bun run test` (a few seconds). This includes `scripts/pack-smoke.test.ts`, which covers the published file list, imports in Node and Bun, consumer types on TypeScript 7 and 5.7, and the dist import graph. Snapshot changes: `bun test --update-snapshots`, then review the `.snap` diff.
+- **Browser tests:** `bun run test:e2e` runs Chromium against the workspace build, in parallel. Run `bun run build` first. Filter with `--project=<name>-chromium`.
   - `tests/e2e/` covers every component's pending/ready behaviour, layout containment and screenshots. Screenshot baselines live in `tests/e2e/__screenshots__/`; CI skips pixel comparisons.
   - `tests/browser/` holds the detailed native runtime tests.
+  - `tests/<suite>/`: coordination, presets, table, shared-wrapper, api, copies, layout, react and m4. Each has its own fixture server, listed in `playwright.config.ts`. Layout runs with one worker, because it measures layout shifts.
   - `bun run test:e2e:all` adds Firefox and WebKit.
-- **Legacy suites:** `bun run test:legacy [suite...]`. These are packed tarballs, React/Next consumers and older M4 fixtures. They are slow; port them into `tests/e2e` by component and delete them from `scripts/test-legacy.ts`.
+- **Legacy suites:** `bun run test:legacy` (under a minute). Only two checks need packed tarballs: the React suite rerun on React 19.0, the oldest supported version, and catalog SSR under Node and Bun. Run them before a release or when touching the React adapter's hydration or nonce handling.
 - **Sizes:** `bun run size` prints gzip sizes per component. Budgets go in `scripts/size-budgets.json` once decided.
 - **Everything CI runs:** `bun run verify`
 - **Website:** `bun run dev:website`, or `bun run build:website` then `bun run --cwd apps/website start` (http://127.0.0.1:4210).

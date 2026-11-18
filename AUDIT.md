@@ -95,18 +95,28 @@ Waiting on decisions:
 Next:
 - React style de-duplication: one `<style>` per instance.
 
-**Test rework — in progress on `test/rework-suites` (2026-11-18).**
+**Test rework — done on `test/rework-suites` (2026-11-18).**
 
-Goal: port the legacy suites into the fast suites and delete them. All 41 known legacy failures traced to stale tests: they waited for SVG `<circle>` elements that the Canvas renderer no longer draws, or ran on stale build artifacts. The triage also found one real product bug, a TableLoader painter offset from the content box, now fixed on PR #41.
+The legacy runner took about 14 minutes and always failed 41 tests. Those tests were stale: they waited for SVG `<circle>` elements that the Canvas renderer no longer draws, or ran on build artifacts nothing produces any more. The triage found one real bug: TableLoader's painter was offset from the content box. That is fixed on PR #41.
 
-Done:
-- **`tests/browser` runs in parallel:** about 40 s instead of 2.4 min.
-- **`scripts/pack-smoke.test.ts` replaces the packed rerun of `tests/browser`.** It checks the file list, manifests, Node and Bun imports of every export, consumer types on TS 7 and 5.7, the dense-renderer leak, and the React `'use client'` directives.
-- **Deleted:**
-  - `next`: could not build. It is the only suite that checked that new owners keep the document's nonce or stylesheet after a soft client navigation; that remains uncovered.
-  - `chart-production`, `table-options` and `motion-review`, each replaced by fast tests.
+Where things stand now:
+- **`bun run verify`:** about 3.8 min. It includes 791 browser tests, which run in parallel against the workspace build. Every ported suite is a project in `playwright.config.ts`.
+  - Coordination, presets, table, shared-wrapper, api, copies, react and m4 were ported with their tests intact, apart from the deletions below.
+  - Their previously failing tests now pass, because they read the Canvas paint.
+  - Layout runs with one worker: under CPU load, a late external stylesheet skews its layout-shift measurements.
+- **`scripts/pack-smoke.test.ts`:** the packed file list, manifests, Node and Bun imports of every export, consumer types on TS 7 and 5.7, the dist import graph, the dense-renderer leak and the `'use client'` directives. `packages/react/test/table-parity.test.ts` checks native/React static table parity.
+- **`bun run test:legacy`:** under a minute. It reruns the React suite on React 19.0 (the oldest supported version, which takes a different nonce hydration path) and checks catalog SSR under Node and Bun.
 
-Still to port: react, m4 (chart, catalog, text, scramble, dissolve), table and parts, presets, coordination, shared-wrapper, api, layout. Copies waits for decision 5.
+Deleted:
+- **Packed rerun:** the packed rerun of `tests/browser`.
+- **Next suite:** it can't build because of a Next security advisory. Uncovered now: new owners keeping the document's nonce or stylesheet after a soft client navigation.
+- **Stale checks:** chart-production, table-options and motion-review, each replaced by fast tests.
+- **Outdated variants:** React 19.1 and 19.2, which take the same path as 19.0.
+- **Hash and evidence tests:** tests that only pinned bundle hashes or wrote evidence files.
+
+Follow-ups:
+- With an external stylesheet arriving late, layout shifted by a 0.94 score under CPU load. Check whether this happens on slow devices.
+- `prototypes/m4-owner-review` read the old m4 prepare output and no longer runs.
 
 ## TL;DR
 
