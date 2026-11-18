@@ -87,6 +87,7 @@ Bun.serve({
     )
       return new Response('not found', { status: 404 });
     const mode = url.searchParams.get('mode') ?? 'inline';
+    const mark = url.searchParams.get('mark');
     const style = mode.startsWith('external')
       ? "'self'"
       : mode === 'nonce'
@@ -109,6 +110,7 @@ Bun.serve({
         .renderStatic({
           kind,
           stylePolicy: policy(name),
+          ...(mark && kind !== 'typing-dots' ? { mark } : {}),
           ...extra,
         } as Parameters<typeof server.renderStatic>[0])
         .replace(

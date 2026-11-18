@@ -4,7 +4,11 @@ import {
   skeletonTextStyles,
   typingStyles,
 } from './catalog-styles.js';
-import { chartStyles, staticChartStyles } from './chart-styles.js';
+import {
+  chartStyles,
+  staticChartMarkStyles,
+  staticChartStyles,
+} from './chart-styles.js';
 import { boundedCount, lineWidths } from './internal/count.js';
 import { capturePreset, type Preset } from './internal/preset.js';
 import {
@@ -14,18 +18,27 @@ import {
   tableStaticParts,
 } from './internal/table-model.js';
 import {
+  staticCircleMarkStyles,
   staticCircleStyles,
+  staticLineMarkStyles,
   staticLineStyles,
+  staticTextMarkStyles,
   staticTextStyles,
+  staticTypingMarkStyles,
   staticTypingStyles,
 } from './static-catalog-styles.js';
 import {
   regionStyles,
   skeletonStyles,
+  staticSkeletonMarkStyles,
   staticSkeletonStyles,
 } from './styles.js';
 import { staticTableStyles, tableStyles } from './table-styles.js';
-import { staticTextLoaderStyles, textStyles } from './text-styles.js';
+import {
+  staticTextLoaderMarkStyles,
+  staticTextLoaderStyles,
+  textStyles,
+} from './text-styles.js';
 import {
   LoaderConfigurationError,
   type LoadingState,
@@ -39,12 +52,19 @@ export {
   skeletonCircleStyles,
   skeletonLineStyles,
   skeletonTextStyles,
+  staticChartMarkStyles,
   staticChartStyles,
+  staticCircleMarkStyles,
   staticCircleStyles,
+  staticLineMarkStyles,
   staticLineStyles,
+  staticSkeletonMarkStyles,
   staticTableStyles,
+  staticTextLoaderMarkStyles,
   staticTextLoaderStyles,
+  staticTextMarkStyles,
   staticTextStyles,
+  staticTypingMarkStyles,
   staticTypingStyles,
   tableStyles,
   textStyles,
@@ -156,14 +176,29 @@ function style(
 }
 /** Renders only library decoration. Applications render real content using their own templates. */
 export function renderStatic(description: StaticDescription): string {
-  const html = renderDescription(description);
   // The shape the static marks use; the default dot needs no attribute.
-  const mark = (description as { mark?: unknown }).mark;
+  const html = renderDescription(description);
+  const mark = shapeOf(description);
+  return mark
+    ? html.replace(/^<dotquilt-[a-z-]+/, (tag) => `${tag} mark="${mark}"`)
+    : html;
+}
+/** A square or dash this markup draws, or undefined for the default dot. */
+function shapeOf(description: StaticDescription): Mark | undefined {
+  const mark = (description as { mark?: unknown } | undefined)?.mark;
   if (mark === undefined || mark === 'dot' || description.kind === 'region')
-    return html;
+    return undefined;
   if (!marks.includes(mark as Mark))
     throw new LoaderConfigurationError('invalid-option', 'Invalid mark');
-  return html.replace(/^<dotquilt-[a-z-]+/, (tag) => `${tag} mark="${mark}"`);
+  return mark as Mark;
+}
+/** A mark's rules ship only with markup that uses it, keeping default output small. */
+function marked(
+  css: readonly string[],
+  markCss: readonly string[],
+  description: StaticDescription,
+): readonly string[] {
+  return shapeOf(description) ? [...css, ...markCss] : css;
 }
 function renderDescription(description: StaticDescription): string {
   if (
@@ -222,7 +257,7 @@ function renderDescription(description: StaticDescription): string {
         'invalid-static-description',
         'Invalid chart variant',
       );
-    return `<dotquilt-chart-loader variant="${variant}"${description.variant === undefined && preset?.variant !== undefined ? ` data-dotquilt-preset-variant="${variant}"` : ''} aria-hidden="true" data-dotquilt-surface>${style(staticChartStyles, description.stylePolicy)}<span data-dotquilt-static></span></dotquilt-chart-loader>`;
+    return `<dotquilt-chart-loader variant="${variant}"${description.variant === undefined && preset?.variant !== undefined ? ` data-dotquilt-preset-variant="${variant}"` : ''} aria-hidden="true" data-dotquilt-surface>${style(marked(staticChartStyles, staticChartMarkStyles, description), description.stylePolicy)}<span data-dotquilt-static></span></dotquilt-chart-loader>`;
   }
   if (description.kind === 'text-loader') {
     const state = description.state ?? 'ready';
@@ -242,18 +277,18 @@ function renderDescription(description: StaticDescription): string {
     const value = String(description.text ?? '');
     const requestedMask = description.mask ?? value;
     const mask = requestedMask.length <= 256 ? requestedMask : '';
-    return `<dotquilt-text-loader state="${state}" mask="${escapeHTML(mask)}">${style(staticTextLoaderStyles, description.stylePolicy)}<span slot="placeholder" data-dotquilt-text-placeholder aria-hidden="true" inert>${escapeHTML(mask)}</span><span data-dotquilt-text-content${state === 'pending' ? ' aria-hidden="true" inert' : ''}>${escapeHTML(value)}</span></dotquilt-text-loader>`;
+    return `<dotquilt-text-loader state="${state}" mask="${escapeHTML(mask)}">${style(marked(staticTextLoaderStyles, staticTextLoaderMarkStyles, description), description.stylePolicy)}<span slot="placeholder" data-dotquilt-text-placeholder aria-hidden="true" inert>${escapeHTML(mask)}</span><span data-dotquilt-text-content${state === 'pending' ? ' aria-hidden="true" inert' : ''}>${escapeHTML(value)}</span></dotquilt-text-loader>`;
   }
   if (description.kind === 'skeleton-block')
-    return `<dotquilt-skeleton-block aria-hidden="true" data-dotquilt-surface>${style(staticSkeletonStyles, description.stylePolicy)}<span data-dotquilt-static></span></dotquilt-skeleton-block>`;
+    return `<dotquilt-skeleton-block aria-hidden="true" data-dotquilt-surface>${style(marked(staticSkeletonStyles, staticSkeletonMarkStyles, description), description.stylePolicy)}<span data-dotquilt-static></span></dotquilt-skeleton-block>`;
   if (
     description.kind === 'skeleton-line' ||
     description.kind === 'skeleton-circle'
   ) {
     const css =
       description.kind === 'skeleton-line'
-        ? staticLineStyles
-        : staticCircleStyles;
+        ? marked(staticLineStyles, staticLineMarkStyles, description)
+        : marked(staticCircleStyles, staticCircleMarkStyles, description);
     return `<dotquilt-${description.kind} aria-hidden="true" data-dotquilt-surface>${style(css, description.stylePolicy)}<span data-dotquilt-static></span></dotquilt-${description.kind}>`;
   }
   if (description.kind === 'skeleton-text') {
@@ -267,11 +302,11 @@ function renderDescription(description: StaticDescription): string {
       (width) =>
         `<svg data-dotquilt-static-line aria-hidden="true" width="${width * 100}%" height="14"></svg>`,
     );
-    return `<dotquilt-skeleton-text lines="${lines}" aria-hidden="true" data-dotquilt-surface>${style(staticTextStyles, description.stylePolicy)}<span data-dotquilt-static>${content.join('')}</span></dotquilt-skeleton-text>`;
+    return `<dotquilt-skeleton-text lines="${lines}" aria-hidden="true" data-dotquilt-surface>${style(marked(staticTextStyles, staticTextMarkStyles, description), description.stylePolicy)}<span data-dotquilt-static>${content.join('')}</span></dotquilt-skeleton-text>`;
   }
   if (description.kind === 'typing-dots') {
     const count = boundedCount(description.count ?? preset?.count ?? 3, 3, 8);
-    return `<dotquilt-typing-dots count="${count}"${description.count === undefined && preset?.count !== undefined ? ` data-dotquilt-preset-count="${count}"` : ''} aria-hidden="true" data-dotquilt-surface>${style(staticTypingStyles, description.stylePolicy)}<span data-dotquilt-static>${'<i class="dot"></i>'.repeat(count)}</span></dotquilt-typing-dots>`;
+    return `<dotquilt-typing-dots count="${count}"${description.count === undefined && preset?.count !== undefined ? ` data-dotquilt-preset-count="${count}"` : ''} aria-hidden="true" data-dotquilt-surface>${style(marked(staticTypingStyles, staticTypingMarkStyles, description), description.stylePolicy)}<span data-dotquilt-static>${'<i class="dot"></i>'.repeat(count)}</span></dotquilt-typing-dots>`;
   }
   if (description.label !== undefined && typeof description.label !== 'string')
     throw new LoaderConfigurationError(

@@ -9,9 +9,10 @@ import {
 } from '@dotquilt-internal/core/chart';
 import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
-import { reactChartStyles } from './server.js';
+import { reactChartMarkStyles, reactChartStyles } from './server.js';
 import {
   initialPolicy,
+  markSheet,
   policyAttributes,
   sheet,
   useCustomAttribute,
@@ -73,6 +74,13 @@ export const ChartLoader = /* @__PURE__ */ forwardRef<
   return (
     <>
       {sheet(reactChartStyles, initial.policy, 'chart', nonce)}
+      {markSheet(
+        reactChartMarkStyles,
+        initial.policy,
+        'chart',
+        nonce,
+        attributes.mark,
+      )}
       <dotquilt-chart-loader
         {...attributes}
         {...upgraded}

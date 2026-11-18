@@ -23,3 +23,22 @@ test('static markup carries dash and square marks, omits the default dot and rej
     renderStatic({ kind: 'chart-loader', mark: 'star' as never }),
   ).toThrow(LoaderConfigurationError);
 });
+
+test('static mark rules ship only with markup that draws squares or dashes', () => {
+  for (const kind of [
+    'skeleton-block',
+    'skeleton-line',
+    'skeleton-circle',
+    'skeleton-text',
+    'typing-dots',
+    'text-loader',
+    'chart-loader',
+  ] as const) {
+    const description = kind === 'text-loader' ? { kind, text: 0 } : { kind };
+    expect(renderStatic(description)).not.toContain('[mark=');
+    for (const mark of ['dash', 'square'] as const)
+      expect(renderStatic({ ...description, mark })).toContain(
+        `[mark=${mark}]`,
+      );
+  }
+});

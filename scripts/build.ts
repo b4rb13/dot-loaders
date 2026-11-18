@@ -8,17 +8,23 @@ import {
 } from '../packages/core/src/catalog-styles.js';
 import {
   chartStyles,
+  staticChartMarkStyles,
   staticChartStyles,
 } from '../packages/core/src/chart-styles.js';
 import {
+  staticCircleMarkStyles,
   staticCircleStyles,
+  staticLineMarkStyles,
   staticLineStyles,
+  staticTextMarkStyles,
   staticTextStyles,
+  staticTypingMarkStyles,
   staticTypingStyles,
 } from '../packages/core/src/static-catalog-styles.js';
 import {
   regionStyles,
   skeletonStyles,
+  staticSkeletonMarkStyles,
   staticSkeletonStyles,
 } from '../packages/core/src/styles.js';
 import {
@@ -26,6 +32,7 @@ import {
   tableStyles,
 } from '../packages/core/src/table-styles.js';
 import {
+  staticTextLoaderMarkStyles,
   staticTextLoaderStyles,
   textStyles,
 } from '../packages/core/src/text-styles.js';
@@ -52,18 +59,35 @@ if (await proc.exited) throw new Error('Declaration build failed');
 await Promise.all([
   writeFile(
     resolve(cwd, 'dist/skeleton.css'),
-    [...skeletonStyles, ...staticSkeletonStyles].join('\n'),
+    [
+      ...skeletonStyles,
+      ...staticSkeletonStyles,
+      ...staticSkeletonMarkStyles,
+    ].join('\n'),
   ),
   writeFile(resolve(cwd, 'dist/region.css'), regionStyles.join('\n')),
 ]);
 
 for (const [name, css] of Object.entries({
-  line: [...skeletonLineStyles, ...staticLineStyles],
-  circle: [...skeletonCircleStyles, ...staticCircleStyles],
-  'skeleton-text': [...skeletonTextStyles, ...staticTextStyles],
-  typing: [...typingStyles, ...staticTypingStyles],
-  text: [...textStyles, ...staticTextLoaderStyles],
-  chart: [...chartStyles, ...staticChartStyles],
+  // External stylesheets carry every mark; inline markup only the one it uses.
+  line: [...skeletonLineStyles, ...staticLineStyles, ...staticLineMarkStyles],
+  circle: [
+    ...skeletonCircleStyles,
+    ...staticCircleStyles,
+    ...staticCircleMarkStyles,
+  ],
+  'skeleton-text': [
+    ...skeletonTextStyles,
+    ...staticTextStyles,
+    ...staticTextMarkStyles,
+  ],
+  typing: [...typingStyles, ...staticTypingStyles, ...staticTypingMarkStyles],
+  text: [
+    ...textStyles,
+    ...staticTextLoaderStyles,
+    ...staticTextLoaderMarkStyles,
+  ],
+  chart: [...chartStyles, ...staticChartStyles, ...staticChartMarkStyles],
   table: [...tableStyles, ...staticTableStyles],
 }))
   await writeFile(resolve(cwd, `dist/${name}.css`), css.join('\n'));
@@ -79,9 +103,13 @@ await writeFile(
     ],
     [
       staticSkeletonStyles,
+      staticSkeletonMarkStyles,
       staticLineStyles,
+      staticLineMarkStyles,
       staticCircleStyles,
+      staticCircleMarkStyles,
       staticTextStyles,
+      staticTextMarkStyles,
     ],
   ),
 );

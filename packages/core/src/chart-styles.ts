@@ -14,5 +14,17 @@ export const chartStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
 // (`:state(unstyled)`); browsers without custom states ignore that part.
 export const staticChartStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
-    `:where(dotquilt-chart-loader:is(:not(:defined),:state(unstyled))){display:block;position:relative;width:100%;height:12rem;overflow:hidden}dotquilt-chart-loader:is(:not(:defined),:state(unstyled))[hidden]{display:none}dotquilt-chart-loader:is(:not(:defined),:state(unstyled)) [data-dotquilt-static]{position:absolute;inset:0;gap:${markGap};${dotGrid('0 0')};opacity:${staticOpacity}}${markShapes((mark) => `dotquilt-chart-loader:is(:not(:defined),:state(unstyled))[mark=${mark}]`, '[data-dotquilt-static]', '0 0')}@media(forced-colors:active){dotquilt-chart-loader:is(:not(:defined),:state(unstyled)) [data-dotquilt-static]{border:1px dotted CanvasText}}`,
+    `:where(dotquilt-chart-loader:is(:not(:defined),:state(unstyled))){display:block;position:relative;width:100%;height:12rem;overflow:hidden}dotquilt-chart-loader:is(:not(:defined),:state(unstyled))[hidden]{display:none}dotquilt-chart-loader:is(:not(:defined),:state(unstyled)) [data-dotquilt-static]{position:absolute;inset:0;gap:${markGap};${dotGrid('0 0')};opacity:${staticOpacity}}@media(forced-colors:active){dotquilt-chart-loader:is(:not(:defined),:state(unstyled)) [data-dotquilt-static]{border:1px dotted CanvasText}}`,
+  ]);
+
+// A mark's rules ship only with markup that uses it (renderStatic), so pages
+// without squares or dashes don't carry them.
+export const staticChartMarkStyles: readonly string[] =
+  /* @__PURE__ */ Object.freeze([
+    markShapes(
+      (mark) =>
+        `dotquilt-chart-loader:is(:not(:defined),:state(unstyled))[mark=${mark}]`,
+      '[data-dotquilt-static]',
+      '0 0',
+    ),
   ]);

@@ -10,7 +10,7 @@ import {
 import { unstyledHold } from './internal/unstyled.js';
 
 export const skeletonStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
-  `:host{display:block;width:100%;height:1em;position:relative;border-radius:var(--dotquilt-radius,.375rem);overflow:hidden}:host .surface{position:absolute;inset:0;${dotGrid()};opacity:${restOpacity}}:host .pulse{position:absolute;inset:0;--dotquilt-color:${glowColor};opacity:0;mask:${glowMask}}:host .pulse>.surface{opacity:1}${markShapes((mark) => `:host([mark=${mark}])`, '.surface')}:host [data-dotquilt-dissolve] circle{r:calc(${markSize}/2)}:host(dotquilt-skeleton-text) [data-dotquilt-dissolve] > svg{border-radius:999px}:host([hidden]){display:none}:host > svg{position:absolute;inset:0;width:100%;height:100%;fill:${markColor}}@media(forced-colors:none){:host([data-custom]) .surface{visibility:hidden}}@media(hover:hover) and (pointer:fine){:host([pointer-response=lift][data-moving][data-pointer]) .pulse{translate:0 -1px;opacity:.6!important;transition:translate .1s}}@media(forced-colors:active){:host .surface{border:1px dotted CanvasText}:host .pulse,:host > svg{display:none}}`,
+  `:host{display:block;width:100%;height:1em;position:relative;border-radius:var(--dotquilt-radius,.375rem);overflow:hidden}:host .surface{position:absolute;inset:0;${dotGrid()};opacity:${restOpacity}}:host .pulse{position:absolute;inset:0;--dotquilt-color:${glowColor};opacity:0;mask:${glowMask}}:host .pulse>.surface{opacity:1}${markShapes((mark) => `:host([mark=${mark}])`, '.surface')}:host [data-dotquilt-dissolve] circle{r:calc(${markSize}/2)}:host [data-dotquilt-dissolve] pattern>rect{transform-box:fill-box;transform-origin:center}:host(dotquilt-skeleton-text) [data-dotquilt-dissolve] > svg{border-radius:999px}:host([hidden]){display:none}:host > svg{position:absolute;inset:0;width:100%;height:100%;fill:${markColor}}@media(forced-colors:none){:host([data-custom]) .surface{visibility:hidden}}@media(hover:hover) and (pointer:fine){:host([pointer-response=lift][data-moving][data-pointer]) .pulse{translate:0 -1px;opacity:.6!important;transition:translate .1s}}@media(forced-colors:active){:host .surface{border:1px dotted CanvasText}:host .pulse,:host > svg{display:none}}`,
   unstyledHold,
 ]);
 // The layers are slots (`display: contents` until styled), so they need boxes.
@@ -24,5 +24,15 @@ export const regionStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
 // Static markup never runs idle, pointer or custom-drawing effects.
 export const staticSkeletonStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
-    `dotquilt-skeleton-block{display:block;width:100%;height:1em;position:relative;border-radius:var(--dotquilt-radius,.375rem);overflow:hidden}dotquilt-skeleton-block [data-dotquilt-static]{position:absolute;inset:0;${dotGrid()};opacity:${restOpacity}}${markShapes((mark) => `dotquilt-skeleton-block[mark=${mark}]`, '[data-dotquilt-static]')}@media(forced-colors:active){dotquilt-skeleton-block [data-dotquilt-static]{border:1px dotted CanvasText}}`,
+    `dotquilt-skeleton-block{display:block;width:100%;height:1em;position:relative;border-radius:var(--dotquilt-radius,.375rem);overflow:hidden}dotquilt-skeleton-block [data-dotquilt-static]{position:absolute;inset:0;${dotGrid()};opacity:${restOpacity}}@media(forced-colors:active){dotquilt-skeleton-block [data-dotquilt-static]{border:1px dotted CanvasText}}`,
+  ]);
+
+// A mark's rules ship only with markup that uses it (renderStatic), so pages
+// without squares or dashes don't carry them.
+export const staticSkeletonMarkStyles: readonly string[] =
+  /* @__PURE__ */ Object.freeze([
+    markShapes(
+      (mark) => `dotquilt-skeleton-block[mark=${mark}]`,
+      '[data-dotquilt-static]',
+    ),
   ]);

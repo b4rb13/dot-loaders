@@ -7,7 +7,7 @@ import {
   styleRefresh,
 } from '../dom.js';
 import { available, lease } from '../ledger.js';
-import { glowColor, markColor } from '../marks.js';
+import { glowColor, markBox, markColor, markOf } from '../marks.js';
 import { createPainter, type Painter, pointer } from '../painter.js';
 
 type Capture = (limit?: number) => readonly Dot[];
@@ -377,6 +377,7 @@ function createDensePainter(
         ctx.clearRect(0, 0, bitmap.width, bitmap.height);
         ctx.setTransform(ratio, 0, 0, ratio, padding * ratio, padding * ratio);
         let tone = -1;
+        const mark = markOf(host);
         for (let i = 0; i < length; i++) {
           const at = i * 5,
             r = data[at + 2] ?? 0,
@@ -389,7 +390,19 @@ function createDensePainter(
           if (!r || !opacity) continue;
           ctx.globalAlpha = opacity;
           ctx.beginPath();
-          ctx.arc(data[at] ?? 0, data[at + 1] ?? 0, r, 0, Math.PI * 2);
+          const x = data[at] ?? 0,
+            y = data[at + 1] ?? 0;
+          if (mark === 'dot') ctx.arc(x, y, r, 0, Math.PI * 2);
+          else {
+            const box = markBox(mark, r);
+            ctx.roundRect(
+              x - box.width / 2,
+              y - box.height / 2,
+              box.width,
+              box.height,
+              box.radius,
+            );
+          }
           ctx.fill();
         }
       } catch {

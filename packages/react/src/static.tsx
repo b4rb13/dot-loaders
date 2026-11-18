@@ -111,6 +111,22 @@ export function sheet(
 }
 
 /**
+ * The static rules for a square or dash mark, or nothing for the default dot.
+ * An external stylesheet already carries every mark.
+ */
+export function markSheet(
+  css: readonly string[],
+  policy: StylePolicy,
+  family: string,
+  nonce: string | undefined,
+  mark: unknown,
+) {
+  if (policy.mode === 'external' || (mark !== 'dash' && mark !== 'square'))
+    return null;
+  return sheet(css, policy, `${family}-marks`, nonce);
+}
+
+/**
  * The server-rendered host carrying this component's `useId`, or undefined.
  * `useId` is only unique within one React root, so when several elements match
  * (multiple roots without `identifierPrefix`) none is trusted.

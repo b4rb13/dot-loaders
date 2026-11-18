@@ -1,6 +1,6 @@
 import { media } from './dom.js';
 import { lease } from './ledger.js';
-import { curves, restOpacity } from './marks.js';
+import { curves, markOf, shapes as markShapes, restOpacity } from './marks.js';
 
 /** How a skeleton leaves during a region handoff. Region owns time, restrictions and cleanup. */
 export type SkeletonDeparture = (
@@ -77,18 +77,24 @@ export function dissolveSkeleton(
     (surface) => !surface.closest('.pulse'),
   );
   const bounds = host.getBoundingClientRect();
+  // Squares and dashes have a fixed spec size; dots follow --dotquilt-dot-size.
+  const mark = markOf(host);
   const measure = (surface: HTMLElement, bounds: DOMRect) => {
     const box = surface.getBoundingClientRect();
     const css = win.getComputedStyle(surface);
-    const gap = parseFloat(css.backgroundSize);
+    // The tile is the pitch across and down; dashes have different ones.
+    const [across = Number.NaN, down = across] = css.backgroundSize
+      .split(/\s+/)
+      .map(parseFloat);
     const repeat = css.backgroundRepeat.split(/\s+/);
     return {
-      size: parseFloat(css.getPropertyValue('--s')) || gap / 2,
+      size: parseFloat(css.getPropertyValue('--s')) || across / 2,
       x: box.left - bounds.left,
       y: box.top - bounds.top,
       width: box.width,
       height: box.height,
-      gap,
+      across,
+      down,
       // Where the CSS grid puts its marks, so the fields line up with them.
       ...flat(
         'column',
@@ -96,7 +102,7 @@ export function dissolveSkeleton(
           repeat[0] ?? 'repeat',
           css.backgroundPositionX,
           box.width,
-          gap,
+          across,
         ),
       ),
       ...flat(
@@ -105,7 +111,7 @@ export function dissolveSkeleton(
           repeat[1] ?? repeat[0] ?? 'repeat',
           css.backgroundPositionY,
           box.height,
-          gap,
+          down,
         ),
       ),
     };
@@ -116,16 +122,24 @@ export function dissolveSkeleton(
     shapes.length > 50 ||
     shapes.some(
       (shape) =>
-        ![shape.x, shape.y, shape.width, shape.height, shape.gap].every(
-          Number.isFinite,
-        ) || shape.gap < 1,
+        ![
+          shape.x,
+          shape.y,
+          shape.width,
+          shape.height,
+          shape.across,
+          shape.down,
+        ].every(Number.isFinite) ||
+        shape.across < 1 ||
+        shape.down < 1,
     )
   )
     throw new TypeError();
   const count = shapes.reduce(
     (sum, shape) =>
       sum +
-      Math.ceil(shape.width / shape.gap) * Math.ceil(shape.height / shape.gap),
+      Math.ceil(shape.width / shape.across) *
+        Math.ceil(shape.height / shape.down),
     0,
   );
   const doc = host.ownerDocument;
@@ -186,7 +200,7 @@ export function dissolveSkeleton(
       });
       const bands = Math.max(
         1,
-        Math.min(12, Math.round(shape.width / (shape.gap * 4))),
+        Math.min(12, Math.round(shape.width / (shape.across * 4))),
       );
       const width = shape.width / bands;
       for (let band = 0; band < bands; band++) {
@@ -199,11 +213,22 @@ export function dissolveSkeleton(
           width: shape.columnStep,
           height: shape.rowStep,
         });
-        const mark = node('circle', {
-          cx: shape.columnStep / 2,
-          cy: shape.rowStep / 2,
-        });
-        pattern.append(mark);
+        // A dot's radius comes from the stylesheet; squares and dashes shrink
+        // about their own centre.
+        const glyph =
+          mark === 'dot'
+            ? node('circle', {
+                cx: shape.columnStep / 2,
+                cy: shape.rowStep / 2,
+              })
+            : node('rect', {
+                x: (shape.columnStep - markShapes[mark].width) / 2,
+                y: (shape.rowStep - markShapes[mark].height) / 2,
+                width: markShapes[mark].width,
+                height: markShapes[mark].height,
+                rx: markShapes[mark].radius,
+              });
+        pattern.append(glyph);
         const rect = node('rect', {
           x: band * width,
           width,
@@ -232,11 +257,16 @@ export function dissolveSkeleton(
         );
         if (departure.shrink)
           own(
-            mark.animate(
-              [
-                { r: `${shape.size / 2}px`, easing: easing ?? curves.sine },
-                { r: `${(shape.size / 2) * (1 - departure.shrink)}px` },
-              ],
+            glyph.animate(
+              mark === 'dot'
+                ? [
+                    { r: `${shape.size / 2}px`, easing: easing ?? curves.sine },
+                    { r: `${(shape.size / 2) * (1 - departure.shrink)}px` },
+                  ]
+                : [
+                    { scale: 1, easing: easing ?? curves.sine },
+                    { scale: 1 - departure.shrink },
+                  ],
               timing,
             ),
           );

@@ -26,6 +26,7 @@ export function tableField(
       | Appearance
       | undefined,
     pitch = appearance?.pitch ?? 9,
+    rows = appearance?.rows ?? pitch,
     scale = appearance?.scale ?? 2.2;
   const cells = surface.input.cells;
   const area = cells.reduce(
@@ -33,7 +34,9 @@ export function tableField(
       n + Math.max(0, c.bounds.width) * Math.max(0, c.bounds.height) * 0.35,
     0,
   );
-  const step = Math.max(pitch, Math.sqrt(area / 3000));
+  // Large tables spread their marks out; rows keep the mark's proportions.
+  const step = Math.max(pitch, Math.sqrt(area / 3000)),
+    rowStep = (step / pitch) * rows;
   let count = 0;
   const t = (time * 600) / options.cadenceMs,
     seconds = time / 1000,
@@ -62,7 +65,7 @@ export function tableField(
         x < Math.min(b.x + b.width, start + w);
         x += step
       )
-        for (const y of [middle - step / 2, middle + step / 2]) {
+        for (const y of [middle - rowStep / 2, middle + rowStep / 2]) {
           if (++count > 4096) return;
           const caret =
             shimmer || still ? 0 : Math.exp(-(((x - start - w) / 9) ** 2));

@@ -6,9 +6,10 @@ import {
 } from '@dotquilt-internal/core/typing';
 import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
-import { reactTypingStyles } from './server.js';
+import { reactTypingMarkStyles, reactTypingStyles } from './server.js';
 import {
   initialPolicy,
+  markSheet,
   policyAttributes,
   sheet,
   useStyleNonce,
@@ -63,6 +64,13 @@ export const TypingDots = /* @__PURE__ */ forwardRef<
   return (
     <>
       {sheet(reactTypingStyles, initial.policy, 'typing', nonce)}
+      {markSheet(
+        reactTypingMarkStyles,
+        initial.policy,
+        'typing',
+        nonce,
+        attributes.mark,
+      )}
       <dotquilt-typing-dots
         {...attributes}
         {...policyAttributes(initial.policy, nonce)}

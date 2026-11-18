@@ -1,5 +1,3 @@
-import type { Mark } from '../types.js';
-
 /**
  * Default marks, from design/SPEC.md ("System, refined"). Every stylesheet
  * takes its dot size, spacing, colours and opacity from here, so the static
@@ -54,42 +52,129 @@ export const shapes = {
   dash: { width: 9.4, height: 3.4, across: 13, down: 9.5, radius: 1.7 },
 } as const;
 
-/** One mask layer: a band between `from` and `to` px, with a 1 px soft edge. */
-function band(angle: string, from: number, to: number, tile: string): string {
-  return `linear-gradient(${angle},#0000 ${from - 0.5}px,#000 ${from + 0.5}px,#000 ${to - 0.5}px,#0000 ${to + 0.5}px) ${tile}`;
+/** A length in px, rounded so the CSS stays short. */
+const px = (value: number) => `${Math.round(value * 100) / 100}px`;
+
+/**
+ * One mask layer: a band between `from` and `to` px, with a 1 px soft edge.
+ * Without an angle it runs down the tile.
+ */
+function band(from: number, to: number, angle = ''): string {
+  return `linear-gradient(${angle}#0000 ${px(from - 0.5)},#000 ${px(from + 0.5)},#000 ${px(to - 0.5)},#0000 ${px(to + 0.5)})`;
+}
+
+interface Shape {
+  readonly width: number;
+  readonly height: number;
+  readonly across: number;
+  readonly down: number;
+  readonly radius: number;
 }
 
 /**
- * A grid of squares or dashes painted with CSS masks, so it needs no image and
+ * A grid of `shape` marks painted with CSS masks, so it needs no image and
  * passes a strict CSP. A square is a horizontal band intersected with a
- * vertical one; a dash adds two round caps, so its ends are round. `position`
- * works like dotGrid's: `space` (whole marks only) unless a position is given.
+ * vertical one; a dash adds two round caps, so its ends are round.
+ */
+function maskGrid(
+  mark: keyof typeof shapes,
+  shape: Shape,
+  place: { position: string; repeat: string },
+  color: string,
+): string {
+  const { width, height, across, down } = shape;
+  const x = (across - width) / 2,
+    y = (down - height) / 2;
+  const rows = band(y, y + height);
+  const layers =
+    mark === 'square'
+      ? [rows, band(x, x + width, '90deg,')]
+      : [
+          ...[x + height / 2, x + width - height / 2].map(
+            (cx) =>
+              `radial-gradient(circle at ${px(cx)} ${px(down / 2)},#000 ${px(height / 2 - 0.5)},#0000 ${px(height / 2 + 0.5)})`,
+          ),
+          rows,
+          band(x + height / 2, x + width - height / 2, '90deg,'),
+        ];
+  const composite = mark === 'square' ? 'intersect' : 'add,add,intersect';
+  const size = `${px(across)} ${px(down)}`;
+  // Every layer shares one tile. The fill carries it too, so code that reads
+  // the grid from the background (the dissolve, the chart and table fields)
+  // finds the same marks.
+  return `background:${color} ${place.position}/${size} ${place.repeat};mask:${layers.join(',')};mask-size:${size};mask-position:${place.position};mask-repeat:${place.repeat};mask-composite:${composite}`;
+}
+
+/**
+ * Squares or dashes for a skeleton or chart surface. `position` works like
+ * dotGrid's: `space` (whole marks only) unless a position is given.
  */
 export function shapeGrid(
   mark: keyof typeof shapes,
   position?: string,
 ): string {
-  const { width, height, across, down } = shapes[mark];
-  const x = (across - width) / 2,
-    y = (down - height) / 2,
-    tile = `${position ?? 'center'}/${across}px ${down}px ${position ? 'repeat' : 'space'}`;
-  const rows = band('180deg', y, y + height, tile);
-  const layers =
-    mark === 'square'
-      ? [rows, band('90deg', x, x + width, tile)]
-      : [
-          ...[x + height / 2, x + width - height / 2].map(
-            (cx) =>
-              `radial-gradient(circle at ${cx}px ${down / 2}px,#000 ${height / 2 - 0.5}px,#0000 ${height / 2 + 0.5}px) ${tile}`,
-          ),
-          rows,
-          band('90deg', x + height / 2, x + width - height / 2, tile),
-        ];
-  const composite = mark === 'square' ? 'intersect' : 'add,add,intersect';
-  // The fill carries the tile too, so code that reads the grid from the
-  // background (the dissolve) finds the same marks as the mask draws.
-  return `background:${markColor} ${tile};mask:${layers.join(',')};mask-composite:${composite}`;
+  return maskGrid(
+    mark,
+    shapes[mark],
+    position
+      ? { position, repeat: 'repeat' }
+      : { position: 'center', repeat: 'space' },
+    markColor,
+  );
 }
+
+/**
+ * TextLoader's placeholder has 2 px dots at a 6 px pitch; squares and dashes
+ * keep that weight. Dashes read as hatching here (design/SPEC.md), but an app
+ * that asks for them still gets them.
+ */
+const textShapes = {
+  square: { width: 2, height: 2, across: 6, down: 6, radius: 0.5 },
+  dash: { width: 4.2, height: 1.6, across: 6, down: 6, radius: 0.8 },
+} as const;
+
+/** Rules that draw TextLoader's placeholder with squares or dashes. */
+export function textMarkShapes(
+  host: (mark: keyof typeof shapes) => string,
+  surface: string,
+): string {
+  return (['square', 'dash'] as const)
+    .map(
+      (mark) =>
+        `${host(mark)} ${surface}{${maskGrid(mark, textShapes[mark], { position: '0 0', repeat: 'repeat' }, 'var(--dotquilt-color,currentColor)')}}`,
+    )
+    .join('');
+}
+
+/**
+ * TypingDots shapes, from the spec's mockup: a square is 90% of the dot size,
+ * and a dash is 80% of it tall and 2.7 times as wide as it is tall.
+ */
+export function typingShapes(
+  host: (mark: keyof typeof shapes) => string,
+  dot: string,
+): string {
+  return `${host('square')} ${dot}{width:calc(${typingSize}*.9);height:calc(${typingSize}*.9);border-radius:calc(${typingSize}*.25)}${host('dash')} ${dot}{width:calc(${typingSize}*2.16);height:calc(${typingSize}*.8);border-radius:999px}`;
+}
+
+/** Rules that give a painted surface its mark's pitch, for the fields that read it. */
+export function markPitches(
+  host: (mark: keyof typeof shapes) => string,
+  surface: string,
+): string {
+  return (['square', 'dash'] as const)
+    .map(
+      (mark) =>
+        `${host(mark)} ${surface}{background-size:${shapes[mark].across}px ${shapes[mark].down}px}`,
+    )
+    .join('');
+}
+
+/**
+ * A drawn mark: the public `Mark` type. It is spelled out here so build
+ * scripts that read these styles from source don't load the element types.
+ */
+export type Mark = 'dot' | keyof typeof shapes;
 
 /** The host's mark; a missing or unknown value draws dots. */
 export function markOf(host: Element): Mark {
@@ -98,7 +183,7 @@ export function markOf(host: Element): Mark {
 }
 
 /** The default dot's radius. Painter commands give a radius; other marks scale from it. */
-const dotRadius = 2.2;
+export const dotRadius = 2.2;
 
 /**
  * The box a painter draws for a command of radius `r`: a circle for a dot,

@@ -26,6 +26,7 @@ import {
   type HandoffSource,
   runHandoff,
 } from './handoff.js';
+import { dotRadius, markOf } from './marks.js';
 import { pointer } from './painter.js';
 import type { Runner } from './runner.js';
 import { readSurface } from './surface.js';
@@ -193,6 +194,8 @@ export abstract class DenseLoader<
     )
       this.invalidOption(name);
     super.attributeChangedCallback(name, old, value);
+    // Another mark has another size and pitch, so the field is rebuilt.
+    if (name === 'mark' && old !== value && this.shadowRoot) this.refresh();
   }
   override connectedCallback(): void {
     installDensePainter(this);
@@ -239,9 +242,19 @@ export abstract class DenseLoader<
       const field = this.shadowRoot?.querySelector('.surface');
       const resolved =
         field && this.ownerDocument.defaultView?.getComputedStyle(field);
-      const pitch = parseFloat(resolved?.backgroundSize ?? '') || 6,
+      // The tile is the pitch across and down; dashes have different ones.
+      const [across = 0, down = across] = (resolved?.backgroundSize ?? '')
+        .split(/\s+/)
+        .map(parseFloat);
+      const pitch = across || 6,
+        rows = down || pitch,
         gap = parseFloat(resolved?.gap ?? ''),
-        size = Math.max(0, pitch - (gap >= 0 ? gap : 4));
+        // Dots take their size from the CSS; squares and dashes have a fixed
+        // spec size, drawn at the default radius.
+        size =
+          markOf(this) === 'dot'
+            ? Math.max(0, pitch - (gap >= 0 ? gap : 4))
+            : 2 * dotRadius;
       this.#geometry = Object.freeze({
         family: this.family,
         width,
@@ -251,6 +264,7 @@ export abstract class DenseLoader<
         revealTargetIds: Object.freeze([...ids]),
         [this.appearanceKey]: Object.freeze({
           pitch: Math.max(2, Math.min(64, pitch)),
+          rows: Math.max(2, Math.min(64, rows)),
           scale: Math.max(0.1, Math.min(8, size / 2)),
         }),
       }) as AnimationSurface<F>;

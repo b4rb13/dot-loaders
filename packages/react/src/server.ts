@@ -68,3 +68,52 @@ export {
   staticChartStyles as reactChartStyles,
   staticTableStyles as reactTableStyles,
 } from '@dotquilt-internal/core/server';
+
+import {
+  staticChartMarkStyles,
+  staticCircleMarkStyles,
+  staticLineMarkStyles,
+  staticSkeletonMarkStyles,
+  staticTextLoaderMarkStyles,
+  staticTextMarkStyles,
+  staticTypingMarkStyles,
+} from '@dotquilt-internal/core/server';
+
+/**
+ * Static rules for squares and dashes. A component adds them only when it
+ * draws one, so pages that keep the default dot don't carry them.
+ */
+function marksBeforeDefinition(
+  css: readonly string[],
+  tag: string,
+): readonly string[] {
+  return Object.freeze(
+    css.map((text) =>
+      text.replaceAll(tag, `${tag}:is(:not(:defined),:state(unstyled))`),
+    ),
+  );
+}
+export const reactSkeletonMarkStyles = /* @__PURE__ */ marksBeforeDefinition(
+  staticSkeletonMarkStyles,
+  'dotquilt-skeleton-block',
+);
+export const reactLineMarkStyles = /* @__PURE__ */ marksBeforeDefinition(
+  staticLineMarkStyles,
+  'dotquilt-skeleton-line',
+);
+export const reactCircleMarkStyles = /* @__PURE__ */ marksBeforeDefinition(
+  staticCircleMarkStyles,
+  'dotquilt-skeleton-circle',
+);
+export const reactTextSkeletonMarkStyles =
+  /* @__PURE__ */ marksBeforeDefinition(
+    staticTextMarkStyles,
+    'dotquilt-skeleton-text',
+  );
+export const reactTypingMarkStyles = /* @__PURE__ */ marksBeforeDefinition(
+  staticTypingMarkStyles,
+  'dotquilt-typing-dots',
+);
+// These already apply only before definition.
+export const reactChartMarkStyles = staticChartMarkStyles;
+export const reactTextMarkStyles = staticTextLoaderMarkStyles;
