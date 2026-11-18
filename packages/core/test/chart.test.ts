@@ -210,7 +210,8 @@ test('morph/wipe prepares bounded line/bar/scatter destinations and terminal dec
   ]) {
     const s = { ...surface, input },
       prepared = definition.prepare(s, binding.options);
-    expect(definition.duration(s, binding.options)).toBe(900);
+    // The spec's 1.1 s handoff (design/SPEC.md).
+    expect(definition.duration(s, binding.options)).toBe(1100);
     for (const p of [0, 0.25, 0.5, 0.85, 1]) {
       const dots: Dot[] = [];
       definition.draw({

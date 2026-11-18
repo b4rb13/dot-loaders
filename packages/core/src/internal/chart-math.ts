@@ -10,10 +10,13 @@ export const noise = (x: number, t: number) =>
   0.15 * Math.sin(x * 0.017 - t * 0.71) +
   0.1 * Math.cos(x * 0.083 + t * 0.19);
 
+/**
+ * The ridge line from design/SPEC.md's mockup: two slow sines drifting in
+ * opposite directions. `nx` is the position across (0–1), `t` seconds.
+ */
 export const ridgeHeight = (nx: number, h: number, t: number, a: number) =>
   h *
-  (0.48 +
+  (0.5 +
     a *
-      (Math.sin(nx * 8 - t * 0.7) * 0.6 +
-        Math.sin(nx * 17 + t * 0.3) * 0.2 +
-        Math.cos(nx * 4 - t * 0.5) * 0.4));
+      (0.83 * Math.sin(2 * Math.PI * (1.1 * nx - t / 7.2)) +
+        0.29 * Math.sin(2 * Math.PI * (2.9 * nx + t / 4.32))));

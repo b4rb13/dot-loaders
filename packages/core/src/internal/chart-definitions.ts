@@ -6,6 +6,7 @@ import { mix, smooth } from './chart-math.js';
 import { managedPainter } from './dense/managed-painter.js';
 import { createDenseRunner as createRunner } from './dense/runner.js';
 import { createHandoff } from './handoff.js';
+import { handoff } from './marks.js';
 import { clamp } from './math.js';
 import type { HandoffFrame } from './paint.js';
 import { createRevealEffect } from './reveal-effect.js';
@@ -34,8 +35,10 @@ const morphDefinition = /* @__PURE__ */ Object.freeze({
   snapshot: nativeSurface,
   reveal: createRevealEffect,
   targets: createTargetTracker,
+  // design/SPEC.md: the field glides onto the line (~570 ms), then the line
+  // draws in (~570 ms).
   duration: (surface: AnimationSurface<'chart'>) =>
-    geometry(surface.input).length ? 900 : 150,
+    geometry(surface.input).length ? handoff.duration : 150,
   prepare(surface: AnimationSurface<'chart'>) {
     const input = surface.input,
       items = geometry(input),
@@ -68,10 +71,8 @@ const morphDefinition = /* @__PURE__ */ Object.freeze({
             y = d.y + target - crest;
             if (Math.abs(y - target) < 5.5) {
               y = target;
-              size = 2.6;
               opacity = 0.95;
             } else if (y > target && y < input.baseline) {
-              size = 1.6;
               opacity =
                 0.05 +
                 clamp(1 - (y - target) / Math.max(1, input.baseline - target)) *
@@ -104,7 +105,6 @@ const morphDefinition = /* @__PURE__ */ Object.freeze({
           if (point) {
             x = point.x;
             y = point.y;
-            size = 2.6;
             opacity = i < items.length ? 0.85 : 0;
           }
         }
@@ -162,8 +162,8 @@ export const morphFactory = /* @__PURE__ */ chartFactory<
   'handoff',
   MorphWipeOptions
 >(morphDefinition, {
-  morphEnd: [0.86, 0.55, 0.95],
-  wipeStart: [0.29, 0.15, 0.6],
+  morphEnd: [0.55, 0.55, 0.95],
+  wipeStart: [0.48, 0.15, 0.6],
   edge: [40, 4, 80],
 });
 // The default Ridge entry retains only its own silhouette. Optional recipes use
@@ -188,7 +188,7 @@ export const defaultRidge = /* @__PURE__ */ chartBinding(ridgeDefinition, {
   highlightWidth: 90,
 });
 export const defaultMorphWipe = /* @__PURE__ */ chartBinding(morphDefinition, {
-  morphEnd: 0.86,
-  wipeStart: 0.29,
+  morphEnd: 0.55,
+  wipeStart: 0.48,
   edge: 40,
 });
