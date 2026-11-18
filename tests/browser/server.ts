@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 
 const root = resolve(import.meta.dir, '../..');
@@ -57,6 +57,41 @@ const hashes = [
 ]
   .map((s: string) => `'sha256-${hash(s)}'`)
   .join(' ');
+// Minified "production" consumers of the selective entries. Packed mode serves the
+// bundles `verify:packed` measured; otherwise they are built from the workspace.
+const productionBundles = new Map<string, Blob>();
+for (const [name, source] of [
+  [
+    'skeleton',
+    "import {registerSkeletonBlock} from '@dotquilt-internal/core/skeleton';registerSkeletonBlock();document.body.append(document.createElement('dotquilt-skeleton-block'));",
+  ],
+  [
+    'region',
+    "import {registerLoadingRegion} from '@dotquilt-internal/core/region';registerLoadingRegion();document.body.append(document.createElement('dotquilt-region'));",
+  ],
+] as const) {
+  const path = `/production-${name}.js`;
+  if (process.env.DOTQUILT_PACKED) {
+    productionBundles.set(
+      path,
+      Bun.file(resolve(root, '.artifacts', `${name}-consumer.js`)),
+    );
+    continue;
+  }
+  const directory = resolve(root, '.artifacts/native-server');
+  await mkdir(directory, { recursive: true });
+  const entry = resolve(directory, `${name}-entry.ts`);
+  await writeFile(entry, source);
+  const bundle = await Bun.build({
+    entrypoints: [entry],
+    minify: true,
+    target: 'browser',
+    format: 'esm',
+  });
+  if (!bundle.success || !bundle.outputs[0])
+    throw new Error(`Production ${name} bundle build failed`);
+  productionBundles.set(path, bundle.outputs[0]);
+}
 Bun.serve({
   hostname: '127.0.0.1',
   port: Number(process.env.DOTQUILT_TEST_PORT ?? 4181),
@@ -156,21 +191,11 @@ Bun.serve({
         return new Response(null, { status: 403 });
       return new Response(Bun.file(path));
     }
-    if (
-      ['/production-skeleton.js', '/production-region.js'].includes(
-        url.pathname,
-      )
-    )
-      return new Response(
-        Bun.file(
-          resolve(
-            root,
-            '.artifacts',
-            url.pathname.slice(12).replace('.js', '-consumer.js'),
-          ),
-        ),
-        { headers: { 'content-type': 'text/javascript' } },
-      );
+    const productionBundle = productionBundles.get(url.pathname);
+    if (productionBundle)
+      return new Response(productionBundle, {
+        headers: { 'content-type': 'text/javascript' },
+      });
     if (url.pathname === '/app.css')
       return new Response(
         `.app-final #content{opacity:.8;transform:scale(.99)}body{font:16px system-ui;margin:40px;color:#405047}.example{min-height:100px;width:320px}.block{height:100px}dotquilt-skeleton-block{display:block;position:relative;width:100%;height:100px}.outside{margin-top:12px}`,
