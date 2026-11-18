@@ -66,6 +66,24 @@ Not done yet:
 - React style de-duplication (one stylesheet per instance). It changes SSR markup across React 19.0–19.3 and Next, so it gets its own change.
 - Hiding pending SSR content before upgrade. Tried and reverted: the legacy React suite requires pending server content to stay visible and usable without JavaScript. Now decision 11.
 
+**Phase 3 — in progress on `refactor/phase-3-degolf` (2026-11-18).**
+
+Done, with no behaviour change; the e2e, unit and legacy suites are the safety net:
+- **Shared Chart/Table base.** `internal/dense-loader.ts` holds the shared behaviour. `chart.ts` and `table.ts` keep only their family-specific hooks: defaults, projection, surface and extra attributes.
+- **Named handoff types.**
+  - `HandoffSource`, `HandoffRequest` and `RunningHandoff` replace the positional tuples (`work[5]`, `work[4][1]`, 9-argument factories).
+  - `IdleFrame` and `HandoffFrame` replace the 6- and 10-argument paint calls.
+- **React in plain JSX.** The custom-element names are declared in `src/jsx.d.ts`, which `tsc` does not emit. The server-rendered markup is byte-identical across all components and style policies.
+
+Waiting on decisions:
+- Moving the M2 dense-renderer proof out of `src`: decision 2.
+- Removing the cross-copy symbol layer: decision 5.
+
+Next:
+- Consistent error codes and `update()` validation.
+- A typed table layout export to replace the React `Symbol.for` lookup.
+- Trimming the export surface.
+
 ## TL;DR
 
 - **The product works.** All nine components exist as native elements plus React wrappers with SSR output. The website (homepage, 9 reference pages, 24-recipe gallery, playground, guides, search) builds and runs. Most loading → reveal handoffs look good.
