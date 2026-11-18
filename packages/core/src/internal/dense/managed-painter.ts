@@ -1,6 +1,6 @@
 import type { Dot } from '../../animations.js';
 import { capturePainter } from '../capture.js';
-import { ancestors } from '../dom.js';
+import { ancestors, paintLayer } from '../dom.js';
 import {
   createPainter,
   type Painter,
@@ -179,7 +179,7 @@ function createDensePainter(
       base.setAttribute('fill', 'var(--dotquilt-color,currentColor)');
       accent.setAttribute('fill', 'var(--dotquilt-accent-color,currentColor)');
       root.append(base, accent);
-      shadow.append(root);
+      paintLayer(shadow).append(root);
     }
     if (!canvas || !base || !accent || !foreign) return false;
     width = root.clientWidth;

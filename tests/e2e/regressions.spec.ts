@@ -161,3 +161,33 @@ test('content updates during a simple reveal do not cut the reveal short', async
   });
   expect(ended).toBe('complete');
 });
+
+// The dot geometry is measured from the host's content box, so the painter
+// must cover exactly that box; otherwise padding shifts every dot.
+for (const kind of ['chart-loader', 'table-loader'] as const)
+  test(`${kind}: the painter covers the content box when the host has padding and a border`, async ({
+    page,
+  }) => {
+    await open(page, `component=${kind}`);
+    const { content, painter } = await page.evaluate(async (kind) => {
+      const host = document.createElement(`dotquilt-${kind}`);
+      host.style.cssText =
+        'display:block;box-sizing:border-box;width:400px;height:200px;padding:15px;border:5px solid';
+      document.getElementById('stage')?.append(host);
+      let drawn: Element | null | undefined;
+      for (let i = 0; i < 120 && !drawn; i++) {
+        await new Promise(requestAnimationFrame);
+        drawn = host.shadowRoot?.querySelector('[data-dotquilt-painter]');
+      }
+      const box = (r: DOMRect) => [r.left, r.top, r.width, r.height];
+      const r = host.getBoundingClientRect();
+      return {
+        content: [r.left + 20, r.top + 20, r.width - 40, r.height - 40],
+        painter: drawn ? box(drawn.getBoundingClientRect()) : null,
+      };
+    }, kind);
+    expect(painter).not.toBeNull();
+    painter?.forEach((value, i) => {
+      expect(value).toBeCloseTo(content[i] as number, 0);
+    });
+  });

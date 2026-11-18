@@ -38,6 +38,7 @@ import {
   installStyles,
   media,
   motionRestricted,
+  node,
   register,
   upgradeProperties,
 } from './internal/dom.js';
@@ -233,7 +234,14 @@ export class TableLoader extends EventElement<'table'> {
     if (!this.shadowRoot) {
       const root = this.attachShadow({ mode: 'open' });
       installStyles(root, tableStyles, this.policy);
-      root.append(
+      // The outline and the painters share one grid cell inside a frame that
+      // spans exactly the content box, so padding or an app's display rule
+      // never shifts the dots away from the geometry they were measured for.
+      const frame = node(this.ownerDocument, 'div', {
+        class: 'f',
+        'data-dotquilt-frame': '',
+      });
+      frame.append(
         staticTableSVG(
           this.ownerDocument,
           this.rows,
@@ -241,6 +249,7 @@ export class TableLoader extends EventElement<'table'> {
           this.columns,
         ),
       );
+      root.append(frame);
     }
     for (const child of this.querySelectorAll(
       ':scope > [data-dotquilt-style],:scope > [data-dotquilt-static]',

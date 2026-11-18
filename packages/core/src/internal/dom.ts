@@ -119,3 +119,12 @@ export function media(win: Window | null | undefined, query: string): boolean {
   }
   return list.matches;
 }
+/**
+ * Where painters append their drawing: the host's frame when it has one (a
+ * grid spanning exactly the content box), otherwise the shadow root itself.
+ */
+export function paintLayer(root: ShadowRoot): ParentNode {
+  for (const child of root.children)
+    if (child.hasAttribute('data-dotquilt-frame')) return child;
+  return root;
+}
