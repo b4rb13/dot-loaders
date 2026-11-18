@@ -67,19 +67,61 @@ export const scrambleDefinition = /* @__PURE__ */ Object.freeze({
   id: 'dotquilt/scramble',
   runner: createTextRunner,
   still,
+  /**
+   * design/SPEC.md: each character changes every ~280 ms (with a small
+   * per-character offset, so they don't flip together) and cross-fades to
+   * the next over 260 ms. A teal glow drifts across every 2.8 s.
+   */
   frame(context: TextDraw, options: ScrambleOptions): undefined {
-    if (!context.surface.input.precise) return;
-    const tick = Math.floor((context.timeMs * options.changesPerSecond) / 1000);
-    context.surface.input.mask.forEach((cell, i) => {
+    const { surface } = context;
+    if (!surface.input.precise) return;
+    const time = context.timeMs,
+      period = 1000 / options.changesPerSecond,
+      glowAt = -0.5 + 2 * sineInOut((time / 2800) % 1),
+      width = Math.max(1, surface.width);
+    surface.input.mask.forEach((cell, i) => {
+      const own = period * (0.75 + ((i * 7) % 5) / 10),
+        step = Math.floor(time / own),
+        k = sineInOut(clamp((time - step * own) / 260));
+      // Merge the outgoing and incoming glyphs pixel by pixel.
+      const pixels = new Map<string, Dot>();
+      const add = (dot: Dot, weight: number) => {
+        const key = `${dot.x},${dot.y}`,
+          prior = pixels.get(key);
+        pixels.set(key, {
+          ...dot,
+          opacity: (prior?.opacity ?? 0) + dot.opacity * weight,
+        });
+      };
       glyph(
         cell,
-        randomCharacter(cell.character, tick * 83 + i + 1),
-        context.dot,
-        0.65,
+        randomCharacter(cell.character, (step - 1) * 83 + i + 1),
+        (dot) => add(dot, 1 - k),
+        1,
         0,
         1,
         true,
       );
+      glyph(
+        cell,
+        randomCharacter(cell.character, step * 83 + i + 1),
+        (dot) => add(dot, k),
+        1,
+        0,
+        1,
+        true,
+      );
+      for (const dot of pixels.values()) {
+        context.dot(dot);
+        const d = ((dot.x / width) * 0.8 + 0.1 - glowAt) / 0.2,
+          glow = d < -3.2 || d > 3.2 ? 0 : Math.exp(-d * d);
+        if (glow * dot.opacity >= 0.02)
+          context.dot({
+            ...dot,
+            opacity: glow * dot.opacity,
+            tone: 'accent',
+          });
+      }
     });
   },
 });
@@ -107,8 +149,9 @@ export const labelPulseDefinition = /* @__PURE__ */ definition(
   },
 );
 function span(surface: AnimationSurface<'text'>, options: TextHandoffOptions) {
+  // Characters lock left to right across at most 460 ms (the spec's 42%).
   return Math.min(
-    220,
+    460,
     Math.max(0, surface.input.value.length - 1) * options.staggerMs,
   );
 }
@@ -157,21 +200,38 @@ export const lockDefinition = /* @__PURE__ */ Object.freeze({
       if (local < 0) return;
       const settle = clamp((local - options.reelMs) / options.settleMs);
       const alpha = clamp((prepared.length - time) / 100);
-      const character =
-        local < options.reelMs
-          ? randomCharacter(cell.character, Math.floor(local / 18) + i * 7)
-          : cell.character;
-      glyph(
-        cell,
-        character,
-        context.dot,
-        alpha,
-        -Math.sin(settle * Math.PI) * 2,
-        1 + Math.sin(settle * Math.PI) * options.pop,
-      );
+      const lift = -Math.sin(settle * Math.PI) * 2 * options.pop * 5,
+        size = 1 + Math.sin(settle * Math.PI) * options.pop;
+      if (local < options.reelMs) {
+        glyph(
+          cell,
+          randomCharacter(cell.character, Math.floor(local / 18) + i * 7),
+          context.dot,
+          alpha,
+        );
+        return;
+      }
+      // Lock: the last reel character eases into the real one (sine).
+      const k = sineInOut(settle);
+      if (k < 1)
+        glyph(
+          cell,
+          randomCharacter(
+            cell.character,
+            Math.floor(options.reelMs / 18) + i * 7,
+          ),
+          context.dot,
+          alpha * (1 - k),
+          lift,
+          size,
+        );
+      glyph(cell, cell.character, context.dot, alpha * k, lift, size);
     });
+    // The real text fades in while the last characters lock, from when the
+    // last one starts locking to the end, so glyphs and text overlap.
+    const from = prepared.span + options.reelMs;
     context.reveal({
-      opacity: clamp((time - prepared.length + 140) / 140),
+      opacity: clamp((time - from) / Math.max(1, prepared.length - from)),
       translateY: 2 * (1 - p),
     });
   },
@@ -234,7 +294,7 @@ export const defaultTextIdle = /* @__PURE__ */ Object.freeze({
   family: 'text' as const,
   phase: 'idle' as const,
   id: 'dotquilt/scramble',
-  options: /* @__PURE__ */ Object.freeze({ changesPerSecond: 2.8 }),
+  options: /* @__PURE__ */ Object.freeze({ changesPerSecond: 1000 / 280 }),
   [brand]: scrambleDefinition,
 });
 export const defaultTextHandoff = /* @__PURE__ */ Object.freeze({
@@ -243,10 +303,15 @@ export const defaultTextHandoff = /* @__PURE__ */ Object.freeze({
   phase: 'handoff' as const,
   id: 'dotquilt/lock',
   options: /* @__PURE__ */ Object.freeze({
-    staggerMs: 24,
+    staggerMs: 40,
     reelMs: 55,
-    settleMs: 90,
-    pop: 0.2,
+    settleMs: 300,
+    pop: 0,
   }),
   [brand]: lockDefinition,
 });
+
+/** Sine in-out, the curve the spec gives marks and text locks. */
+function sineInOut(p: number): number {
+  return 0.5 - 0.5 * Math.cos(Math.PI * p);
+}

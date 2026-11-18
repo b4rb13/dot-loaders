@@ -28,16 +28,18 @@ const surface: AnimationSurface<'text'> = {
   revealTargetIds: [],
 };
 test('text recipes validate immutable options and preserve approved ranges', () => {
-  expect(scramble().options.changesPerSecond).toBe(2.8);
+  // design/SPEC.md: a change every 280 ms.
+  expect(scramble().options.changesPerSecond).toBe(1000 / 280);
   expect(scramble({ changesPerSecond: 50 }).options.changesPerSecond).toBe(4);
   expect(labelPulse({ travelPxPerSecond: 0 }).options.travelPxPerSecond).toBe(
     20,
   );
+  // design/SPEC.md: characters lock left to right, each easing in over 300 ms.
   expect(lock().options).toEqual({
-    staggerMs: 24,
+    staggerMs: 40,
     reelMs: 55,
-    settleMs: 90,
-    pop: 0.2,
+    settleMs: 300,
+    pop: 0,
   });
   expect(Object.isFrozen(lock().options)).toBe(true);
   for (const options of [
@@ -57,9 +59,10 @@ test('lock and print totals include bounded stagger, reel, settle and tail', () 
       object,
       unknown
     >;
-  expect(get(lock()).duration(surface, lock().options)).toBe(461);
+  // Ten characters: 9 × 40 ms stagger + 55 ms reel + 300 ms lock + 100 ms tail.
+  expect(get(lock()).duration(surface, lock().options)).toBe(815);
   expect(get(printText()).duration(surface, printText().options)).toBeCloseTo(
-    180 + 461 / 1.5,
+    180 + 815 / 1.5,
   );
   expect(
     get(lock()).duration(

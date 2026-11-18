@@ -60,7 +60,10 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
   - **Idle:** the default is now the spec's still bars under the drifting glow (`tableShimmer`). Each bar is two rows of uniform marks at the resting opacity, and the field breathes. Type-on is still available as a variant.
   - **Rows handoff:** rows start 80 ms apart and cells 28 ms apart, and rows settle 5 px, in 1.1 s. Without per-row targets the content fades and rises over 700 ms instead of 150 ms.
   - **Static outline:** slate at the resting opacity, styled from CSS, so the server markup and React parity are unchanged.
-- **E. TextLoader.** Characters cross-fade every 280 ms and lock left to right over 300 ms.
+- **E. TextLoader — done on `design/4b-text`.**
+  - **Idle:** each character changes about every 280 ms, offset slightly per character so they don't flip together, and cross-fades over 260 ms. Unlit glyph pixels show faintly, and the teal glow drifts across every 2.8 s.
+  - **Lock handoff:** characters lock left to right across at most 460 ms (40 ms each), each easing from the reel into the real character over 300 ms, with no pop (`pop` 0). A 10-character lock takes 815 ms.
+  - **Colours:** the glyphs draw in slate through the painter default (slice C).
 - **F. TypingDots and default sizes.**
 - **G. Alternative marks:** a `mark: 'dot' | 'dash' | 'square'` option with the same positions and motion.
 - **H. Prune old variants.** Keep, change or drop each of the 16 built-in recipes deliberately.
