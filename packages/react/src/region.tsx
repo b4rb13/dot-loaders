@@ -21,7 +21,8 @@ import {
 } from './static.js';
 import type { HostProps } from './types.js';
 
-export interface LoadingRegionProps extends HostProps<NativeLoadingRegion> {
+export interface LoadingRegionProps
+  extends Omit<HostProps<NativeLoadingRegion>, 'mark'> {
   children?: ReactNode;
   placeholder?: ReactNode;
   refreshIndicator?: ReactNode;

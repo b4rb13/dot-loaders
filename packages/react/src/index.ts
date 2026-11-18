@@ -21,6 +21,7 @@ export type {
   LoaderErrorDetail,
   LoaderEvents,
   LoadingState,
+  Mark,
   Motion,
   StylePolicy,
   Timing,

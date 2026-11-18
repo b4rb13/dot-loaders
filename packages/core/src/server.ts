@@ -29,6 +29,8 @@ import { staticTextLoaderStyles, textStyles } from './text-styles.js';
 import {
   LoaderConfigurationError,
   type LoadingState,
+  type Mark,
+  marks,
   type StylePolicy,
 } from './types.js';
 
@@ -56,18 +58,21 @@ export type DecorativeDescription =
       rows?: number;
       rowHeight?: number;
       columns?: readonly import('./table.js').TableColumn[];
+      mark?: Mark;
       stylePolicy?: StylePolicy;
     }>
   | Readonly<{
       kind: 'chart-loader';
       preset?: Preset<'chart'>;
       variant?: import('./chart.js').ChartVariant;
+      mark?: Mark;
       stylePolicy?: StylePolicy;
     }>
   | {
       [K in 'skeleton-block' | 'skeleton-line' | 'skeleton-circle']: Readonly<{
         kind: K;
         preset?: Preset<'skeleton'>;
+        mark?: Mark;
         stylePolicy?: StylePolicy;
       }>;
     }['skeleton-block' | 'skeleton-line' | 'skeleton-circle']
@@ -76,12 +81,14 @@ export type DecorativeDescription =
       preset?: Preset<'skeleton'>;
       lines?: number;
       widths?: readonly number[];
+      mark?: Mark;
       stylePolicy?: StylePolicy;
     }>
   | Readonly<{
       kind: 'typing-dots';
       preset?: Preset<'typing'>;
       count?: number;
+      mark?: Mark;
       stylePolicy?: StylePolicy;
     }>;
 
@@ -94,6 +101,7 @@ export type StaticDescription =
       text?: string | number;
       mask?: string;
       state?: LoadingState;
+      mark?: Mark;
       stylePolicy?: StylePolicy;
     }>
   | Readonly<{
@@ -148,6 +156,16 @@ function style(
 }
 /** Renders only library decoration. Applications render real content using their own templates. */
 export function renderStatic(description: StaticDescription): string {
+  const html = renderDescription(description);
+  // The shape the static marks use; the default dot needs no attribute.
+  const mark = (description as { mark?: unknown }).mark;
+  if (mark === undefined || mark === 'dot' || description.kind === 'region')
+    return html;
+  if (!marks.includes(mark as Mark))
+    throw new LoaderConfigurationError('invalid-option', 'Invalid mark');
+  return html.replace(/^<dotquilt-[a-z-]+/, (tag) => `${tag} mark="${mark}"`);
+}
+function renderDescription(description: StaticDescription): string {
   if (
     !description ||
     ![

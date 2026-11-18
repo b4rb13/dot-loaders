@@ -200,3 +200,12 @@ test('nonce styles stay one per loader, because React 19.0 cannot put a nonce on
   expect(styles).toHaveLength(3);
   expect(styles.every((s) => s.attributes.includes('nonce="n"'))).toBe(true);
 });
+
+test('mark passes through to the server-rendered host', () => {
+  expect(renderToString(h(SkeletonBlock, { mark: 'dash' }))).toContain(
+    'mark="dash"',
+  );
+  expect(renderToString(h(TypingDots, { mark: 'square' }))).toContain(
+    'mark="square"',
+  );
+});

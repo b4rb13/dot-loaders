@@ -58,6 +58,7 @@ export type {
   HandoffDetail,
   LoaderErrorDetail,
   LoadingState,
+  Mark,
   Motion,
   StylePolicy,
   Timing,
