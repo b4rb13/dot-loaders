@@ -252,7 +252,11 @@ export abstract class LoadingController<
       const content = layer('content', 'c'),
         placeholder = layer('placeholder', 'p', 'placeholder'),
         refresh = layer('refresh-indicator', 'r', 'refresh-indicator');
-      root.append(content, placeholder, refresh);
+      // The layers overlap inside their own grid, so the overlay survives app
+      // CSS that changes the host's display (e.g. `display: block`).
+      const frame = node(this.ownerDocument, 'div', { class: 'f' });
+      frame.append(content, placeholder, refresh);
+      root.append(frame);
       this.#wrappers = [content, placeholder, refresh];
     }
     if (this.#wrappers) this.resources?.watch(this.#wrappers[0]);

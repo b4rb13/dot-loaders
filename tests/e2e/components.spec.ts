@@ -1,10 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { type Kind, kinds } from './kinds';
 
-// Known bugs, fixed in AUDIT.md Phase 2 (item 1). Each entry keeps its test
-// red-by-expectation until the fix lands; remove it with the fix.
-const drawsOutsideWhenHostIsBlock = new Set<Kind>(['table-loader']);
-
 /** CSS selector of the application content each fixture reveals. */
 function contentSelector(kind: Kind) {
   if (kind === 'chart-loader') return '.chart';
@@ -107,14 +103,37 @@ for (const kind of kinds) {
       expect(errors).toEqual([]);
     });
 
-    test('pending: stays inside its box when the app sets display:block', async ({
+    test('pending: app CSS setting display:block does not change the layout', async ({
       page,
     }) => {
-      test.fail(
-        drawsOutsideWhenHostIsBlock.has(kind),
-        'Known bug: drawing depends on :host display (AUDIT.md Phase 2)',
-      );
+      // Apps commonly style hosts with display:block. The placeholder must
+      // still overlay the content in the same box and draw inside itself.
+      const boxes = () =>
+        page.evaluate(() => {
+          const owner = window.e2e.owner.getBoundingClientRect();
+          const decoration = window.e2e.decoration.getBoundingClientRect();
+          return {
+            owner: [owner.width, owner.height].map(Math.round),
+            decoration: [
+              decoration.x - owner.x,
+              decoration.y - owner.y,
+              decoration.width,
+              decoration.height,
+            ].map(Math.round),
+          };
+        });
+      // An inline component (TextLoader) legitimately becomes full width when
+      // made a block; only its height and vertical placement must hold.
+      const comparable = async () => {
+        const measured = await boxes();
+        return kind === 'text-loader'
+          ? [measured.owner[1], measured.decoration[1], measured.decoration[3]]
+          : measured;
+      };
+      await open(page, kind);
+      const expected = await comparable();
       await open(page, kind, '&hostDisplay=block');
+      expect(await comparable()).toEqual(expected);
       expect((await drawingOutsideBox(page)).outside).toEqual([]);
     });
 
