@@ -1,7 +1,5 @@
-// biome-ignore-all assist/source/organizeImports: Preserve verified inert import order for complete gzip budgets; see docs/implementation/m4/configuration-size-progress.md.
 'use client';
 import type { Animations } from '@dotquilt-internal/core';
-import type { HostProps } from './types.js';
 import {
   type ChartPreset,
   type ChartVariant,
@@ -9,8 +7,9 @@ import {
   registerChartLoader,
   type TargetProvider,
 } from '@dotquilt-internal/core/chart';
-import { createElement, Fragment, forwardRef, useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
+import { reactChartStyles } from './server.js';
 import {
   initialPolicy,
   policyAttributes,
@@ -18,7 +17,7 @@ import {
   useCustomAttribute,
   useStyleNonce,
 } from './static.js';
-import { reactChartStyles } from './server.js';
+import type { HostProps } from './types.js';
 
 export interface ChartLoaderProps extends HostProps<NativeChartLoader> {
   variant?: ChartVariant | undefined;
@@ -71,27 +70,23 @@ export const ChartLoader = /* @__PURE__ */ forwardRef<
     },
     { onHandoffStart, onHandoffEnd, onHandoffCancel, onLoaderError },
   );
-  return createElement(
-    Fragment,
-    null,
-    sheet(reactChartStyles, initial.policy, 'chart', nonce),
-    createElement(
-      'dotquilt-chart-loader',
-      {
-        ...attributes,
-        ...upgraded,
-        ...policyAttributes(initial.policy, nonce),
-        'aria-hidden': true,
-        'data-dotquilt-surface': '',
-        motion: 'paused',
-        variant: initial.variant,
-        ref: host,
-      },
-      createElement(
-        'span',
-        { 'data-dotquilt-react-static': '', 'aria-hidden': true },
-        createElement('span', { 'data-dotquilt-static': '' }),
-      ),
-    ),
+  return (
+    <>
+      {sheet(reactChartStyles, initial.policy, 'chart', nonce)}
+      <dotquilt-chart-loader
+        {...attributes}
+        {...upgraded}
+        {...policyAttributes(initial.policy, nonce)}
+        aria-hidden
+        data-dotquilt-surface=""
+        motion="paused"
+        variant={initial.variant}
+        ref={host}
+      >
+        <span data-dotquilt-react-static="" aria-hidden>
+          <span data-dotquilt-static="" />
+        </span>
+      </dotquilt-chart-loader>
+    </>
   );
 });

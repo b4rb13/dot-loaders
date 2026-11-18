@@ -11,9 +11,7 @@ import {
 } from '@dotquilt-internal/core/skeleton';
 import {
   type ForwardRefExoticComponent,
-  Fragment,
   forwardRef,
-  createElement as h,
   type RefAttributes,
   useState,
 } from 'react';
@@ -114,43 +112,38 @@ function component<
       },
       { onHandoffStart, onHandoffEnd, onHandoffCancel, onLoaderError },
     );
-    return h(
-      Fragment,
-      null,
-      sheet(css, initial.policy, name, nonce),
-      h(
-        `dotquilt-${name}`,
-        {
-          ...attributes,
-          ...policyAttributes(initial.policy, nonce),
-          'aria-hidden': attributes['aria-hidden'] ?? true,
-          'data-dotquilt-surface': '',
-          motion: 'paused',
-          speed: initial.speed,
-          'pointer-response': initial.pointerResponse,
-          ...(multiline ? { lines: initial.count } : {}),
-          ref: host,
-        },
-        h(
-          'span',
-          { 'data-dotquilt-react-static': '', 'aria-hidden': true },
-          h(
-            'span',
-            { 'data-dotquilt-static': '' },
-            multiline
-              ? initial.widths.map((width, index) =>
-                  h('svg', {
-                    // Position describes decoration only; no application content is keyed here.
-                    key: index,
-                    'data-dotquilt-static-line': '',
-                    width: `${width * 100}%`,
-                    height: 14,
-                  }),
-                )
-              : null,
-          ),
-        ),
-      ),
+    const Host = `dotquilt-${name}` as 'dotquilt-skeleton-line';
+    return (
+      <>
+        {sheet(css, initial.policy, name, nonce)}
+        <Host
+          {...attributes}
+          {...policyAttributes(initial.policy, nonce)}
+          aria-hidden={attributes['aria-hidden'] ?? true}
+          data-dotquilt-surface=""
+          motion="paused"
+          speed={initial.speed}
+          pointer-response={initial.pointerResponse}
+          {...(multiline ? { lines: initial.count } : {})}
+          ref={host}
+        >
+          <span data-dotquilt-react-static="" aria-hidden>
+            <span data-dotquilt-static="">
+              {multiline
+                ? initial.widths.map((width, index) => (
+                    <svg
+                      // biome-ignore lint/suspicious/noArrayIndexKey: fixed decorative lines that never reorder
+                      key={index}
+                      data-dotquilt-static-line=""
+                      width={`${width * 100}%`}
+                      height={14}
+                    />
+                  ))
+                : null}
+            </span>
+          </span>
+        </Host>
+      </>
     );
   });
 }

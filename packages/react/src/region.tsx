@@ -1,4 +1,3 @@
-// biome-ignore-all assist/source/organizeImports: Preserve verified inert import order for complete gzip budgets; see docs/implementation/m4/configuration-size-progress.md.
 'use client';
 import type {
   Animations,
@@ -6,27 +5,21 @@ import type {
   RevealTarget,
   Timing,
 } from '@dotquilt-internal/core';
-import type { HostProps } from './types.js';
-import { useHost } from './host.js';
 import {
   type LoadingRegion as NativeLoadingRegion,
   type RegionPreset,
   registerLoadingRegion,
 } from '@dotquilt-internal/core/region';
-import {
-  Children,
-  createElement,
-  forwardRef,
-  type ReactNode,
-  useState,
-} from 'react';
+import { Children, forwardRef, type ReactNode, useState } from 'react';
+import { useHost } from './host.js';
+import { reactRegionStyles } from './server.js';
 import {
   initialPolicy,
   policyAttributes,
   sheet,
   useStyleNonce,
 } from './static.js';
-import { reactRegionStyles } from './server.js';
+import type { HostProps } from './types.js';
 
 export interface LoadingRegionProps extends HostProps<NativeLoadingRegion> {
   children?: ReactNode;
@@ -85,39 +78,32 @@ export const LoadingRegion = /* @__PURE__ */ forwardRef<
     { onHandoffStart, onHandoffEnd, onHandoffCancel, onLoaderError },
   );
   const hasPlaceholder = Children.toArray(placeholder).length > 0;
-  const slot = (name: string, content: ReactNode) =>
-    createElement(
-      'div',
-      {
-        slot: name,
-        'data-dotquilt-react-slot': '',
-        'aria-hidden': true,
-        inert: true,
-      },
-      content,
-    );
-  return [
-    sheet(reactRegionStyles, initial.policy, 'region', nonce),
-    createElement(
-      'dotquilt-region',
-      {
-        key: 'host',
-        ...attributes,
-        ...policyAttributes(initial.policy, nonce),
-        role: attributes.role ?? 'group',
-        state: initial.state,
-        'data-presentation': initial.state,
-        motion: 'paused',
-        ref: host,
-        'data-dotquilt-react-empty': !hasPlaceholder ? '' : undefined,
-      },
-      hasPlaceholder ? slot('placeholder', placeholder) : null,
-      refreshIndicator !== undefined
-        ? slot('refresh-indicator', refreshIndicator)
-        : null,
-      children,
-    ),
-  ];
+  const slot = (name: string, content: ReactNode) => (
+    <div slot={name} data-dotquilt-react-slot="" aria-hidden inert>
+      {content}
+    </div>
+  );
+  return (
+    <>
+      {sheet(reactRegionStyles, initial.policy, 'region', nonce)}
+      <dotquilt-region
+        {...attributes}
+        {...policyAttributes(initial.policy, nonce)}
+        role={attributes.role ?? 'group'}
+        state={initial.state}
+        data-presentation={initial.state}
+        motion="paused"
+        ref={host}
+        data-dotquilt-react-empty={!hasPlaceholder ? '' : undefined}
+      >
+        {hasPlaceholder ? slot('placeholder', placeholder) : null}
+        {refreshIndicator !== undefined
+          ? slot('refresh-indicator', refreshIndicator)
+          : null}
+        {children}
+      </dotquilt-region>
+    </>
+  );
 });
 
 export type {

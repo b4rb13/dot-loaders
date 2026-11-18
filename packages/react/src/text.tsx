@@ -5,7 +5,7 @@ import {
   registerTextLoader,
   type TextPreset,
 } from '@dotquilt-internal/core/text';
-import { createElement, Fragment, forwardRef, useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
 import { reactTextStyles } from './server.js';
 import {
@@ -86,41 +86,35 @@ export const TextLoader = /* @__PURE__ */ forwardRef<
     },
     { onHandoffStart, onHandoffEnd, onHandoffCancel, onLoaderError },
   );
-  return createElement(
-    Fragment,
-    null,
-    sheet(reactTextStyles, initial.policy, 'text', nonce),
-    createElement(
-      'dotquilt-text-loader',
-      {
-        ...attributes,
-        ...upgraded,
-        ...policyAttributes(initial.policy, nonce),
-        role: attributes.role ?? 'group',
-        state: initial.state,
-        mask: initial.mask,
-        motion: 'paused',
-        ref: host,
-      },
-      createElement(
-        'span',
-        {
-          slot: 'placeholder',
-          'data-dotquilt-text-placeholder': '',
-          'aria-hidden': true,
-          inert: true,
-        },
-        initial.mask,
-      ),
-      createElement(
-        'span',
-        {
-          'data-dotquilt-text-content': '',
-          ...contentAttributes,
-          inert: contentAttributes.inert === '' ? true : undefined,
-        },
-        children,
-      ),
-    ),
+  return (
+    <>
+      {sheet(reactTextStyles, initial.policy, 'text', nonce)}
+      <dotquilt-text-loader
+        {...attributes}
+        {...upgraded}
+        {...policyAttributes(initial.policy, nonce)}
+        role={attributes.role ?? 'group'}
+        state={initial.state}
+        mask={initial.mask}
+        motion="paused"
+        ref={host}
+      >
+        <span
+          slot="placeholder"
+          data-dotquilt-text-placeholder=""
+          aria-hidden
+          inert
+        >
+          {initial.mask}
+        </span>
+        <span
+          data-dotquilt-text-content=""
+          {...contentAttributes}
+          inert={contentAttributes.inert === '' ? true : undefined}
+        >
+          {children}
+        </span>
+      </dotquilt-text-loader>
+    </>
   );
 });
