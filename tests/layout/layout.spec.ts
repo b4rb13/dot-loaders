@@ -30,11 +30,21 @@ async function observe(page: Page) {
             value: e.value,
             startTime: e.startTime,
             hadRecentInput: e.hadRecentInput,
-            sources: (e.sources ?? []).map((s) => ({
-              id: (s.node as Element)?.id ?? '',
-              previous: s.previousRect.toJSON(),
-              current: s.currentRect.toJSON(),
-            })),
+            sources: (e.sources ?? []).map((s) => {
+              // Name the node well enough to find it from a CI log.
+              const node = s.node as Element | undefined;
+              const element = node?.nodeType === 1 ? node : node?.parentElement;
+              const near = element?.closest('[id]');
+              return {
+                id: element?.id ?? '',
+                node: element
+                  ? `${element.localName}${element.className && typeof element.className === 'string' ? `.${element.className.trim().replace(/\s+/g, '.')}` : ''}${element.getAttribute('slot') ? `[slot=${element.getAttribute('slot')}]` : ''}`
+                  : String(node?.nodeName ?? ''),
+                in: near && near !== element ? near.id : '',
+                previous: s.previousRect.toJSON(),
+                current: s.currentRect.toJSON(),
+              };
+            }),
           });
         }
       }).observe({ type: 'layout-shift', buffered: true });
@@ -230,7 +240,11 @@ for (const framework of ['native', 'react'])
         }));
         for (const sample of result.samples) stable(before, sample);
         const cls = result.supported ? layoutScore(result.shifts) : null;
-        if (result.supported) expect(cls).toBeLessThanOrEqual(0.01);
+        if (result.supported)
+          expect(
+            cls,
+            `layout shifts: ${JSON.stringify(result.shifts.filter((shift) => !shift.hadRecentInput))}`,
+          ).toBeLessThanOrEqual(0.01);
         expect(result.errors).toEqual([]);
         expect(result.csp).toEqual(csp);
         expect(errors).toEqual([]);
