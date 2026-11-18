@@ -24,11 +24,18 @@ export function subscribe(client: Client): Subscription {
     // one of its ancestors, or a document-wide motion/visibility change.
     const pending = new Set<Client>();
     const flush = () => {
-      for (const c of pending) {
-        pending.delete(c);
+      const batch = [...pending];
+      pending.clear();
+      for (const c of batch) {
         if (!clients.has(c)) continue;
         c.visible = undefined;
-        c.changed();
+        // One failing handler must not drop the rest of the batch, or leave
+        // the queue non-empty so that no later flush is ever scheduled.
+        try {
+          c.changed();
+        } catch (error) {
+          win.reportError?.(error);
+        }
       }
     };
     const queue = (c: Client) => {
