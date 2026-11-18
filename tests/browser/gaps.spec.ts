@@ -61,7 +61,7 @@ test('no JavaScript: supplied ready content works and pending content stays unav
   await context.close();
 });
 
-test('independently evaluated compatible copies share registration and animation bindings', async ({
+test('a second copy of the library is refused while the first copy keeps working', async ({
   page,
 }) => {
   await page.goto('/?static');
@@ -69,27 +69,46 @@ test('independently evaluated compatible copies share registration and animation
     await page.evaluate(async () => {
       const first = await import(String('/pkg/dist/index.js'));
       const second = await import(String('/pkg-copy/dist/index.js'));
+      const secondAll = await import(String('/pkg-copy/dist/register-all.js'));
       const { pulse } = await import(
         String('/pkg-copy/dist/skeleton-animations.js')
       );
-      first.registerSkeletonBlock();
-      first.registerLoadingRegion();
-      second.registerSkeletonBlock();
-      second.registerLoadingRegion();
+      const refused = (register: () => void) => {
+        try {
+          register();
+          return 'registered';
+        } catch (error) {
+          return (error as { code?: string }).code ?? String(error);
+        }
+      };
+      const results = {
+        first: refused(first.registerSkeletonBlock),
+        again: refused(first.registerSkeletonBlock),
+        second: refused(second.registerSkeletonBlock),
+        secondAll: refused(secondAll.registerAll),
+      };
       const block = document.getElementById('block') as SkeletonBlock;
+      const errors: string[] = [];
+      block.addEventListener('dotquilt-error', (event) =>
+        errors.push((event as CustomEvent<{ code: string }>).detail.code),
+      );
+      // A binding made by the second copy is not one of this copy's animations.
       block.animations = { idle: pulse() };
       await Promise.resolve();
       return {
-        independentlyEvaluated: first.SkeletonBlock !== second.SkeletonBlock,
-        reused:
+        ...results,
+        kept:
           customElements.get('dotquilt-skeleton-block') === first.SkeletonBlock,
-        binding: block.animations.idle?.id,
+        errors,
       };
     }),
   ).toEqual({
-    independentlyEvaluated: true,
-    reused: true,
-    binding: 'dotquilt/pulse',
+    first: 'registered',
+    again: 'registered',
+    second: 'registration-conflict',
+    secondAll: 'registration-conflict',
+    kept: true,
+    errors: ['invalid-binding'],
   });
 });
 

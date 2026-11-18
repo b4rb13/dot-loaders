@@ -1,5 +1,11 @@
 import type { Motion, StylePolicy } from '../types.js';
-import { BaseElement, emit, motionRestricted } from './dom.js';
+import {
+  BaseElement,
+  emit,
+  motionRestricted,
+  type RefreshHost,
+  styleRefresh,
+} from './dom.js';
 import type { Preset, PresetKind } from './preset.js';
 import { subscribe } from './services.js';
 export interface Activity {
@@ -220,7 +226,7 @@ export function refreshStyles(scope: ParentNode): void {
   )
     hosts.push(scope as Element);
   for (const host of hosts) {
-    Reflect.get(host, Symbol.for('dotquilt.style-refresh.v1'))?.();
+    (host as RefreshHost)[styleRefresh]?.();
     (host as ManagedElement & { refresh(): void }).refresh?.();
   }
 }

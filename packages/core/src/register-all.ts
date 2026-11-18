@@ -1,6 +1,5 @@
 import { ChartLoader } from './chart.js';
 import { register } from './internal/dom.js';
-import { implementationVersion } from './internal/version.js';
 import { LoadingRegion } from './region.js';
 import {
   SkeletonBlock,
@@ -30,14 +29,9 @@ export function registerAll(): void {
   ] as const;
   // Check the entire batch before avoidable writes. Reentrant upgrades still use
   // each definition's normal conflict check; there is no rollback promise.
-  for (const [name] of definitions) {
+  for (const [name, definition] of definitions) {
     const existing = customElements.get(name);
-    if (
-      existing &&
-      (!Object.hasOwn(existing, Symbol.for('dotquilt.implementation')) ||
-        Reflect.get(existing, Symbol.for('dotquilt.implementation')) !==
-          implementationVersion)
-    )
+    if (existing && existing !== definition)
       throw new LoaderRegistrationError(name);
   }
   for (const [name, definition] of definitions) register(name, definition);

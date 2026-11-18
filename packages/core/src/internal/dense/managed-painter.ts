@@ -1,8 +1,13 @@
 import type { Dot } from '../../animations.js';
 import { capturePainter } from '../capture.js';
-import { ancestors, paintLayer } from '../dom.js';
+import {
+  ancestors,
+  paintLayer,
+  type RefreshHost,
+  styleRefresh,
+} from '../dom.js';
+import { available, lease } from '../ledger.js';
 import { createPainter, type Painter, pointer } from '../painter.js';
-import { available, lease } from './resources.js';
 
 type Capture = (limit?: number) => readonly Dot[];
 interface Context {
@@ -11,7 +16,6 @@ interface Context {
   revision: number;
   release: Set<() => void>;
 }
-const refresh = Symbol.for('dotquilt.style-refresh.v1');
 const ns = 'http://www.w3.org/2000/svg';
 const bufferBytes = 4096 * 5 * 8;
 const factoryKey = Symbol.for('dotquilt.painter.v1');
@@ -23,12 +27,12 @@ export function installDensePainter(host: HTMLElement): void {
     release: new Set(),
     sources: new Set(),
   };
-  const prior = Reflect.get(host, refresh);
-  Reflect.set(host, refresh, () => {
+  const prior = (host as RefreshHost)[styleRefresh];
+  (host as RefreshHost)[styleRefresh] = () => {
     prior?.();
     context.revision++;
     for (const release of context.release) release();
-  });
+  };
   Reflect.set(
     host,
     factoryKey,
@@ -46,7 +50,7 @@ export function installDensePainter(host: HTMLElement): void {
   );
 }
 export function invalidateDensePainter(host: HTMLElement): void {
-  Reflect.get(host, refresh)?.();
+  (host as RefreshHost)[styleRefresh]?.();
 }
 function visible(host: HTMLElement): boolean {
   const win = host.ownerDocument.defaultView;

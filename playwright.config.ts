@@ -28,7 +28,6 @@ const suites: {
   { name: 'api', port: 4203 },
   { name: 'react', port: 4191 },
   { name: 'm4', port: 4194 },
-  { name: 'copies', port: 4206 },
   {
     name: 'layout',
     port: 4207,

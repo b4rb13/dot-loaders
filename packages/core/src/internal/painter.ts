@@ -1,5 +1,6 @@
 import type { Dot } from '../animations.js';
 import { paintLayer } from './dom.js';
+import { lease } from './ledger.js';
 import { clamp } from './math.js';
 export interface Painter {
   draw(callback: (dot: (value: Dot) => void) => void): void;
@@ -12,11 +13,6 @@ export type PaintEntry = Partial<Record<0 | 1 | 2 | 3, number>> & {
 };
 // Optional authoring support, reached only through an imported custom definition.
 // The engine creates/disposes this painter. Author callbacks see bounded commands only.
-interface Ledger {
-  dots: number;
-  users: number;
-}
-const ledgerKey = Symbol.for('dotquilt.v1.dot-ledger');
 export const pointer: unique symbol = Symbol.for('dotquilt.pointer.v1');
 type Index = 0 | 1 | 2 | 3;
 type Entry = SVGCircleElement &
@@ -45,12 +41,11 @@ export function createPainter(
   part?: string,
 ): Painter {
   const doc = host.ownerDocument;
-  const ledger = (Reflect.get(doc, ledgerKey) as Ledger | undefined) ?? {
-    dots: 0,
-    users: 0,
-  };
-  Reflect.set(doc, ledgerKey, ledger);
-  ledger.users++;
+  // The surface cap is checked per command below, so a refused lease means
+  // the document is full.
+  const budget = lease(doc, (code) =>
+    report(code === 'dots-limit' ? 'document-dot-limit' : code),
+  );
   let disposed = false;
   const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('aria-hidden', 'true');
@@ -96,11 +91,7 @@ export function createPainter(
           }
           let entry = dots[count - 1];
           if (!entry) {
-            if (ledger.dots >= 16384) {
-              report('document-dot-limit');
-              return;
-            }
-            ledger.dots++;
+            if (!budget.set('dots', dots.length + 1)) return;
             entry = doc.createElementNS('http://www.w3.org/2000/svg', 'circle');
             dots.push(entry);
             svg.append(entry);
@@ -123,16 +114,15 @@ export function createPainter(
       } finally {
         active = false;
       }
-      while (dots.length > count) {
-        dots.pop()?.remove();
-        ledger.dots--;
+      if (dots.length > count) {
+        for (const entry of dots.splice(count)) entry.remove();
+        budget.set('dots', dots.length);
       }
     },
     dispose() {
       if (disposed) return;
       disposed = true;
-      ledger.dots -= dots.length;
-      if (--ledger.users === 0) Reflect.deleteProperty(doc, ledgerKey);
+      budget.close();
       dots.length = 0;
       svg.remove();
       if (!host.shadowRoot?.querySelector('[data-dotquilt-painter]'))

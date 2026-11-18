@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { available, lease } from '../src/internal/dense/resources.js';
+import { available, lease } from '../src/internal/ledger.js';
 
 test('optional renderer preflight does not reserve resources or suppress actual rejection', () => {
   const doc = {} as Document;

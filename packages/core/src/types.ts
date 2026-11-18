@@ -20,7 +20,9 @@ export interface LoaderErrorDetail {
 export class LoaderRegistrationError extends Error {
   readonly code = 'registration-conflict';
   constructor(readonly elementName: string) {
-    super(`Incompatible definition for ${elementName}`);
+    super(
+      `${elementName} is already defined by other code. Load one copy of Dotquilt per page.`,
+    );
     this.name = 'LoaderRegistrationError';
   }
 }

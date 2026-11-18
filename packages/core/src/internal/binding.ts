@@ -7,7 +7,7 @@ import type {
 } from '../animations.js';
 import type { HandoffFactory } from './handoff.js';
 import type { Runner } from './runner.js';
-export const brand: unique symbol = Symbol.for('dotquilt.animation.v1');
+export const brand: unique symbol = Symbol('dotquilt.animation');
 type Definition = (
   | IdleDefinition<AnimationFamily, object>
   | HandoffDefinition<AnimationFamily, object, unknown>

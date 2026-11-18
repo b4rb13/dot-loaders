@@ -37,7 +37,7 @@ test.afterEach(async ({ page }) => {
   ).toEqual({ violations: [], errors: [] });
 });
 
-test('register-all import is inert and two independently evaluated copies reuse all nine definitions', async ({
+test('register-all import is inert, repeats safely, and a second copy is refused', async ({
   page,
 }) => {
   await page.goto('/?empty');
@@ -49,17 +49,22 @@ test('register-all import is inert and two independently evaluated copies reuse 
       first.registerAll();
       const definitions = tags.map((tag) => customElements.get(tag));
       first.registerAll();
-      second.registerAll();
+      let code: string | undefined;
+      try {
+        second.registerAll();
+      } catch (error) {
+        code = (error as { code: string }).code;
+      }
       return {
         inert,
-        separate: first.registerAll !== second.registerAll,
-        reused: tags.every(
+        code,
+        kept: tags.every(
           (tag, i) =>
             customElements.get(tag) === definitions[i] && !!definitions[i],
         ),
       };
     }, tags),
-  ).toEqual({ inert: true, separate: true, reused: true });
+  ).toEqual({ inert: true, code: 'registration-conflict', kept: true });
 });
 
 for (const [tag, helper] of [
@@ -68,7 +73,7 @@ for (const [tag, helper] of [
   ['dotquilt-region', 'registerLoadingRegion'],
 ] as const)
   for (const mode of ['selective', 'all'])
-    test(`an inherited build marker cannot authorize a different ${tag} definition (${mode})`, async ({
+    test(`a subclass of another Dotquilt element cannot take the place of ${tag} (${mode})`, async ({
       page,
     }) => {
       await page.goto('/?empty');
@@ -574,8 +579,10 @@ test('approved custom drift and fanReveal examples play on the engine clock and 
 }) => {
   await page.goto('/');
   await page.evaluate(async () => {
-    const { app, drift, fanReveal } = await import(String('/native.js'));
-    const { registerChartLoader } = await import(String('/copy-one/chart.js'));
+    // One copy: the chart comes from the same bundle as the region and animations.
+    const { app, drift, fanReveal, registerChartLoader } = await import(
+      String('/native.js')
+    );
     registerChartLoader();
     const chart = document.createElement('dotquilt-chart-loader');
     chart.className = 'chart-example';

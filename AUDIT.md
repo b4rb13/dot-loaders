@@ -86,7 +86,13 @@ Following decisions 2 and 5 (decided 2026-11-18, see the decisions list):
   - The M2 proof suite (`tests/browser/m2.spec.ts` with its `/m2` pages) and the renderer benchmark (`scripts/bench`, `tests/bench`, the trace manifests) go with them. They only ever ran the proof candidates, never the shipped painters.
   - A new test runs both shipped painters, SVG and Canvas: the 4,096-dot cap, invalid and late dots, and releasing every reservation.
   - The `/m2/catalog` page stays: the renderer and layout tests use it with the real loaders.
-- **Cross-copy layer:** next.
+- **Cross-copy layer removed.** Done on `refactor/one-copy`.
+  - **Registration:** only the exact class this copy defined counts as registered. A second copy of the library, even the same version, gets `registration-conflict` with a message saying to load one copy. The build-identity brand and the build step that wrote it are deleted.
+  - **Private symbols:** the animation, appearance, handoff and style-refresh symbols are now module-private. A binding made by another copy is reported as `invalid-binding`.
+  - **One budget:** the four dot budgets (SVG painter, Canvas painter, skeleton handoff and TextLoader) are one module, `internal/ledger.ts`.
+  - **Five global keys stay:** the budget, the frame loop, the surface reader, pointer position and painter capture. They are only inspection points for tests, not a protocol between copies.
+  - **Counts:** distinct `Symbol.for` keys go from 12 to 5 and `Reflect` calls from 48 to 32. The 84-test copies suite is deleted, and the two tests that expected sharing now expect a second copy to be refused.
+  - **Early registration has to share the app's module graph.** The React fixture's early script used to be a separate bundle, which is a second copy. It now builds with the client as ES modules sharing one chunk. Apps that register in a separate early script need the same setup.
 
 - **Typed table layout.** `staticTableLayout()` is a typed export of `@dotquilt-internal/core/table`. It replaces the `Symbol.for('dotquilt.table.static.v1')` hook that React read off the `TableLoader` class. The dead `react/src/internal/table-static` build is deleted. React's server markup is byte-identical.
 

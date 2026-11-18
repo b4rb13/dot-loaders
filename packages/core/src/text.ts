@@ -13,6 +13,7 @@ import {
   upgradeProperties,
 } from './internal/dom.js';
 import type { HandoffSource } from './internal/handoff.js';
+import { documentDots } from './internal/ledger.js';
 import { LoadingController } from './internal/loading-controller.js';
 import { pointer } from './internal/painter.js';
 import type { Preset } from './internal/preset.js';
@@ -342,16 +343,12 @@ export class TextLoader extends LoadingController<'text'> {
       maskCells.length * 35,
       valueCells.length * 35 + this.#source.length,
     );
-    const ledger = Reflect.get(
-      this.ownerDocument,
-      Symbol.for('dotquilt.v1.dot-ledger'),
-    ) as { dots: number } | undefined;
     const precise =
       !!supported &&
       singleLine(maskCells) &&
       singleLine(valueCells) &&
       count <= 4096 &&
-      (ledger?.dots ?? 0) + count <= 16384 &&
+      documentDots(this.ownerDocument) + count <= 16384 &&
       rect.width > 0 &&
       rect.height > 0;
     this.toggleAttribute('data-dotquilt-glyphs', precise);

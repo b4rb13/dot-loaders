@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import {
@@ -68,25 +67,6 @@ for (const [name, css] of Object.entries({
   table: [...tableStyles, ...staticTableStyles],
 }))
   await writeFile(resolve(cwd, `dist/${name}.css`), css.join('\n'));
-
-const manifest = await Bun.file(resolve(cwd, 'package.json')).json();
-const sourceHash = createHash('sha256');
-const sourcePaths = await Array.fromAsync(
-  new Bun.Glob('**/*.ts').scan(resolve(cwd, 'src')),
-);
-for (const path of sourcePaths.sort()) {
-  sourceHash.update(path);
-  sourceHash.update(
-    await Bun.file(resolve(cwd, 'src', path))
-      .arrayBuffer()
-      .then((v) => new Uint8Array(v)),
-  );
-}
-const identity = `dotquilt/${manifest.version}+${sourceHash.digest('hex').slice(0, 12)}`;
-await writeFile(
-  resolve(cwd, 'dist/internal/version.js'),
-  `export const implementationVersion = ${JSON.stringify(identity)};\n`,
-);
 
 await writeFile(
   resolve(cwd, 'dist/skeleton-family.css'),

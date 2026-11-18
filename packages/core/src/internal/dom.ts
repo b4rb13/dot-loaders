@@ -1,7 +1,8 @@
 import { LoaderRegistrationError, type StylePolicy } from '../types.js';
-import { implementationVersion as version } from './version.js';
 
-const implementation = Symbol.for('dotquilt.implementation');
+/** Lets a host's Canvas painter re-read colours after a stylesheet change. */
+export const styleRefresh: unique symbol = Symbol('dotquilt.style-refresh');
+export type RefreshHost = HTMLElement & { [styleRefresh]?: () => void };
 export const BaseElement = (globalThis.HTMLElement ??
   class {}) as typeof HTMLElement;
 export function register(
@@ -10,15 +11,10 @@ export function register(
 ): void {
   if (typeof customElements === 'undefined')
     throw new Error('Registration requires a browser');
-  const old = customElements.get(name) as
-    | (CustomElementConstructor & { [implementation]?: string })
-    | undefined;
-  if (old) {
-    if (!Object.hasOwn(old, implementation) || old[implementation] !== version)
-      throw new LoaderRegistrationError(name);
-    return;
-  }
-  Object.defineProperty(elementClass, implementation, { value: version });
+  const existing = customElements.get(name);
+  // One copy per page (AUDIT.md decision 5): only this exact class counts.
+  if (existing === elementClass) return;
+  if (existing) throw new LoaderRegistrationError(name);
   customElements.define(name, elementClass);
 }
 export function node<K extends keyof HTMLElementTagNameMap>(
