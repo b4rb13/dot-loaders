@@ -1,9 +1,9 @@
 import type { AnimationBinding, AnimationFamily } from '../animations.js';
-import { peakOpacity, restOpacity } from './marks.js';
+import { curves, peakOpacity, restOpacity } from './marks.js';
 import type { Runner } from './runner.js';
 
 /** Sine in-out, the curve the spec gives marks and the idle glow. */
-const sine = 'cubic-bezier(.37,0,.63,1)';
+const sine = curves.sine;
 const glowPeriod = 2800;
 const breathPeriod = 3200;
 

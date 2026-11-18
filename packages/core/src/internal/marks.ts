@@ -43,3 +43,28 @@ export function dotGrid(position?: string): string {
  */
 export const glowMask =
   'linear-gradient(104deg,#0000 12.5%,#00000005 18.75%,#0000001b 26.56%,#0000005e 34.38%,#000000c7 42.19%,#000 50%,#000000c7 57.81%,#0000005e 65.63%,#0000001b 73.44%,#00000005 81.25%,#0000 87.5%) 0 0/128% 100% no-repeat';
+
+/** Motion curves from the spec. */
+export const curves = {
+  /** Content entering and UI transitions: a long tail, no overshoot. */
+  settle: 'cubic-bezier(.22,1,.36,1)',
+  /** Opacity of revealed content. */
+  fade: 'cubic-bezier(.33,0,.2,1)',
+  /** Marks, the idle glow and chart glides. */
+  sine: 'cubic-bezier(.37,0,.63,1)',
+} as const;
+
+/**
+ * The handoff (design/SPEC.md): 1.1 s in all. Content fades in over 700 ms
+ * while a 2 px blur clears, and rises 5 px over 910 ms. Marks dim, shrink by
+ * 30% and drift up 3 px. An explicit `timing.duration` scales every part.
+ */
+export const handoff = {
+  duration: 1100,
+  contentFade: 700,
+  contentRise: 910,
+  risePx: 5,
+  blurPx: 2,
+  markShrink: 0.3,
+  markDriftPx: 3,
+} as const;

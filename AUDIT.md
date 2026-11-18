@@ -44,7 +44,12 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
   - **Idle:** a soft teal glow drifts across every 2.8 s on a sine curve, with a Gaussian edge, while the field breathes −14% to 0 every 3.2 s.
   - **Lines are two rows of marks tall** (18 px by default, was 0.875em), as in the mockup, so no row is clipped in half. Blocks and circles centre their grid.
   - **Handoff:** the skeleton dissolve fields start on the same grid offset as the CSS, so marks don't jump when the handoff begins.
-- **B. Handoff, every family.** Marks dim, shrink 30% and drift up 3 px. Content rises 5 px while fading in over 700 ms and a 2 px blur clears. 1.1 s in total, with row and cell staggers. Reduced motion becomes a 240 ms fade.
+- **B. Region and skeleton handoff — done on `design/4b-handoff`.**
+  - **Region:** content fades in over 700 ms while a 2 px blur clears, and rises 5 px over 910 ms. The handoff is 1.1 s by default, and an explicit `timing.duration` scales every part.
+  - **Skeleton marks:** they leave from left to right in bands, each band over half the handoff. Marks dim, shrink 30% and drift up 3 px, and the skeleton's layer holds until they are gone. An explicit `dissolve()` keeps its documented fall and does not shrink.
+  - **Out of scope:** ChartLoader, TableLoader and custom handoffs keep their shared clock (their drawing follows the content's progress); their slices change them.
+  - **Reduced motion:** still ends the handoff at once. The spec also asks for a 240 ms fade, but it says the runtime's reduced-motion behaviour stays, and tests pin the immediate handoff, so this waits for the owner (see the open question in the PR).
+  - **Layout tests:** they now subtract the content layer's rise before comparing positions. A transform is not a layout shift, and CLS ignores it too.
 - **C. ChartLoader.** The glow idle, then on ready the field glides onto the line (~570 ms) and the line draws in (~570 ms).
 - **D. TableLoader.** The glow idle; the handoff staggers by row and cell.
 - **E. TextLoader.** Characters cross-fade every 280 ms and lock left to right over 300 ms.

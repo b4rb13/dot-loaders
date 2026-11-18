@@ -2,6 +2,7 @@ import type { LoadingRegion } from '../region.js';
 import type { SkeletonBlock } from '../skeleton-block.js';
 import { definitionOf } from './binding.js';
 import type { HandoffDriver, HandoffSource } from './handoff.js';
+import { handoff } from './marks.js';
 import { skeletonHandoff } from './skeleton-handoff.js';
 import { targetChanges } from './target-changes.js';
 export function createSkeletonSource(
@@ -14,7 +15,7 @@ export function createSkeletonSource(
       ? [(participant as SkeletonBlock)[skeletonHandoff]()]
       : [],
   );
-  const easing = owner.timing.easing ?? 'ease-out';
+  const easing = owner.timing.easing;
   return {
     binding: child?.animations.handoff ?? child?.preset?.animations?.handoff,
     host: child ?? owner,
@@ -30,7 +31,7 @@ export function createSkeletonSource(
         driver?.duration ??
         requestedDuration ??
         (binding?.options as { duration?: number } | undefined)?.duration ??
-        (child ? 300 : 150);
+        handoff.duration;
       const releases: (() => void)[] = [];
       return {
         duration,
