@@ -84,9 +84,11 @@ Waiting on decisions:
 - Moving the M2 dense-renderer proof out of `src`: decision 2.
 - Removing the cross-copy symbol layer: decision 5.
 
+- **Typed table layout.** `staticTableLayout()` is a typed export of `@dotquilt-internal/core/table`. It replaces the `Symbol.for('dotquilt.table.static.v1')` hook that React read off the `TableLoader` class. The dead `react/src/internal/table-static` build is deleted. React's server markup is byte-identical.
+
 Next:
-- A typed table layout export to replace the React `Symbol.for` lookup.
-- Trimming the export surface.
+- Trimming the export surface. Each per-component stylesheet uses bare `:host` rules, so a single combined sheet would need every rule rewritten to target its element.
+- React style de-duplication: one `<style>` per instance.
 
 ## TL;DR
 

@@ -16,8 +16,6 @@ import {
   tableColumns,
   tableHeight,
   tableRows,
-  tableStatic,
-  tableStaticData,
 } from './internal/table-model.js';
 import {
   emptyTableInput,
@@ -55,8 +53,6 @@ export type TableTargetProvider = (
 export type TablePreset = import('./internal/preset.js').Preset<'table'>;
 
 export class TableLoader extends DenseLoader<'table', TableTargetProvider> {
-  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: Private adapter capability; accessed through its versioned symbol from the separately compiled React package.
-  private static [tableStatic] = tableStaticData;
   static override observedAttributes = [
     ...DenseLoader.observedAttributes,
     'rows',
@@ -187,6 +183,10 @@ export class TableLoader extends DenseLoader<'table', TableTargetProvider> {
       );
   }
 }
+export {
+  type StaticTableLayout,
+  staticTableLayout,
+} from './internal/table-model.js';
 export function registerTableLoader(): void {
   register('dotquilt-table-loader', TableLoader);
 }

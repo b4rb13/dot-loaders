@@ -1,8 +1,9 @@
 'use client';
 import type { Animations } from '@dotquilt-internal/core';
 import {
-  TableLoader as NativeTableLoader,
+  type TableLoader as NativeTableLoader,
   registerTableLoader,
+  staticTableLayout,
   type TableColumn,
   type TablePreset,
   type TableTargetProvider,
@@ -18,17 +19,6 @@ import {
   useStyleNonce,
 } from './static.js';
 import type { HostProps } from './types.js';
-
-/** Private native/adapter capability, independent of DOM and registration. */
-type StaticTableLayout = (
-  rows: number | undefined,
-  rowHeight: number | undefined,
-  columns: readonly TableColumn[] | undefined,
-) => {
-  rows: number;
-  rowHeight: number;
-  parts: readonly Readonly<Record<string, string>>[];
-};
 
 export interface TableLoaderProps extends HostProps<NativeTableLoader> {
   rows?: number | undefined;
@@ -71,11 +61,7 @@ export const TableLoader = /* @__PURE__ */ forwardRef<
       rows: count,
       rowHeight: height,
       parts,
-    } = (
-      (NativeTableLoader as unknown as Record<symbol, StaticTableLayout>)[
-        Symbol.for('dotquilt.table.static.v1')
-      ] as StaticTableLayout
-    )(rows, rowHeight, columns);
+    } = staticTableLayout(rows, rowHeight, columns);
     return {
       policy,
       rows: count,

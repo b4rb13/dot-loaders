@@ -128,15 +128,22 @@ export function staticTableSVG(
   return svg;
 }
 
-/** Private SSR-safe native/adapter seam; no DOM, renderer or registration work. */
-export const tableStatic: unique symbol = Symbol.for(
-  'dotquilt.table.static.v1',
-);
-export function tableStaticData(
+export interface StaticTableLayout {
+  readonly rows: number;
+  readonly rowHeight: number;
+  /** Attributes of each `<path>` in the static outline, in drawing order. */
+  readonly parts: readonly Readonly<Record<string, string>>[];
+}
+/**
+ * The static table outline for the given options, normalized the same way
+ * TableLoader normalizes them. Pure and DOM-free, so framework adapters can
+ * render the identical server markup without registering the element.
+ */
+export function staticTableLayout(
   rows = 5,
   rowHeight = 32,
   columns?: readonly TableColumn[],
-) {
+): StaticTableLayout {
   const normalized = tableColumns(columns);
   const count = tableRows(rows, normalized.length);
   const height = tableHeight(rowHeight);
