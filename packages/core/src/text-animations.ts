@@ -56,7 +56,7 @@ function factory<O extends object, P extends 'idle' | 'handoff'>(
 }
 export const scramble = /* @__PURE__ */ factory<ScrambleOptions, 'idle'>(
   scrambleDefinition,
-  { changesPerSecond: [2.8, 0.5, 4] },
+  { changesPerSecond: [1000 / 280, 0.5, 4] },
 );
 /** Independent, deterministic character phases; rate applies to each character. */
 export const scrambleCharacters = /* @__PURE__ */ factory<
@@ -73,10 +73,10 @@ export const labelPulse = /* @__PURE__ */ factory<LabelPulseOptions, 'idle'>(
   { travelPxPerSecond: [70, 20, 140] },
 );
 const handoffSchema = {
-  staggerMs: [24, 0, 40],
+  staggerMs: [40, 0, 60],
   reelMs: [55, 0, 100],
-  settleMs: [90, 40, 180],
-  pop: [0.2, 0, 0.3],
+  settleMs: [300, 40, 400],
+  pop: [0, 0, 0.3],
 } as const;
 export const lock = /* @__PURE__ */ factory<TextHandoffOptions, 'handoff'>(
   lockDefinition,
