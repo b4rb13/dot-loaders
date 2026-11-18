@@ -27,6 +27,8 @@ const suites: {
   { name: 'react', port: 4191 },
   { name: 'm4', port: 4194 },
   { name: 'layout', port: 4207, viewport: { width: 320, height: 2400 } },
+  // The built docs site (apps/site).
+  { name: 'site', port: 4331 },
 ];
 const browsers = (
   process.env.ALL_BROWSERS ? ['chromium', 'firefox', 'webkit'] : ['chromium']

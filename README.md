@@ -8,7 +8,7 @@ Dot-based loading components for the web. Placeholder dots animate while your da
   - TypingDots
   - LoadingRegion
 - **React adapter** (`packages/react`): thin React 19 wrappers with server-rendered markup.
-- **Website** (`apps/website`): a legacy docs/playground site, scheduled to be rebuilt from scratch.
+- **Docs site** (`apps/site`): Astro + Starlight, themed to the design spec.
 
 **Status:** private, pre-alpha, not published to npm. See [AUDIT.md](AUDIT.md) for the current state, known bugs and the phased plan.
 
@@ -31,10 +31,10 @@ bun run test:e2e
 ```
 
 ```bash
-bun run dev:website
+bun run --cwd apps/site dev
 ```
 
-The site runs at http://127.0.0.1:4210.
+The docs site runs at http://127.0.0.1:4330.
 
 ## Guides
 

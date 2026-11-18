@@ -1,0 +1,85 @@
+---
+title: Installation
+description: Install Dotquilt and register the components you use.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Install
+
+<Tabs syncKey="pkg">
+  <TabItem label="npm">
+    ```sh
+    npm install @dotquilt-internal/core
+    ```
+  </TabItem>
+  <TabItem label="bun">
+    ```sh
+    bun add @dotquilt-internal/core
+    ```
+  </TabItem>
+</Tabs>
+
+For React, add the adapter too:
+
+```sh
+npm install @dotquilt-internal/react
+```
+
+## Register the components
+
+Each component has its own entry point, so you only ship what you use. Register them once, before they appear on the page.
+
+<Tabs syncKey="framework">
+  <TabItem label="Native">
+    ```ts
+    import { registerLoadingRegion } from '@dotquilt-internal/core/region';
+    import { registerSkeletonText } from '@dotquilt-internal/core/skeleton';
+
+    registerLoadingRegion();
+    registerSkeletonText();
+    ```
+  </TabItem>
+  <TabItem label="React">
+    The React components register themselves. Import them from the adapter:
+
+    ```tsx
+    import { LoadingRegion, SkeletonText } from '@dotquilt-internal/react';
+    ```
+  </TabItem>
+</Tabs>
+
+To register every component at once, call `registerAll()` from `@dotquilt-internal/core/register-all`.
+
+## Show a placeholder
+
+<Tabs syncKey="framework">
+  <TabItem label="Native">
+    ```html
+    <dotquilt-region state="pending" aria-label="Quarterly revenue">
+      <dotquilt-skeleton-text slot="placeholder" lines="3"></dotquilt-skeleton-text>
+      <article>…your content…</article>
+    </dotquilt-region>
+    ```
+
+    When the data arrives, fill in your content and set the state:
+
+    ```ts
+    const region = document.querySelector('dotquilt-region');
+    region?.update({ state: 'ready' });
+    ```
+  </TabItem>
+  <TabItem label="React">
+    ```tsx
+    <LoadingRegion
+      state={data ? 'ready' : 'pending'}
+      aria-label="Quarterly revenue"
+      placeholder={<SkeletonText lines={3} />}
+    >
+      <article>…your content…</article>
+    </LoadingRegion>
+    ```
+  </TabItem>
+</Tabs>
+
+Give each region a label, so assistive technology can name what is loading.

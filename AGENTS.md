@@ -6,6 +6,7 @@ Dotquilt is a set of dot-based loading components. Placeholder dots animate whil
 | --- | --- |
 | `packages/core` | Native Web Components runtime, framework-free. 9 elements: SkeletonBlock/Line/Circle/Text, TextLoader, ChartLoader, TableLoader, TypingDots, LoadingRegion. |
 | `packages/react` | Thin React 19 adapter over the same runtime, with SSR markup. |
+| `apps/site` | Docs site: Astro + Starlight. Pages in `src/content/docs`, live previews in `src/components/Preview.astro`. |
 | `tests/`, `scripts/` | Browser/SSR/size tests and tooling. Many scripts are legacy and slated for deletion in Phase 1. |
 | `design/` | Design directions and specs for the visual rework. |
 
@@ -14,7 +15,7 @@ Dotquilt is a set of dot-based loading components. Placeholder dots animate whil
 Follow `AUDIT.md` (2026-11-18). It holds the audit findings, the phases and the open owner decisions.
 
 - **Runtime:** keep and refactor. Fix real bugs with regression tests, then simplify the size-golfed code. Readability beats saving bytes.
-- **Website, docs and every visual part:** rebuilt from scratch to `design/SPEC.md` (Phase 4). The legacy `apps/website` was retired on 2026-11-19; the new site is Phase 4c–4d.
+- **Website, docs and every visual part:** rebuilt from scratch to `design/SPEC.md` (Phase 4). The docs site is `apps/site`, Astro + Starlight (decision 8), themed from `design/tokens.css`.
 - **Open decisions:** listed at the end of `AUDIT.md`. Don't act as if one is decided until the owner answers it.
 
 ## Commands
@@ -33,6 +34,7 @@ Use Bun (pinned in `.bun-version`) and Node 24+.
   - `bun run test:e2e:all` adds Firefox and WebKit.
 - **Legacy suites:** `bun run test:legacy` (under a minute). Only two checks need packed tarballs: the React suite rerun on React 19.0, the oldest supported version, and catalog SSR under Node and Bun. Run them before a release or when touching the React adapter's hydration or nonce handling.
 - **Sizes:** `bun run size` prints gzip sizes per component. Budgets go in `scripts/size-budgets.json` once decided.
+- **Docs site:** `bun run --cwd apps/site dev` (http://127.0.0.1:4330; Astro runs it in the background, `bunx astro dev stop` ends it). `bun run build` builds it; `tests/site` checks the built pages.
 - **Everything CI runs:** `bun run verify`
 
 ## Rules

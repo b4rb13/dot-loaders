@@ -1,0 +1,116 @@
+/* The site's theme: Starlight's variables mapped onto the spec's tokens
+   (design/tokens.css, the single source of colour, type and shape). Starlight
+   always sets data-theme on <html>, which tokens.css follows. */
+@import "../../../../design/tokens.css";
+
+:root,
+:root[data-theme="light"] {
+  /* Colour. Starlight's "white" is the strongest text and "black" the page. */
+  --sl-color-white: var(--dq-ink);
+  --sl-color-gray-1: var(--dq-ink);
+  --sl-color-gray-2: var(--dq-ink);
+  --sl-color-gray-3: var(--dq-muted);
+  --sl-color-gray-4: var(--dq-faint);
+  --sl-color-gray-5: var(--dq-line-2);
+  --sl-color-gray-6: var(--dq-line);
+  --sl-color-gray-7: var(--dq-subtle);
+  --sl-color-black: var(--dq-bg);
+
+  --sl-color-accent-low: var(--dq-accent-soft);
+  --sl-color-accent: var(--dq-accent);
+  --sl-color-accent-high: var(--dq-accent);
+
+  --sl-color-text: var(--dq-ink);
+  --sl-color-text-accent: var(--dq-accent);
+  --sl-color-text-invert: var(--dq-accent-ink);
+  --sl-color-bg: var(--dq-bg);
+  --sl-color-bg-nav: var(--dq-surface);
+  --sl-color-bg-sidebar: var(--dq-bg);
+  --sl-color-bg-inline-code: var(--dq-subtle);
+  --sl-color-bg-accent: var(--dq-accent);
+  --sl-color-hairline-light: var(--dq-line);
+  --sl-color-hairline: var(--dq-line);
+  --sl-color-hairline-shade: var(--dq-line);
+
+  --sl-shadow-md: var(--dq-shadow);
+  --sl-shadow-lg: var(--dq-shadow-lg);
+
+  /* Type: Manrope and DM Mono; 15 px docs prose, about 68ch wide. */
+  --sl-font: var(--dq-font);
+  --sl-font-mono: var(--dq-font-mono);
+  --sl-text-body: 0.9375rem;
+  --sl-line-height: var(--dq-body-leading);
+  --sl-line-height-headings: var(--dq-heading-leading);
+  --sl-text-h1: 2.125rem;
+  --sl-text-h2: 1.5rem;
+  --sl-text-h3: 1.1875rem;
+  --sl-text-h4: 1rem;
+  --sl-content-width: 46rem;
+  --sl-sidebar-width: 16.5rem;
+}
+
+body {
+  font-feature-settings: "tnum" 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Display headings are weight 500 and tight; section headings are 600. */
+h1#_top,
+.sl-markdown-content h1 {
+  font-weight: var(--dq-heading-weight);
+  letter-spacing: var(--dq-heading-tracking);
+}
+.sl-markdown-content :is(h2, h3, h4) {
+  font-weight: var(--dq-title-weight);
+  letter-spacing: -0.01em;
+}
+.sl-markdown-content p,
+.sl-markdown-content li {
+  max-width: 68ch;
+}
+
+/* The current page: soft teal, not a solid accent block (the mockup). */
+.sidebar-content a[aria-current="page"],
+.sidebar-content a[aria-current="page"]:hover,
+.sidebar-content a[aria-current="page"]:focus {
+  background: var(--dq-accent-soft);
+  color: var(--dq-accent);
+  font-weight: 500;
+}
+.sidebar-content a {
+  border-radius: var(--dq-radius-sm);
+}
+.sidebar-content .group-label .large {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--dq-faint);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Hairlines, never hard edges. */
+:focus-visible {
+  outline-color: var(--dq-accent);
+}
+
+/* Buttons are 9 px controls, not pills (design/SPEC.md, "Shape"). */
+.sl-link-button {
+  border-radius: var(--dq-radius-sm);
+  font-weight: 500;
+}
+
+/* Hero: one wide column, the spec's display size and lead text. */
+.hero {
+  grid-template-columns: minmax(0, 46rem);
+}
+.hero h1 {
+  font-size: clamp(2.2rem, 4.6vw, 3.4rem);
+  font-weight: var(--dq-heading-weight);
+  letter-spacing: var(--dq-heading-tracking);
+  line-height: var(--dq-heading-leading);
+}
+.hero .tagline {
+  font-size: 1.09375rem;
+  color: var(--dq-muted);
+  max-width: 40rem;
+}

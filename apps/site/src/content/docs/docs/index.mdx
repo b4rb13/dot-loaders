@@ -1,0 +1,43 @@
+---
+title: Introduction
+description: What Dotquilt is and how a loading region hands over to your content.
+---
+
+import Preview from '../../../components/Preview.astro';
+
+Dotquilt is a set of loading placeholders drawn from small marks. While your data loads, the marks hold the shape of what is coming. When it arrives, they fade out as your content rises into place.
+
+<Preview label="A card loading">
+  <dotquilt-region state="pending" aria-label="Quarterly revenue">
+    <dotquilt-skeleton-text slot="placeholder" lines="3"></dotquilt-skeleton-text>
+    <div>
+      <strong>Quarterly revenue</strong>
+      <p>Revenue grew 12% compared with the previous quarter.</p>
+    </div>
+  </dotquilt-region>
+</Preview>
+
+## How it works
+
+Every loader sits inside a **loading region**. The region decides when to switch; the loader only draws.
+
+- **Pending:** the region shows its placeholder and keeps your content hidden from people and assistive technology.
+- **Ready:** the region hands over. The marks fade and drift away while your content rises in, in about a second.
+- **Refreshing:** your content stays visible and usable while new data loads.
+
+Your application owns the data, the request and the state. Dotquilt owns only the decoration and the handoff.
+
+## The components
+
+| Component | Holds the place of |
+| --- | --- |
+| SkeletonBlock, SkeletonLine, SkeletonCircle, SkeletonText | images, text lines, avatars and paragraphs |
+| TextLoader | a number or short label |
+| ChartLoader | a chart |
+| TableLoader | a table |
+| TypingDots | a reply that is being written |
+| LoadingRegion | the area that switches from placeholder to content |
+
+## Works everywhere
+
+The components are native web components, so they work in plain HTML and in any framework. A thin React adapter adds server rendering and typed props. Reduced motion, forced colours and keyboard focus are handled for you.

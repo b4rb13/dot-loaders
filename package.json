@@ -8,13 +8,14 @@
     "node": ">=24"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/site"
   ],
   "scripts": {
     "build": "turbo run build",
     "check": "turbo run check && tsc --noEmit -p tsconfig.json",
-    "lint": "biome check packages scripts tests examples package.json turbo.json tsconfig.json biome.json playwright*.config.ts .changeset --error-on-warnings",
-    "format": "biome check --write packages scripts tests examples package.json turbo.json tsconfig.json biome.json playwright*.config.ts .changeset",
+    "lint": "biome check packages apps/site scripts tests examples package.json turbo.json tsconfig.json biome.json playwright*.config.ts .changeset --error-on-warnings",
+    "format": "biome check --write packages apps/site scripts tests examples package.json turbo.json tsconfig.json biome.json playwright*.config.ts .changeset",
     "test": "turbo run test && bun test scripts tests/layout/score",
     "test:e2e": "playwright test",
     "test:e2e:all": "ALL_BROWSERS=1 playwright test",
