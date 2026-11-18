@@ -7,6 +7,7 @@ import {
   styleRefresh,
 } from '../dom.js';
 import { available, lease } from '../ledger.js';
+import { glowColor, markColor } from '../marks.js';
 import { createPainter, type Painter, pointer } from '../painter.js';
 
 type Capture = (limit?: number) => readonly Dot[];
@@ -173,8 +174,8 @@ function createDensePainter(
       root.append(foreign);
       base = doc.createElementNS(ns, 'rect');
       accent = doc.createElementNS(ns, 'rect');
-      base.setAttribute('fill', 'var(--dotquilt-color,currentColor)');
-      accent.setAttribute('fill', 'var(--dotquilt-accent-color,currentColor)');
+      base.setAttribute('fill', markColor);
+      accent.setAttribute('fill', glowColor);
       root.append(base, accent);
       paintLayer(shadow).append(root);
     }

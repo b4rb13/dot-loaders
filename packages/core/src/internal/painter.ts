@@ -1,6 +1,7 @@
 import type { Dot } from '../animations.js';
 import { paintLayer } from './dom.js';
 import { lease } from './ledger.js';
+import { glowColor, markColor } from './marks.js';
 import { clamp } from './math.js';
 export interface Painter {
   draw(callback: (dot: (value: Dot) => void) => void): void;
@@ -102,12 +103,7 @@ export function createPainter(
           write(entry, 3, clamp(opacity), channels);
           const accent = tone === 'accent';
           if (entry[4] !== accent) {
-            entry.setAttribute(
-              'fill',
-              accent
-                ? 'var(--dotquilt-accent-color,currentColor)'
-                : 'var(--dotquilt-color,currentColor)',
-            );
+            entry.setAttribute('fill', accent ? glowColor : markColor);
             entry[4] = accent;
           }
         });

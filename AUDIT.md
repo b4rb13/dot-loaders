@@ -50,7 +50,12 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
   - **Out of scope:** ChartLoader, TableLoader and custom handoffs keep their shared clock (their drawing follows the content's progress); their slices change them.
   - **Reduced motion:** still ends the handoff at once. The spec also asks for a 240 ms fade, but it says the runtime's reduced-motion behaviour stays, and tests pin the immediate handoff, so this waits for the owner (see the open question in the PR).
   - **Layout tests:** they now subtract the content layer's rise before comparing positions. A transform is not a layout shift, and CLS ignores it too.
-- **C. ChartLoader.** The glow idle, then on ready the field glides onto the line (~570 ms) and the line draws in (~570 ms).
+- **C. ChartLoader — done on `design/4b-chart`.**
+  - **Idle:** a faint field (about 5%) with a soft ridge line up to about 63% and a 26% shaded area under it. The ridge drifts on two slow sines, the field breathes, and a teal glow drifts across every 2.8 s, drawn as accent marks over the resting ones.
+  - **Marks:** every mark is the same size, and the grid starts half a pitch in, like the CSS grid. The static field before upgrade sits at 15%.
+  - **Handoff:** morph-wipe, 1.1 s. Columns finish gliding onto the data by 55%, turning teal, and the real chart draws in from 48% to the end.
+  - **Painter colours:** both painters now default to the spec's slate and glow instead of `currentColor`. This also affects TextLoader and custom animations.
+  - **Other variants:** `ridgeHeight` is the new ridge, so variants built on it (cycle, terrain and others) share it. Their own tuning is slice H.
 - **D. TableLoader.** The glow idle; the handoff staggers by row and cell.
 - **E. TextLoader.** Characters cross-fade every 280 ms and lock left to right over 300 ms.
 - **F. TypingDots and default sizes.**
