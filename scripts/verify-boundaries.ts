@@ -58,7 +58,13 @@ for (const name of ['core', 'react']) {
         if (!Object.hasOwn(native.exports, entry ? `.${entry}` : '.'))
           throw Error(`Unexported core dependency: ${specifier}`);
       } else if (
-        !['react', 'react-dom', 'react-dom/client'].includes(specifier)
+        // react/jsx-runtime is part of the react peer dependency (compiled JSX).
+        ![
+          'react',
+          'react/jsx-runtime',
+          'react-dom',
+          'react-dom/client',
+        ].includes(specifier)
       )
         throw Error(`Unexpected external dependency ${specifier}`);
     }
