@@ -9,6 +9,7 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
+import { hasClientDirective } from './client-directive.js';
 
 // What a published package guarantees beyond the workspace build, checked
 // without installing tarballs:
@@ -191,3 +192,26 @@ test('selective skeleton and region bundles leave the dense renderer out', async
     ).toBe(false);
   }
 }, 30_000);
+
+// Server components may import the adapter directly; the directive is what
+// keeps its hooks on the client side of that boundary.
+test('react: every component entry keeps its client directive', async () => {
+  for (const entry of [
+    'index',
+    'skeleton',
+    'region',
+    'typing',
+    'text',
+    'chart',
+    'table',
+  ])
+    expect(
+      hasClientDirective(
+        await readFile(
+          resolve(root, `packages/react/dist/${entry}.js`),
+          'utf8',
+        ),
+      ),
+      entry,
+    ).toBe(true);
+});

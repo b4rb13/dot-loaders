@@ -34,10 +34,6 @@ const suites: Record<string, Suite> = {
     ],
     configs: [{ file: 'playwright.react.config.ts', chromium: 'chromium-*' }],
   },
-  next: {
-    prepare: [['bun', 'run', 'scripts/prepare-next.ts']],
-    configs: [{ file: 'playwright.next.config.ts', chromium: 'chromium-*' }],
-  },
   m4: {
     prepare: [['bun', 'run', 'scripts/prepare-m4.ts']],
     configs: [
@@ -90,7 +86,6 @@ const suites: Record<string, Suite> = {
 // Suites reuse consumers that earlier suites install.
 const requires: Record<string, string[]> = {
   react: ['native'],
-  next: ['react'],
   m4: ['react'],
   table: ['m4'],
   presets: ['m4'],
