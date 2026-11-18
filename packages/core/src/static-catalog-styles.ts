@@ -1,4 +1,11 @@
-import { dotGrid, lineHeight, restOpacity } from './internal/marks.js';
+import {
+  dotGrid,
+  lineHeight,
+  markColor,
+  restOpacity,
+  typingGap,
+  typingSize,
+} from './internal/marks.js';
 
 const staticDots = `${dotGrid()};opacity:${restOpacity}`;
 const staticLineDots = `${dotGrid('0 0')};opacity:${restOpacity}`;
@@ -19,5 +26,5 @@ export const staticTextStyles: readonly string[] =
   ]);
 export const staticTypingStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
-    'dotquilt-typing-dots{display:inline-flex;align-items:center;height:1em}dotquilt-typing-dots [data-dotquilt-static]{display:inline-flex;align-items:center;gap:var(--dotquilt-dot-gap,4px)}dotquilt-typing-dots .dot{display:block;width:var(--dotquilt-dot-size,2px);height:var(--dotquilt-dot-size,2px);border-radius:50%;background:var(--dotquilt-color,currentColor);opacity:.35}@media(forced-colors:active){dotquilt-typing-dots .dot{background:CanvasText}}',
+    `dotquilt-typing-dots{display:inline-flex;align-items:center;height:1em}dotquilt-typing-dots [data-dotquilt-static]{display:inline-flex;align-items:center;gap:${typingGap}}dotquilt-typing-dots .dot{display:block;width:${typingSize};height:${typingSize};border-radius:50%;background:${markColor};opacity:.3}@media(forced-colors:active){dotquilt-typing-dots .dot{background:CanvasText}}`,
   ]);

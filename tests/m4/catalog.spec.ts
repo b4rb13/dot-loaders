@@ -425,21 +425,22 @@ for (const mode of ['inline', 'nonce', 'external']) {
     expect(result.stable).toBe(true);
     expect(result.stopped).toBe(true);
     expect(result.released).toBe(true);
+    // design/SPEC.md: a sine wave 30% → 100%, each dot 14% of a cycle behind.
     expect(result.frames.map((frame) => frame.computedOffset)).toEqual([
-      0, 0.35, 0.7, 1,
+      0, 0.5, 1,
     ]);
     expect(result.frames.map((frame) => frame.opacity)).toEqual([
-      '0.35',
-      '0.85',
-      '0.35',
-      '0.35',
+      '0.3',
+      '1',
+      '0.3',
     ]);
     expect(result.timing.length).toBeGreaterThan(0);
     for (const [index, timing] of result.timing.entries()) {
-      expect(timing?.duration).toBe(600);
-      expect(timing?.easing).toBe('ease-in-out');
+      // 1.9 s per cycle at speed 2; easing sits on the keyframes.
+      expect(timing?.duration).toBe(950);
+      expect(timing?.easing).toBe('linear');
       expect(timing?.iterationStart).toBeCloseTo(
-        ((result.phase ?? 0) + 1 - index / result.timing.length) % 1,
+        ((result.phase ?? 0) + 1 - ((index * 0.14) % 1)) % 1,
         5,
       );
     }
