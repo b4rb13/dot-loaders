@@ -1,13 +1,22 @@
 import { media } from './dom.js';
 import { lease } from './ledger.js';
+import { curves, restOpacity } from './marks.js';
 
 /** How a skeleton leaves during a region handoff. Region owns time, restrictions and cleanup. */
 export type SkeletonDeparture = (
   duration: number,
-  easing: string,
+  easing: string | undefined,
   own: (animation: Animation) => void,
   invalidate: () => void,
 ) => () => void;
+
+/** How the marks leave: vertical drift (negative is up) and how much they shrink. */
+export interface Departure {
+  readonly driftPx: number;
+  readonly shrink: number;
+}
+/** Each band of marks takes this share of the handoff; later bands start later. */
+const exitWindow = 0.5;
 export const skeletonHandoff: unique symbol = Symbol(
   'dotquilt.skeleton-handoff',
 );
@@ -21,12 +30,16 @@ function gridOffset(position: string, box: number, tile: number): number {
   return tile > 0 ? ((px % tile) + tile) % tile : 0;
 }
 
-/** Nine interleaved dot fields share one clock; no per-dot loop or animation. */
+/**
+ * The marks leave from left to right (design/SPEC.md): the field is cut into
+ * vertical bands, and each band's marks dim, shrink and drift over half the
+ * handoff, starting later the further right the band is. No per-dot loop.
+ */
 export function dissolveSkeleton(
   host: HTMLElement,
   duration: number,
-  easing: string,
-  fallPx: number,
+  easing: string | undefined,
+  departure: Departure,
   own: (animation: Animation) => void,
   invalidate: () => void,
   report: (code: string) => void,
@@ -44,6 +57,7 @@ export function dissolveSkeleton(
     const css = win.getComputedStyle(surface);
     const gap = parseFloat(css.backgroundSize);
     return {
+      size: parseFloat(css.getPropertyValue('--s')) || gap / 2,
       x: box.left - bounds.left,
       y: box.top - bounds.top,
       width: box.width,
@@ -128,39 +142,59 @@ export function dissolveSkeleton(
         width: shape.width,
         height: shape.height,
       });
-      for (let i = 0; i < 9; i++) {
-        const id = `d${index}-${i}`;
+      const bands = Math.max(
+        1,
+        Math.min(12, Math.round(shape.width / (shape.gap * 4))),
+      );
+      const width = shape.width / bands;
+      for (let band = 0; band < bands; band++) {
+        const id = `d${index}-${band}`;
         const pattern = node('pattern', {
           id,
           patternUnits: 'userSpaceOnUse',
           x: shape.offsetX,
           y: shape.offsetY,
-          width: shape.gap * 3,
-          height: shape.gap * 3,
+          width: shape.gap,
+          height: shape.gap,
         });
-        pattern.append(
-          node('circle', {
-            cx: shape.gap * ((i % 3) + 0.5),
-            cy: shape.gap * (Math.floor(i / 3) + 0.5),
-          }),
-        );
+        const mark = node('circle', { cx: shape.gap / 2, cy: shape.gap / 2 });
+        pattern.append(mark);
         const rect = node('rect', {
-          width: shape.width,
+          x: band * width,
+          width,
           height: shape.height,
           fill: `url(#${id})`,
         });
         field.append(pattern, rect);
-        const delay = ((i * 5) % 9) / 20;
+        const timing: KeyframeAnimationOptions = {
+          duration: duration * exitWindow,
+          delay:
+            bands > 1 ? (band / (bands - 1)) * (1 - exitWindow) * duration : 0,
+          fill: 'both',
+        };
         own(
           rect.animate(
             [
-              { opacity: 0.3, transform: 'translateY(0px)', offset: 0 },
-              { opacity: 0.3, transform: 'translateY(0px)', offset: delay },
-              { opacity: 0, transform: `translateY(${fallPx}px)`, offset: 1 },
+              {
+                opacity: restOpacity,
+                transform: 'translateY(0px)',
+                easing: easing ?? curves.sine,
+              },
+              { opacity: 0, transform: `translateY(${departure.driftPx}px)` },
             ],
-            { duration, easing, fill: 'both' },
+            timing,
           ),
         );
+        if (departure.shrink)
+          own(
+            mark.animate(
+              [
+                { r: `${shape.size / 2}px`, easing: easing ?? curves.sine },
+                { r: `${(shape.size / 2) * (1 - departure.shrink)}px` },
+              ],
+              timing,
+            ),
+          );
       }
       svg.append(field);
     }

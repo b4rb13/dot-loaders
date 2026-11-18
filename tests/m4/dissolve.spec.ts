@@ -59,7 +59,13 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
         ).r,
       }));
     });
-    expect(measured.map((row) => row.patterns)).toEqual([9, 9, 9, 36]);
+    // One pattern per band of marks: 1–12 per surface, four lines in multiline.
+    expect(
+      measured.every(
+        (row) => (row.patterns ?? 0) >= 1 && (row.patterns ?? 0) <= 48,
+      ),
+    ).toBe(true);
+    expect(measured[3]?.patterns).toBeGreaterThanOrEqual(4);
     // Half the default 4.4 px mark.
     expect(measured.every((row) => row.radius === '2.2px')).toBe(true);
     const reservation = await page.evaluate(ledger);
@@ -78,7 +84,7 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
     await page.evaluate(() => {
       for (const host of document.querySelectorAll('[data-host]'))
         for (const animation of host.shadowRoot?.getAnimations() ?? [])
-          animation.currentTime = 165;
+          animation.currentTime = 150; // halfway through the fixture's 300 ms handoff
     });
     if (mode === 'inline')
       await page.screenshot({
@@ -97,8 +103,18 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
             rect.getAnimations()[0]?.effect?.getComputedTiming().progress,
         ),
       );
+    // Marks leave left to right: exit progress falls across the bands, and
+    // some bands are part-way out.
+    expect(offsets.length).toBeGreaterThan(1);
     expect(
       offsets.every(
+        (value, index) =>
+          typeof value === 'number' &&
+          (index === 0 || value <= (offsets[index - 1] as number)),
+      ),
+    ).toBe(true);
+    expect(
+      offsets.some(
         (value) => typeof value === 'number' && value > 0 && value < 1,
       ),
     ).toBe(true);

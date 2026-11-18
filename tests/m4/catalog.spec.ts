@@ -577,7 +577,8 @@ for (const mode of ['hash', 'external']) {
       hidden: 'true',
       busy: 'true',
     });
-    expect(result.duration).toBe(150);
+    // The spec's 1.1 s handoff (design/SPEC.md).
+    expect(result.duration).toBe(1100);
     expect(result.settled).toEqual({
       inert: false,
       hidden: null,

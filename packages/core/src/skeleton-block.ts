@@ -11,6 +11,7 @@ import {
   ManagedElement,
   remaining,
 } from './internal/element.js';
+import { handoff } from './internal/marks.js';
 import type { Preset } from './internal/preset.js';
 import { skeletonPreset } from './internal/preset.js';
 import { capturePresetData } from './internal/preset-data.js';
@@ -114,15 +115,21 @@ export class SkeletonBlock extends ManagedElement {
   [skeletonHandoff](): import('./internal/skeleton-handoff.js').SkeletonDeparture {
     const binding = this.#bindings.handoff ?? this.preset?.animations?.handoff;
     const builtin = !binding || definitionOf(binding).dissolve;
-    const fallPx =
-      (binding?.options as { fallPx?: number } | undefined)?.fallPx ?? 5;
+    // The default exit follows the spec; an explicit dissolve() keeps its fall.
+    const departure = binding
+      ? {
+          driftPx:
+            (binding.options as { fallPx?: number } | undefined)?.fallPx ?? 5,
+          shrink: 0,
+        }
+      : { driftPx: -handoff.markDriftPx, shrink: handoff.markShrink };
     return (duration, easing, own, invalidate) => {
       if (!builtin || !this.allowed(this.activity)) return () => {};
       const effect = dissolveSkeleton(
         this,
         duration,
         easing,
-        fallPx,
+        departure,
         own,
         invalidate,
         (code) => this.report(code, 'animations'),

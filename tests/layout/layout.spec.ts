@@ -38,13 +38,27 @@ async function observe(page: Page) {
           });
         }
       }).observe({ type: 'layout-shift', buffered: true });
+    // The handoff raises content into place with a transform, which is not a
+    // layout shift; take it out so the samples compare layout only.
+    const rise = (element: Element) => {
+      const layer = element
+        .closest('dotquilt-region')
+        ?.shadowRoot?.querySelector('[part=content]');
+      return layer
+        ? Number.parseFloat(
+            getComputedStyle(layer).translate.split(' ')[1] ?? '',
+          ) || 0
+        : 0;
+    };
     const rects = () =>
       Object.fromEntries(
         ['before', 'owner', 'source', 'after', 'value'].map((id) => {
-          const r = document.getElementById(id)?.getBoundingClientRect();
+          const element = document.getElementById(id);
+          const r = element?.getBoundingClientRect();
+          const y = element && id === 'value' ? rise(element) : 0;
           return [
             id,
-            r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null,
+            r ? { x: r.x, y: r.y - y, width: r.width, height: r.height } : null,
           ];
         }),
       );

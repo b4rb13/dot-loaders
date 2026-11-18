@@ -21,6 +21,7 @@ import {
   type HandoffSource,
   runHandoff,
 } from './handoff.js';
+import { curves, handoff } from './marks.js';
 import { clamp } from './math.js';
 import type { Preset } from './preset.js';
 import { regionPreset } from './preset.js';
@@ -525,14 +526,25 @@ export abstract class LoadingController<
       return;
     }
     try {
-      const options: KeyframeAnimationOptions = {
-        duration,
-        easing,
-        fill: 'both',
-      };
-      const outgoing = placeholder.animate({ opacity: [1, 0] }, options);
-      const incoming = content.animate({ opacity: [0, 1] }, options);
-      this.#work.animations.push(outgoing, incoming);
+      const { outgoing, incoming, extra } =
+        !binding &&
+        (source.animation === 'dotquilt/dissolve' ||
+          source.animation === 'dotquilt/fade')
+          ? this.#specHandoff(placeholder, content, duration, source.animation)
+          : {
+              // Custom and dense sources keep one shared clock: they draw in
+              // step with the content's progress.
+              outgoing: placeholder.animate(
+                { opacity: [1, 0] },
+                { duration, easing, fill: 'both' },
+              ),
+              incoming: content.animate(
+                { opacity: [0, 1] },
+                { duration, easing, fill: 'both' },
+              ),
+              extra: [],
+            };
+      this.#work.animations.push(outgoing, incoming, ...extra);
       this.#work.incoming = incoming;
       outgoing.onfinish = () => {
         if (this.#work?.revision === revision) this.#finish('end', 'complete');
@@ -544,6 +556,52 @@ export abstract class LoadingController<
       this.report('animation-failed', 'animations');
       this.#finish('end', 'fallback');
     }
+  }
+  /**
+   * design/SPEC.md: content fades in while a slight blur clears and rises
+   * into place on a longer settle. Skeleton marks leave by themselves, so
+   * their layer holds until the end; other placeholders fade with the content.
+   * Every part scales with `duration`, and the handoff ends after the rise.
+   */
+  #specHandoff(
+    placeholder: HTMLElement,
+    content: HTMLElement,
+    duration: number,
+    animation: string,
+  ) {
+    const scale = duration / handoff.duration;
+    const fade = (handoff.contentFade * scale) / duration;
+    const timing = this.timing;
+    const outgoing = placeholder.animate(
+      animation === 'dotquilt/dissolve'
+        ? { opacity: [1, 1, 0], offset: [0, 0.9, 1] }
+        : {
+            opacity: [1, 0, 0],
+            offset: [0, fade, 1],
+            easing: timing.easing ?? curves.fade,
+          },
+      { duration, fill: 'both' },
+    );
+    const incoming = content.animate(
+      {
+        opacity: [0, 1],
+        filter: [`blur(${handoff.blurPx}px)`, 'blur(0px)'],
+      },
+      {
+        duration: handoff.contentFade * scale,
+        easing: timing.easing ?? curves.fade,
+        fill: 'both',
+      },
+    );
+    const rise = content.animate(
+      { translate: [`0 ${handoff.risePx}px`, '0 0'] },
+      {
+        duration: handoff.contentRise * scale,
+        easing: timing.easing ?? curves.settle,
+        fill: 'both',
+      },
+    );
+    return { outgoing, incoming, extra: [rise] };
   }
   protected frame(): void {
     const work = this.#work;
