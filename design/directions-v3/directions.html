@@ -1,0 +1,1072 @@
+<title>Dotquilt — System, refined</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400..700&family=Public+Sans:wght@400..700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a quiet review shell (title, sticky bar with compare, theme, mark and pause controls) around one full-width specimen.
+   Two token sets share the same markup: .d-c is the round 2 System direction, unchanged; .d-r is the refined version. */
+:root {
+  --s-bg: #F3F4F6; --s-panel: #FFFFFF; --s-fg: #16181D; --s-muted: #5A5F69; --s-line: #D9DCE2;
+  --s-focus: #2453E6; --s-sel: #16181D; --s-sel-ink: #FFFFFF;
+  --s-font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --s-bg: #171B22; --s-panel: #1F242C; --s-fg: #ECEEF1; --s-muted: #A2A8B3; --s-line: #323843; --s-focus: #8FB0FF; --s-sel: #ECEEF1; --s-sel-ink: #171B22; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --s-bg: #171B22; --s-panel: #1F242C; --s-fg: #ECEEF1; --s-muted: #A2A8B3; --s-line: #323843; --s-focus: #8FB0FF; --s-sel: #ECEEF1; --s-sel-ink: #171B22; color-scheme: dark; }
+body { background: var(--s-bg); color: var(--s-fg); font-family: var(--s-font); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--s-bg); }
+#app[data-mode="light"] { --s-bg: #F3F4F6; --s-panel: #FFFFFF; --s-fg: #16181D; --s-muted: #5A5F69; --s-line: #D9DCE2; --s-focus: #2453E6; --s-sel: #16181D; --s-sel-ink: #FFFFFF; color-scheme: light; }
+#app[data-mode="dark"] { --s-bg: #171B22; --s-panel: #1F242C; --s-fg: #ECEEF1; --s-muted: #A2A8B3; --s-line: #323843; --s-focus: #8FB0FF; --s-sel: #ECEEF1; --s-sel-ink: #171B22; color-scheme: dark; }
+#app { background: var(--s-bg); color: var(--s-fg); min-height: 100vh; }
+#app :focus-visible { outline: 2px solid var(--s-focus); outline-offset: 2px; }
+
+/* ===================== Round 2 System (unchanged) ===================== */
+.d-c {
+  --bg: #F2F4F7; --surface: #FFFFFF; --subtle: #F6F7F9; --ink: #121826; --muted: #586174; --faint: #848C9C; --line: #DFE3EA; --line-2: #C8CFDA;
+  --accent: #0B7C85; --accent-ink: #FFFFFF; --accent-soft: #E0F1F2; --focus: #0B7C85;
+  --pos: #157A47; --pos-soft: #E2F3E9; --neg: #B4321E; --warn: #8F5B00; --warn-soft: #FCF0D9; --info: #2B5DB8; --info-soft: #E7EEFB;
+  --btn: #0B7C85; --btn-ink: #FFFFFF; --route: #0B7C85; --chart: #0B7C85;
+  --shadow: 0 1px 2px rgba(18, 24, 38, .06), 0 1px 1px rgba(18, 24, 38, .03); --shadow-lg: var(--shadow);
+  --dot: #6A7486; --dot-acc: #0FA3AC; --dot-lo: .42; --dot-hi: .95;
+  --code-bg: #0F1520; --code-fg: #E3E8EF; --code-k: #7FD6DA; --code-s: #B5DB9E; --code-t: #93BBFF; --code-a: #E2C58D; --code-p: #7E8899;
+  --f-display: 'Public Sans', system-ui, sans-serif; --f-body: 'Public Sans', system-ui, sans-serif; --f-mono: 'Roboto Mono', ui-monospace, Menlo, monospace;
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+  --hx-w: 700; --hx-t: -0.03em; --hx-lh: 1.06; --h-w: 700; --title-w: 600; --num-w: 700; --num-t: -0.02em; --body: 14px; --lh: 1.55;
+  --ease: ease; --t-ui: 0ms;
+}
+#app[data-mode="dark"] .d-c {
+  --bg: #0E1218; --surface: #151A22; --subtle: #1A2029; --ink: #E6EAF0; --muted: #9AA3B3; --faint: #6F7889; --line: #262E3A; --line-2: #354152;
+  --accent: #36C3C8; --accent-ink: #052628; --accent-soft: #0E3134; --focus: #36C3C8;
+  --pos: #55CC8E; --pos-soft: #11301F; --neg: #FF8B74; --warn: #E8B04B; --warn-soft: #352812; --info: #86AEFF; --info-soft: #17233D;
+  --btn: #36C3C8; --btn-ink: #052628; --route: #36C3C8; --chart: #36C3C8;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .35); --shadow-lg: var(--shadow);
+  --dot: #8691A4; --dot-acc: #3FD2D6; --dot-lo: .46; --dot-hi: .98;
+  --code-bg: #0A0E14; --code-p: #6F7A8C;
+  color-scheme: dark;
+}
+/* ===================== System, refined ===================== */
+.d-r {
+  --bg: #F4F5F7; --surface: #FFFFFF; --subtle: #F7F8FA; --ink: #1B2230; --muted: #5E6777; --faint: #8C94A2; --line: #E7EAEF; --line-2: #D8DDE4;
+  --accent: #2F6F74; --accent-ink: #FFFFFF; --accent-soft: #EAF2F2; --focus: #2F6F74;
+  --pos: #2F7656; --pos-soft: #EAF4EF; --neg: #A84A3A; --warn: #85601E; --warn-soft: #F8F1E3; --info: #3C5F99; --info-soft: #EDF2F9;
+  --btn: #2F6F74; --btn-ink: #FFFFFF; --route: #2F6F74; --chart: #2F6F74;
+  --shadow: 0 1px 2px rgba(27, 34, 48, .04), 0 8px 24px -14px rgba(27, 34, 48, .14);
+  --shadow-lg: 0 2px 4px rgba(27, 34, 48, .03), 0 28px 56px -30px rgba(27, 34, 48, .22);
+  --dot: #6E7889; --dot-acc: #4F8F93; --dot-lo: .37; --dot-hi: .9;
+  --code-bg: #1E2430; --code-fg: #E2E7EE; --code-k: #9CC9CA; --code-s: #C6D6AE; --code-t: #A9C1E8; --code-a: #DCC9A2; --code-p: #8892A2;
+  --f-display: 'Manrope', 'Segoe UI', system-ui, sans-serif; --f-body: 'Manrope', 'Segoe UI', system-ui, sans-serif; --f-mono: 'DM Mono', ui-monospace, Menlo, monospace;
+  --r-sm: 9px; --r-md: 12px; --r-lg: 16px;
+  --hx-w: 500; --hx-t: -0.03em; --hx-lh: 1.1; --h-w: 600; --title-w: 600; --num-w: 500; --num-t: -0.025em; --body: 14.5px; --lh: 1.65;
+  --ease: cubic-bezier(.22, 1, .36, 1); --t-ui: 320ms;
+}
+#app[data-mode="dark"] .d-r {
+  --bg: #181D25; --surface: #1F2530; --subtle: #252C38; --ink: #E3E7ED; --muted: #9CA5B3; --faint: #747E8D; --line: #2B323E; --line-2: #3A4351;
+  --accent: #84BABB; --accent-ink: #132324; --accent-soft: #24363A; --focus: #84BABB;
+  --pos: #7CC4A0; --pos-soft: #1E332A; --neg: #E8998A; --warn: #DDB572; --warn-soft: #382F1F; --info: #9DB8E8; --info-soft: #243042;
+  --btn: #84BABB; --btn-ink: #132324; --route: #84BABB; --chart: #84BABB;
+  --shadow: 0 1px 2px rgba(6, 9, 15, .22), 0 10px 28px -14px rgba(6, 9, 15, .5);
+  --shadow-lg: 0 2px 6px rgba(6, 9, 15, .2), 0 30px 60px -30px rgba(6, 9, 15, .65);
+  --dot: #8E99AB; --dot-acc: #8DC4C5; --dot-lo: .44; --dot-hi: .92;
+  --code-bg: #141920; --code-p: #7A8494;
+  color-scheme: dark;
+}
+
+/* ===================== Shell ===================== */
+.wrap { max-width: 1280px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.shell-head { padding-block: 36px 22px; }
+.shell-head h1 { margin: 0; font-size: clamp(1.5rem, 2.6vw, 2rem); line-height: 1.15; letter-spacing: -0.015em; font-weight: 650; text-wrap: balance; }
+.shell-head p { margin: 10px 0 0; max-width: 74ch; color: var(--s-muted); }
+.bar { position: relative; z-index: 20; background: var(--s-bg); border-block: 1px solid var(--s-line); }
+@media (min-width: 900px) { .bar { position: sticky; top: env(safe-area-inset-top, 0px); } }
+.bar-in { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-block: 10px; }
+.ctl { display: flex; align-items: center; gap: 8px; }
+.ctl.cmp { margin-right: auto; }
+.ctl-l { font-size: 13px; color: var(--s-muted); }
+.seg { display: inline-flex; border: 1px solid var(--s-line); border-radius: 8px; padding: 2px; background: var(--s-panel); }
+.seg button { appearance: none; border: 0; background: transparent; color: var(--s-fg); font: 500 13px/1 var(--s-font); padding: 0 10px; min-height: 32px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.seg button svg { width: 14px; height: 14px; flex: none; }
+.seg button[aria-pressed="true"] { background: var(--s-sel); color: var(--s-sel-ink); }
+.cmp .seg button { font-weight: 600; min-height: 36px; padding: 0 14px; }
+.sbtn { appearance: none; border: 1px solid var(--s-line); background: var(--s-panel); color: var(--s-fg); font: 500 13px/1 var(--s-font); padding: 0 12px; min-height: 36px; border-radius: 8px; cursor: pointer; }
+.sbtn[aria-pressed="true"] { background: var(--s-sel); color: var(--s-sel-ink); border-color: var(--s-sel); }
+.dir { padding-block: 28px 64px; }
+.dir-head { display: grid; gap: 6px; margin-bottom: 6px; }
+.dir-k { margin: 0; font-size: 13px; color: var(--s-muted); }
+.dir-head h2 { margin: 0; font-family: var(--f-display); color: var(--s-fg); font-size: clamp(2rem, 4vw, 2.7rem); line-height: 1.08; font-weight: var(--hx-w); letter-spacing: var(--hx-t); }
+.dir-head p { margin: 0; max-width: 76ch; color: var(--s-muted); font-size: 16px; }
+.dir-head p b { color: var(--s-fg); font-weight: 600; }
+.slabel { margin: 40px 0 12px; font: 600 14px/1.3 var(--s-font); color: var(--s-fg); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; }
+.slabel small { font-weight: 400; font-size: 13px; color: var(--s-muted); }
+
+/* ===================== Specimen site ===================== */
+.site { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: var(--body); line-height: var(--lh); border: 1px solid var(--s-line); border-radius: 14px; overflow: hidden; min-width: 0; }
+.site :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.nav { display: flex; align-items: center; gap: 10px 28px; padding: 14px clamp(16px, 3.5vw, 32px); border-bottom: 1px solid var(--line); background: var(--surface); }
+.logo { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--ink); font-family: var(--f-display); font-weight: var(--h-w); font-size: 17px; letter-spacing: -0.02em; }
+.logo svg { width: 22px; height: 22px; flex: none; }
+.nav-links { display: flex; gap: 24px; }
+.nav-links a { text-decoration: none; color: var(--muted); font-size: 14px; transition: color var(--t-ui) var(--ease); }
+.nav-links a:hover { color: var(--ink); }
+.nav-end { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.nav-end .gh { font-size: 14px; color: var(--muted); text-decoration: none; }
+@media (max-width: 760px) { .nav-links, .nav-end .gh { display: none; } }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: var(--title-w) 14px/1 var(--f-body); padding: 0 16px; min-height: 40px; border-radius: var(--r-sm); border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); text-decoration: none; cursor: pointer; white-space: nowrap; box-shadow: var(--shadow); transition: background-color var(--t-ui) var(--ease), border-color var(--t-ui) var(--ease), box-shadow var(--t-ui) var(--ease), opacity var(--t-ui) var(--ease); }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--btn); color: var(--btn-ink); border-color: var(--btn); box-shadow: none; }
+.btn.primary:hover { opacity: .9; }
+.btn.sm { min-height: 34px; padding: 0 12px; font-size: 13px; }
+.btn.lg { min-height: 44px; padding: 0 20px; font-size: 15px; }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.hx { margin: 0 0 18px; font-family: var(--f-display); font-weight: var(--hx-w); letter-spacing: var(--hx-t); line-height: var(--hx-lh); font-size: clamp(2.2rem, 4.6vw, 3.4rem); max-width: 17ch; text-wrap: balance; }
+.sub { margin: 0 0 26px; color: var(--muted); font-size: 17px; max-width: 42em; }
+.hero-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 12.5px; color: var(--faint); margin-top: 10px; }
+.linkbtn { appearance: none; background: none; border: 0; padding: 8px 0; min-height: 36px; font: 500 13px var(--f-body); color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* Stage: real content underneath, marks drawn on a canvas above */
+.stage { position: relative; }
+.stage > .content { position: relative; }
+.stage > canvas.dots { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+.stage[data-state="pending"] [data-ph], .stage[data-state="pending"] [data-part="chart"], .stage[data-state="pending"] .glyph-text { opacity: 0; }
+.stage[data-state="revealing"] [data-ph], .stage[data-state="revealing"] [data-part="chart"], .stage[data-state="revealing"] .glyph-text { opacity: 0; animation: dq-in var(--rd, 300ms) var(--re, ease) var(--dl, 0ms) both; }
+.stage[data-state="revealing"] .chart-line { animation: dq-draw var(--ld, 400ms) var(--re, ease) var(--ldl, 0ms) both; }
+.stage[data-state="revealing"] [data-part="typing"] { animation: dq-out var(--rd, 300ms) var(--re, ease) forwards; }
+.stage[data-state="ready"] [data-part="typing"] { opacity: 0; visibility: hidden; }
+@keyframes dq-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dq-out { to { opacity: 0; } }
+@keyframes dq-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+/* Refined handoff: content rises a few pixels into place while a light blur clears. */
+.d-r [data-ph], .d-r [data-part="chart"], .d-r .glyph-text { position: relative; }
+/* Opacity eases in gently; the 5 px rise and blur run 30% longer on the settle curve, so content is still gliding as it becomes visible. */
+@keyframes dq-rise { from { top: 5px; filter: blur(2px); } 65% { filter: blur(0); } to { top: 0; filter: blur(0); } }
+@keyframes dq-settle-out { to { opacity: 0; filter: blur(1.5px); } }
+.d-r .stage[data-state="revealing"] [data-ph], .d-r .stage[data-state="revealing"] [data-part="chart"], .d-r .stage[data-state="revealing"] .glyph-text { animation: dq-in var(--rd, 700ms) cubic-bezier(.33, 0, .2, 1) var(--dl, 0ms) both, dq-rise calc(var(--rd, 700ms) * 1.3) var(--re) var(--dl, 0ms) both; }
+.d-r .stage[data-state="revealing"] [data-part="typing"] { animation-name: dq-settle-out; }
+.chart-line { stroke-dasharray: 1; }
+#app[data-reduced] .stage * { --dl: 0ms !important; --rd: 200ms !important; --ldl: 0ms !important; --ld: 1ms !important; }
+#app[data-reduced] .d-r .stage[data-state="revealing"] [data-ph], #app[data-reduced] .d-r .stage[data-state="revealing"] [data-part="chart"], #app[data-reduced] .d-r .stage[data-state="revealing"] .glyph-text { animation: dq-in 200ms ease 0ms both; }
+
+.glyph { --gh: 44px; height: var(--gh); display: flex; align-items: center; min-width: 0; }
+.glyph-text { font-family: var(--f-display); font-size: var(--gh); line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: var(--num-w); letter-spacing: var(--num-t); }
+.chart { display: block; width: 100%; height: 150px; overflow: visible; }
+.chart-grid line { stroke: var(--line); stroke-width: 1; }
+.d-c .chart-area { fill: var(--chart); opacity: .1; }
+.cg-a { stop-color: var(--chart); stop-opacity: .16; }
+.cg-b { stop-color: var(--chart); stop-opacity: 0; }
+.chart-line { fill: none; stroke: var(--chart); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.d-r .chart-line { stroke-width: 1.75; }
+.chart-end { fill: var(--surface); stroke: var(--chart); stroke-width: 2; }
+.chart-h { display: flex; justify-content: space-between; gap: 4px 12px; font-size: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+.chart-h > span:first-child { font-weight: var(--title-w); }
+.chart-v { color: var(--muted); font-variant-numeric: tabular-nums; }
+.chart-x { display: flex; justify-content: space-between; font-size: 12px; color: var(--faint); margin-top: 8px; }
+.cap { margin: 10px 0 0; font-size: 13.5px; color: var(--muted); }
+.lines { margin: 0; font-size: 14.5px; line-height: 1.75; }
+.lines span { display: block; }
+.map { aspect-ratio: 16 / 9; max-width: 100%; border-radius: var(--r-sm); overflow: hidden; }
+.map svg { width: 100%; height: 100%; display: block; }
+.m-bg { fill: var(--subtle); }
+.m-st path { stroke: var(--line-2); stroke-width: 6; fill: none; }
+.m-rt { stroke: var(--route); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.m-sp { fill: var(--surface); stroke: var(--route); stroke-width: 3; }
+.m-end { fill: var(--route); }
+.tblwrap { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.tbl th { text-align: left; font-weight: var(--title-w); font-size: 12.5px; color: var(--muted); padding: 0 14px 8px 0; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+.tbl td { padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl th:last-child, .tbl td:last-child { padding-right: 0; }
+.tbl .num { text-align: right; }
+.d-r .tbl th { border-bottom-color: var(--line); letter-spacing: .01em; }
+.d-r .tbl td { padding-block: 11px; }
+.pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--subtle); color: var(--muted); border: 1px solid var(--line); }
+.pill.ok { background: var(--pos-soft); color: var(--pos); border-color: transparent; }
+.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.pill.info { background: var(--info-soft); color: var(--info); border-color: transparent; }
+.d-r .pill { padding: 3px 10px; letter-spacing: .01em; }
+.chat { display: grid; gap: 8px; }
+.msg { padding: 9px 13px; border-radius: 14px; font-size: 14px; line-height: 1.45; max-width: 88%; }
+.msg.me { justify-self: end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.msg-slot { display: grid; justify-items: start; align-items: end; }
+.msg-slot > * { grid-area: 1 / 1; }
+.msg.them { background: var(--subtle); color: var(--ink); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.msg.typing { padding: 10px 14px; }
+.d-r .msg { border-radius: 16px; padding: 10px 14px; }
+.d-r .msg.me { border-bottom-right-radius: 6px; }
+.d-r .msg.them { border-bottom-left-radius: 6px; }
+.typing-anchor { display: block; width: 76px; height: 20px; }
+.person { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px 14px; align-items: center; }
+.avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+.pname { margin: 0; font-size: 16px; font-weight: var(--title-w); }
+.role { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; }
+.bio { grid-column: 1 / -1; margin: 0; font-size: 14px; }
+.pact { grid-column: 1 / -1; }
+
+/* Homepage and dashboard */
+.c-hero { padding: clamp(36px, 6vw, 76px) clamp(16px, 4vw, 40px) 30px; }
+.d-r .c-hero { padding-bottom: 36px; }
+.d-r .sub { font-size: 17.5px; line-height: 1.65; }
+.c-trust { margin: 18px 0 0; font-size: 13px; color: var(--muted); }
+.c-app-wrap { padding: 0 clamp(16px, 4vw, 40px) clamp(24px, 4vw, 36px); }
+.c-app { display: grid; grid-template-columns: 200px minmax(0, 1fr); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--bg); overflow: hidden; box-shadow: var(--shadow-lg); }
+.c-side { background: var(--surface); border-right: 1px solid var(--line); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
+.c-ws { display: flex; align-items: center; gap: 9px; padding: 4px 8px 14px; font-weight: var(--title-w); }
+.c-ws svg { width: 20px; height: 20px; }
+.c-side a { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: var(--r-sm); color: var(--muted); text-decoration: none; transition: background-color var(--t-ui) var(--ease), color var(--t-ui) var(--ease); }
+.c-side a:hover { background: var(--subtle); color: var(--ink); }
+.c-side a[aria-current] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.c-side a i { width: 14px; height: 14px; border: 1.5px solid currentColor; border-radius: 4px; opacity: .85; flex: none; }
+.d-r .c-side a i { border-radius: 5px; opacity: .7; }
+.c-main { padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.d-r .c-main { padding: 22px; gap: 16px; }
+.c-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.c-top h3 { margin: 0; font-size: 18px; font-weight: var(--h-w); letter-spacing: -0.015em; }
+.c-tools { display: flex; gap: 8px; align-items: center; }
+.c-chip { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-sm); padding: 6px 10px; font-size: 12.5px; color: var(--ink); }
+.c-av { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-size: 11.5px; font-weight: 700; }
+.c-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.c-row2 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; }
+.d-r .c-kpis, .d-r .c-row2 { gap: 16px; }
+.c-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow); padding: 14px 16px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.d-r .c-card { padding: 16px 18px; gap: 12px; }
+.c-card-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.c-card-h b { color: var(--ink); font-weight: var(--title-w); font-size: 13.5px; }
+.g-kpi { --gh: 30px; }
+.d-r .g-kpi { --gh: 31px; }
+.kpi-d { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.c-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.c-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.c-list li:first-child { border-top: 0; padding-top: 2px; }
+.d-r .c-list li { padding-block: 9px; }
+.c-lav { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+.c-la { font-variant-numeric: tabular-nums; font-weight: 600; }
+.c-card .chart { height: 168px; }
+@media (max-width: 980px) { .c-app { grid-template-columns: minmax(0, 1fr); } .c-side { display: none; } }
+@media (max-width: 720px) { .c-kpis, .c-row2 { grid-template-columns: minmax(0, 1fr); } .c-main, .d-r .c-main { padding: 12px; } }
+
+/* Component sheet */
+.sheet-h { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px 24px; padding: 26px clamp(16px, 3.5vw, 32px) 20px; }
+.sheet-h > div:first-child { flex: 1 1 320px; min-width: 0; }
+.sheet-h h3 { margin: 0; font-family: var(--f-display); font-size: 24px; line-height: 1.2; font-weight: var(--h-w); letter-spacing: -0.02em; }
+.sheet-h p { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
+.cgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 0 clamp(16px, 3.5vw, 32px) clamp(20px, 3.5vw, 32px); grid-auto-flow: dense; }
+@media (min-width: 680px) { .cgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .span-2, .span-r { grid-column: span 2; } }
+@media (min-width: 1040px) { .cgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .span-r { grid-column: auto; } }
+.d-r .cgrid { gap: 18px; }
+.demo { display: flex; flex-direction: column; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow); overflow: hidden; }
+.demo-h { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.demo-h h4 { margin: 0; font-size: 14px; font-weight: var(--title-w); }
+.demo-h .cmp { font: 11.5px var(--f-mono); color: var(--muted); background: var(--subtle); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
+.demo-b { flex: 1; min-width: 0; padding: 16px; }
+.d-r .demo-h { padding: 14px 18px; }
+.d-r .demo-b { padding: 18px; }
+.ctrl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.demo .ctrl { padding: 10px 16px; border-top: 1px solid var(--line); background: var(--subtle); }
+.d-r .demo .ctrl { padding: 12px 18px; }
+.ctrl .st { margin-left: auto; font-size: 12.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.ctrl .st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); transition: background-color 600ms var(--ease); }
+.ctrl .st[data-s="ready"] { color: var(--pos); }
+.ctrl .st[data-s="ready"]::before { background: var(--pos); }
+.ctrl .st[data-s="pending"]::before { background: var(--accent); }
+.g-demo { --gh: 40px; }
+
+/* Docs */
+.search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-sm); padding: 0 8px 0 10px; min-height: 36px; width: min(300px, 100%); color: var(--faint); font-size: 13.5px; }
+.search:focus-within { outline: 2px solid var(--focus); outline-offset: 1px; }
+.search input { border: 0; background: transparent; color: var(--ink); font: inherit; flex: 1; min-width: 0; padding: 8px 0; }
+.search input:focus { outline: none; }
+.search input::placeholder { color: var(--faint); }
+.search kbd { font: 11px/1 var(--f-mono); border: 1px solid var(--line); border-radius: 5px; padding: 3px 5px; color: var(--muted); }
+.docs { display: grid; grid-template-columns: 220px minmax(0, 1fr) 176px; min-width: 0; }
+.side { border-right: 1px solid var(--line); padding: 22px 12px 32px; font-size: 14px; }
+.side h4 { margin: 18px 0 6px; padding-left: 10px; font-size: 12.5px; color: var(--faint); font-weight: 600; }
+.side .grp:first-child h4 { margin-top: 0; }
+.side ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
+.side a { display: block; padding: 6px 10px; border-radius: var(--r-sm); color: var(--muted); text-decoration: none; transition: background-color var(--t-ui) var(--ease), color var(--t-ui) var(--ease); }
+.side a:hover { color: var(--ink); background: var(--subtle); }
+.side a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.doc { padding: 28px clamp(16px, 4vw, 48px) 56px; min-width: 0; }
+.doc > * { max-width: 760px; }
+.d-r .doc { padding-top: 36px; }
+.crumbs { margin: 0 0 8px; font-size: 13px; color: var(--faint); }
+.doc h1 { margin: 0 0 12px; font-family: var(--f-display); font-weight: var(--h-w); font-size: 32px; line-height: 1.15; letter-spacing: -0.025em; }
+.d-r .doc h1 { font-weight: 500; font-size: 34px; letter-spacing: -0.03em; }
+.doc h2 { margin: 40px 0 12px; font-family: var(--f-display); font-weight: var(--h-w); font-size: 19px; line-height: 1.25; letter-spacing: -0.01em; }
+.doc p { margin: 0 0 14px; max-width: 68ch; font-size: 15px; }
+.doc .lead { font-size: 17px; color: var(--muted); }
+.d-r .doc p { line-height: 1.7; }
+.doc p code { font: 0.88em var(--f-mono); background: var(--subtle); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; }
+.c-badges { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 14px; }
+.c-badges span { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--subtle); border: 1px solid var(--line); color: var(--muted); }
+.c-badges span.on { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.toc { padding: 28px 18px; font-size: 13px; border-left: 1px solid var(--line); }
+.toc p { margin: 0 0 8px; font-weight: 600; color: var(--ink); }
+.toc a { display: block; color: var(--muted); text-decoration: none; padding: 4px 0; }
+.preview { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); margin: 24px 0 8px; overflow: hidden; box-shadow: var(--shadow); }
+.pv-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; padding: 6px 10px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.pv-stage { padding: 22px 20px 18px; background: var(--bg); }
+.d-r .pv-stage { padding: 26px 24px 22px; }
+.pv-code .codeblock { margin: 0; border-radius: 0; }
+.ptabs { display: flex; gap: 2px; background: var(--subtle); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 2px; }
+.ptabs button { appearance: none; border: 0; background: transparent; color: var(--muted); font: 600 13px/1 var(--f-body); padding: 0 12px; min-height: 30px; border-radius: calc(var(--r-sm) - 2px); cursor: pointer; transition: background-color var(--t-ui) var(--ease), color var(--t-ui) var(--ease); }
+.ptabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.codeblock { border-radius: var(--r-md); background: var(--code-bg); color: var(--code-fg); overflow: hidden; margin: 16px 0; }
+.code-h { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 8px 6px 16px; font: 12px var(--f-mono); color: var(--code-p); border-bottom: 1px solid color-mix(in srgb, var(--code-fg) 12%, transparent); }
+.code-h button { appearance: none; border: 0; background: transparent; color: var(--code-p); font: 12px var(--f-mono); padding: 0 8px; min-height: 30px; border-radius: 5px; cursor: pointer; }
+.code-h button:hover { color: var(--code-fg); }
+pre.code { margin: 0; padding: 14px 16px 16px; overflow-x: auto; font: 13px/1.75 var(--f-mono); }
+pre.code .cl { display: block; white-space: pre; }
+.k { color: var(--code-k); } .s { color: var(--code-s); } .t { color: var(--code-t); } .a { color: var(--code-a); } .p { color: var(--code-p); } .f { color: var(--code-fg); font-weight: 500; }
+.props { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }
+.props th { text-align: left; font-weight: 600; font-size: 12.5px; color: var(--muted); padding: 8px 16px 8px 0; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+.props td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.d-r .props td { padding-block: 14px; }
+.props td:last-child { color: var(--muted); }
+.props code { font: 13px var(--f-mono); white-space: nowrap; }
+.props td:first-child code { color: var(--ink); font-weight: 500; }
+.props code.ty { background: var(--subtle); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; color: var(--ink); }
+@media (max-width: 1180px) { .docs { grid-template-columns: 200px minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 760px) {
+  .docs { grid-template-columns: minmax(0, 1fr); }
+  .side { border-right: 0; border-bottom: 1px solid var(--line); padding: 10px 16px; }
+  .side .grp:not(.cur), .side .cur h4 { display: none; }
+  .side ul { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 2px; }
+  .side li { flex: none; }
+  .docs-nav .search { display: none; }
+}
+
+/* Tokens */
+.spec { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px; background: var(--line); }
+@media (min-width: 720px) { .spec { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1080px) { .spec { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.blk { background: var(--bg); padding: 22px clamp(16px, 2.4vw, 26px); min-width: 0; }
+.blk h3 { margin: 0 0 14px; font-family: var(--f-display); font-size: 20px; line-height: 1.2; font-weight: var(--h-w); letter-spacing: -0.015em; }
+.blk h4 { margin: 16px 0 8px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.blk h4:first-of-type { margin-top: 0; }
+.blk p, .blk li { font-size: 14px; }
+.blk p { margin: 0 0 10px; }
+.blk ul { margin: 0; padding-left: 18px; display: grid; gap: 7px; }
+.blk code { font: 12.5px var(--f-mono); }
+.sw { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 8px; }
+.chip { display: grid; gap: 3px; font-size: 12px; line-height: 1.3; min-width: 0; }
+.chip i { display: block; height: 30px; border-radius: var(--r-sm); border: 1px solid rgba(128, 128, 128, .28); }
+.chip b { font-weight: 600; overflow-wrap: anywhere; }
+.chip span { color: var(--muted); font-family: var(--f-mono); font-size: 11.5px; }
+.ty-row { padding: 10px 0; border-top: 1px solid var(--line); }
+.ty-row:first-of-type { border-top: 0; padding-top: 0; }
+.ty-row p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.ty-row p.ty-sample { margin: 0; color: var(--ink); line-height: 1.2; overflow-wrap: anywhere; }
+.mk-row { display: grid; gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); }
+.mk-row:first-of-type { border-top: 0; padding-top: 0; }
+.mk-row svg { display: block; max-width: 100%; height: auto; }
+.mk-row span { font-size: 13px; color: var(--muted); }
+.mk-row b { color: var(--ink); font-weight: 600; }
+.curves { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 14px; }
+.curve { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.curve svg { width: 100%; height: auto; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
+.curve path.c { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+.curve path.g { fill: none; stroke: var(--line); stroke-width: 1; }
+.curve b { color: var(--ink); font-weight: 600; }
+.radii { display: flex; gap: 10px; align-items: flex-end; margin: 2px 0 14px; }
+.radii span { width: 52px; height: 36px; border: 1px solid var(--line-2); background: var(--surface); display: grid; place-items: center; font: 11px var(--f-mono); color: var(--muted); box-shadow: var(--shadow); }
+.diff { display: grid; gap: 18px; }
+
+@media (max-width: 520px) { .cmp .seg button { padding: 0 10px; } .ctl-l { display: none; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+.vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+
+<div id="app" data-mode="light">
+  <header class="wrap shell-head">
+    <h1>Dotquilt — System, refined</h1>
+    <p>The System direction made calmer and more elegant: long eased motion, softer shapes, a quieter accent and a more refined typeface. Compare switches between round 2 and the refined version on the same homepage, docs page and components, so you can feel the difference in motion and shape.</p>
+  </header>
+  <div class="bar">
+    <div class="wrap bar-in">
+      <div class="ctl cmp"><span class="ctl-l" id="l-cmp">Compare</span>
+        <div class="seg" role="group" aria-labelledby="l-cmp">
+          <button type="button" data-view="c" aria-pressed="false">Round 2 System</button>
+          <button type="button" data-view="r" aria-pressed="true">Refined</button>
+        </div>
+      </div>
+      <div class="ctl"><span class="ctl-l" id="l-theme">Theme</span>
+        <div class="seg" role="group" aria-labelledby="l-theme">
+          <button type="button" data-mode="auto" aria-pressed="true">Auto</button>
+          <button type="button" data-mode="light" aria-pressed="false">Light</button>
+          <button type="button" data-mode="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+      <div class="ctl"><span class="ctl-l" id="l-mark">Mark</span>
+        <div class="seg" role="group" aria-labelledby="l-mark">
+          <button type="button" data-mark="default" aria-pressed="true" title="The direction's own choice: a round dot">Default</button>
+          <button type="button" data-mark="dot" aria-pressed="false"><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="2.8" fill="currentColor"/></svg>Dot</button>
+          <button type="button" data-mark="dash" aria-pressed="false"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.4 7h7.2" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>Dash</button>
+          <button type="button" data-mark="square" aria-pressed="false"><svg viewBox="0 0 14 14" aria-hidden="true"><rect x="4.3" y="4.3" width="5.4" height="5.4" rx="1" fill="currentColor"/></svg>Square</button>
+        </div>
+      </div>
+      <button type="button" class="sbtn" id="pause" aria-pressed="false">Pause motion</button>
+    </div>
+  </div>
+  <main class="wrap" id="panels"></main>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const TAU = Math.PI * 2;
+  const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v);
+  const fract = (v) => v - Math.floor(v);
+  const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+  const E = {
+    outCubic: (t) => 1 - Math.pow(1 - t, 3),
+    inOutSine: (t) => -(Math.cos(Math.PI * t) - 1) / 2,
+    inOutCubic: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+    /* cubic-bezier(0.22, 1, 0.36, 1), solved numerically, for the marks to match the CSS settle curve */
+    settle: (() => { const bz = (a, b, t) => 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t; return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let lo = 0, hi = 1, t = x; for (let i = 0; i < 22; i++) { t = (lo + hi) / 2; if (bz(0.22, 0.36, t) < x) lo = t; else hi = t; } return bz(1, 1, t); }; })()
+  };
+
+  /* 5 x 7 dot-matrix glyphs; one number per row, leftmost column = 16 */
+  const FONT = {
+    A:[14,17,17,31,17,17,17], B:[30,17,17,30,17,17,30], C:[14,17,16,16,16,17,14], D:[30,17,17,17,17,17,30],
+    E:[31,16,16,30,16,16,31], F:[31,16,16,30,16,16,16], G:[14,17,16,23,17,17,15], H:[17,17,17,31,17,17,17],
+    I:[14,4,4,4,4,4,14], J:[7,2,2,2,2,18,12], K:[17,18,20,24,20,18,17], L:[16,16,16,16,16,16,31],
+    M:[17,27,21,21,17,17,17], N:[17,17,25,21,19,17,17], O:[14,17,17,17,17,17,14], P:[30,17,17,30,16,16,16],
+    Q:[14,17,17,17,21,18,13], R:[30,17,17,30,20,18,17], S:[15,16,16,14,1,1,30], T:[31,4,4,4,4,4,4],
+    U:[17,17,17,17,17,17,14], V:[17,17,17,17,17,10,4], W:[17,17,17,21,21,21,10], X:[17,17,10,4,10,17,17],
+    Y:[17,17,10,4,4,4,4], Z:[31,1,2,4,8,16,31],
+    0:[14,17,19,21,25,17,14], 1:[4,12,4,4,4,4,14], 2:[14,17,1,2,4,8,31], 3:[31,2,4,2,1,17,14],
+    4:[2,6,10,18,31,2,2], 5:[31,16,30,1,1,17,14], 6:[6,8,16,30,17,17,14], 7:[31,1,2,4,8,8,8],
+    8:[14,17,17,14,17,17,14], 9:[14,17,17,15,1,2,12],
+    ',':[0,0,0,0,12,4,8], '.':[0,0,0,0,0,12,12], '%':[24,25,2,4,8,19,3], '$':[4,15,20,14,5,30,4],
+    '+':[0,4,4,31,4,4,0], '-':[0,0,0,31,0,0,0], ' ':[0,0,0,0,0,0,0]
+  };
+  const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', DIGITS = '0123456789';
+  const rnd = (ch) => (/[0-9]/.test(ch) ? DIGITS[(Math.random() * 10) | 0] : /[A-Z]/.test(ch) ? LETTERS[(Math.random() * 26) | 0] : ch);
+
+  /* ---------- Motion and mark personalities ----------
+     m: per-mark grid pitch (px, py), size (w, h), rows per text line (tr) and corner radius (rr, squares only).
+     exit(q) fills OUT with [alpha, scale, accent glow, vertical drift] for a mark that is q of the way through its handoff. */
+  const OUT = [1, 1, 0, 0];
+  const STY = {
+    c: {
+      mark: 'dot',
+      m: { dot: { px: 8, py: 8, w: 3.9, h: 3.9, tr: 2 }, dash: { px: 11.5, py: 8.5, w: 8.4, h: 3, tr: 2 }, square: { px: 7, py: 7, w: 3.5, h: 3.5, tr: 2, rr: 0 } },
+      D: 700, spread: 0.6, win: 0.4, fade: 220, ease: 'cubic-bezier(.2,0,0,1)', rest: 0,
+      order: (x, y) => x * 0.86 + y * 0.14,
+      idle: (t, x, y, W, H) => { const k = (t % 1900) / 1300; if (k >= 1) return 0; const pos = E.inOutCubic(k) * 1.5 - 0.25, d = ((x / W) * 0.86 + (y / H) * 0.14 - pos) / 0.085; return d < -3 || d > 3 ? 0 : Math.exp(-d * d); },
+      exit: (q) => { OUT[2] = q < 0.35 ? q / 0.35 : Math.max(0, 1 - (q - 0.35) / 0.45); OUT[1] = 1 - E.outCubic(clamp((q - 0.3) / 0.7)) * 0.85; OUT[0] = 1 - smooth(0.55, 1, q); OUT[3] = 0; return OUT; },
+      chart: { T: 4200, ease: E.outCubic, floor: 0.07, area: 0.3, band: 1.3, s0: 0, spread: 0.42, win: 0.42, fade: [0.62, 0.98], line: [0.55, 0.45], svg: [0.6, 1.4] },
+      glyph: { tick: 100, fade: 60, lockFade: 60, off: 0.08, lock: 0.5, mfade: [0, 0.3], textAt: 0.12 },
+      typing: { d: 7.5, f: (t, i) => { const ph = fract(t / 1200 - i * 0.15); return ph < 0.4 ? Math.sin(Math.PI * ph / 0.4) : 0; }, lift: 2.5, out: (tr) => clamp(tr / 0.4) },
+      status: { pending: 'Loading', revealing: 'Ready', ready: 'Ready' }
+    },
+    r: {
+      mark: 'dot',
+      m: { dot: { px: 9, py: 9, w: 4.4, h: 4.4, tr: 2 }, dash: { px: 13, py: 9.5, w: 9.4, h: 3.4, tr: 2 }, square: { px: 8.5, py: 8.5, w: 4, h: 4, tr: 2, rr: 1.1 } },
+      D: 1100, win: 0.5, fade: 700, rise: 1.3, ease: 'cubic-bezier(.22,1,.36,1)', rest: 0,
+      stagger: { row: 80, cell: 28, max: 0.42 },
+      order: (x, y) => x * 0.8 + y * 0.2,
+      /* A soft glow drifts across every 2.8 s on a sine curve; its wide Gaussian edge means marks brighten and dim gradually. */
+      idle: (t, x, y, W, H) => { const pos = -0.5 + 2 * E.inOutSine(fract(t / 2800)), d = ((x / W) * 0.8 + (y / H) * 0.2 - pos) / 0.2; return d < -3.2 || d > 3.2 ? 0 : Math.exp(-d * d); },
+      breathe: (t) => 0.93 + 0.07 * Math.sin(TAU * t / 3200),
+      exit: (q) => { const e = E.inOutSine(q); OUT[0] = 1 - e; OUT[1] = 1 - 0.3 * e; OUT[2] = 0.3 * Math.sin(Math.PI * Math.min(1, q * 1.5)) * (1 - e); OUT[3] = -3 * E.settle(q); return OUT; },
+      chart: { T: 7200, ease: E.inOutSine, floor: 0.05, area: 0.26, band: 1.45, s0: 0.04, spread: 0.22, win: 0.52, fade: [0.58, 0.94], line: [0.48, 0.52], svg: [0.5, 1.0] },
+      glyph: { tick: 280, fade: 260, lockFade: 300, off: 0.05, lock: 0.42, mfade: [0.06, 0.4], textAt: 0.16, peak: 0.92 },
+      typing: { d: 8, f: (t, i) => { const s = 0.5 + 0.5 * Math.sin(TAU * (t / 1900 - i * 0.14)); return s * s * (3 - 2 * s); }, lift: 1.5, out: (tr) => E.inOutSine(clamp(tr / 0.5)) },
+      status: { pending: 'Loading', revealing: 'Ready', ready: 'Ready' }
+    }
+  };
+
+  const DIRS = [
+    {
+      key: 'r', hash: 'refined', label: 'Refined', name: 'System, refined',
+      idea: 'The same product system, made calmer: long eased motion, softer shapes, a quieter accent and a more elegant typeface.',
+      feel: 'Composed and unhurried. Data settles into place instead of snapping.',
+      light: [['Canvas', '#F4F5F7'], ['Card', '#FFFFFF'], ['Ink', '#1B2230'], ['Muted', '#5E6777'], ['Hairline', '#E7EAEF'], ['Deep teal', '#2F6F74']],
+      dark: [['Slate', '#181D25'], ['Card', '#1F2530'], ['Ink', '#E3E7ED'], ['Muted', '#9CA5B3'], ['Hairline', '#2B323E'], ['Soft teal', '#84BABB']],
+      colorNote: 'Marks are slate (#6E7889, or #8E99AB in dark) at 37% (44% in dark), with a soft teal glow (#4F8F93 / #8DC4C5) that fades in and out. Teal appears only on primary actions, the current page, the glow and the chart line.',
+      type: [
+        ['Overview', 'Manrope 500, 34–54 px, tracking −3%, line height 1.1. Headings and key figures.', 'font-size:34px;font-weight:500;letter-spacing:-0.03em'],
+        ['Revenue rose for the third quarter running.', 'Manrope 400 and 600, 13.5–17.5 px, line height 1.65. Interface and reading.', 'font-size:16px;line-height:1.65'],
+        ['<ChartLoader variant="line" />', 'DM Mono 400. Code, component names and keyboard hints.', 'font-size:13.5px;font-family:var(--f-mono)']
+      ],
+      markWhy: 'Dot by default, a touch larger (4.4 px on a 9 px grid) in a lower-contrast slate. It has the same soft weight in every direction, which suits the glow and works for curves, avatars, numbers and rows. Squares get a 1 px corner radius and dashes are slightly thicker so every mark stays soft.',
+      curves: true,
+      motion: [
+        ['Settle', '<code>cubic-bezier(0.22, 1, 0.36, 1)</code> for content, buttons and tabs. Long tail, no overshoot.'],
+        ['Sine in-out', 'For marks, the idle glow and the chart glide.'],
+        ['Durations', 'Interface 320 ms. Handoff 1.1 s. Content fades in over 700 ms while it rises into place over 910 ms on the settle curve. Rows stagger by 80 ms and cells by 28 ms.'],
+        ['Idle', 'A soft teal glow drifts across each placeholder every 2.8 s, and the whole field breathes by ±7% every 3.2 s. No hard edges.'],
+        ['Handoff', 'Marks dim, shrink by 30% and drift up 3 px while content rises 5 px into place and a 2 px blur clears.'],
+        ['Chart and text', 'The field glides onto the real line over about 570 ms, then the line draws in over 570 ms. TextLoader characters morph every 280 ms and lock left to right, each easing in over 300 ms.'],
+        ['Reduced motion', 'No idle glow; the handoff becomes a 240 ms fade with no rise or blur. Pause holds the current frame.']
+      ],
+      space: ['4 px base: 4, 8, 12, 16, 18, 22, 32, 40.', 'Radius 9 px on controls, 12 px on cards and 16 px on the app frame.', 'Hairlines are one step lighter. Cards use a soft, large-radius shadow at 4–14% instead of a hard 1 px one.'],
+      changed: [
+        'Motion: the handoff is 1.1 s instead of 700 ms, on a long ease-out. Rows and cells stagger softly, and the sweep is now a wide glow with no hard band.',
+        'Content settles in with a 5 px rise and a light blur that clears, instead of a plain 220 ms fade.',
+        'Shape: radii go from 6, 10 and 14 px to 9, 12 and 16 px, with lighter hairlines and soft elevation.',
+        'Colour: the bright teal becomes a deeper, desaturated teal used sparingly. Dark mode is slate (#181D25), not near-black.',
+        'Type: Manrope at lighter heading weights with more line height replaces Public Sans 700; DM Mono replaces Roboto Mono.'
+      ]
+    },
+    {
+      key: 'c', hash: 'round-2', label: 'Round 2 System', name: 'Round 2 System',
+      idea: 'The System direction as shown in round 2: Public Sans, a bright teal sweep with a crisp band and a quick 700 ms handoff.',
+      feel: 'Dependable and familiar, but quick and sharp.',
+      light: [['Canvas', '#F2F4F7'], ['Card', '#FFFFFF'], ['Ink', '#121826'], ['Muted', '#586174'], ['Border', '#DFE3EA'], ['Teal', '#0B7C85']],
+      dark: [['Canvas', '#0E1218'], ['Card', '#151A22'], ['Ink', '#E6EAF0'], ['Muted', '#9AA3B3'], ['Border', '#262E3A'], ['Teal', '#36C3C8']],
+      colorNote: 'Marks are slate (#6A7486, or #8691A4 in dark) at 42%, with a teal sweep (#0FA3AC / #3FD2D6) passing over them.',
+      type: [
+        ['Overview', 'Public Sans 700, tracking −2.5%. Headings and key figures.', 'font-size:32px;font-weight:700;letter-spacing:-0.025em'],
+        ['Revenue rose for the third quarter running.', 'Public Sans 400, 500 and 600, 13–17 px.', 'font-size:15px'],
+        ['<ChartLoader variant="line" />', 'Roboto Mono 400. Code and component names.', 'font-size:13.5px;font-family:var(--f-mono)']
+      ],
+      markWhy: 'Dot by default: 3.9 px on an 8 px grid.',
+      curves: false,
+      motion: [
+        ['Easing', '<code>cubic-bezier(0.2, 0, 0, 1)</code> for content; ease-in-out cubic for the sweep.'],
+        ['Idle', 'A teal band crosses each placeholder in 1.3 s, then rests for 0.6 s.'],
+        ['Handoff', '700 ms. Marks light up, then shrink away as content fades in over 220 ms.'],
+        ['Reduced motion', 'No sweep; the handoff becomes a 240 ms fade.']
+      ],
+      space: ['4 px base: 4, 8, 12, 16, 20, 24, 32, 40.', 'Radius 6 px on controls, 10 px on cards and 14 px on the app frame.', 'Cards use a 1 px border and a faint 1 px shadow.'],
+      changed: ['This is the round 2 version, kept unchanged for comparison.']
+    }
+  ];
+
+  /* ---------- Markup ---------- */
+  const sp = (t, cls) => `<span${cls ? ` class="${cls}"` : ''} data-ph="text">${t}</span>`;
+  const PTS = [812, 860, 845, 930, 1010, 980, 1065, 1120, 1098, 1176, 1230, 1284];
+  const REV = [31.2, 32.8, 32.1, 34.0, 35.6, 35.1, 37.4, 38.9, 38.2, 40.6, 42.3, 44.1];
+  let gid = 0;
+  const chart = (pts, label) => { const id = 'cg' + (++gid); return `<svg class="chart" data-part="chart" data-points="${pts.join(',')}" role="img" aria-label="${label}" preserveAspectRatio="none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="cg-a"/><stop offset="1" class="cg-b"/></linearGradient></defs><g class="chart-grid"></g><path class="chart-area" d="" fill="url(#${id})"/><path class="chart-line" d="" pathLength="1"/><circle class="chart-end" r="3.5" cx="0" cy="0"/></svg>`; };
+  const MAP = `<svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect class="m-bg" width="320" height="180"/><g class="m-st"><path d="M0 42H320M0 116H320M0 158H320M64 0V180M152 0V180M250 0V180M0 180L320 4"/></g><path class="m-rt" d="M28 150C88 150 112 116 152 116S228 60 290 42"/><circle class="m-sp" cx="28" cy="150" r="6"/><circle class="m-sp" cx="152" cy="116" r="6"/><circle class="m-end" cx="290" cy="42" r="8"/></svg>`;
+  const ROWS = [['#4417', 'Ana Ribeiro', 'Delivered', 'ok', '€84.20'], ['#4418', 'Tomás Silva', 'Shipped', 'info', '€129.00'], ['#4419', 'Inês Costa', 'Packed', '', '€46.50'], ['#4420', 'Rui Almeida', 'Delayed', 'warn', '€212.80']];
+  const C = {
+    block: () => `<div class="map" data-ph="rect">${MAP}</div><p class="cap">${sp('Lisbon to Porto, 2 stops')}</p>`,
+    text: () => `<p class="lines">${sp('Your order left our warehouse at 08:12 and is')}${sp('on its way to the pickup point on Rua Augusta.')}${sp('We’ll send a message when it’s ready.')}</p>`,
+    glyph: () => `<div class="glyph g-demo" data-part="glyph" data-word="DELIVERED"><span class="glyph-text">Delivered</span></div><p class="cap">${sp('Order 4417, signed for at 14:32')}</p>`,
+    chart: () => `<div class="chart-h">${sp('Orders per week')}<span class="chart-v">${sp('1,284 this week')}</span></div>${chart(PTS, 'Line chart: weekly orders rose from 812 to 1,284 over 12 weeks')}<div class="chart-x">${sp('Aug 4')}${sp('Oct 20')}</div>`,
+    table: () => `<div class="tblwrap"><table class="tbl"><thead><tr><th scope="col">Order</th><th scope="col">Customer</th><th scope="col">Status</th><th scope="col" class="num">Total</th></tr></thead><tbody>${ROWS.map((r) => `<tr><td>${sp(r[0])}</td><td>${sp(r[1])}</td><td>${sp(r[2], 'pill ' + r[3])}</td><td class="num">${sp(r[4])}</td></tr>`).join('')}</tbody></table></div>`,
+    typing: () => `<div class="chat"><div class="msg me">Where is my order?</div><div class="msg-slot"><div class="msg them typing" data-part="typing"><span class="typing-anchor"></span></div><div class="msg them" data-ph="none">Your courier is two stops away, about 10 minutes.</div></div></div>`,
+    region: () => `<article class="person"><span class="avatar" data-ph="circle">MO</span><div><p class="pname">${sp('Mira Okafor')}</p><p class="role">${sp('Fulfilment lead, Lisbon')}</p></div><p class="bio">${sp('Handles returns and courier handoffs for the Lisbon hub.')}</p><div class="pact"><button type="button" class="btn sm" data-ph="rect">Send message</button></div></article>`,
+    kpi: (o) => `<div class="glyph g-kpi" data-part="glyph" data-word="${o.word}"><span class="glyph-text">${o.word}</span></div><p class="kpi-d">${sp(o.delta, 'pill ok')}${sp('vs. last month')}</p>`,
+    dchart: () => `<div class="chart-h">${sp('$412,880 in 12 weeks')}<span class="chart-v">${sp('+41% on the prior period')}</span></div>${chart(REV, 'Line chart: weekly revenue rose from 31 to 44 thousand dollars')}<div class="chart-x">${sp('Aug 4')}${sp('Sep 8')}${sp('Oct 20')}</div>`,
+    dlist: () => `<ul class="c-list">${[['AR', 'Ana Ribeiro', '$6,420'], ['TS', 'Tomás Silva', '$5,980'], ['IC', 'Inês Costa', '$4,310'], ['RA', 'Rui Almeida', '$3,775']].map((r) => `<li><span class="c-lav" data-ph="circle">${r[0]}</span>${sp(r[1])}<span class="c-la">${sp(r[2])}</span></li>`).join('')}</ul>`,
+    dtable: () => `<div class="tblwrap"><table class="tbl"><thead><tr><th scope="col">Invoice</th><th scope="col">Customer</th><th scope="col">Due</th><th scope="col" class="num">Amount</th><th scope="col">Status</th></tr></thead><tbody>${[['INV-2041', 'Ana Ribeiro', 'Oct 24', '$1,240.00', 'Paid', 'ok'], ['INV-2042', 'Tomás Silva', 'Oct 26', '$860.00', 'Sent', 'info'], ['INV-2043', 'Inês Costa', 'Oct 29', '$2,115.50', 'Overdue', 'warn'], ['INV-2044', 'Rui Almeida', 'Nov 2', '$395.00', 'Draft', '']].map((r) => `<tr><td>${sp(r[0])}</td><td>${sp(r[1])}</td><td>${sp(r[2])}</td><td class="num">${sp(r[3])}</td><td>${sp(r[4], 'pill ' + r[5])}</td></tr>`).join('')}</tbody></table></div>`
+  };
+  const stage = (kind, label, o = {}) =>
+    `<div class="stage" data-kind="${kind}" role="group" aria-label="${label}"${o.group ? ` data-group="${o.group}" data-p="${o.p}" data-cycle="${o.cycle}"` : ''}><div class="content">${C[kind](o)}</div><canvas class="dots" aria-hidden="true"></canvas></div>`;
+  const ctrl = () => `<div class="ctrl"><button type="button" class="btn sm" data-act="start">Start loading</button><button type="button" class="btn sm primary" data-act="reveal">Reveal</button><span class="st" aria-live="polite"></span></div>`;
+  const LOGO = '<svg viewBox="0 0 22 22" aria-hidden="true"><rect width="22" height="22" rx="7" fill="var(--accent)"/><g fill="var(--accent-ink)"><circle cx="7.5" cy="7.5" r="2.1"/><circle cx="14.5" cy="7.5" r="2.1"/><circle cx="7.5" cy="14.5" r="2.1"/><circle cx="14.5" cy="14.5" r="2.1" opacity=".45"/></g></svg>';
+  const CODE_LINES = [
+    `<span class="k">import</span> <span class="p">{</span> LoadingRegion<span class="p">,</span> ChartLoader <span class="p">}</span> <span class="k">from</span> <span class="s">'dotquilt/react'</span><span class="p">;</span>`,
+    ``,
+    `<span class="k">export function</span> <span class="f">RevenueChart</span><span class="p">({</span> data <span class="p">})</span> <span class="p">{</span>`,
+    `  <span class="k">return</span> <span class="p">(</span>`,
+    `    <span class="p">&lt;</span><span class="t">LoadingRegion</span>`,
+    `      <span class="a">state</span><span class="p">={</span>data <span class="p">?</span> <span class="s">'ready'</span> <span class="p">:</span> <span class="s">'pending'</span><span class="p">}</span>`,
+    `      <span class="a">placeholder</span><span class="p">={&lt;</span><span class="t">ChartLoader</span> <span class="a">variant</span><span class="p">=</span><span class="s">"line"</span> <span class="p">/&gt;}</span>`,
+    `    <span class="p">&gt;</span>`,
+    `      <span class="p">{</span>data <span class="p">&amp;&amp;</span> <span class="p">&lt;</span><span class="t">LineChart</span> <span class="a">data</span><span class="p">={</span>data<span class="p">}</span> <span class="p">/&gt;}</span>`,
+    `    <span class="p">&lt;/</span><span class="t">LoadingRegion</span><span class="p">&gt;</span>`,
+    `  <span class="p">);</span>`,
+    `<span class="p">}</span>`
+  ];
+  const codeBlock = () => `<div class="codeblock"><div class="code-h"><span>RevenueChart.tsx</span><button type="button" data-act="copy-code">Copy</button></div><pre class="code"><code>${CODE_LINES.map((l) => `<span class="cl">${l || ' '}</span>`).join('')}</code></pre></div>`;
+  const PROPS = [
+    ['variant', "'line' | 'bar' | 'scatter'", "'line'", 'The silhouette drawn while the data loads.'],
+    ['speed', 'number', '1', 'Multiplies the idle animation speed. Use 0.5 on calm screens.'],
+    ['pointerResponse', "'none' | 'lift'", "'none'", 'Lets marks lift toward the pointer while waiting.'],
+    ['motion', "'system' | 'paused'", "'system'", 'Follows the reduced-motion setting, or holds a still frame.'],
+    ['onHandoffEnd', '() =&gt; void', '', 'Called once your chart has fully taken over.']
+  ];
+
+  function home(d) {
+    const k = d.key, G = { group: 'hero-' + k, cycle: k === 'r' ? 9400 : 7600 };
+    const P = k === 'r' ? [1000, 1400, 1800, 2400, 2900, 3400] : [900, 1200, 1500, 2000, 2400, 2800];
+    const kpis = [['Revenue', '$48,210', '+8.2%'], ['Active customers', '1,284', '+3.1%'], ['Refund rate', '0.8%', '−0.2 pts']];
+    return `<header class="nav"><a class="logo" href="#">${LOGO}<span>Dotquilt</span></a><nav class="nav-links" aria-label="Site (example)"><a href="#">Docs</a><a href="#">Components</a><a href="#">Examples</a><a href="#">Changelog</a></nav><div class="nav-end"><a class="gh" href="#">GitHub</a><a class="btn sm primary" href="#">Get started</a></div></header>
+      <section class="c-hero">
+        <h1 class="hx">Loading states built for real product screens.</h1>
+        <p class="sub">Metrics, charts, tables and chat all arrive at different times. Dotquilt gives each one a placeholder in its own shape and hands over gently when its data lands, so your dashboard settles into place instead of jumping.</p>
+        <div class="cta"><a class="btn lg primary" href="#">Get started</a><a class="btn lg" href="#">See the components</a></div>
+        <p class="c-trust">Native web components for React, Vue, Svelte or plain HTML. Server rendering and reduced motion handled for you.</p>
+      </section>
+      <div class="c-app-wrap hero-vis">
+        <div class="c-app">
+          <aside class="c-side" aria-label="App navigation (example)"><div class="c-ws">${LOGO}<span>Fernhill Studio</span></div><a href="#" aria-current="page"><i></i>Overview</a><a href="#"><i></i>Invoices</a><a href="#"><i></i>Customers</a><a href="#"><i></i>Reports</a><a href="#"><i></i>Settings</a></aside>
+          <div class="c-main">
+            <div class="c-top"><h3>Overview</h3><div class="c-tools"><span class="c-chip">Last 30 days</span><span class="c-av" aria-hidden="true">JD</span></div></div>
+            <div class="c-kpis">${kpis.map((q, i) => `<div class="c-card"><div class="c-card-h"><b>${q[0]}</b></div>${stage('kpi', q[0] + ' metric example', { ...G, p: P[i], word: q[1], delta: q[2] })}</div>`).join('')}</div>
+            <div class="c-row2">
+              <div class="c-card"><div class="c-card-h"><b>Revenue by week</b><span>USD</span></div>${stage('dchart', 'Revenue chart example', { ...G, p: P[3] })}</div>
+              <div class="c-card"><div class="c-card-h"><b>Top customers</b><span>This month</span></div>${stage('dlist', 'Top customers example', { ...G, p: P[4] })}</div>
+            </div>
+            <div class="c-card"><div class="c-card-h"><b>Recent invoices</b><span>4 of 38</span></div>${stage('dtable', 'Invoices table example', { ...G, p: P[5] })}</div>
+          </div>
+        </div>
+        <div class="hero-foot"><span>Example data. Each card hands over when its own data arrives.</span><button type="button" class="linkbtn" data-act="replay" data-group="hero-${k}">Replay</button></div>
+      </div>`;
+  }
+  function docs(d) {
+    const k = d.key;
+    const groups = [['Getting started', ['Introduction', 'Installation', 'Loading states', 'Theming']], ['Components', ['Skeleton', 'TextLoader', 'ChartLoader', 'TableLoader', 'TypingDots', 'LoadingRegion']], ['Guides', ['React', 'Server rendering', 'Reduced motion']]];
+    return `<header class="nav docs-nav"><a class="logo" href="#">${LOGO}<span>Dotquilt</span></a><label class="search"><span class="vh">Search the docs</span><input type="search" id="q-${k}" placeholder="Search the docs"><kbd>⌘K</kbd></label><div class="nav-end"><a class="gh" href="#">GitHub</a></div></header>
+      <div class="docs">
+        <nav class="side" aria-label="Docs (example)">${groups.map((g) => `<div class="grp${g[0] === 'Components' ? ' cur' : ''}"><h4>${g[0]}</h4><ul>${g[1].map((n) => `<li><a href="#"${n === 'ChartLoader' ? ' aria-current="page"' : ''}>${n}</a></li>`).join('')}</ul></div>`).join('')}</nav>
+        <article class="doc">
+          <p class="crumbs">Components / ChartLoader</p>
+          <h1>ChartLoader</h1>
+          <div class="c-badges"><span class="on">Web component</span><span>React</span><span>Server rendering</span></div>
+          <p class="lead">Holds the place of a chart while its data loads. Marks trace a line inside the chart’s own bounds, then glide onto your real line and hand over to it.</p>
+          <div class="preview"><div class="pv-bar"><div class="ptabs" role="tablist" aria-label="Example view"><button type="button" role="tab" aria-selected="true" data-ptab="preview">Preview</button><button type="button" role="tab" aria-selected="false" data-ptab="code">Code</button></div>${ctrl()}</div><div class="pv-stage">${stage('chart', 'ChartLoader preview')}</div><div class="pv-code" hidden>${codeBlock()}</div></div>
+          <h2>Usage</h2>
+          <p>Render your chart inside a <code>LoadingRegion</code> and pass a <code>ChartLoader</code> as its placeholder. The region decides when to switch; the loader only draws, sized to the chart it stands in for.</p>
+          ${codeBlock()}
+          <h2>Props</h2>
+          <div class="tblwrap"><table class="props"><thead><tr><th scope="col">Prop</th><th scope="col">Type</th><th scope="col">Default</th><th scope="col">Description</th></tr></thead><tbody>${PROPS.map((p) => `<tr><td><code>${p[0]}</code></td><td><code class="ty">${p[1]}</code></td><td>${p[2] ? `<code>${p[2]}</code>` : '–'}</td><td>${p[3]}</td></tr>`).join('')}</tbody></table></div>
+          <h2>Accessibility</h2>
+          <p>While pending, the region is marked busy and its content is inert, so keyboard and screen reader users skip the placeholder. Your chart is announced once, when it’s ready. With reduced motion on, the idle animation stops and the handoff becomes a short fade.</p>
+        </article>
+        <aside class="toc" aria-label="On this page (example)"><p>On this page</p><a href="#">Usage</a><a href="#">Props</a><a href="#">Accessibility</a></aside>
+      </div>`;
+  }
+  const DEMOS = [
+    { kind: 'block', name: 'SkeletonBlock', ctx: 'Delivery route' },
+    { kind: 'text', name: 'SkeletonText', ctx: 'Order note' },
+    { kind: 'glyph', name: 'TextLoader', ctx: 'Order status' },
+    { kind: 'chart', name: 'ChartLoader', ctx: 'Orders per week', cls: 'span-2' },
+    { kind: 'typing', name: 'TypingDots', ctx: 'Support chat' },
+    { kind: 'table', name: 'TableLoader', ctx: 'Recent orders', cls: 'span-2' },
+    { kind: 'region', name: 'LoadingRegion', ctx: 'Account owner', cls: 'span-r' }
+  ];
+  const sheet = () => `<div class="sheet-h"><div><h3>Components in context</h3><p>Each loader inside the card it would live in. They start loading; reveal one at a time or all together.</p></div><div class="cta"><button type="button" class="btn sm" data-act="start-all">Start all</button><button type="button" class="btn sm primary" data-act="reveal-all">Reveal all</button></div></div>
+    <div class="cgrid">${DEMOS.map((m) => `<div class="demo ${m.cls || ''}"><div class="demo-h"><h4>${m.ctx}</h4><code class="cmp">${m.name}</code></div><div class="demo-b">${stage(m.kind, m.name + ' example')}</div>${ctrl()}</div>`).join('')}</div>`;
+
+  const cap = (s) => s[0].toUpperCase() + s.slice(1);
+  function marksSVG(k) {
+    const S = STY[k];
+    return ['dot', 'dash', 'square'].map((m) => {
+      const M = S.m[m], n = 9, sc = 2, w = Math.round(n * M.px * sc), h = Math.round(Math.max(M.py, 8) * sc + 4);
+      let sh = '';
+      for (let i = 0; i < n; i++) {
+        const x = (i + 0.5) * M.px * sc, y = h / 2, op = (0.3 + 0.7 * i / (n - 1)).toFixed(2);
+        if (m === 'dot') sh += `<circle cx="${x.toFixed(1)}" cy="${y}" r="${(M.w * sc / 2).toFixed(2)}" opacity="${op}"/>`;
+        else if (m === 'square') sh += `<rect x="${(x - M.w * sc / 2).toFixed(1)}" y="${(y - M.w * sc / 2).toFixed(1)}" width="${M.w * sc}" height="${M.w * sc}" rx="${(M.rr || 0) * sc}" opacity="${op}"/>`;
+        else sh += `<rect x="${(x - M.w * sc / 2).toFixed(1)}" y="${(y - M.h * sc / 2).toFixed(1)}" width="${(M.w * sc).toFixed(1)}" height="${(M.h * sc).toFixed(1)}" rx="${(M.h * sc / 2).toFixed(2)}" opacity="${op}"/>`;
+      }
+      const size = m === 'dash' ? `${M.w} × ${M.h} px on a ${M.px} × ${M.py} px grid` : `${M.w} px on a ${M.px} px grid`;
+      return `<div class="mk-row"><svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" fill="var(--dot)" aria-hidden="true">${sh}</svg><span><b>${cap(m)}${m === S.mark ? ', default' : ''}.</b> ${size}, shown at 2×.</span></div>`;
+    }).join('');
+  }
+  function curveSVG(f) {
+    let d = '';
+    for (let i = 0; i <= 40; i++) { const x = i / 40, y = f(x); d += `${i ? 'L' : 'M'}${(6 + x * 108).toFixed(1)} ${(66 - y * 56).toFixed(1)}`; }
+    return `<svg viewBox="0 0 120 72" aria-hidden="true"><path class="g" d="M6 66H114M6 10H114"/><path class="c" d="${d}"/></svg>`;
+  }
+  const chips = (list) => `<div class="sw">${list.map(([n, h]) => `<div class="chip"><i style="background:${h}"></i><b>${n}</b><span>${h}</span></div>`).join('')}</div>`;
+  const esc = (s) => s.replace(/</g, '&lt;');
+  function tokens(d) {
+    const curves = d.curves ? `<div class="curves"><div class="curve">${curveSVG(E.settle)}<span><b>Settle</b> 0.22, 1, 0.36, 1</span></div><div class="curve">${curveSVG(E.inOutSine)}<span><b>Sine</b> in-out</span></div></div>` : '';
+    return `<div class="spec">
+      <div class="blk"><h3>Colour</h3><h4>Light</h4>${chips(d.light)}<h4>Dark</h4>${chips(d.dark)}<p style="margin-top:14px">${d.colorNote}</p></div>
+      <div class="blk"><h3>Type</h3>${d.type.map((t) => `<div class="ty-row"><p class="ty-sample" style="${t[2]}">${esc(t[0])}</p><p>${t[1]}</p></div>`).join('')}</div>
+      <div class="blk"><h3>Marks</h3>${marksSVG(d.key)}<p style="margin-top:12px">${d.markWhy}</p></div>
+      <div class="blk"><h3>Motion</h3>${curves}<ul>${d.motion.map((m) => `<li><b>${m[0]}.</b> ${m[1]}</li>`).join('')}</ul></div>
+      <div class="blk"><h3>Space and shape</h3><div class="radii" aria-hidden="true"><span style="border-radius:var(--r-sm)">sm</span><span style="border-radius:var(--r-md)">md</span><span style="border-radius:var(--r-lg)">lg</span></div><ul>${d.space.map((m) => `<li>${m}</li>`).join('')}</ul></div>
+      <div class="blk"><h3>What changed</h3><ul>${d.changed.map((m) => `<li>${m}</li>`).join('')}</ul></div>
+    </div>`;
+  }
+  function panelHTML(d) {
+    const k = d.key;
+    return `<section class="dir d-${k}" id="panel-${k}" data-dir="${k}" aria-label="${d.name}" hidden>
+      <div class="dir-head"><p class="dir-k">${k === 'r' ? 'Direction C, refined' : 'Direction C, as shown in round 2'}</p><h2>${d.name}</h2><p>${d.idea}</p><p><b>Feels:</b> ${d.feel}</p></div>
+      <h3 class="slabel"><span>Homepage</span><small>The dashboard loops: loading, handoff, ready.</small></h3>
+      <div class="site">${home(d)}</div>
+      <h3 class="slabel"><span>Docs page</span><small>Component reference with a live preview.</small></h3>
+      <div class="site">${docs(d)}</div>
+      <h3 class="slabel"><span>Components, default look</span><small>Live. Each starts loading; Reveal shows the handoff.</small></h3>
+      <div class="site">${sheet()}</div>
+      <h3 class="slabel"><span>Tokens and notes</span></h3>
+      <div class="site">${tokens(d)}</div>
+    </section>`;
+  }
+  const app = document.getElementById('app');
+  document.getElementById('panels').innerHTML = DIRS.map(panelHTML).join('');
+
+  /* ---------- Motion state ---------- */
+  const rm = matchMedia('(prefers-reduced-motion: reduce)');
+  let paused = false, markPref = 'default', mt = 0, last = performance.now();
+  const isReduced = () => rm.matches;
+  const motionOn = () => !paused && !rm.matches;
+
+  /* ---------- Drawing ---------- */
+  function drawMark(ctx, kind, w, h, x, y, s, ang, dpr, rr) {
+    if (s <= 0.03) return;
+    if (kind === 'dot') { ctx.beginPath(); ctx.arc(x, y, (w * s) / 2, 0, TAU); ctx.fill(); }
+    else if (kind === 'square') {
+      const z = Math.max(1 / dpr, Math.round(w * s * dpr) / dpr), x0 = Math.round((x - z / 2) * dpr) / dpr, y0 = Math.round((y - z / 2) * dpr) / dpr;
+      if (rr && ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x0, y0, z, z, Math.min(z / 2, rr * s)); ctx.fill(); }
+      else ctx.fillRect(x0, y0, z, z);
+    } else {
+      const hh = h * s, L = Math.max(0, w * s - hh) / 2, c = Math.cos(ang) * L, sn = Math.sin(ang) * L;
+      ctx.lineWidth = hh; ctx.beginPath(); ctx.moveTo(x - c, y - sn); ctx.lineTo(x + c, y + sn); ctx.stroke();
+    }
+  }
+  function rel(node, r) { const b = node.getBoundingClientRect(); return { x: b.left - r.left, y: b.top - r.top, w: b.width, h: b.height }; }
+  function lineRects(node, r) {
+    const rg = document.createRange(); rg.selectNodeContents(node);
+    const out = [];
+    for (const q of rg.getClientRects()) {
+      if (q.width < 1 || q.height < 1) continue;
+      const lst = out[out.length - 1];
+      if (lst && Math.abs(lst.top - q.top) < 4) { lst.left = Math.min(lst.left, q.left); lst.right = Math.max(lst.right, q.right); lst.bottom = Math.max(lst.bottom, q.bottom); }
+      else out.push({ left: q.left, right: q.right, top: q.top, bottom: q.bottom });
+    }
+    return out.map((q) => ({ x: q.left - r.left, y: q.top - r.top, w: q.right - q.left, h: q.bottom - q.top }));
+  }
+  function sampleY(ys, u) { const f = clamp(u) * (ys.length - 1), k = Math.min(ys.length - 2, Math.floor(f)); return ys[k] + (ys[k + 1] - ys[k]) * (f - k); }
+
+  /* ---------- Stage engine ---------- */
+  const GROUPS = {};
+  const stages = [], byEl = new Map();
+  class Stage {
+    constructor(el) {
+      this.el = el; this.dir = el.closest('[data-dir]').dataset.dir; this.S = STY[this.dir];
+      this.canvas = el.querySelector('canvas.dots'); this.ctx = this.canvas.getContext('2d');
+      this.content = el.querySelector('.content');
+      this.group = el.dataset.group || null; this.p = +el.dataset.p || 0;
+      if (this.group) { const g = GROUPS[this.group] || (GROUPS[this.group] = { t0: 0, cycle: +el.dataset.cycle, members: [] }); g.members.push(this); }
+      this.state = 'pending'; this.revealAt = 0; this.manual = false; this.endT = 1.06;
+      this.cells = []; this.parts = []; this.W = 0; this.H = 0; this.dpr = 1; this.dirty = true; this.visible = false;
+      const host = el.closest('.demo, .preview');
+      this.status = host ? host.querySelector('.st') : null;
+      el.style.setProperty('--re', this.S.ease);
+      this.colors(); this.apply();
+    }
+    get kind() { return markPref === 'default' ? this.S.mark : markPref; }
+    colors() {
+      const cs = getComputedStyle(this.el), g = (n) => cs.getPropertyValue(n).trim();
+      this.c = { dot: g('--dot'), acc: g('--dot-acc') || g('--dot'), lo: parseFloat(g('--dot-lo')) || 0.3, hi: parseFloat(g('--dot-hi')) || 0.9 };
+      this.dirty = true;
+    }
+    measure() {
+      const r = this.el.getBoundingClientRect();
+      if (!r.width || !r.height) { this.W = 0; return; }
+      this.W = r.width; this.H = r.height;
+      const dpr = (this.dpr = Math.min(2, window.devicePixelRatio || 1));
+      this.canvas.width = Math.round(r.width * dpr); this.canvas.height = Math.round(r.height * dpr);
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const S = this.S, mk = (this.mk = this.kind), M = (this.M = S.m[mk]), W = this.W, H = this.H, D = S.D;
+      const px = M.px, py = M.py, mw = M.w, cells = [], parts = [];
+      const ms = (v) => Math.round(v) + 'ms';
+      let endT = 1.06;
+      const cols = (x0, x1) => {
+        const out = [];
+        for (let i = Math.ceil((x0 + mw / 2 - px / 2) / px - 1e-6); ; i++) { const x = px / 2 + i * px; if (x > x1 - mw / 2 + 1e-6) break; out.push(x); }
+        if (!out.length) out.push((x0 + x1) / 2);
+        return out;
+      };
+      /* When each placeholder starts handing over: soft row and cell staggers for the refined style, a positional sweep for round 2. */
+      const items = [];
+      for (const node of this.content.querySelectorAll('[data-ph]')) {
+        const shape = node.dataset.ph, rects = shape === 'text' ? lineRects(node, r) : [rel(node, r)];
+        if (rects.length) items.push({ node, shape, rects, s0: 0 });
+      }
+      if (S.stagger) {
+        const byY = [...items].sort((a, b) => a.rects[0].y - b.rects[0].y), rows = [];
+        for (const it of byY) { const lr = rows[rows.length - 1]; if (lr && it.rects[0].y - lr.y < 10) lr.items.push(it); else rows.push({ y: it.rects[0].y, items: [it] }); }
+        rows.forEach((row, ri) => row.items.sort((a, b) => a.rects[0].x - b.rects[0].x).forEach((it, ci) => { it.s0 = Math.min(S.stagger.max, (ri * S.stagger.row + ci * S.stagger.cell) / D); }));
+      } else {
+        for (const it of items) { const b0 = it.rects[0]; it.s0 = S.order(clamp((b0.x + b0.w / 2) / W), clamp((b0.y + b0.h / 2) / H)) * S.spread; }
+      }
+      for (const it of items) {
+        const { node, shape, rects, s0 } = it, dl = (s0 + S.win * 0.22) * D;
+        node.style.setProperty('--dl', ms(dl)); node.style.setProperty('--rd', ms(S.fade));
+        endT = Math.max(endT, (dl + S.fade * (S.rise || 1)) / D + 0.02);
+        if (shape === 'none') continue;
+        const add = (x, y) => cells.push({ x, y, s0 });
+        if (shape === 'circle') {
+          const b0 = rects[0], ccx = b0.x + b0.w / 2, ccy = b0.y + b0.h / 2, rad = Math.min(b0.w, b0.h) / 2 - 1;
+          const ny = Math.max(1, Math.floor((2 * rad) / py));
+          for (let j = 0; j < ny; j++) {
+            const y = ccy + (j - (ny - 1) / 2) * py, hw = Math.sqrt(Math.max(0, rad * rad - (y - ccy) * (y - ccy))) - mw * 0.25;
+            if (hw <= mw * 0.3) continue;
+            const n = Math.max(1, Math.floor((2 * hw - mw) / px) + 1);
+            for (let i = 0; i < n; i++) add(ccx + (i - (n - 1) / 2) * px, y);
+          }
+        } else {
+          for (const b of rects) {
+            const rows = shape === 'text' ? Math.max(1, Math.min(M.tr, Math.floor((b.h - 1) / py))) : Math.max(1, Math.floor(b.h / py));
+            const xs = cols(b.x, b.x + b.w);
+            for (let j = 0; j < rows; j++) { const y = b.y + b.h / 2 + (j - (rows - 1) / 2) * py; for (const x of xs) add(x, y); }
+          }
+        }
+      }
+      const ch = S.chart;
+      for (const node of this.content.querySelectorAll('[data-part="chart"]')) {
+        const b = rel(node, r), pts = node.dataset.points.split(',').map(Number);
+        const mn = Math.min(...pts), mx = Math.max(...pts), ys = pts.map((v) => 0.16 + 0.68 * (1 - (v - mn) / (mx - mn || 1)));
+        const w = b.w.toFixed(1), h = b.h.toFixed(1);
+        node.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        const P = ys.map((y, k) => [(k / (ys.length - 1)) * b.w, y * b.h]);
+        const dd = P.map((q, k) => `${k ? 'L' : 'M'}${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join(' ');
+        node.querySelector('.chart-line').setAttribute('d', dd);
+        node.querySelector('.chart-area').setAttribute('d', `${dd} L${w} ${h} L0 ${h} Z`);
+        node.querySelector('.chart-grid').innerHTML = [0.25, 0.5, 0.75].map((f) => `<line x1="0" x2="${w}" y1="${(f * b.h).toFixed(1)}" y2="${(f * b.h).toFixed(1)}"/>`).join('');
+        const end = node.querySelector('.chart-end'); end.setAttribute('cx', P[P.length - 1][0].toFixed(1)); end.setAttribute('cy', P[P.length - 1][1].toFixed(1));
+        const rows = Math.max(3, Math.floor(b.h / py));
+        parts.push({ type: 'chart', b, ys, xs: cols(b.x, b.x + b.w), rows, rowH: b.h / rows });
+        const svgDl = D * ch.svg[0], svgRd = S.fade * ch.svg[1] * (S.rise || 1);
+        node.style.setProperty('--dl', ms(svgDl)); node.style.setProperty('--rd', ms(svgRd));
+        node.style.setProperty('--ldl', ms(D * ch.line[0])); node.style.setProperty('--ld', ms(D * ch.line[1]));
+        endT = Math.max(endT, (svgDl + svgRd) / D + 0.02, ch.line[0] + ch.line[1] + 0.02);
+      }
+      const G = S.glyph, lockEnd = 0.06 + G.lock;
+      for (const node of this.content.querySelectorAll('[data-part="glyph"]')) {
+        const b = rel(node, r), word = node.dataset.word, n = word.length;
+        const pg = Math.min(b.h / 9.5, b.w / (n * 6 - 1));
+        const prior = this.parts.find((pt) => pt.type === 'glyph' && pt.word === word);
+        const slots = prior ? prior.slots : [...word].map((ch2) => { const c = rnd(ch2); return { cur: c, prev: c, at: 0, atR: 0, rt: false }; });
+        parts.push({ type: 'glyph', word, n, pg, x0: b.x + pg * 0.1, y0: b.y + (b.h - 7 * pg) / 2, slots });
+        const gdl = D * (lockEnd + G.textAt);
+        node.style.setProperty('--dl', ms(gdl)); node.style.setProperty('--rd', ms(S.fade));
+        endT = Math.max(endT, (gdl + S.fade * (S.rise || 1)) / D + 0.02);
+      }
+      for (const node of this.content.querySelectorAll('[data-part="typing"]')) {
+        node.style.setProperty('--rd', ms(Math.min(S.fade, D * 0.45)));
+        const a = node.querySelector('.typing-anchor'); if (a) parts.push({ type: 'typing', b: rel(a, r) });
+      }
+      this.cells = cells; this.parts = parts; this.endT = endT; this.dirty = true;
+    }
+    apply() {
+      const st = this.state;
+      this.el.dataset.state = st;
+      this.content.inert = st !== 'ready';
+      this.el.setAttribute('aria-busy', String(st !== 'ready'));
+      if (this.status) { this.status.textContent = this.S.status[st]; this.status.dataset.s = st === 'pending' ? 'pending' : 'ready'; }
+      this.dirty = true;
+    }
+    start() {
+      this.state = 'pending';
+      for (const pt of this.parts) if (pt.type === 'glyph') pt.slots.forEach((s, k) => { s.cur = rnd(pt.word[k]); s.prev = s.cur; s.at = mt; s.rt = false; });
+      this.apply();
+    }
+    reveal(now = performance.now()) { if (this.state !== 'pending') return; this.state = 'revealing'; this.revealAt = now; this.apply(); }
+    finish() { this.state = 'ready'; this.apply(); if (this.W) this.ctx.clearRect(0, 0, this.W, this.H); this.dirty = false; }
+    loopStep(now) {
+      if (this.manual) return;
+      if (isReduced()) { if (this.state !== 'ready') this.finish(); return; }
+      const g = GROUPS[this.group], ph = (((mt - g.t0) % g.cycle) + g.cycle) % g.cycle;
+      if (ph < this.p) { if (this.state !== 'pending') this.start(); }
+      else if (this.state === 'pending') this.reveal(now);
+    }
+    frame(now) {
+      if (!this.W) return;
+      if (this.group) this.loopStep(now);
+      if (this.state === 'ready') { if (this.dirty) { this.ctx.clearRect(0, 0, this.W, this.H); this.dirty = false; } return; }
+      let tr = 0;
+      if (this.state === 'revealing') {
+        const red = isReduced();
+        tr = (now - this.revealAt) / (red ? 260 : this.S.D);
+        if (tr >= (red ? 1.06 : this.endT)) { this.finish(); return; }
+      } else if (!motionOn() && !this.dirty) return;
+      this.dirty = false;
+      const ctx = this.ctx, S = this.S, c = this.c, W = this.W, H = this.H, M = this.M, mk = this.mk, red = isReduced();
+      const br = S.breathe && !red ? S.breathe(mt) : 1, lo = c.lo * br;
+      ctx.clearRect(0, 0, W, H);
+      ctx.lineCap = 'round';
+      for (let pass = 0; pass < 2; pass++) {
+        ctx.fillStyle = ctx.strokeStyle = pass ? c.acc : c.dot;
+        for (const cell of this.cells) {
+          const v = red ? S.rest : S.idle(mt, cell.x, cell.y, W, H);
+          let am = 1, sc = 1, acc = 0, dy = 0;
+          if (tr) { const q = clamp((tr - cell.s0) / S.win); if (q >= 1) continue; const o = S.exit(q); am = o[0]; sc = o[1]; acc = o[2]; dy = o[3]; }
+          const a = pass === 0 ? lo * am : Math.max(v, acc) * c.hi * am;
+          if (a < 0.01) continue;
+          ctx.globalAlpha = a;
+          drawMark(ctx, mk, M.w, M.h, cell.x, cell.y + dy, sc, 0, this.dpr, M.rr);
+        }
+        for (const pt of this.parts) {
+          if (pt.type === 'chart') this.chart(pt, tr, red, pass, lo);
+          else if (pt.type === 'glyph') this.glyph(pt, now, tr, pass, red);
+          else if (pass === 0) this.typing(pt, tr, red);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+    chart(pt, tr, red, pass, lo) {
+      const { b, ys, xs, rows, rowH } = pt, S = this.S, ch = S.chart, ctx = this.ctx, c = this.c, mk = this.mk, M = this.M;
+      const fade = tr ? smooth(ch.fade[0], ch.fade[1], tr) : 0;
+      if (fade >= 1) return;
+      const tt = red ? 0 : mt;
+      const ridge = (u) => 0.5 + 0.2 * Math.sin(TAU * (u * 1.1 - tt / ch.T)) + 0.07 * Math.sin(TAU * (u * 2.9 + tt / (ch.T * 0.6)));
+      for (const x of xs) {
+        const u = clamp((x - b.x) / b.w);
+        const qc = tr ? ch.ease(clamp((tr - ch.s0 - S.order(x / this.W, 0.5) * ch.spread) / ch.win)) : 0;
+        const yAt = (uu) => { const iy = ridge(uu); return (iy + (sampleY(ys, uu) - iy) * qc) * b.h; };
+        const ry = yAt(u);
+        let ang = 0;
+        if (mk === 'dash') { const u0 = Math.max(0, u - 0.025), u1 = Math.min(1, u + 0.025); ang = clamp(Math.atan2(yAt(u1) - yAt(u0), (u1 - u0) * b.w), -1.1, 1.1); }
+        const band = M.py * (ch.band - 0.65 * qc);
+        const iv = red ? 0 : S.idle(mt, x, b.y + ry, this.W, this.H);
+        for (let j = 0; j < rows; j++) {
+          const y = (j + 0.5) * rowH, d = (y - ry) / band, line = Math.exp(-d * d), area = y > ry ? ch.area * (1 - qc) : 0;
+          const v = Math.max(line, area);
+          let a = pass === 0 ? ch.floor + (Math.min(1, lo * 1.7) - ch.floor) * v : c.hi * v * iv;
+          a *= 1 - fade;
+          if (a < 0.012) continue;
+          ctx.globalAlpha = a;
+          drawMark(ctx, mk, M.w, M.h, x, b.y + y, 1, ang * line, this.dpr, M.rr);
+        }
+      }
+    }
+    glyph(pt, now, tr, pass, red) {
+      const S = this.S, G = S.glyph, ctx = this.ctx, c = this.c, pg = pt.pg, mk = this.mk, M = this.M;
+      const lockEnd = 0.06 + G.lock, fade = tr ? smooth(lockEnd + G.mfade[0], lockEnd + G.mfade[1], tr) : 0;
+      if (fade >= 1) return;
+      const gw = mk === 'dot' ? pg * 0.72 : mk === 'square' ? pg * 0.8 : pg * 0.98, gh = pg * 0.36;
+      for (let k = 0; k < pt.n; k++) {
+        const s = pt.slots[k], target = pt.word[k];
+        if (target === ' ') continue;
+        if (pass === 0) {
+          const locked = tr > 0 && tr >= 0.06 + (k / Math.max(1, pt.n - 1)) * G.lock;
+          if (locked) { if (s.cur !== target) { s.prev = s.cur; s.cur = target; s.atR = now; s.rt = true; } }
+          else if (motionOn() && mt - s.at > G.tick * (0.75 + ((k * 7) % 5) / 10)) { s.prev = s.cur; s.cur = rnd(target); s.at = mt; s.rt = false; }
+        }
+        const kk = s.rt ? (G.lockFade <= 0 ? 1 : E.inOutSine(clamp((now - s.atR) / G.lockFade))) : (G.fade <= 0 || red ? 1 : E.inOutSine(clamp((mt - s.at) / G.fade)));
+        const A = FONT[s.prev] || FONT[' '], B = FONT[s.cur] || FONT[' '];
+        for (let rr = 0; rr < 7; rr++) for (let col = 0; col < 5; col++) {
+          const bit = 16 >> col, va = A[rr] & bit ? 1 : 0, vb = B[rr] & bit ? 1 : 0, v = va + (vb - va) * kk;
+          const x = pt.x0 + (k * 6 + col + 0.5) * pg, y = pt.y0 + (rr + 0.5) * pg;
+          let a = pass === 0 ? G.off + (c.hi * (G.peak || 1) - G.off) * v : v * c.hi * (red ? 0 : S.idle(mt, x, y, this.W, this.H));
+          a *= 1 - fade;
+          if (a < 0.012) continue;
+          ctx.globalAlpha = a;
+          drawMark(ctx, mk, gw, gh, x, y, 1, 0, this.dpr, M.rr ? pg * 0.2 : 0);
+        }
+      }
+    }
+    typing(pt, tr, red) {
+      const { b } = pt, T = this.S.typing, d = T.d, mk = this.mk, ctx = this.ctx;
+      const fade = tr ? T.out(tr) : 0;
+      if (fade >= 1) return;
+      const h = mk === 'dash' ? d * 0.8 : d, w = mk === 'dash' ? h * 2.7 : mk === 'square' ? d * 0.9 : d;
+      const gap = mk === 'dash' ? d * 0.6 : d * 0.75, total = w * 3 + gap * 2;
+      const x0 = b.x + (b.w - total) / 2 + w / 2, cy = b.y + b.h / 2;
+      for (let i = 0; i < 3; i++) {
+        const v = red ? 0.6 : T.f(mt, i);
+        ctx.globalAlpha = (0.3 + 0.7 * v) * (1 - fade);
+        drawMark(ctx, mk, w, h, x0 + i * (w + gap), cy - T.lift * v, 1, 0, this.dpr, this.M.rr ? 1.4 : 0);
+      }
+    }
+  }
+
+  for (const el of document.querySelectorAll('.stage')) { const s = new Stage(el); stages.push(s); byEl.set(el, s); }
+  const io = new IntersectionObserver((entries) => { for (const e of entries) { const s = byEl.get(e.target); s.visible = e.isIntersecting; s.dirty = true; } }, { rootMargin: '160px' });
+  const ro = new ResizeObserver((entries) => { for (const e of entries) byEl.get(e.target).measure(); });
+  stages.forEach((s) => { io.observe(s.el); ro.observe(s.el); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => stages.forEach((s) => s.measure()));
+  function tick(now) {
+    const dt = Math.min(64, now - last); last = now;
+    if (motionOn()) mt += dt;
+    for (const s of stages) if (s.visible) s.frame(now);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* ---------- Preferences ---------- */
+  const store = { get: (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } } };
+  const dm = matchMedia('(prefers-color-scheme: dark)');
+  let pref = store.get('dq3-mode', 'auto');
+  const modeBtns = [...document.querySelectorAll('button[data-mode]')];
+  function applyMode() {
+    let mode = pref;
+    if (mode === 'auto') { const th = document.documentElement.getAttribute('data-theme'); mode = th === 'dark' || th === 'light' ? th : dm.matches ? 'dark' : 'light'; }
+    app.dataset.mode = mode;
+    modeBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === pref)));
+    stages.forEach((s) => s.colors());
+  }
+  modeBtns.forEach((b) => b.addEventListener('click', () => { pref = b.dataset.mode; store.set('dq3-mode', pref); applyMode(); }));
+  dm.addEventListener('change', applyMode);
+  new MutationObserver(applyMode).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  applyMode();
+
+  const markBtns = [...document.querySelectorAll('button[data-mark]')];
+  markPref = store.get('dq3-mark', 'default');
+  if (!['default', 'dot', 'dash', 'square'].includes(markPref)) markPref = 'default';
+  function applyMark() { markBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mark === markPref))); stages.forEach((s) => s.measure()); }
+  markBtns.forEach((b) => b.addEventListener('click', () => { markPref = b.dataset.mark; store.set('dq3-mark', markPref); applyMark(); }));
+  applyMark();
+
+  function syncReduced() {
+    if (rm.matches) app.setAttribute('data-reduced', ''); else app.removeAttribute('data-reduced');
+    stages.forEach((s) => { s.manual = false; s.dirty = true; });
+  }
+  rm.addEventListener('change', syncReduced); syncReduced();
+  const pauseBtn = document.getElementById('pause');
+  pauseBtn.addEventListener('click', () => {
+    paused = !paused;
+    pauseBtn.setAttribute('aria-pressed', String(paused));
+    pauseBtn.textContent = paused ? 'Resume motion' : 'Pause motion';
+    stages.forEach((s) => { s.dirty = true; if (!paused) s.manual = false; });
+  });
+
+  /* ---------- Compare: keep the reader at the same section when switching ---------- */
+  const viewBtns = [...document.querySelectorAll('button[data-view]')];
+  const HASH = Object.fromEntries(DIRS.map((d) => [d.hash, d.key]));
+  let view = HASH[location.hash.slice(1)] || 'r';
+  function showView(key, keepPlace) {
+    let anchor = -1, offset = 0;
+    if (keepPlace) {
+      const cur = document.getElementById('panel-' + view);
+      [...cur.querySelectorAll('.slabel')].forEach((l, i) => { const t = l.getBoundingClientRect().top; if (t < 140) { anchor = i; offset = t; } });
+    }
+    view = key;
+    viewBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === key)));
+    DIRS.forEach((d) => { document.getElementById('panel-' + d.key).hidden = d.key !== key; });
+    if (anchor >= 0) { const l = document.getElementById('panel-' + key).querySelectorAll('.slabel')[anchor]; window.scrollBy(0, l.getBoundingClientRect().top - offset); }
+    requestAnimationFrame(() => stages.forEach((s) => { if (s.el.closest('#panel-' + key)) s.measure(); }));
+    try { history.replaceState(null, '', '#' + DIRS.find((d) => d.key === key).hash); } catch (e) { /* hash unavailable */ }
+  }
+  viewBtns.forEach((b) => b.addEventListener('click', () => showView(b.dataset.view, true)));
+  window.addEventListener('hashchange', () => { const k = HASH[location.hash.slice(1)]; if (k && k !== view) showView(k, true); });
+  showView(view, false);
+
+  /* ---------- Controls ---------- */
+  function replay(name) {
+    const g = GROUPS[name]; if (!g) return;
+    if (motionOn()) { g.t0 = mt; g.members.forEach((s) => { s.manual = false; s.start(); }); return; }
+    const p0 = Math.min(...g.members.map((s) => s.p));
+    g.members.forEach((s) => { s.manual = true; s.start(); setTimeout(() => s.reveal(), 700 + (s.p - p0)); });
+  }
+  function copyText(text, btn) {
+    const done = () => { const o = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => (btn.textContent = o), 1400); };
+    try { navigator.clipboard.writeText(text).then(done, () => {}); } catch (e) { /* clipboard unavailable */ }
+  }
+  document.addEventListener('click', (e) => {
+    const pt = e.target.closest('[data-ptab]');
+    if (pt) {
+      const pv = pt.closest('.preview'), code = pt.dataset.ptab === 'code';
+      pv.querySelectorAll('[data-ptab]').forEach((b) => b.setAttribute('aria-selected', String(b === pt)));
+      pv.querySelector('.pv-stage').hidden = code; pv.querySelector('.pv-code').hidden = !code;
+      return;
+    }
+    const btn = e.target.closest('[data-act]');
+    if (!btn) { const a = e.target.closest('.site a[href="#"]'); if (a) e.preventDefault(); return; }
+    const act = btn.dataset.act;
+    if (act === 'copy-code') { copyText(btn.closest('.codeblock').querySelector('pre').textContent, btn); return; }
+    if (act === 'replay') { replay(btn.dataset.group); return; }
+    if (act === 'start-all' || act === 'reveal-all') {
+      const grid = btn.closest('.site').querySelector('.cgrid');
+      stages.forEach((s) => { if (grid.contains(s.el)) act === 'start-all' ? s.start() : s.reveal(); });
+      return;
+    }
+    const host = btn.closest('.demo, .preview'); if (!host) return;
+    const s = byEl.get(host.querySelector('.stage')); if (!s) return;
+    if (act === 'start') s.start(); else if (act === 'reveal') s.reveal();
+  });
+})();
+</script>
