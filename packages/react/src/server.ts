@@ -4,19 +4,23 @@ import {
 } from '@dotquilt-internal/core/server';
 export const reactTextStyles = staticTextLoaderStyles;
 
-/** Static appearance only. These exact strings can be authorized by CSP hashes. */
+/**
+ * Static appearance only. These exact strings can be authorized by CSP hashes.
+ * They apply before definition and while the host's external stylesheet loads
+ * (`:state(unstyled)`); browsers without custom states ignore that part.
+ */
 export const reactSkeletonStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
     `${staticSkeletonStyles
       .join('\n')
       .replaceAll(
         'dotquilt-skeleton-block',
-        'dotquilt-skeleton-block:not(:defined)',
-      )}dotquilt-skeleton-block:not(:defined)[hidden]{display:none}`,
+        'dotquilt-skeleton-block:is(:not(:defined),:state(unstyled))',
+      )}dotquilt-skeleton-block:is(:not(:defined),:state(unstyled))[hidden]{display:none}`,
   ]);
 export const reactRegionStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
-    'dotquilt-region:not(:defined){display:flow-root;position:relative}dotquilt-region:not(:defined)[hidden]{display:none}dotquilt-region:not(:defined)>[data-dotquilt-react-slot]{position:absolute;inset:0;pointer-events:none}dotquilt-region:not(:defined):not([state=pending])>[slot=placeholder],dotquilt-region:not(:defined):not([state=refreshing])>[slot=refresh-indicator]{display:none}dotquilt-region:not(:defined)[state=pending][data-dotquilt-react-empty]::before{content:"";position:absolute;inset:0;min-height:1em;border:1px dotted currentColor}',
+    'dotquilt-region:is(:not(:defined),:state(unstyled)){display:flow-root;position:relative}dotquilt-region:is(:not(:defined),:state(unstyled))[hidden]{display:none}dotquilt-region:is(:not(:defined),:state(unstyled))>[data-dotquilt-react-slot]{position:absolute;inset:0;pointer-events:none}dotquilt-region:is(:not(:defined),:state(unstyled)):not([state=pending])>[slot=placeholder],dotquilt-region:is(:not(:defined),:state(unstyled)):not([state=refreshing])>[slot=refresh-indicator]{display:none}dotquilt-region:is(:not(:defined),:state(unstyled))[state=pending][data-dotquilt-react-empty]::before{content:"";position:absolute;inset:0;min-height:1em;border:1px dotted currentColor}',
   ]);
 
 import {
@@ -32,8 +36,12 @@ function beforeDefinition(
 ): readonly string[] {
   return Object.freeze(
     css
-      .map((text) => text.replaceAll(tag, `${tag}:not(:defined)`))
-      .concat(`${tag}:not(:defined)[hidden]{display:none}`),
+      .map((text) =>
+        text.replaceAll(tag, `${tag}:is(:not(:defined),:state(unstyled))`),
+      )
+      .concat(
+        `${tag}:is(:not(:defined),:state(unstyled))[hidden]{display:none}`,
+      ),
   );
 }
 export const reactLineStyles = /* @__PURE__ */ beforeDefinition(

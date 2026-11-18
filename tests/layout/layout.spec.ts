@@ -522,3 +522,141 @@ for (const framework of ['native', 'react'])
       });
       await page.evaluate(() => window.layoutTest.remove());
     });
+
+// The `external` style policy loads each upgraded host's shadow stylesheet
+// after upgrade. Until it applies, the host must keep the layout its static
+// markup reserved; rendered unstyled, long text shifted by 0.94 and inline
+// TypingDots lost their baseline. Every stylesheet requested after
+// enhancement is held, so the late arrival is deterministic.
+for (const framework of ['native', 'react'])
+  for (const profile of Object.keys(profiles) as Profile[])
+    test(`${framework} ${profile}: a late shadow stylesheet keeps the static layout until it applies`, async ({
+      page,
+    }, info) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      page.on('console', (m) => {
+        if (m.type() === 'error') errors.push(m.text());
+      });
+      let release = () => {};
+      let gate: Promise<void> | undefined;
+      await page.route(/\/(?:react-)?styles\/[^/]+\.css$/, async (route) => {
+        await gate;
+        await route.continue();
+      });
+      const shadowSheets = () =>
+        page.evaluate(() => {
+          const links = [...document.querySelectorAll('*')].flatMap((e) => [
+            ...(e.shadowRoot?.querySelectorAll('link') ?? []),
+          ]);
+          return {
+            requested: links.length,
+            loaded: links.filter((link) => link.sheet).length,
+          };
+        });
+      await observe(page);
+      await page.addInitScript(() => {
+        const reported: string[] = [];
+        Reflect.set(window, 'loaderErrors', reported);
+        document.addEventListener('dotquilt-error', (event) => {
+          const { code, field } = (event as CustomEvent).detail;
+          reported.push(`${(event.target as Element).id}:${code}:${field}`);
+        });
+      });
+      const loaderErrors = () =>
+        page.evaluate(() =>
+          [...(Reflect.get(window, 'loaderErrors') as string[])].sort(),
+        );
+      const path = (mode: string) =>
+        `/${framework}?profile=${profile}&mode=${mode}${profile === 'typing' ? '&inline=1' : ''}`;
+      // Inline styles apply at upgrade. Waiting for an external stylesheet
+      // may delay what the element reports, but must not change it.
+      await page.goto(path('nonce'));
+      await page.waitForFunction(() => Boolean(window.layoutTest));
+      await page.evaluate(() => {
+        window.layoutTest.enhance();
+        window.layoutTest.hydrate();
+      });
+      await settle(page);
+      const reported = await loaderErrors();
+      const results: Record<string, unknown> = { reported };
+      // `natural` drops the fixture's height reservation, so the static
+      // markup alone sizes every host.
+      for (const reservation of ['reserved', 'natural'] as const) {
+        if (reservation === 'natural')
+          await page.route('**/reservation.css*', (route) =>
+            route.fulfill({ contentType: 'text/css', body: '' }),
+          );
+        gate = undefined;
+        await page.goto(path('external'));
+        await page.waitForFunction(() => Boolean(window.layoutTest));
+        await settle(page);
+        const before = await snapshot(page);
+        if (reservation === 'reserved')
+          expect(before.owner?.height).toBe(profiles[profile].height);
+        gate = new Promise((resolve) => {
+          release = resolve;
+        });
+        await page.evaluate(() => {
+          window.layoutProbe.start();
+          window.layoutTest.enhance();
+          window.layoutTest.hydrate();
+        });
+        if (framework === 'react')
+          await expect
+            .poll(() => page.evaluate(() => window.layoutTest.commits()))
+            .toBeGreaterThan(0);
+        await settle(page);
+        await settle(page);
+        const held = await snapshot(page);
+        const sheets = await shadowSheets();
+        expect(sheets.requested).toBeGreaterThan(0);
+        expect(sheets.loaded).toBe(0);
+        stable(before, held);
+        // Pending content stays unavailable while the static layout holds.
+        if ('text' in profiles[profile])
+          expect(
+            await page
+              .locator('[data-dotquilt-text-content]')
+              .evaluate((e) => e.checkVisibility({ visibilityProperty: true })),
+          ).toBe(false);
+        else {
+          await page.locator('#value').evaluate((e) => e.focus());
+          await expect(page.locator('#value')).not.toBeFocused();
+        }
+        release();
+        await expect
+          .poll(async () => {
+            const { requested, loaded } = await shadowSheets();
+            return loaded === requested;
+          })
+          .toBe(true);
+        await settle(page);
+        const styled = await snapshot(page);
+        const probe = await page.evaluate(() => {
+          window.layoutProbe.stop();
+          return {
+            supported: window.layoutProbe.supported,
+            shifts: window.layoutProbe.shifts,
+            samples: window.layoutProbe.samples,
+          };
+        });
+        const cls = probe.supported ? layoutScore(probe.shifts) : null;
+        // A natural layout may still settle once styled; that is the
+        // caller's reservation to make, not the stylesheet's arrival.
+        if (reservation === 'reserved') {
+          stable(before, styled);
+          for (const sample of probe.samples) stable(before, sample);
+          if (probe.supported) expect(cls).toBeLessThanOrEqual(0.01);
+        }
+        expect(await page.evaluate(() => window.layoutTest.errors)).toEqual([]);
+        expect(await loaderErrors()).toEqual(reported);
+        results[reservation] = { before, held, styled, sheets, cls };
+        await page.evaluate(() => window.layoutTest.remove());
+      }
+      expect(errors).toEqual([]);
+      await info.attach('late-shadow-stylesheet', {
+        body: JSON.stringify({ framework, profile, ...results }),
+        contentType: 'application/json',
+      });
+    });

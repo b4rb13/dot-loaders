@@ -15,7 +15,6 @@ import {
 } from './dense/managed-painter.js';
 import {
   ancestors,
-  installStyles,
   media,
   motionRestricted,
   upgradeProperties,
@@ -201,16 +200,17 @@ export abstract class DenseLoader<
     super.connectedCallback();
     this.setAttribute('data-dotquilt-surface', '');
     this.setAttribute('aria-hidden', 'true');
-    if (!this.shadowRoot) {
-      const root = this.attachShadow({ mode: 'open' });
-      installStyles(root, this.styles, this.policy);
-      root.append(this.createSurface(this.ownerDocument));
-    }
+    if (!this.shadowRoot)
+      this.attachStyledShadow(this.styles, true).append(
+        this.createSurface(this.ownerDocument),
+      );
     // Server-rendered fallback markup is replaced by the live surface.
-    for (const child of this.querySelectorAll(
-      ':scope > [data-dotquilt-style],:scope > [data-dotquilt-static]',
-    ))
-      child.remove();
+    this.whenStyled(() => {
+      for (const child of this.querySelectorAll(
+        ':scope > [data-dotquilt-style],:scope > [data-dotquilt-static]',
+      ))
+        child.remove();
+    });
     this.listen(this.shadowRoot, 'load', () => this.refresh(), true);
     const pointerHost = this.owner ?? this;
     this.listen(pointerHost, 'pointermove', this.#pointer as EventListener);

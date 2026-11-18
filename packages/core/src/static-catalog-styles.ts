@@ -8,9 +8,12 @@ export const staticCircleStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
     `dotquilt-skeleton-circle{display:block;width:2.5rem;aspect-ratio:1;position:relative;border-radius:50%;overflow:hidden}dotquilt-skeleton-circle [data-dotquilt-static]{display:block;position:absolute;inset:0;${staticDots}}@media(forced-colors:active){dotquilt-skeleton-circle [data-dotquilt-static]{border:1px dotted CanvasText}}`,
   ]);
+// While the external stylesheet loads (`:state(unstyled)`), a slot projects the
+// fallback and sits between it and the host, so `gap: inherit` would not reach
+// the host's gap; the fallback then uses the host's default gap directly.
 export const staticTextStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
-    `dotquilt-skeleton-text{display:grid;position:relative;gap:.5em}dotquilt-skeleton-text [data-dotquilt-static],dotquilt-skeleton-text [data-dotquilt-react-static]{display:grid;gap:inherit}dotquilt-skeleton-text [data-dotquilt-static-line]{display:block;height:.875em;border-radius:999px;${staticDots}}@media(forced-colors:active){dotquilt-skeleton-text [data-dotquilt-static-line]{outline:1px dotted CanvasText}}`,
+    `dotquilt-skeleton-text{display:grid;position:relative;gap:.5em}dotquilt-skeleton-text [data-dotquilt-static],dotquilt-skeleton-text [data-dotquilt-react-static]{display:grid;gap:inherit}dotquilt-skeleton-text:state(unstyled) [data-dotquilt-static],dotquilt-skeleton-text:state(unstyled) [data-dotquilt-react-static]{gap:.5em}dotquilt-skeleton-text [data-dotquilt-static-line]{display:block;height:.875em;border-radius:999px;${staticDots}}@media(forced-colors:active){dotquilt-skeleton-text [data-dotquilt-static-line]{outline:1px dotted CanvasText}}`,
   ]);
 export const staticTypingStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([

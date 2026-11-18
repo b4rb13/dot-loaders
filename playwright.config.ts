@@ -14,8 +14,6 @@ const suites: {
   name: string;
   port: number;
   viewport?: { width: number; height: number };
-  /** One worker: the suite measures layout shifts that CPU contention skews. */
-  serial?: boolean;
 }[] = [
   { name: 'coordination', port: 4201, viewport: { width: 1100, height: 1600 } },
   { name: 'presets', port: 4198 },
@@ -28,12 +26,7 @@ const suites: {
   { name: 'api', port: 4203 },
   { name: 'react', port: 4191 },
   { name: 'm4', port: 4194 },
-  {
-    name: 'layout',
-    port: 4207,
-    viewport: { width: 320, height: 2400 },
-    serial: true,
-  },
+  { name: 'layout', port: 4207, viewport: { width: 320, height: 2400 } },
 ];
 const browsers = (
   process.env.ALL_BROWSERS ? ['chromium', 'firefox', 'webkit'] : ['chromium']
@@ -71,8 +64,7 @@ export default defineConfig({
       name: `${suite.name}-${browserName}`,
       testDir: `./tests/${suite.name}`,
       testMatch: '*.spec.ts',
-      fullyParallel: !suite.serial,
-      ...(suite.serial ? { workers: 1 } : {}),
+      fullyParallel: true,
       use: {
         browserName,
         baseURL: `http://127.0.0.1:${suite.port}`,
