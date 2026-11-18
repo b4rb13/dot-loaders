@@ -8,14 +8,13 @@
     "node": ">=24"
   },
   "workspaces": [
-    "packages/*",
-    "apps/*"
+    "packages/*"
   ],
   "scripts": {
     "build": "turbo run build",
     "check": "turbo run check && tsc --noEmit -p tsconfig.json",
-    "lint": "biome check apps packages scripts tests examples package.json turbo.json tsconfig.json biome.json playwright*.config.ts .changeset --error-on-warnings",
-    "format": "biome check --write apps packages scripts tests examples package.json turbo.json tsconfig.json biome.json playwright*.config.ts .changeset",
+    "lint": "biome check packages scripts tests examples package.json turbo.json tsconfig.json biome.json playwright*.config.ts .changeset --error-on-warnings",
+    "format": "biome check --write packages scripts tests examples package.json turbo.json tsconfig.json biome.json playwright*.config.ts .changeset",
     "test": "turbo run test && bun test scripts tests/layout/score",
     "test:e2e": "playwright test",
     "test:e2e:all": "ALL_BROWSERS=1 playwright test",
@@ -23,10 +22,7 @@
     "size": "bun run scripts/size.ts",
     "verify": "bun run lint && bun run check && bun run test && bun run build && bun run size && bun run test:e2e",
     "verify:packed": "bun run scripts/verify-packed.ts",
-    "changeset": "changeset",
-    "dev:website": "bun run --cwd apps/website dev",
-    "build:website": "turbo run build --filter=@dotquilt/website",
-    "check:website": "bun run --cwd apps/website check"
+    "changeset": "changeset"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

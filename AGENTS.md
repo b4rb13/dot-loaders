@@ -6,7 +6,6 @@ Dotquilt is a set of dot-based loading components. Placeholder dots animate whil
 | --- | --- |
 | `packages/core` | Native Web Components runtime, framework-free. 9 elements: SkeletonBlock/Line/Circle/Text, TextLoader, ChartLoader, TableLoader, TypingDots, LoadingRegion. |
 | `packages/react` | Thin React 19 adapter over the same runtime, with SSR markup. |
-| `apps/website` | **Legacy** docs, playground and gallery site. Being replaced, not polished. |
 | `tests/`, `scripts/` | Browser/SSR/size tests and tooling. Many scripts are legacy and slated for deletion in Phase 1. |
 | `design/` | Design directions and specs for the visual rework. |
 
@@ -15,7 +14,7 @@ Dotquilt is a set of dot-based loading components. Placeholder dots animate whil
 Follow `AUDIT.md` (2026-11-18). It holds the audit findings, the phases and the open owner decisions.
 
 - **Runtime:** keep and refactor. Fix real bugs with regression tests, then simplify the size-golfed code. Readability beats saving bytes.
-- **Website, docs and every visual part:** rebuild from scratch after a design direction is chosen (Phase 4). Don't spend effort polishing `apps/website`.
+- **Website, docs and every visual part:** rebuilt from scratch to `design/SPEC.md` (Phase 4). The legacy `apps/website` was retired on 2026-11-19; the new site is Phase 4c–4d.
 - **Open decisions:** listed at the end of `AUDIT.md`. Don't act as if one is decided until the owner answers it.
 
 ## Commands
@@ -23,7 +22,7 @@ Follow `AUDIT.md` (2026-11-18). It holds the audit findings, the phases and the 
 Use Bun (pinned in `.bun-version`) and Node 24+.
 
 - **Install:** `bun install`, then `bunx playwright install chromium` once for browser tests.
-- **Build everything:** `bun run build`. Turbo builds the packages first, then the website.
+- **Build everything:** `bun run build` (Turbo builds the packages).
 - **Types:** `bun run check`
 - **Lint:** `bun run lint` (Biome); `bun run format` to fix.
 - **Unit tests:** `bun run test` (a few seconds). This includes `scripts/pack-smoke.test.ts`, which covers the published file list, imports in Node and Bun, consumer types on TypeScript 7 and 5.7, and the dist import graph. Snapshot changes: `bun test --update-snapshots`, then review the `.snap` diff.
@@ -35,12 +34,11 @@ Use Bun (pinned in `.bun-version`) and Node 24+.
 - **Legacy suites:** `bun run test:legacy` (under a minute). Only two checks need packed tarballs: the React suite rerun on React 19.0, the oldest supported version, and catalog SSR under Node and Bun. Run them before a release or when touching the React adapter's hydration or nonce handling.
 - **Sizes:** `bun run size` prints gzip sizes per component. Budgets go in `scripts/size-budgets.json` once decided.
 - **Everything CI runs:** `bun run verify`
-- **Website:** `bun run dev:website`, or `bun run build:website` then `bun run --cwd apps/website start` (http://127.0.0.1:4210).
 
 ## Rules
 
 - **Privacy and release.** Keep the repository private. Don't publish to npm, deploy, or change visibility unless the owner asks for that specific action.
-- **Package boundaries.** Core stays framework-independent. React, Next.js and Tailwind belong only in the adapter or the website.
+- **Package boundaries.** Core stays framework-independent. React, Next.js and Tailwind belong only in the adapter or a future site.
 - **Release requirements.** These are real requirements, not polish:
   - accessibility: focus, inert content, reduced motion, forced colors
   - SSR safety
