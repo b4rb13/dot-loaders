@@ -49,7 +49,6 @@ const suites: Record<string, Suite> = {
     prepare: [['bun', 'run', 'scripts/prepare-table.ts']],
     configs: [
       { file: 'playwright.table.config.ts', chromium: 'chromium' },
-      { file: 'playwright.table-options.config.ts', chromium: 'chromium' },
       { file: 'playwright.table-parts.config.ts', chromium: 'chromium' },
     ],
   },

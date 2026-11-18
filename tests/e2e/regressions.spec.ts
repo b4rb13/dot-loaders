@@ -191,3 +191,45 @@ for (const kind of ['chart-loader', 'table-loader'] as const)
       expect(value).toBeCloseTo(content[i] as number, 0);
     });
   });
+
+// Both table idles draw while pending, keep the content out of reach, and
+// release their drawing when the region becomes ready.
+for (const idle of ['typeOn', 'tableShimmer'] as const)
+  test(`table-loader: the ${idle} idle draws while pending and is released when ready`, async ({
+    page,
+  }) => {
+    await open(page, 'component=table-loader');
+    await page.evaluate((idle) => {
+      const animations = Reflect.get(window, 'e2eAnimations').table;
+      (
+        window.e2e.decoration as HTMLElement & { animations: object }
+      ).animations = { idle: animations[idle]() };
+    }, idle);
+    const painted = () =>
+      page.evaluate(
+        () =>
+          !!window.e2e.decoration.shadowRoot?.querySelector(
+            '[data-dotquilt-painter]',
+          ),
+      );
+    await expect.poll(painted).toBe(true);
+    expect(
+      await page.evaluate(
+        () =>
+          window.e2e.content.closest('[inert]') !== null ||
+          window.e2e.owner.shadowRoot
+            ?.querySelector('[part=content]')
+            ?.hasAttribute('inert'),
+      ),
+    ).toBe(true);
+    await page.evaluate(() => {
+      window.e2e.owner.state = 'ready';
+    });
+    await expect(
+      page.locator('#stage dotquilt-region').first(),
+    ).toHaveAttribute('data-presentation', 'ready');
+    await expect.poll(painted).toBe(false);
+    expect(
+      await page.evaluate(() => window.e2e.events.map((e) => e.type)),
+    ).not.toContain('dotquilt-error');
+  });
