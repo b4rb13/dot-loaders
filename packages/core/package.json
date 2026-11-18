@@ -38,22 +38,14 @@
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js"
     },
-    "./styles/skeleton.css": "./dist/skeleton.css",
-    "./styles/region.css": "./dist/region.css",
     "./typing": {
       "types": "./dist/typing.d.ts",
       "import": "./dist/typing.js"
     },
-    "./styles/line.css": "./dist/line.css",
-    "./styles/circle.css": "./dist/circle.css",
-    "./styles/skeleton-text.css": "./dist/skeleton-text.css",
-    "./styles/typing.css": "./dist/typing.css",
-    "./styles/skeleton-family.css": "./dist/skeleton-family.css",
     "./text": {
       "types": "./dist/text.d.ts",
       "import": "./dist/text.js"
     },
-    "./styles/text.css": "./dist/text.css",
     "./animations/text": {
       "types": "./dist/text-animations.d.ts",
       "import": "./dist/text-animations.js"
@@ -66,12 +58,10 @@
       "types": "./dist/chart-animations.d.ts",
       "import": "./dist/chart-animations.js"
     },
-    "./styles/chart.css": "./dist/chart.css",
     "./table": {
       "types": "./dist/table.d.ts",
       "import": "./dist/table.js"
     },
-    "./styles/table.css": "./dist/table.css",
     "./animations/table": {
       "types": "./dist/table-animations.d.ts",
       "import": "./dist/table-animations.js"
@@ -79,7 +69,8 @@
     "./register-all": {
       "types": "./dist/register-all.d.ts",
       "import": "./dist/register-all.js"
-    }
+    },
+    "./styles/*.css": "./dist/*.css"
   },
   "scripts": {
     "build": "bun run ../../scripts/build.ts",

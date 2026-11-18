@@ -20,10 +20,15 @@ const graphs = [];
 for (const name of ['core', 'react']) {
   const directory = resolve(consumer, 'node_modules/@dotquilt-internal', name),
     manifest = await Bun.file(resolve(directory, 'package.json')).json();
+  // The only wildcard is the public stylesheet pattern, mapped onto the
+  // top-level stylesheets in dist (scripts/package-exports.test.ts).
   if (
     !manifest.private ||
-    Object.keys(manifest.exports).some(
-      (p) => p.includes('internal') || p.includes('*'),
+    Object.entries(manifest.exports).some(
+      ([p, target]) =>
+        p.includes('internal') ||
+        (p.includes('*') &&
+          !(p === './styles/*.css' && target === './dist/*.css')),
     )
   )
     throw Error('Private/wildcard export exposed');

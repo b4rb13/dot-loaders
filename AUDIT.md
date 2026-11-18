@@ -86,8 +86,13 @@ Waiting on decisions:
 
 - **Typed table layout.** `staticTableLayout()` is a typed export of `@dotquilt-internal/core/table`. It replaces the `Symbol.for('dotquilt.table.static.v1')` hook that React read off the `TableLoader` class. The dead `react/src/internal/table-static` build is deleted. React's server markup is byte-identical.
 
+- **Export surface.** Decided with the owner on 2026-11-18.
+  - The ten stylesheet entries in each package's export map are now one `./styles/*.css` pattern onto the top-level `dist/*.css` files. The public paths are unchanged.
+  - Core goes from 24 to 15 entries, React from 18 to 9.
+  - The JavaScript entries stay as they are. Each one keeps imports selective or keeps server code apart.
+  - `scripts/package-exports.test.ts` checks that every stylesheet resolves and that the pattern cannot reach anything else.
+
 Next:
-- Trimming the export surface. Each per-component stylesheet uses bare `:host` rules, so a single combined sheet would need every rule rewritten to target its element.
 - React style de-duplication: one `<style>` per instance.
 
 ## TL;DR
