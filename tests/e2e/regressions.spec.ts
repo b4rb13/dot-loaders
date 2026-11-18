@@ -172,7 +172,8 @@ for (const kind of ['chart-loader', 'table-loader'] as const)
     const { content, painter } = await page.evaluate(async (kind) => {
       const host = document.createElement(`dotquilt-${kind}`);
       host.style.cssText =
-        'display:block;box-sizing:border-box;width:400px;height:200px;padding:15px;border:5px solid';
+        // Taller than the table's rows, so the frame has to fill the box.
+        'display:block;box-sizing:border-box;width:400px;height:260px;padding:15px;border:5px solid';
       document.getElementById('stage')?.append(host);
       let drawn: Element | null | undefined;
       for (let i = 0; i < 120 && !drawn; i++) {
