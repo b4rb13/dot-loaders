@@ -4,7 +4,7 @@ import {
   type PointerResponse,
   type Projector,
 } from './internal/dense-loader.js';
-import { register, upgradeProperties } from './internal/dom.js';
+import { node, register, upgradeProperties } from './internal/dom.js';
 import type { Preset } from './internal/preset.js';
 import { tablePreset } from './internal/preset.js';
 import { capturePresetData } from './internal/preset-data.js';
@@ -68,8 +68,20 @@ export class TableLoader extends DenseLoader<'table', TableTargetProvider> {
   protected defaultHandoff() {
     return defaultRows;
   }
+  /**
+   * The outline and the painters share one grid cell inside a frame that
+   * spans exactly the content box, so padding or an app's display rule never
+   * shifts the dots away from the geometry they were measured for.
+   */
   protected createSurface(document: Document): Node {
-    return staticTableSVG(document, this.rows, this.rowHeight, this.columns);
+    const frame = node(document, 'div', {
+      class: 'f',
+      'data-dotquilt-frame': '',
+    });
+    frame.append(
+      staticTableSVG(document, this.rows, this.rowHeight, this.columns),
+    );
+    return frame;
   }
   protected projector(
     provider: TableTargetProvider | undefined,

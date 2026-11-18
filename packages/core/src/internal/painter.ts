@@ -1,4 +1,5 @@
 import type { Dot } from '../animations.js';
+import { paintLayer } from './dom.js';
 import { clamp } from './math.js';
 export interface Painter {
   draw(callback: (dot: (value: Dot) => void) => void): void;
@@ -76,7 +77,7 @@ export function createPainter(
   svg.setAttribute('aria-hidden', 'true');
   if (part) svg.setAttribute('part', part);
   svg.setAttribute('data-dotquilt-painter', '');
-  host.shadowRoot?.append(svg);
+  if (host.shadowRoot) paintLayer(host.shadowRoot).append(svg);
   host.setAttribute('data-custom', '');
   // Remember only the primitives written by this painter, bounded by admitted nodes.
   const dots: Entry[] = [];
