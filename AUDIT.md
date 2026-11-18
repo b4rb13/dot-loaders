@@ -56,7 +56,10 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
   - **Handoff:** morph-wipe, 1.1 s. Columns finish gliding onto the data by 55%, turning teal, and the real chart draws in from 48% to the end.
   - **Painter colours:** both painters now default to the spec's slate and glow instead of `currentColor`. This also affects TextLoader and custom animations.
   - **Other variants:** `ridgeHeight` is the new ridge, so variants built on it (cycle, terrain and others) share it. Their own tuning is slice H.
-- **D. TableLoader.** The glow idle; the handoff staggers by row and cell.
+- **D. TableLoader — done on `design/4b-table`.**
+  - **Idle:** the default is now the spec's still bars under the drifting glow (`tableShimmer`). Each bar is two rows of uniform marks at the resting opacity, and the field breathes. Type-on is still available as a variant.
+  - **Rows handoff:** rows start 80 ms apart and cells 28 ms apart, and rows settle 5 px, in 1.1 s. Without per-row targets the content fades and rises over 700 ms instead of 150 ms.
+  - **Static outline:** slate at the resting opacity, styled from CSS, so the server markup and React parity are unchanged.
 - **E. TextLoader.** Characters cross-fade every 280 ms and lock left to right over 300 ms.
 - **F. TypingDots and default sizes.**
 - **G. Alternative marks:** a `mark: 'dot' | 'dash' | 'square'` option with the same positions and motion.

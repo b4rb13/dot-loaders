@@ -1,9 +1,8 @@
 import {
   rowsFactory,
-  tableIdle,
+  shimmerFactory,
   typeOnFactory,
 } from './internal/table-definitions.js';
-import { tableFactory } from './internal/table-factory.js';
 export interface TypeOnOptions {
   readonly cadenceMs: number;
   readonly cellStyle:
@@ -20,9 +19,5 @@ export interface RowsOptions {
   readonly settlePx: number;
 }
 export const typeOn = typeOnFactory;
-export const tableShimmer = /* @__PURE__ */ tableFactory<'idle', TypeOnOptions>(
-  /* @__PURE__ */ tableIdle(true),
-  { cadenceMs: [600, 250, 1200] },
-  true,
-);
+export const tableShimmer = shimmerFactory;
 export const rows = rowsFactory;
