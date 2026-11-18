@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { lease } from '../src/internal/dense/resources';
+import { lease } from '../src/internal/ledger';
 
 test('document resource admission accounts compatible leases and transient capacity before growth', () => {
   const doc = {} as Document;

@@ -43,20 +43,23 @@ const source = floor ?? import.meta.dir;
 const renderer: typeof import('./ssr.js') = await import(
   floor ? String(resolve(floor, 'ssr.tsx')) : './ssr.js'
 );
+// One build with a shared chunk: the early registration script and the React
+// client load one copy of the library, as an app must (AUDIT.md decision 5).
 const bundles = new Map<string, Uint8Array>();
-for (const entry of ['client', 'early']) {
-  const build = await Bun.build({
-    entrypoints: [
-      resolve(source, `${entry}.${entry === 'early' ? 'ts' : 'tsx'}`),
-    ],
-    format: 'iife',
-    target: 'browser',
-    define: { 'process.env.NODE_ENV': JSON.stringify('development') },
-  });
-  if (!build.success || !build.outputs[0])
-    throw new Error('React fixture build failed');
-  bundles.set(entry, new Uint8Array(await build.outputs[0].arrayBuffer()));
-}
+const build = await Bun.build({
+  entrypoints: [resolve(source, 'client.tsx'), resolve(source, 'early.ts')],
+  format: 'esm',
+  splitting: true,
+  target: 'browser',
+  naming: { entry: '[name].[ext]', chunk: 'chunk-[hash].[ext]' },
+  define: { 'process.env.NODE_ENV': JSON.stringify('development') },
+});
+if (!build.success) throw new Error('React fixture build failed');
+for (const output of build.outputs)
+  bundles.set(
+    `/${output.path.replace(/^\.\//, '')}`,
+    new Uint8Array(await output.arrayBuffer()),
+  );
 const hash = (css: string) =>
   `'sha256-${createHash('sha256').update(css).digest('base64')}'`;
 const cssHashes = Object.values({ ...nativeCss, ...reactCss })
@@ -88,11 +91,11 @@ const server = Bun.serve({
         await readFile(resolve(import.meta.dir, 'capture.js')),
         { headers: { 'Content-Type': 'text/javascript' } },
       );
-    if (url.pathname === '/client.js' || url.pathname === '/early.js')
-      return new Response(
-        bundles.get(url.pathname.slice(1, -3))?.slice().buffer,
-        { headers: { 'Content-Type': 'text/javascript' } },
-      );
+    const bundle = bundles.get(url.pathname);
+    if (bundle)
+      return new Response(bundle.slice().buffer, {
+        headers: { 'Content-Type': 'text/javascript' },
+      });
     if (url.pathname.startsWith('/pkg/')) {
       const [kind, ...segments] = url.pathname.slice(5).split('/');
       const directory = floor
@@ -135,10 +138,10 @@ const server = Bun.serve({
       empty: url.searchParams.has('empty'),
     };
     const early = url.searchParams.has('early')
-      ? `<script src="/early.js?line=${line}"></script>`
+      ? `<script type="module" src="/early.js?line=${line}"></script>`
       : '';
     const start = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Packed React integration</title><link rel="stylesheet" href="/app.css"><script src="/capture.js"></script>${early}</head><body><div id="root" data-catalog="${options.catalog ? 'yes' : 'no'}" data-state="${options.state}" data-mode="${options.mode}" nonce="${options.nonce}" data-skeleton="${options.skeletonOnly ? 'yes' : 'no'}" data-empty="${options.empty ? 'yes' : 'no'}">`;
-    const end = `</div><script src="/snapshot.js"></script>${url.searchParams.has('fail') ? '<script src="/missing.js"></script>' : `<script src="/client.js?line=${line}" defer></script>`}</body></html>`;
+    const end = `</div><script src="/snapshot.js"></script>${url.searchParams.has('fail') ? '<script src="/missing.js"></script>' : `<script type="module" src="/client.js?line=${line}"></script>`}</body></html>`;
     const headers: Record<string, string> = {
       'Content-Type': 'text/html; charset=utf-8',
       'Content-Security-Policy': csp(options.mode, options.nonce),

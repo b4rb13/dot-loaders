@@ -1,21 +1,16 @@
 import { media } from './dom.js';
+import { lease } from './ledger.js';
 
-/** Private compatible-copy seam. Region owns time, restrictions and terminal cleanup. */
+/** How a skeleton leaves during a region handoff. Region owns time, restrictions and cleanup. */
 export type SkeletonDeparture = (
   duration: number,
   easing: string,
   own: (animation: Animation) => void,
   invalidate: () => void,
 ) => () => void;
-export const skeletonHandoff: unique symbol = Symbol.for(
-  'dotquilt.skeleton.handoff.v1',
+export const skeletonHandoff: unique symbol = Symbol(
+  'dotquilt.skeleton-handoff',
 );
-
-interface Ledger {
-  dots: number;
-  users: number;
-}
-const ledgerKey = Symbol.for('dotquilt.v1.dot-ledger');
 
 /** Nine interleaved dot fields share one clock; no per-dot loop or animation. */
 export function dissolveSkeleton(
@@ -65,14 +60,12 @@ export function dissolveSkeleton(
     0,
   );
   const doc = host.ownerDocument;
-  const ledger: Ledger = Reflect.get(doc, ledgerKey) ?? { dots: 0, users: 0 };
-  if (count > 4096 || ledger.dots + count > 16384) {
+  const budget = lease(doc, () => {});
+  if (!budget.set('dots', count)) {
+    budget.close();
     report('dot-limit');
     return { dispose() {}, check() {} };
   }
-  ledger.users++;
-  ledger.dots += count;
-  Reflect.set(doc, ledgerKey, ledger);
   const node = (tag: string, attributes: Record<string, string | number>) => {
     const element = doc.createElementNS('http://www.w3.org/2000/svg', tag);
     for (const [key, value] of Object.entries(attributes))
@@ -91,8 +84,7 @@ export function dissolveSkeleton(
     resize?.disconnect();
     svg.remove();
     host.removeAttribute('data-custom');
-    ledger.dots -= count;
-    if (--ledger.users === 0) Reflect.deleteProperty(doc, ledgerKey);
+    budget.close();
   };
   const check = () => {
     if (closed) return;

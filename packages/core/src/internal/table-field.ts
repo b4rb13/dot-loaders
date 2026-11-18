@@ -2,8 +2,8 @@ import type { AnimationSurface, Dot } from '../animations.js';
 import type { TypeOnOptions } from '../table-animations.js';
 import type { Appearance } from './chart-appearance.js';
 import { clamp } from './math.js';
-export const tableAppearance: unique symbol = Symbol.for(
-  'dotquilt.table-appearance.v1',
+export const tableAppearance: unique symbol = Symbol(
+  'dotquilt.table-appearance',
 );
 /** Bounded command generation, no per-frame layout or geometry discovery. */
 export function tableField(
