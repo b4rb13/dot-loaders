@@ -68,7 +68,15 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
   - **Size:** TypingDots are 8 px slate dots, 6 px apart (the mockup's size), so they read as a status rather than a speck. They use `--dotquilt-dot-size` and `--dotquilt-dot-gap` with their own defaults.
   - **Motion:** a calm sine wave from 30% to 100% over 1.9 s, each dot 14% of a cycle behind, rising 1.5 px. The easing sits on the keyframes, so speed changes keep the phase.
   - **Other defaults:** skeleton lines are two rows tall (slice A), and charts keep 12rem. Their sizes already read well at the new mark size.
-- **G. Alternative marks:** a `mark: 'dot' | 'dash' | 'square'` option with the same positions and motion.
+- **G. Alternative marks — done on `design/4b-marks`.**
+  - **Option:** `mark` is `dot` (default), `dash` or `square` on every element that draws marks: attribute, property, `update()`, `renderStatic` and the React prop. A region has none. An unknown value draws dots and reports the option as invalid.
+  - **CSS surfaces:** skeletons, lines, text lines and the chart's static field draw squares and dashes with CSS masks, so a strict CSP still works. Lines are two rows of the mark tall: 17 px for squares, 19 px for dashes. Static markup carries a mark's CSS only when it uses one, so default server output is unchanged.
+  - **Painters and handoff:** the SVG and Canvas painters draw rounded rectangles. The dissolve leaves as the same shapes, on the same grid. Chart and table fields use the mark's own pitch across and down.
+  - **TypingDots and TextLoader:** squares are 90% of the dot size; dashes are 80% of it tall and 2.7 times as wide (the mockup). TextLoader's squares make a pixel font.
+  - **Not done:**
+    - On charts, dashes stay horizontal. The spec says they follow the line, which needs an angle on painter commands, a change to the authoring API.
+    - Squares and dashes have a fixed size, so `--dotquilt-dot-size` and `--dotquilt-dot-gap` change dots only.
+    - The legacy catalog SSR gate (24 loaders with all nine external stylesheets, 8 KB gzip) now measures 8.3 KB. The mark rules add about 1.5 KB gzip across those stylesheets. Raising the gate or making marks opt-in is an owner call.
 - **H. Prune old variants — done on `design/4b-prune`.** Each built-in recipe was kept, changed or dropped:
   - **Kept as defaults** (already reworked in A–F): `pulse`, `dissolve`, `ridge`, `morphWipe`, `tableShimmer`, `rows`, `scramble`, `lock`.
   - **Kept as options:**

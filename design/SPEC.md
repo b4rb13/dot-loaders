@@ -126,6 +126,7 @@ The defaults live in `packages/core/src/internal/marks.ts`; each family adopts t
 - **Theme switching:** colours follow the page's `color-scheme`. An app with a dark theme sets `color-scheme: dark` on it (or on the loaders) to get the dark marks.
 - **One resting opacity:** CSS can't switch a number between themes, so both use 37%. The dark mark #A3AFC2 at 37% matches #8E99AB at 44% on the dark surface. The glow peaks at 90% in both.
 - **Lines:** a line placeholder (SkeletonLine and each SkeletonText line) is two rows of marks tall, 18 px by default.
+- **Alternative marks:** `mark="dash"` or `mark="square"` draws the shapes above at their fixed size and pitch. The size and gap properties apply to dots only. Lines stay two rows tall: 17 px with squares, 19 px with dashes. TypingDots squares are 90% of the dot size, and dashes are 80% of it tall and 2.7 times as wide.
 
 ## Open details (decide during 4b–4d, then record here)
 
