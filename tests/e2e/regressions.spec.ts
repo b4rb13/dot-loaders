@@ -326,3 +326,135 @@ for (const mark of ['dot', 'square'] as const)
     expect(result).toMatchObject({ glyphs: false, visible: true });
     expect((result as { alpha: number }).alpha).toBeGreaterThan(0);
   });
+
+// AUDIT.md decision 10: a configuration error reports again only after the
+// field held a valid value in between; a failure while loading reports once
+// per loading cycle. Before, each problem reported once per element, ever.
+async function errorCodes(page: Page) {
+  return page.evaluate(() => Reflect.get(window, 'errorCodes') as string[]);
+}
+async function collectErrors(page: Page) {
+  await page.evaluate(() => {
+    const codes: string[] = [];
+    Reflect.set(window, 'errorCodes', codes);
+    document.addEventListener(
+      'dotquilt-error',
+      (event) => {
+        const { code, field } = (
+          event as CustomEvent<{ code: string; field: string }>
+        ).detail;
+        codes.push(`${code}:${field}`);
+      },
+      true,
+    );
+  });
+}
+
+test('an invalid attribute reports again after a valid value in between', async ({
+  page,
+}) => {
+  await open(page, 'component=chart-loader');
+  await collectErrors(page);
+  await page.evaluate(async () => {
+    const chart = window.e2e.decoration;
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+    chart.setAttribute('speed', 'fast');
+    await settle();
+    // Still invalid: the same problem, not reported twice.
+    chart.setAttribute('speed', 'faster');
+    await settle();
+    chart.setAttribute('speed', '2');
+    await settle();
+    chart.setAttribute('speed', 'fast');
+    await settle();
+  });
+  expect(await errorCodes(page)).toEqual([
+    'invalid-option:speed',
+    'invalid-option:speed',
+  ]);
+});
+
+test('an invalid property reports again after a valid value in between', async ({
+  page,
+}) => {
+  await open(page, 'component=skeleton-block');
+  await collectErrors(page);
+  await page.evaluate(() => {
+    const host = window.e2e.decoration as HTMLElement & {
+      animations: unknown;
+    };
+    host.animations = { idle: 'not a binding' };
+    host.animations = { idle: 'still not one' };
+    host.animations = {};
+    host.animations = { idle: 'not a binding' };
+  });
+  expect(await errorCodes(page)).toEqual([
+    'invalid-binding:animations',
+    'invalid-binding:animations',
+  ]);
+});
+
+test('a failed handoff reports once per loading cycle', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await open(page, 'component=region');
+  await collectErrors(page);
+  await page.evaluate(async () => {
+    const { defineAnimation } = Reflect.get(window, 'e2eAnimations');
+    const failing = defineAnimation({
+      contractVersion: 1,
+      id: 'e2e/failing-handoff',
+      family: 'region',
+      phase: 'handoff',
+      options: { parse: () => ({}) },
+      duration: () => 400,
+      prepare: () => {
+        throw new Error('broken handoff');
+      },
+      frame: () => undefined,
+    });
+    const region = window.e2e.owner as HTMLElement & {
+      update(patch: object): void;
+    };
+    region.update({ animations: { handoff: failing() } });
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 120));
+    for (const cycle of ['first', 'second']) {
+      region.update({ state: 'pending', cycle });
+      await settle();
+      region.update({ state: 'ready' });
+      await settle();
+    }
+  });
+  expect(await errorCodes(page)).toEqual([
+    'animation-failed:animations',
+    'animation-failed:animations',
+  ]);
+});
+
+// A web font finishing loading anywhere on the page used to end a handoff in
+// flight at once ("geometry-changed"), even when nothing moved. Pages often
+// load fonts while their data arrives, so reveals were cut short.
+for (const kind of ['text-loader', 'table-loader'] as const)
+  test(`${kind}: a font finishing loading does not cut the handoff short`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await open(page, `component=${kind}`);
+    const reason = await page.evaluate(async () => {
+      const owner = window.e2e.owner as HTMLElement & {
+        update(patch: object): void;
+      };
+      const ended = new Promise<string>((resolve) =>
+        owner.addEventListener(
+          'dotquilt-handoff-end',
+          (event) =>
+            resolve((event as CustomEvent<{ reason: string }>).detail.reason),
+          { once: true },
+        ),
+      );
+      owner.update({ state: 'ready' });
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      document.fonts.dispatchEvent(new Event('loadingdone'));
+      return ended;
+    });
+    expect(reason).toBe('complete');
+  });

@@ -18,6 +18,24 @@ import { now, remaining } from './time.js';
 
 export { now, remaining } from './time.js';
 
+/**
+ * Failures while loading, rather than configuration mistakes. They report
+ * once per loading cycle (AUDIT.md decision 10); configuration errors report
+ * again only after the field held a valid value in between.
+ */
+const runtimeCodes = new Set([
+  'animation-failed',
+  'invalid-geometry',
+  'missing-placeholder',
+  'missing-content',
+  'focus-fallback-unavailable',
+]);
+const codeOf = (key: string) => key.slice(0, key.indexOf(':'));
+const fieldOf = (key: string) => key.slice(key.indexOf(':') + 1);
+/** `pointerResponse` → `pointer-response`. */
+const attributeOf = (field: string) =>
+  field.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+
 /** What an element keeps while its external shadow stylesheet loads. */
 interface Hold {
   link: Element;
@@ -41,7 +59,10 @@ export abstract class ManagedElement<
   protected resources: ReturnType<typeof subscribe> | undefined;
   protected deadline: ReturnType<typeof setTimeout> | undefined;
   #queued = false;
+  /** Problems reported and not yet cleared, as `code:field`. */
   #issues = new Set<string>();
+  /** The attribute value each configuration field had when it was reported. */
+  #invalid = new Map<string, string | null>();
   #hold: Hold | undefined;
   #internals: ElementInternals | undefined;
   // Cached between environment changes so animation frames don't walk ancestors.
@@ -57,6 +78,7 @@ export abstract class ManagedElement<
     try {
       this.#preset =
         value === undefined ? undefined : this.capturePreset(value);
+      this.accept('preset');
     } catch {
       this.#preset = undefined;
       this.report('invalid-preset', 'preset');
@@ -128,6 +150,7 @@ export abstract class ManagedElement<
       return;
     }
     this.policy = Object.freeze({ ...value });
+    this.accept('stylePolicy');
   }
   /**
    * Attaches the shadow root with this element's styles.
@@ -277,6 +300,12 @@ export abstract class ManagedElement<
       this.invalidOption('motion');
     if (name === 'mark' && value !== null && !marks.includes(value as Mark))
       this.invalidOption('mark');
+    // A value no check reported is valid (or the default): the field's
+    // configuration errors may report again.
+    const field = name.replace(/-([a-z])/g, (_, letter: string) =>
+      letter.toUpperCase(),
+    );
+    if (this.#invalid.get(field) !== value) this.accept(field);
     if (name === 'motion') this.#motionChanged();
     else this.requestRender();
   }
@@ -343,9 +372,28 @@ export abstract class ManagedElement<
   }
   protected report(code: string, field: string): void {
     const key = `${code}:${field}`;
+    if (!runtimeCodes.has(code))
+      this.#invalid.set(field, this.getAttribute(attributeOf(field)));
     if (this.#issues.has(key)) return;
     this.#issues.add(key);
     emit(this, 'dotquilt-error', { code, field });
+  }
+  /** `field` now holds a valid value: its configuration errors may report again. */
+  protected accept(field: string): void {
+    this.#invalid.delete(field);
+    for (const key of this.#issues)
+      if (fieldOf(key) === field && !runtimeCodes.has(codeOf(key)))
+        this.#issues.delete(key);
+  }
+  /**
+   * A new loading cycle in `owner`: failures while loading may report again,
+   * from the owner and from every loader inside it.
+   */
+  protected static newCycle(owner: Element): void {
+    for (const element of [owner, ...owner.querySelectorAll('*')])
+      if (#issues in element)
+        for (const key of element.#issues)
+          if (runtimeCodes.has(codeOf(key))) element.#issues.delete(key);
   }
   protected requestRender(): void {
     if (this.#queued) return;

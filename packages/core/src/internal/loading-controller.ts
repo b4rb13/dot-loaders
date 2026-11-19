@@ -136,9 +136,10 @@ export abstract class LoadingController<
     ) {
       easing = 'ease-out';
       this.report('invalid-easing', 'timing.easing');
-    }
+    } else this.accept('timing.easing');
     if (duration !== undefined && !valid)
       this.report('invalid-duration', 'timing.duration');
+    else this.accept('timing.duration');
     this.#clockTiming = Object.freeze({
       ...(valid ? { duration } : {}),
       ...(value?.easing === undefined ? {} : { easing }),
@@ -157,6 +158,7 @@ export abstract class LoadingController<
         throw new TypeError();
       validateBindings(value, this.family);
       this.#bindings = Object.freeze({ ...value }) as Animations<F>;
+      this.accept('animations');
     } catch {
       this.#bindings = {};
       this.report('invalid-binding', 'animations');
@@ -180,6 +182,7 @@ export abstract class LoadingController<
       [...(value ?? [])].slice(0, 100).map((v) => Object.freeze({ ...v })),
     );
     if (value?.length > 100) this.report('target-limit', 'revealTargets');
+    else this.accept('revealTargets');
     this.#settleTargets();
     this.requestRender();
   }
@@ -208,6 +211,7 @@ export abstract class LoadingController<
     if (this.state !== priorState || this.cycle !== priorCycle) {
       this.#revision++;
       this.#finish('cancel', 'superseded');
+      ManagedElement.newCycle(this);
     }
     this.#settleTargets();
     this.requestRender();
@@ -238,6 +242,7 @@ export abstract class LoadingController<
     ) {
       this.#revision++;
       this.#finish('cancel', 'superseded');
+      ManagedElement.newCycle(this);
     }
     super.attributeChangedCallback(name, old, value);
   }

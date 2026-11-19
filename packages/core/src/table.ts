@@ -155,8 +155,11 @@ export class TableLoader extends DenseLoader<'table', TableTargetProvider> {
   }
   override connectedCallback(): void {
     super.connectedCallback();
-    // Text metrics change once web fonts arrive.
+    // Text metrics change once web fonts arrive. During a handoff the
+    // handoff watches its own content and targets for real size changes, so
+    // a font that moved nothing must not end it.
     this.listen(this.ownerDocument.fonts, 'loadingdone', () => {
+      if (this.owner?.presentation === 'handoff') return;
       this.owner?.refresh();
       this.refresh();
     });

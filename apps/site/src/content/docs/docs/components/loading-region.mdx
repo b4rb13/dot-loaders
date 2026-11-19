@@ -75,6 +75,8 @@ Going from `pending` to `ready` plays the handoff: the marks fade and drift as y
 
 In React, use `onHandoffStart`, `onHandoffEnd`, `onHandoffCancel` and `onLoaderError`.
 
+`dotquilt-error` doesn't repeat itself. A configuration problem, such as an invalid `speed`, reports again only after the option held a valid value in between. A failure while loading, such as an animation that throws, reports at most once per load: the next pending state or new `cycle` can report it again.
+
 ## Accessibility
 
 - **Label every region** with `aria-label`, so people know what is loading.

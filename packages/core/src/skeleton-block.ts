@@ -92,6 +92,7 @@ export class SkeletonBlock extends ManagedElement {
       validateBindings(value, 'skeleton');
       this.#bindings = Object.freeze({ ...value });
       this.#runner?.reset?.();
+      this.accept('animations');
     } catch {
       this.#bindings = {};
       this.report('invalid-binding', 'animations');

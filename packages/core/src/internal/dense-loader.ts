@@ -137,6 +137,7 @@ export abstract class DenseLoader<
       validateBindings(value, this.family);
       this.#bindings = Object.freeze({ ...value });
       this.#runner?.reset?.();
+      this.accept('animations');
     } catch {
       this.#bindings = {};
       this.report('invalid-binding', 'animations');
@@ -150,6 +151,7 @@ export abstract class DenseLoader<
     this.#provider = typeof value === 'function' ? value : undefined;
     if (value !== undefined && !this.#provider)
       this.report('invalid-provider', 'targetProvider');
+    else this.accept('targetProvider');
   }
   /** The region this loader is the placeholder of, if any. */
   get owner(): Owner | undefined {
