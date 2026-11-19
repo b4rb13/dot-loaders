@@ -290,3 +290,39 @@ for (const kind of ['chart-loader', 'table-loader'] as const)
       await page.mouse.move(900, 700);
       await expect.poll(pointer).toBeUndefined();
     });
+
+/** The alpha of the first colour a surface paints its marks with. */
+function markAlpha(surface: Element) {
+  const style = getComputedStyle(surface);
+  const source =
+    style.backgroundImage !== 'none'
+      ? style.backgroundImage
+      : style.backgroundColor;
+  const color = /rgba?\(([^)]+)\)/.exec(source)?.[1]?.split(',') ?? [];
+  return color.length === 4 ? Number(color[3]) : color.length === 3 ? 1 : 0;
+}
+
+for (const mark of ['dot', 'square'] as const)
+  test(`text-loader: text outside its glyph set still shows a visible placeholder (${mark})`, async ({
+    page,
+  }) => {
+    // The character effect covers printable ASCII; anything else falls back
+    // to a plain field of marks, which used to be drawn in a transparent colour.
+    await open(
+      page,
+      `component=text-loader&text=${encodeURIComponent('Ñandú 12,00 €')}&mark=${mark}`,
+    );
+    const result = await page.evaluate(`(() => {
+      const markAlpha = ${markAlpha.toString()};
+      const loader = window.e2e.decoration;
+      const mask = loader.shadowRoot.querySelector('.mask');
+      const style = getComputedStyle(mask);
+      return {
+        glyphs: loader.hasAttribute('data-dotquilt-glyphs'),
+        visible: style.visibility === 'visible' && Number(style.opacity) > 0,
+        alpha: markAlpha(mask),
+      };
+    })()`);
+    expect(result).toMatchObject({ glyphs: false, visible: true });
+    expect((result as { alpha: number }).alpha).toBeGreaterThan(0);
+  });

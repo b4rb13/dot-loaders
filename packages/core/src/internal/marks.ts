@@ -133,7 +133,11 @@ const textShapes = {
   dash: { width: 4.2, height: 1.6, across: 6, down: 6, radius: 0.8 },
 } as const;
 
-/** Rules that draw TextLoader's placeholder with squares or dashes. */
+/**
+ * Rules that draw TextLoader's placeholder with squares or dashes, in the
+ * mark colour: the placeholder's own text is transparent, so `currentColor`
+ * would draw nothing.
+ */
 export function textMarkShapes(
   host: (mark: keyof typeof shapes) => string,
   surface: string,
@@ -141,7 +145,7 @@ export function textMarkShapes(
   return (['square', 'dash'] as const)
     .map(
       (mark) =>
-        `${host(mark)} ${surface}{${maskGrid(mark, textShapes[mark], { position: '0 0', repeat: 'repeat' }, 'var(--dotquilt-color,currentColor)')}}`,
+        `${host(mark)} ${surface}{${maskGrid(mark, textShapes[mark], { position: '0 0', repeat: 'repeat' }, markColor)}}`,
     )
     .join('');
 }
