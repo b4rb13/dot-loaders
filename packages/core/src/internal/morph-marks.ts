@@ -123,6 +123,13 @@ export function skeletonParts(host: HTMLElement, origin: DOMRect): Part[] {
     const opacity = +win.getComputedStyle(surface).opacity || 0;
     const r = look.mark === 'dot' ? shape.size / 2 : dotRadius;
     const seeds: Seed[] = [];
+    // Lines end on their last whole mark where CSS round() trims them.
+    const end =
+      (name === 'dotquilt-skeleton-line' ||
+        name === 'dotquilt-skeleton-text') &&
+      win.CSS?.supports?.('width', 'round(down, 1px, 1px)')
+        ? Math.floor(shape.width / shape.columnStep + 1e-6) * shape.columnStep
+        : Number.POSITIVE_INFINITY;
     const firstColumn = shape.columnOffset + shape.columnStep / 2,
       firstRow = shape.rowOffset + shape.rowStep / 2;
     for (
@@ -143,7 +150,12 @@ export function skeletonParts(host: HTMLElement, origin: DOMRect): Part[] {
           clamp((shape.height - y + r) / (2 * r));
         const px = shape.x + x,
           py = shape.y + y;
-        if (cover < 0.35 || !inside(clip, px, py, -r * 0.4)) continue;
+        if (
+          cover < 0.35 ||
+          x + shape.columnStep / 2 > end + 0.01 ||
+          !inside(clip, px, py, -r * 0.4)
+        )
+          continue;
         seeds.push({ x: px, y: py, r, o: opacity * cover, ...look });
       }
     if (!seeds.length) continue;

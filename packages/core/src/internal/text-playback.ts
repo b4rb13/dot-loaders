@@ -69,7 +69,7 @@ export function createTextRunner(
         previousSpeed = speed;
         last = still ? 0 : time;
         const definition = definitionOf(binding) as unknown as IdleRecipe;
-        painter ??= createPainter(host, report);
+        painter ??= createPainter(host, report, undefined, true);
         painter.draw((dot) => {
           const context: TextDraw = {
             surface: (host as TextLoader)[readSurface]('text'),
@@ -110,7 +110,7 @@ export const createTextHandoff: HandoffFactory = (
   return {
     duration,
     draw(p) {
-      painter ??= createPainter(host, report);
+      painter ??= createPainter(host, report, undefined, true);
       painter.draw((dot) => {
         const context: TextReveal = {
           surface,

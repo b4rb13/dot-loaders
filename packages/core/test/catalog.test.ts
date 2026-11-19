@@ -20,7 +20,7 @@ test('static catalog defaults and admitted maxima fit raw markup ceilings', () =
     lines: 500000,
     widths: [0.25, 0, Number.NaN],
   });
-  expect(multiline.match(/data-dotquilt-static-line/g)?.length).toBe(52); // markup plus two exact CSS selectors
+  expect(multiline.match(/data-dotquilt-static-line/g)?.length).toBe(53); // markup plus three exact CSS selectors (one trims line ends)
   expect(multiline).toContain('width="25%"');
   expect(multiline).toContain('width="60%"');
   expect(multiline).not.toContain('NaN');
