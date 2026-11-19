@@ -38,6 +38,8 @@ TextLoader is its own loading region: set its state, and put the value in as its
 | --- | --- | --- | --- | --- |
 | `state` | `state` | `pending` \| `refreshing` \| `ready` | `ready` | Whether the value is loading. |
 | `cycle` | `cycle` | string | | Names one load, so a stale answer can't settle a newer one. |
+| `delay` | `delay` | number (ms) | `0` | Wait this long before showing the placeholder. A response inside it shows no placeholder and no handoff, so fast loads don't flicker. A placeholder already on the page, such as server markup, is never hidden. Up to 10000. |
+| `min-display` | `minDisplay` | number (ms) | `0` | Once a placeholder shows, keep it at least this long before handing over, so it never flashes. Up to 10000. |
 | `mask` | `mask` | string | the text | The shape the placeholder shows. |
 | `mark` | `mark` | `dot` \| `square` \| `dash` | `dot` | Squares make a clean pixel font. Dashes read as hatching here. |
 | `speed` | `speed` | number | `1` | How fast the characters change. |
