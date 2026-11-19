@@ -2,7 +2,7 @@
 import type { RevealTarget } from '@dotquilt-internal/core';
 import { LoadingRegion, TableLoader } from '@dotquilt-internal/react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { type Invoice, invoiceColumns } from './data';
+import { type Invoice, invoiceColumns } from '../data';
 
 async function fetchInvoices(signal: AbortSignal): Promise<Invoice[]> {
   const response = await fetch('/api/invoices', { signal });

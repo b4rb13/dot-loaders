@@ -6,9 +6,9 @@ description: A number or short label that scrambles while it loads, then locks i
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import Preview from '../../../../components/Preview.astro';
 // Real files, type-checked with the repository, so the code here always works.
-import totalTsx from '../../../../../../../examples/site/revenue-total.tsx?raw';
-import totalHtml from '../../../../../../../examples/site/revenue-total.html?raw';
-import totalTs from '../../../../../../../examples/site/revenue-total.ts?raw';
+import totalTsx from '../../../../../../../examples/site/react/revenue-total.tsx?raw';
+import totalHtml from '../../../../../../../examples/site/native/revenue-total.html?raw';
+import totalTs from '../../../../../../../examples/site/native/revenue-total.ts?raw';
 
 TextLoader holds the place of a number or a short label. While it loads, its characters cross-fade through look-alikes in the shape of the answer. When the value arrives, they lock into it from left to right.
 
@@ -24,11 +24,11 @@ TextLoader is its own loading region: set its state, and put the value in as its
 
 <Tabs syncKey="framework">
   <TabItem label="React">
-    <Code code={totalTsx} lang="tsx" title="RevenueTotal.tsx" />
+    <Code code={totalTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="RevenueTotal.tsx" />
   </TabItem>
   <TabItem label="Native">
     <Code code={totalHtml} lang="html" title="index.html" />
-    <Code code={totalTs} lang="ts" title="total.ts" />
+    <Code code={totalTs.replaceAll("'../data'", "'./data'")} lang="ts" title="total.ts" />
   </TabItem>
 </Tabs>
 

@@ -6,7 +6,7 @@ import {
   registerTableLoader,
   type TableLoader,
 } from '@dotquilt-internal/core/table';
-import { type Invoice, invoiceColumns } from './data';
+import { type Invoice, invoiceColumns } from '../data';
 
 registerLoadingRegion();
 registerTableLoader();

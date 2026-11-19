@@ -59,6 +59,7 @@ export default defineConfig({
           items: [
             { label: 'Introduction', slug: 'docs' },
             { label: 'Installation', slug: 'docs/installation' },
+            { label: 'Theming', slug: 'docs/theming' },
           ],
         },
         {
@@ -70,6 +71,19 @@ export default defineConfig({
             { label: 'TableLoader', slug: 'docs/components/table-loader' },
             { label: 'TypingDots', slug: 'docs/components/typing-dots' },
             { label: 'LoadingRegion', slug: 'docs/components/loading-region' },
+          ],
+        },
+        {
+          label: 'Guides',
+          items: [
+            { label: 'React and Next.js', slug: 'docs/guides/react' },
+            { label: 'Server rendering', slug: 'docs/guides/server-rendering' },
+            { label: 'Content Security Policy', slug: 'docs/guides/csp' },
+            {
+              label: 'Custom animations',
+              slug: 'docs/guides/custom-animations',
+            },
+            { label: 'Motion and accessibility', slug: 'docs/guides/motion' },
           ],
         },
       ],

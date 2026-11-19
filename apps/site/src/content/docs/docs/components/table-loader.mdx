@@ -7,9 +7,9 @@ import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import Preview from '../../../../components/Preview.astro';
 import TableDemo from '../../../../components/demos/TableDemo.astro';
 // Real files, type-checked with the repository, so the code here always works.
-import tableTsx from '../../../../../../../examples/site/invoice-table.tsx?raw';
-import tableHtml from '../../../../../../../examples/site/invoice-table.html?raw';
-import tableTs from '../../../../../../../examples/site/invoice-table.ts?raw';
+import tableTsx from '../../../../../../../examples/site/react/invoice-table.tsx?raw';
+import tableHtml from '../../../../../../../examples/site/native/invoice-table.html?raw';
+import tableTs from '../../../../../../../examples/site/native/invoice-table.ts?raw';
 import dataTs from '../../../../../../../examples/site/data.ts?raw';
 
 TableLoader holds the place of a table. Each cell shows a short bar of marks shaped like what the column holds, with a glow drifting across. When the data arrives, your rows settle in one after another.
@@ -24,12 +24,12 @@ Describe the columns, set how many rows to show, and hand the region your real r
 
 <Tabs syncKey="framework">
   <TabItem label="React">
-    <Code code={tableTsx} lang="tsx" title="InvoiceTable.tsx" />
+    <Code code={tableTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="InvoiceTable.tsx" />
     <Code code={dataTs} lang="ts" title="data.ts" />
   </TabItem>
   <TabItem label="Native">
     <Code code={tableHtml} lang="html" title="index.html" />
-    <Code code={tableTs} lang="ts" title="invoices.ts" />
+    <Code code={tableTs.replaceAll("'../data'", "'./data'")} lang="ts" title="invoices.ts" />
     <Code code={dataTs} lang="ts" title="data.ts" />
   </TabItem>
 </Tabs>

@@ -1,0 +1,60 @@
+---
+title: Theming
+description: Colours, mark size and spacing, light and dark, and the alternative marks.
+---
+
+Dotquilt's marks use a slate close to your text colour and a soft teal glow, so they sit inside any product without imposing a brand colour. Every part of that is a CSS custom property you can set on any element: it applies to every loader inside.
+
+```css
+.dashboard {
+  --dotquilt-color: #5b6b62;
+  --dotquilt-accent-color: #3f7f86;
+  --dotquilt-dot-size: 5px;
+  --dotquilt-dot-gap: 5px;
+}
+```
+
+## Custom properties
+
+| Property | Default | Changes |
+| --- | --- | --- |
+| `--dotquilt-color` | `light-dark(#6E7889, #A3AFC2)` | the resting marks |
+| `--dotquilt-accent-color` | `light-dark(#4F8F93, #8DC4C5)` | the idle glow and chart handoff |
+| `--dotquilt-dot-size` | `4.4px` (TypingDots `8px`) | each dot's diameter |
+| `--dotquilt-dot-gap` | `4.6px` (TypingDots `6px`) | the space between dots |
+| `--dotquilt-radius` | `.375rem` | a SkeletonBlock's corners |
+
+## Light and dark
+
+The default colours follow the page's `color-scheme`. If your dark theme is a class rather than the system setting, set `color-scheme: dark` along with it:
+
+```css
+.theme-dark {
+  color-scheme: dark;
+}
+```
+
+ChartLoader and TableLoader draw on a canvas and read their colours once. When you switch themes with a class, tell them to read again:
+
+```ts
+import { refreshStyles } from '@dotquilt-internal/core';
+
+document.documentElement.classList.toggle('theme-dark');
+refreshStyles(document);
+```
+
+## Marks
+
+Every loader takes a `mark`: `dot` (the default), `square` or `dash`. The positions and motion stay the same; only the shape and spacing change.
+
+| Mark | Shape | Spacing | Suits |
+| --- | --- | --- | --- |
+| `dot` | 4.4 px circle | 9 px | everything |
+| `square` | 4 × 4 px, softly rounded | 8.5 px | small sizes, and a pixel font in TextLoader |
+| `dash` | 9.4 × 3.4 px, round ends | 13 × 9.5 px | text lines and table rows |
+
+Squares and dashes have a fixed size, so the size and gap properties change dots only.
+
+## Forced colours
+
+In Windows high-contrast mode the marks are replaced by a dotted outline in the system text colour, so placeholders stay visible without decoration.

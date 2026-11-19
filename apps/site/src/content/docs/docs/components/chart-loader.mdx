@@ -7,9 +7,9 @@ import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import Preview from '../../../../components/Preview.astro';
 import ChartDemo from '../../../../components/demos/ChartDemo.astro';
 // Real files, type-checked with the repository, so the code here always works.
-import chartTsx from '../../../../../../../examples/site/revenue-chart.tsx?raw';
-import chartHtml from '../../../../../../../examples/site/revenue-chart.html?raw';
-import chartTs from '../../../../../../../examples/site/revenue-chart.ts?raw';
+import chartTsx from '../../../../../../../examples/site/react/revenue-chart.tsx?raw';
+import chartHtml from '../../../../../../../examples/site/native/revenue-chart.html?raw';
+import chartTs from '../../../../../../../examples/site/native/revenue-chart.ts?raw';
 import dataTs from '../../../../../../../examples/site/data.ts?raw';
 
 ChartLoader holds the place of a chart. A faint field of marks carries a slow ridge and a drifting glow. When the data arrives, the marks glide onto your real line, turning teal, and then your chart draws in.
@@ -24,12 +24,12 @@ Put a ChartLoader in a region's placeholder slot, sized like the chart it stands
 
 <Tabs syncKey="framework">
   <TabItem label="React">
-    <Code code={chartTsx} lang="tsx" title="RevenueChart.tsx" />
+    <Code code={chartTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="RevenueChart.tsx" />
     <Code code={dataTs} lang="ts" title="data.ts" />
   </TabItem>
   <TabItem label="Native">
     <Code code={chartHtml} lang="html" title="index.html" />
-    <Code code={chartTs} lang="ts" title="revenue.ts" />
+    <Code code={chartTs.replaceAll("'../data'", "'./data'")} lang="ts" title="revenue.ts" />
     <Code code={dataTs} lang="ts" title="data.ts" />
   </TabItem>
 </Tabs>
