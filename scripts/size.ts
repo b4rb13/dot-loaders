@@ -4,8 +4,11 @@
 //
 // Each row bundles the smallest real usage (import + register, or the React
 // component) from the workspace build with Bun, minified, default inline
-// styles. "React adds" is the React entry minus the native one, with react and
-// react-dom left external.
+// styles, with react and react-dom left external. Code an entry loads only
+// later (a dynamic import, such as the region's reveal) is split off: the
+// sizes and budgets count what loads up front (the entry and the chunks it
+// imports statically, compressed together as Vite and webpack would bundle
+// them), and "later" shows the rest.
 //
 // Budgets (AUDIT.md decision 1): scripts/size-budgets.json holds, per entry,
 // the most gzip bytes the native usage and the React usage (native included)
@@ -14,7 +17,7 @@
 // in a PR that says why.
 import { existsSync } from 'node:fs';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { basename, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
 const root = resolve(import.meta.dir, '..');
@@ -73,6 +76,7 @@ const components: [name: string, native: string, react: string][] = [
   ],
 ];
 
+/** Gzip bytes the usage loads up front, and what it loads later on its own. */
 async function gzipSize(name: string, source: string, external: string[] = []) {
   const entry = resolve(work, `${name}.ts`);
   await writeFile(entry, source);
@@ -81,12 +85,33 @@ async function gzipSize(name: string, source: string, external: string[] = []) {
     target: 'browser',
     format: 'esm',
     minify: true,
+    splitting: true,
     external,
   });
   if (!build.success || !build.outputs[0])
     throw new Error(`Cannot bundle ${name}:\n${build.logs.join('\n')}`);
-  const bytes = new Uint8Array(await build.outputs[0].arrayBuffer());
-  return gzipSync(bytes, { level: 9 }).length;
+  const files = new Map<string, string>();
+  for (const output of build.outputs)
+    files.set(basename(output.path), await output.text());
+  // Up front: the entry and every chunk it reaches through static imports.
+  const upFront = new Set<string>();
+  const visit = (file: string) => {
+    if (upFront.has(file)) return;
+    upFront.add(file);
+    for (const [, chunk = ''] of (files.get(file) ?? '').matchAll(
+      /(?:from|import)\s*"\.\/([^"]+)"/g,
+    ))
+      visit(chunk);
+  };
+  visit(basename(build.outputs[0].path));
+  const gzip = (texts: string[]) =>
+    texts.length ? gzipSync(texts.join('\n'), { level: 9 }).length : 0;
+  return {
+    now: gzip([...upFront].map((file) => files.get(file) ?? '')),
+    later: gzip(
+      [...files].filter(([file]) => !upFront.has(file)).map(([, t]) => t),
+    ),
+  };
 }
 
 await rm(work, { recursive: true, force: true });
@@ -102,12 +127,14 @@ const overruns: string[] = [];
 const left = (bytes: number, budget?: number) =>
   budget === undefined ? '—' : `${Math.round((1 - bytes / budget) * 100)}%`;
 for (const [name, native, react] of components) {
-  const nativeBytes = await gzipSize(`${name}-native`, native);
-  const reactBytes = await gzipSize(`${name}-react`, `${native}\n${react}`, [
+  const nativeSize = await gzipSize(`${name}-native`, native);
+  const reactSize = await gzipSize(`${name}-react`, `${native}\n${react}`, [
     'react',
     'react-dom',
     'react/jsx-runtime',
   ]);
+  const nativeBytes = nativeSize.now,
+    reactBytes = reactSize.now;
   const budget = budgets[name];
   if (budget && nativeBytes > budget.native)
     overruns.push(`${name} (native): ${nativeBytes} B > ${budget.native} B`);
@@ -119,6 +146,7 @@ for (const [name, native, react] of components) {
     'native left': left(nativeBytes, budget?.native),
     'React gzip (B)': reactBytes,
     'React left': left(reactBytes, budget?.react),
+    'later (B)': nativeSize.later || '—',
   });
 }
 console.table(rows);

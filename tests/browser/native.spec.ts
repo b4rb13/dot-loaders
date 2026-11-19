@@ -11,6 +11,7 @@ declare global {
       cycle?: string;
       handoffId: number;
       reason?: string;
+      animation?: string;
     }[];
     violations: string[];
   }
@@ -232,6 +233,64 @@ test('four-second window is not renewed by cycle churn or same-instance reconnec
     'start',
     'end',
   ]);
+});
+// The reveal (the morph) is a third of the region's code, so it loads on its
+// own, the first time a region shows its placeholder.
+const reveal = '/pkg/dist/internal/morph.js';
+test('a region loads its reveal only once its placeholder shows', async ({
+  page,
+}) => {
+  const requests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === reveal)
+      requests.push(request.url());
+  });
+  // Ready from the server: no placeholder shows, so nothing is fetched.
+  await page.goto('/?ssr=ready');
+  await page.waitForFunction(() => window.booted);
+  await expect(page.locator(r)).toHaveAttribute('data-presentation', 'ready');
+  await page.waitForTimeout(300);
+  expect(requests).toEqual([]);
+  await page.evaluate(() =>
+    (document.getElementById('region') as LoadingRegion).update({
+      state: 'pending',
+    }),
+  );
+  await expect.poll(() => requests.length).toBe(1);
+});
+test('data that arrives before the reveal has loaded dissolves, and later cycles take shape', async ({
+  page,
+}) => {
+  let release = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(`**${reveal}`, async (route) => {
+    await held;
+    await route.continue();
+  });
+  await boot(page);
+  await ready(page, 600);
+  const starts = () =>
+    page.evaluate(() =>
+      window.events.filter((e) => e.type === 'start').map((e) => e.animation),
+    );
+  expect(await starts()).toEqual(['dotquilt/dissolve']);
+  expect(
+    await page.evaluate(() => window.events.map((e) => e.reason ?? e.type)),
+  ).toEqual(['start', 'complete']);
+  release();
+  // Imported again from the page, it resolves once the module has run.
+  await page.evaluate((url) => import(url), reveal);
+  await page.evaluate(() =>
+    (document.getElementById('region') as LoadingRegion).update({
+      state: 'pending',
+      cycle: 'second',
+    }),
+  );
+  await expect(page.locator(r)).toHaveAttribute('data-presentation', 'pending');
+  await ready(page, 600);
+  expect(await starts()).toEqual(['dotquilt/dissolve', 'dotquilt/morph']);
 });
 test('a requested handoff longer than the 4-second motion limit is skipped', async ({
   page,
