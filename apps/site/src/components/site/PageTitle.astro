@@ -1,0 +1,77 @@
+---
+/**
+ * The page title, and on docs pages a "Copy page" button that copies the
+ * page as Markdown (the same text as /docs/….md and /llms-full.txt), for
+ * pasting into an AI assistant.
+ */
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+import { markdownPath } from '../../lib/markdown';
+
+const { id } = Astro.locals.starlightRoute.entry;
+const docs = id === 'docs' || id.startsWith('docs/');
+---
+
+{
+  docs ? (
+    <div class="title-row">
+      <Default />
+      <a class="copy-page" href={markdownPath(id)} data-copy-page>
+        Copy page
+      </a>
+    </div>
+  ) : (
+    <Default />
+  )
+}
+
+<style>
+  .title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .copy-page {
+    flex: none;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--dq-line, var(--sl-color-gray-5));
+    border-radius: 9px;
+    font-size: var(--sl-text-xs);
+    font-weight: 500;
+    color: var(--dq-muted, var(--sl-color-gray-3));
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      color 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .copy-page:hover,
+  .copy-page:focus-visible {
+    color: var(--dq-ink, var(--sl-color-white));
+    border-color: var(--dq-line-2, var(--sl-color-gray-4));
+  }
+</style>
+
+<script>
+  // Without JavaScript or clipboard access, the link opens the Markdown.
+  for (const link of document.querySelectorAll<HTMLAnchorElement>(
+    '[data-copy-page]',
+  )) {
+    link.dataset.copyPage = 'ready';
+    link.addEventListener('click', async (event) => {
+      if (!navigator.clipboard) return;
+      event.preventDefault();
+      try {
+        const text = await (await fetch(link.href)).text();
+        await navigator.clipboard.writeText(text);
+        link.textContent = 'Copied';
+      } catch {
+        location.href = link.href;
+        return;
+      }
+      setTimeout(() => {
+        link.textContent = 'Copy page';
+      }, 2000);
+    });
+  }
+</script>

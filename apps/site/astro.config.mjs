@@ -34,6 +34,8 @@ export default defineConfig({
         // The brand, main links and a seam of marks; and the site footer.
         Header: './src/components/site/Header.astro',
         Footer: './src/components/site/Footer.astro',
+        // On docs pages, a "Copy page" button beside the title (Markdown).
+        PageTitle: './src/components/site/PageTitle.astro',
       },
       head: [
         {
