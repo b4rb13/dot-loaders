@@ -174,6 +174,32 @@ test('font and shadow stylesheet load invalidation stops observing after disconn
   });
   expect(calls).toEqual({ connected: 2, disconnected: 2 });
 });
+test('TextLoader moves once its external stylesheet loads, even if its size stays the same', async ({
+  page,
+}) => {
+  // Until its external stylesheet loads, the loader keeps its static
+  // presentation and has no mask glyphs. It measures again when its size or
+  // font changes, which loading the stylesheet usually causes. Here the page
+  // gives the content part the box the stylesheet would, so nothing changes
+  // size: the glyphs that arrive with the stylesheet must still be measured.
+  // (React hydration could hit the same state by chance: re-measuring after
+  // the rules applied, but before the loader noticed the sheet.)
+  await page.route('**/app.css', async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      body: `${await response.text()}#text::part(content){display:block;grid-area:1/1}`,
+    });
+  });
+  await page.goto(
+    `/text?mode=external&sheet=${encodeURIComponent('/core/styles/text.css?shadow')}`,
+  );
+  await expect(page.locator('#text')).toHaveAttribute('data-moving', '');
+  expect(
+    await page.evaluate(() => window.m4Text.surface().input.mask.length),
+  ).toBe(8);
+  expect(await page.locator(dots).count()).toBeGreaterThan(100);
+});
 test('custom text handoffs retain frozen capabilities and settle removed targets without stale effects', async ({
   page,
 }) => {

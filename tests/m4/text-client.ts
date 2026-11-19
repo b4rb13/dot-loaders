@@ -37,11 +37,14 @@ host.addEventListener('dotquilt-error', (event) =>
 document.addEventListener('securitypolicyviolation', (event) =>
   violations.push(event.violatedDirective),
 );
+// `sheet` gives the shadow stylesheet its own URL, so it loads apart from the
+// server markup's copy instead of coming from the memory cache.
+const sheet = new URL(location.href).searchParams.get('sheet');
 Reflect.set(
   host,
   'stylePolicy',
   mode?.startsWith('external')
-    ? { mode: 'external', href: '/core/styles/text.css' }
+    ? { mode: 'external', href: sheet ?? '/core/styles/text.css' }
     : { mode: 'inline', ...(mode === 'nonce' ? { nonce: 'm4-fixture' } : {}) },
 );
 const content = host.querySelector('[data-dotquilt-text-content]');
