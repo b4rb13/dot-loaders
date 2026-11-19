@@ -14,7 +14,7 @@ import {
   node,
   upgradeProperties,
 } from './dom.js';
-import { ManagedElement, now, remaining } from './element.js';
+import { ManagedElement, now } from './element.js';
 import { EventElement } from './event-element.js';
 import {
   type HandoffDriver,
@@ -26,6 +26,7 @@ import { clamp } from './math.js';
 import type { Preset } from './preset.js';
 import { regionPreset } from './preset.js';
 import { capturePresetData } from './preset-data.js';
+import { motionLimit } from './time.js';
 
 type OwnerAnimations<F extends 'region' | 'text'> = F extends 'region'
   ? Pick<Animations<F>, 'handoff'>
@@ -375,7 +376,7 @@ export abstract class LoadingController<
     if (revision !== this.#revision) return;
     this.toggleAttribute('data-dotquilt-disabled', invalid);
     if (this.#work) {
-      if (!this.allowed(this.activity) || this.#work.driver?.restricted?.())
+      if (!this.canAnimate() || this.#work.driver?.restricted?.())
         this.#finish('end', 'restricted');
       return;
     }
@@ -480,15 +481,16 @@ export abstract class LoadingController<
       driver?.dispose();
       return;
     }
+    // The handoff ignores the idle's 4-second window: it is short, and it
+    // happens because the data arrived (owner decision 3, 2026-11-19). A
+    // requested handoff longer than the motion limit is still skipped.
     if (
-      !this.allowed(this.activity) ||
+      !this.canAnimate() ||
       driver?.restricted?.() ||
-      duration > remaining(this, this.activity) ||
+      duration > motionLimit ||
       activeWithin(content)
     )
       duration = 0;
-    if (duration > 0 && this.activity.started === undefined)
-      this.arm(this.activity);
     const detail: HandoffDetail = {
       cycle: this.cycle,
       handoffId: ++this.#serial,
@@ -516,12 +518,8 @@ export abstract class LoadingController<
       this.#finish('end', 'immediate');
       return;
     }
-    // Synchronous start handlers may consume the window or change restrictions.
-    if (
-      !this.allowed(this.activity) ||
-      driver?.restricted?.() ||
-      duration > remaining(this, this.activity)
-    ) {
+    // Synchronous start handlers may change restrictions.
+    if (!this.canAnimate() || driver?.restricted?.()) {
       this.#finish('end', 'restricted');
       return;
     }
@@ -606,7 +604,7 @@ export abstract class LoadingController<
   protected frame(): void {
     const work = this.#work;
     if (!work) return;
-    if (!this.allowed(this.activity) || work.driver?.restricted?.()) {
+    if (!this.canAnimate() || work.driver?.restricted?.()) {
       this.#finish('end', 'restricted');
       return;
     }

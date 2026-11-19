@@ -246,7 +246,7 @@ Confirmed by me in source:
 2. **One throwing callback kills all animation.** The shared frame loop has no per-callback `try/catch` ([frames.ts:15-20](packages/core/src/internal/frames.ts:15)), so one error stops the loop for the whole document.
 3. **Errors are reported once per element, forever.** The `#issues` set is never cleared ([element.ts:21,151](packages/core/src/internal/element.ts:21)). A repeated failure is silent.
 4. **`el.state = undefined` writes the string `"undefined"`.** That is read back as pending ([loading-controller.ts:103](packages/core/src/internal/loading-controller.ts:103)).
-5. **Hard-coded 4 s motion window** ([time.ts](packages/core/src/internal/time.ts)). Idle motion freezes after 4 s, and loads longer than about 4 s skip the handoff entirely. This is by design, but it is not configurable.
+5. **Hard-coded 4 s motion window** ([time.ts](packages/core/src/internal/time.ts)). Idle motion freezes after 4 s. ~~Loads longer than about 3 s skipped the handoff entirely.~~ Fixed 2026-11-19 (decision 3): the handoff ignores the window.
 
 Reported by the reviewers (high/medium confidence, not all re-verified):
 
@@ -451,7 +451,7 @@ Performance qualification on real devices comes after there are users, against b
    - **Rejected, SVG only:** it would save about 490 lines (the managed painter and its resource budget), but every user's device would pay for it on every load.
    - **What goes instead:** the 768 lines of benchmark-only proof code in `src/` and its comparison hook. The proof answered its question.
    - **Kept:** the SVG fallback for bitmaps that can't be allocated, lost contexts and dot CSS that Canvas can't honour. Revisit those conditions with the mark-styling API in Phase 4.
-3. **4-second motion cap.** Keep it fixed, make it configurable, or drop it?
+3. ~~**4-second motion cap.**~~ **Decided 2026-11-19 by the owner: keep the cap on idle motion, and always animate the reveal.** The idle glow still stops after 4 seconds, so a long load never loops indefinitely. The handoff runs however long the load took: it is about a second long and happens because the data arrived. Reduced motion, a pause or focus inside the content still skip it.
 4. **TextLoader international text.** Is ASCII-only acceptable for v1?
 5. ~~**Multiple library copies on one page.**~~ **Decided 2026-11-18 (delegated to the agent): one copy per page.** A second copy reports a registration error instead of sharing.
    - **The registry is global:** each tag can be defined once per document, so a second copy never owns its own elements. "Support" was glue: about 13 global symbols, ~56 `Reflect` calls, four dot ledgers and an 84-test suite.

@@ -451,7 +451,7 @@ test('no JavaScript and delayed enhancement retain reserved static layout and ap
     await context.close();
   }
 });
-test('ready on mount, zero duration and a short remaining window never delay the current application outcome', async ({
+test('ready on mount and zero duration never delay the outcome; a long load still animates the reveal', async ({
   page,
 }) => {
   await page.goto('/chart?enhance=0');
@@ -484,12 +484,18 @@ test('ready on mount, zero duration and a short remaining window never delay the
   await page.goto('/chart');
   await page.clock.runFor(3500);
   await page.evaluate(() => window.m4Chart.ready());
+  // Decision 3: the morph plays however long the load took.
+  await expect(page.locator('#chart-region')).toHaveAttribute(
+    'data-presentation',
+    'handoff',
+  );
+  await page.clock.runFor(1500);
   await expect(page.locator('#chart-region')).toHaveAttribute(
     'data-presentation',
     'ready',
   );
   expect(await page.evaluate(() => window.m4Chart.events.at(-1)?.reason)).toBe(
-    'immediate',
+    'complete',
   );
 });
 test('actual CSS content-box geometry, density and surface part survive border/padding and recover from excessive dots', async ({
