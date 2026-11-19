@@ -1,0 +1,565 @@
+---
+/**
+ * One recipe's live demo: a loader in the place it lives, and the real
+ * content it hands over to. The gallery script drives `[data-owner]` from a
+ * simulated request; the marks and animations come from the recipe.
+ */
+import { invoices, linePath, revenue } from '../../../../../examples/site/data';
+import type { Recipe } from './recipes';
+
+interface Props {
+  recipe: Recipe;
+}
+const { recipe } = Astro.props;
+const mark = recipe.mark;
+const width = 320;
+const height = 150;
+const top = Math.max(...revenue) * 1.15;
+const bars = revenue.map((value, i) => {
+  const slot = width / revenue.length;
+  const h = (value / top) * height;
+  return {
+    x: i * slot + slot * 0.2,
+    y: height - h,
+    width: slot * 0.6,
+    height: h,
+  };
+});
+/** Deals by size and days to close: a loose cloud. */
+const scatter = [
+  [18, 40],
+  [34, 62],
+  [52, 48],
+  [70, 96],
+  [88, 70],
+  [104, 112],
+  [126, 88],
+  [142, 120],
+  [160, 104],
+  [178, 134],
+  [196, 118],
+  [214, 140],
+  [236, 128],
+  [252, 150],
+  [274, 138],
+  [296, 160],
+].map(([x, y]) => ({ x, y: height - (y / 180) * height }));
+const people = [
+  { name: 'Inês Costa', role: 'Design lead', joined: 'Mar 3' },
+  { name: 'Tomás Silva', role: 'Engineer', joined: 'Jun 17' },
+  { name: 'Ana Ribeiro', role: 'Support', joined: 'Sep 9' },
+];
+const comments = [
+  {
+    initials: 'RA',
+    name: 'Rui Almeida',
+    text: 'Moved the launch to Thursday.',
+  },
+  {
+    initials: 'IC',
+    name: 'Inês Costa',
+    text: 'Works for me. I will update the plan.',
+  },
+  {
+    initials: 'TS',
+    name: 'Tomás Silva',
+    text: 'Release notes are ready for review.',
+  },
+];
+---
+
+{
+  recipe.demo === 'profile' && (
+    <dotquilt-region state="pending" aria-label="Member" data-owner>
+      <div slot="placeholder" class="profile">
+        <dotquilt-skeleton-circle mark={mark} />
+        <div class="lines">
+          <dotquilt-skeleton-line mark={mark} class="w60" />
+          <dotquilt-skeleton-line mark={mark} class="w40" />
+        </div>
+      </div>
+      <div class="profile">
+        <span class="avatar">IC</span>
+        <div class="lines">
+          <strong>Inês Costa</strong>
+          <span class="muted">Design lead, Lisbon</span>
+        </div>
+      </div>
+    </dotquilt-region>
+  )
+}
+
+{
+  recipe.demo === 'article' && (
+    <dotquilt-region state="pending" aria-label="Article" data-owner>
+      <div slot="placeholder" class="article">
+        <dotquilt-skeleton-block mark={mark} class="cover" />
+        <dotquilt-skeleton-text mark={mark} lines="3" />
+      </div>
+      <div class="article">
+        <div class="cover art" />
+        <div>
+          <strong>Closing the quarter calmly</strong>
+          <p class="muted">
+            How the finance team cut month-end from five days to two, and what
+            they stopped doing along the way.
+          </p>
+        </div>
+      </div>
+    </dotquilt-region>
+  )
+}
+
+{
+  recipe.demo === 'comments' && (
+    <dotquilt-region state="pending" aria-label="Comments" data-owner>
+      <ul slot="placeholder" class="comments">
+        {comments.map(() => (
+          <li>
+            <dotquilt-skeleton-circle mark={mark} />
+            <dotquilt-skeleton-text mark={mark} lines="2" />
+          </li>
+        ))}
+      </ul>
+      <ul class="comments">
+        {comments.map((comment) => (
+          <li>
+            <span class="avatar small">{comment.initials}</span>
+            <div>
+              <strong>{comment.name}</strong>
+              <span class="muted">{comment.text}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </dotquilt-region>
+  )
+}
+
+{
+  recipe.demo === 'kpi' && (
+    <div class="figure">
+      <span class="caption">Revenue this month</span>
+      <dotquilt-text-loader
+        state="pending"
+        mask="$00,000"
+        mark={mark}
+        aria-label="Revenue this month"
+        data-owner
+        data-value="$48,210"
+      >
+        $48,210
+      </dotquilt-text-loader>
+    </div>
+  )
+}
+
+{
+  recipe.demo === 'order' && (
+    <div class="figure order">
+      <span class="caption">Order</span>
+      <dotquilt-text-loader
+        state="pending"
+        mask="INV-0000"
+        mark={mark}
+        aria-label="Order number"
+        data-owner
+        data-value="INV-2043"
+      >
+        INV-2043
+      </dotquilt-text-loader>
+    </div>
+  )
+}
+
+{
+  recipe.demo === 'status' && (
+    <div class="figure status">
+      <span class="caption">Delivery</span>
+      <dotquilt-text-loader
+        state="pending"
+        mask="Shipped, Nov 0"
+        mark={mark}
+        aria-label="Delivery status"
+        data-owner
+        data-value="Shipped, Nov 2"
+      >
+        Shipped, Nov 2
+      </dotquilt-text-loader>
+    </div>
+  )
+}
+
+{
+  recipe.demo === 'chart' && (
+    <dotquilt-region state="pending" aria-label="Revenue by month" data-owner>
+      <dotquilt-chart-loader
+        slot="placeholder"
+        variant={recipe.variant ?? 'line'}
+        mark={mark}
+        data-chart={recipe.variant ?? 'line'}
+      />
+      <svg
+        class="chart"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        role="img"
+        aria-label="Revenue by month, rising from $32k to $72k"
+      >
+        {recipe.variant === 'bar' &&
+          bars.map((bar) => (
+            <rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} rx="2" />
+          ))}
+        {recipe.variant === 'scatter' &&
+          scatter.map((point) => <circle cx={point.x} cy={point.y} r="3.5" />)}
+        {(recipe.variant ?? 'line') === 'line' && (
+          <path
+            d={linePath(revenue, width, height)}
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            vector-effect="non-scaling-stroke"
+          />
+        )}
+      </svg>
+    </dotquilt-region>
+  )
+}
+
+{
+  recipe.demo === 'invoices' && (
+    <dotquilt-region state="pending" aria-label="Invoices" data-owner data-rows>
+      <dotquilt-table-loader
+        slot="placeholder"
+        rows="3"
+        row-height="30"
+        mark={mark}
+        data-columns="invoices"
+      />
+      <table class="mini-table">
+        <tbody>
+          {invoices.slice(0, 3).map((invoice) => (
+            <tr>
+              <td>{invoice.customer}</td>
+              <td class="num">{invoice.amount}</td>
+              <td>
+                <span class="pill">{invoice.status}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </dotquilt-region>
+  )
+}
+
+{
+  recipe.demo === 'people' && (
+    <dotquilt-region state="pending" aria-label="Team" data-owner data-rows>
+      <dotquilt-table-loader
+        slot="placeholder"
+        rows="3"
+        row-height="30"
+        mark={mark}
+        data-columns="people"
+      />
+      <table class="mini-table">
+        <tbody>
+          {people.map((person) => (
+            <tr>
+              <td>{person.name}</td>
+              <td class="muted">{person.role}</td>
+              <td class="num">{person.joined}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </dotquilt-region>
+  )
+}
+
+{
+  recipe.demo === 'reply' && (
+    <div class="thread">
+      <div class="bubble mine">When is the Globex invoice due?</div>
+      <dotquilt-region state="pending" aria-label="Assistant reply" data-owner>
+        <div slot="placeholder" class="bubble">
+          <dotquilt-typing-dots mark={mark} />
+        </div>
+        <div class="bubble">It was due on Oct 28. Want me to send a reminder?</div>
+      </dotquilt-region>
+    </div>
+  )
+}
+
+{
+  recipe.demo === 'saving' && (
+    <div class="saving">
+      <span class="fake-button">Save changes</span>
+      <dotquilt-region state="pending" aria-label="Save status" data-owner>
+        <dotquilt-typing-dots slot="placeholder" mark={mark} />
+        <span class="saved">Saved</span>
+      </dotquilt-region>
+    </div>
+  )
+}
+
+{
+  recipe.demo === 'feed' && (
+    <dotquilt-region
+      state="pending"
+      aria-label="Activity"
+      data-owner
+      data-refresh
+    >
+      <dotquilt-skeleton-text slot="placeholder" lines="3" mark={mark} />
+      <span slot="refresh-indicator" class="updating">Updating</span>
+      <ul class="feed">
+        <li>Northwind paid <strong>$4,200</strong></li>
+        <li>Globex invoice is overdue</li>
+        <li>Initech paid <strong>$3,115</strong></li>
+      </ul>
+    </dotquilt-region>
+  )
+}
+
+{
+  recipe.demo === 'results' && (
+    <div class="search">
+      <span class="field-input">invoices overdue</span>
+      <dotquilt-region state="pending" aria-label="Search results" data-owner>
+        <dotquilt-skeleton-text slot="placeholder" lines="4" mark={mark} />
+        <ul class="results">
+          <li><strong>INV-2043</strong> <span class="muted">Globex, due Oct 28</span></li>
+          <li><strong>INV-2038</strong> <span class="muted">Acme Labs, due Oct 30</span></li>
+          <li><strong>INV-2031</strong> <span class="muted">Umbrella, due Oct 31</span></li>
+        </ul>
+      </dotquilt-region>
+    </div>
+  )
+}
+
+<style>
+  dotquilt-region {
+    display: block;
+  }
+  .muted {
+    color: var(--dq-muted);
+  }
+  strong {
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .profile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .profile dotquilt-skeleton-circle {
+    width: 48px;
+    height: 48px;
+    flex: none;
+  }
+  .lines {
+    display: grid;
+    gap: 6px;
+    flex: 1;
+    font-size: 14px;
+  }
+  .w60 {
+    width: 60%;
+  }
+  .w40 {
+    width: 40%;
+  }
+  .avatar {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--dq-accent-soft);
+    color: var(--dq-accent);
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .avatar.small {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+  .article {
+    display: grid;
+    gap: 14px;
+    font-size: 14px;
+  }
+  .article .cover {
+    width: 100%;
+    height: 96px;
+    border-radius: var(--dq-radius-sm);
+  }
+  .article .cover.art {
+    background: var(--dq-accent-soft);
+  }
+  .article p {
+    margin: 4px 0 0;
+    line-height: 1.55;
+  }
+  .comments {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13.5px;
+  }
+  .comments li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .comments dotquilt-skeleton-circle {
+    width: 32px;
+    height: 32px;
+    flex: none;
+  }
+  .comments dotquilt-skeleton-text {
+    flex: 1;
+  }
+  .comments li div {
+    display: grid;
+    gap: 2px;
+  }
+  .figure {
+    display: grid;
+    gap: 8px;
+  }
+  .caption {
+    font-size: 13px;
+    color: var(--dq-muted);
+  }
+  .figure dotquilt-text-loader {
+    font-size: 40px;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-ink);
+  }
+  .figure.order dotquilt-text-loader {
+    font-family: var(--dq-font-mono);
+    font-size: 30px;
+    letter-spacing: 0;
+  }
+  .figure.status dotquilt-text-loader {
+    font-size: 22px;
+  }
+  /* Until it upgrades, a pending value shows nothing, not the value. */
+  dotquilt-text-loader:not(:defined)[state='pending'] {
+    color: transparent;
+  }
+  .chart,
+  dotquilt-chart-loader {
+    display: block;
+    width: 100%;
+    height: 150px;
+  }
+  .chart {
+    color: var(--dq-accent);
+  }
+  .chart rect,
+  .chart circle {
+    fill: var(--dq-accent);
+  }
+  .mini-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  .mini-table td {
+    height: 30px;
+    padding: 0 8px 0 0;
+    border: 0;
+    color: var(--dq-ink);
+  }
+  .mini-table .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .pill {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--dq-subtle);
+    color: var(--dq-muted);
+    font-size: 12px;
+  }
+  .thread {
+    display: grid;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .bubble {
+    justify-self: start;
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 12px 12px 12px 4px;
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+    line-height: 1.5;
+  }
+  .bubble.mine {
+    justify-self: end;
+    border-radius: 12px 12px 4px 12px;
+    background: var(--dq-accent-soft);
+  }
+  .thread dotquilt-region {
+    justify-self: start;
+  }
+  .saving {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+  }
+  .fake-button {
+    padding: 9px 14px;
+    border: 1px solid var(--dq-line-2);
+    border-radius: var(--dq-radius-sm);
+    color: var(--dq-ink);
+    font-weight: 500;
+  }
+  .saved {
+    color: var(--dq-positive);
+    font-weight: 500;
+  }
+  .feed,
+  .results {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    color: var(--dq-ink);
+  }
+  .updating {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--dq-subtle);
+    color: var(--dq-muted);
+    font-size: 12px;
+  }
+  .search {
+    display: grid;
+    gap: 14px;
+  }
+  .field-input {
+    padding: 9px 12px;
+    border: 1px solid var(--dq-line-2);
+    border-radius: var(--dq-radius-sm);
+    color: var(--dq-ink);
+    font-size: 14px;
+  }
+</style>

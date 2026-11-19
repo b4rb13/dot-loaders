@@ -8,7 +8,6 @@ const spark = linePath(weekly, 240, 80);
 
 <section class="home-section not-content" aria-labelledby="family-title">
   <header>
-    <p class="home-eyebrow">The components</p>
     <h2 id="family-title">One quiet language for every wait.</h2>
     <p>
       A number, a chart, a table and a reply all take their own time. Each
@@ -189,7 +188,7 @@ const spark = linePath(weekly, 240, 80);
     display: grid;
     align-content: start;
     gap: 0.25rem;
-    padding: 0.75rem 0.75rem 1.125rem;
+    padding: 1.25rem 1.375rem 1.375rem;
     color: inherit;
     text-decoration: none;
     transition:
@@ -208,20 +207,19 @@ const spark = linePath(weekly, 240, 80);
     display: grid;
     align-items: center;
     height: 8.5rem;
-    margin-bottom: 0.875rem;
-    padding: 1rem 1.125rem;
-    border-radius: var(--dq-radius-sm);
-    background: var(--dq-bg);
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--dq-line);
     overflow: hidden;
   }
   .tile h3 {
-    margin: 0 0.375rem;
+    margin: 0;
     font-size: 0.9375rem;
     font-weight: 600;
     color: var(--dq-ink);
   }
   .tile > p {
-    margin: 0 0.375rem;
+    margin: 0;
     font-size: 0.8125rem;
     line-height: 1.5;
     color: var(--dq-muted);
@@ -247,7 +245,7 @@ const spark = linePath(weekly, 240, 80);
     width: 2.75rem;
     height: 2.75rem;
     border-radius: 50%;
-    background: var(--dq-surface);
+    background: var(--dq-subtle);
     font-weight: 600;
     color: var(--dq-muted);
   }
@@ -287,7 +285,7 @@ const spark = linePath(weekly, 240, 80);
   .pill {
     padding: 0.0625rem 0.4375rem;
     border-radius: 999px;
-    background: var(--dq-surface);
+    background: var(--dq-subtle);
     font-size: 0.6875rem;
     color: var(--dq-muted);
   }
@@ -297,7 +295,7 @@ const spark = linePath(weekly, 240, 80);
     min-height: 2.5rem;
     padding: 0.625rem 0.875rem;
     border-radius: var(--dq-radius-md) var(--dq-radius-md) var(--dq-radius-md) 4px;
-    background: var(--dq-surface);
+    background: var(--dq-subtle);
     border: 1px solid var(--dq-line);
     font-size: 0.875rem;
     color: var(--dq-ink);
@@ -317,7 +315,7 @@ const spark = linePath(weekly, 240, 80);
     inset-inline-end: -0.25rem;
     padding: 0.0625rem 0.5rem;
     border-radius: 999px;
-    background: var(--dq-surface);
+    background: var(--dq-subtle);
     font-size: 0.6875rem;
     color: var(--dq-muted);
   }

@@ -3,38 +3,11 @@
  * Make it yours: the loaders respond live to a mark, a colour, a size and a
  * speed, and the CSS to get the same look updates beside them.
  */
-const palettes = [
-  { name: 'Slate', mark: '', glow: '', swatch: '#6e7889' },
-  {
-    name: 'Sage',
-    mark: 'light-dark(#5f7a6c, #9db8aa)',
-    glow: 'light-dark(#3f8a6e, #86c9ad)',
-    swatch: '#5f7a6c',
-  },
-  {
-    name: 'Ink',
-    mark: 'light-dark(#56607e, #a6afcc)',
-    glow: 'light-dark(#4b67b8, #9db3ec)',
-    swatch: '#56607e',
-  },
-  {
-    name: 'Clay',
-    mark: 'light-dark(#87705f, #c6b1a1)',
-    glow: 'light-dark(#b0714b, #e0a582)',
-    swatch: '#87705f',
-  },
-  {
-    name: 'Plum',
-    mark: 'light-dark(#776479, #bba7bd)',
-    glow: 'light-dark(#8e5a95, #c99bd0)',
-    swatch: '#776479',
-  },
-];
+import { palettes } from '../playground/settings';
 ---
 
 <section class="home-section not-content" aria-labelledby="yours-title">
   <header>
-    <p class="home-eyebrow">Make it yours</p>
     <h2 id="yours-title">Quiet by default. Yours in a few lines.</h2>
     <p>
       The marks start in a slate that sits beside any text, with a soft glow

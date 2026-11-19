@@ -25,3 +25,9 @@ apps/website/public/dotquilt/
 
 # Astro
 .astro/
+
+# Impeccable working files: generated comps and review captures
+apps/site/.impeccable/mocks/
+apps/site/.impeccable/review/
+apps/site/.impeccable/questions/
+apps/site/.impeccable/hook.cache.json

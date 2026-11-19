@@ -27,8 +27,10 @@ export default defineConfig({
         './src/styles/home.css',
       ],
       components: {
-        // The homepage's hero: headline, actions and the live dashboard.
+        // The homepage's first screen, and the centred headline of other heroes.
         Hero: './src/components/home/Hero.astro',
+        // The first thing in <body>: carries the homepage's design contract.
+        SkipLink: './src/components/site/SkipLink.astro',
         // The brand, main links and a seam of marks; and the site footer.
         Header: './src/components/site/Header.astro',
         Footer: './src/components/site/Footer.astro',
