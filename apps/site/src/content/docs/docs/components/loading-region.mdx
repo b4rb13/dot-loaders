@@ -62,7 +62,7 @@ Going from `pending` to `ready` plays the handoff: the marks fade and drift as y
 | `cycle` | `cycle` | string | | Names one load, so a stale answer can't settle a newer one. |
 | | `timing` | `{ duration?, easing? }` | | The handoff's length and curve. `{ duration: 0 }` swaps at once, for errors. |
 | | `revealTargets` | `{ id, element }[]` | | Parts of your content that settle in turn, such as table rows. |
-| `motion` | `motion` | `auto` \| `paused` | `auto` | `paused` stills every loader inside. |
+| `motion` | `motion` | `system` \| `paused` | `system` | `system` follows the visitor's reduced-motion setting; `paused` stills every loader inside. |
 
 ## Events
 

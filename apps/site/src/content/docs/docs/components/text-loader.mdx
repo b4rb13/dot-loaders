@@ -41,7 +41,7 @@ TextLoader is its own loading region: set its state, and put the value in as its
 | `mask` | `mask` | string | the text | The shape the placeholder shows. |
 | `mark` | `mark` | `dot` \| `square` \| `dash` | `dot` | Squares make a clean pixel font. Dashes read as hatching here. |
 | `speed` | `speed` | number | `1` | How fast the characters change. |
-| `motion` | `motion` | `auto` \| `paused` | `auto` | `paused` stills the characters. |
+| `motion` | `motion` | `system` \| `paused` | `system` | `system` follows the visitor's reduced-motion setting; `paused` stills the characters. |
 | | `timing` | `{ duration?, easing? }` | | The handoff's length and curve. `{ duration: 0 }` swaps at once. |
 
 ## Animations
