@@ -54,6 +54,7 @@ The provider receives the loader's `width` and `height` and returns one of these
 | | `targetProvider` | function | | Where the real chart is, for the handoff. |
 | `mark` | `mark` | `dot` \| `square` \| `dash` | `dot` | The shape of each mark. |
 | `speed` | `speed` | number | `1` | How fast the ridge and glow move. |
+| `pointer-response` | `pointerResponse` | `none` \| `lift` | `none` | `lift` lights the marks around the pointer while the placeholder shows, on devices with a fine pointer. |
 | `motion` | `motion` | `system` \| `paused` | `system` | `system` follows the visitor's reduced-motion setting; `paused` stills the field. |
 
 The chart sizes like a block: it fills its width and is 12rem tall unless you set a height.
@@ -64,5 +65,17 @@ Import alternatives from `@dotquilt-internal/core/animations/chart` and pass the
 
 | Phase | Default | Also available |
 | --- | --- | --- |
-| Idle | `ridge`: a soft line drifting through the field | `bars`, `scatter`: still shapes under the glow, for those chart types |
+| Idle | `ridge`: a soft line drifting through the field | `bars`, `scatter`: shapes for those chart types; `scan`: a band sweeps across the line; `terrain`: the field below the line is shaded like land; `cycle`: moves between line, bars and scatter |
 | Handoff | `morphWipe`: marks glide onto the line, then the chart draws in | |
+
+Each takes options, for example `scan({ bandWidth: 48 })`:
+
+| Animation | Options (default) |
+| --- | --- |
+| `ridge` | `amplitude` 0–0.4 (0.24), `highlightWidth` 20–180 px (90) |
+| `scan` | `amplitude` 0–0.4 (0.24), `bandWidth` 12–80 px (36), `trail` 40–240 px (160) |
+| `terrain` | `amplitude` 0–0.4 (0.24), `relief` 0.4–1.4 (1) |
+| `bars` | `sway` 0–0.12 (0.07) |
+| `scatter` | `radius` 6–24 px (13), `spread` 0.1–0.35 (0.24), `sway` 0–0.1 (0.045) |
+| `cycle` | `holdMs` 800–3200 (3200), `blendMs` 200–600 (460) |
+| `morphWipe` | `morphEnd` 0.55–0.95 (0.55), `wipeStart` 0.15–0.6 (0.48), `edge` 4–80 px (40) |

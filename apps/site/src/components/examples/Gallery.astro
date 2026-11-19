@@ -56,6 +56,7 @@ const filters: [Family | 'all', string][] = [
           data-delay={recipe.delay}
           data-idle={recipe.idle}
           data-handoff={recipe.handoff}
+          data-pointer={recipe.pointer}
           aria-labelledby={`${recipe.id}-title`}
         >
           <div class="stage">
@@ -69,6 +70,7 @@ const filters: [Family | 'all', string][] = [
               {recipe.mark && ` · ${recipe.mark} marks`}
               {recipe.idle && ` · ${recipe.idle}`}
               {recipe.handoff && ` · ${recipe.handoff}`}
+              {recipe.pointer && ' · pointer lift'}
             </p>
           </div>
           <div class="actions">
@@ -106,7 +108,7 @@ const filters: [Family | 'all', string][] = [
 
 <script>
   import { registerAll } from '@dotquilt-internal/core/register-all';
-  import { animate, load, wire } from './live';
+  import { animate, load, loaderSelector, wire } from './live';
 
   registerAll();
   const gallery = document.querySelector<HTMLElement>('[data-gallery]');
@@ -114,8 +116,11 @@ const filters: [Family | 'all', string][] = [
   if (gallery) {
     const cards = [...gallery.querySelectorAll<HTMLElement>('[data-recipe]')];
     for (const card of cards) {
-      const { idle, handoff } = card.dataset;
+      const { idle, handoff, pointer } = card.dataset;
       if (idle || handoff) animate(card, idle, handoff);
+      if (pointer)
+        for (const loader of card.querySelectorAll(loaderSelector))
+          loader.setAttribute('pointer-response', pointer);
       wire(card);
     }
     const run = (card: HTMLElement) => load(card, Number(card.dataset.delay) || 2400);

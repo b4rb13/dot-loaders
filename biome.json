@@ -9,6 +9,7 @@
       "apps/site/**",
       "!**/dist",
       "!**/.astro",
+      "!**/.impeccable/hook.cache.json",
       "*.json",
       "playwright*.config.ts",
       ".changeset/*.json",

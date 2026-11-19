@@ -15,7 +15,14 @@ declare global {
       ready(duration?: number, easing?: string): void;
       pending(cycle?: string): void;
       recipe(
-        name: 'ridge' | 'bars' | 'scatter' | 'morphWipe',
+        name:
+          | 'ridge'
+          | 'scan'
+          | 'terrain'
+          | 'bars'
+          | 'scatter'
+          | 'cycle'
+          | 'morphWipe',
         options?: object,
       ): void;
       custom(): void;
@@ -93,12 +100,19 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
     ).toBeUndefined();
   });
 }
-test('all three idle silhouettes and all three final geometries: fixed progress and natural playback', async ({
+test('all six idle silhouettes and all three final geometries: fixed progress and natural playback', async ({
   page,
   browser,
 }, testInfo) => {
   test.setTimeout(150000);
-  const names = ['ridge', 'bars', 'scatter'] as const;
+  const names = [
+    'ridge',
+    'scan',
+    'terrain',
+    'bars',
+    'scatter',
+    'cycle',
+  ] as const;
   // Natural-speed playback in its own context, so motion is not restricted.
   const context = await browser.newContext({
     baseURL: testInfo.project.use.baseURL ?? 'http://127.0.0.1:4194',

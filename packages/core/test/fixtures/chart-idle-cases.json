@@ -458,6 +458,942 @@
       "scale": 0.5
     },
     {
+      "name": "scan",
+      "options": {},
+      "time": 0,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 0,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 0,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 0,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 0,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 0,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 1700,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 1700,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 1700,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 1700,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 1700,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 1700,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3500,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3500,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3500,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3500,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3500,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3500,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3900,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3900,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3900,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3900,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3900,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {},
+      "time": 3900,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 0,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 0,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 0,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 0,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 0,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 0,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 1700,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 1700,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 1700,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 1700,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 1700,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 1700,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3500,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3500,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3500,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3500,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3500,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3500,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3900,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3900,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3900,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3900,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3900,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "scan",
+      "options": {
+        "amplitude": 0.4,
+        "bandWidth": 80,
+        "trail": 240
+      },
+      "time": 3900,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 0,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 0,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 0,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 0,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 0,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 0,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 1700,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 1700,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 1700,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 1700,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 1700,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 1700,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3500,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3500,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3500,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3500,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3500,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3500,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3900,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3900,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3900,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3900,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3900,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {},
+      "time": 3900,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 0,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 0,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 0,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 0,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 0,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 0,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 1700,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 1700,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 1700,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 1700,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 1700,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 1700,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3500,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3500,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3500,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3500,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3500,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3500,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3900,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3900,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3900,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3900,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3900,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "terrain",
+      "options": {
+        "amplitude": 0.4,
+        "relief": 1.4
+      },
+      "time": 3900,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
       "name": "bars",
       "options": {},
       "time": 0,
@@ -1363,6 +2299,462 @@
         "radius": 24,
         "spread": 0.35,
         "sway": 0.1
+      },
+      "time": 3900,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 0,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 0,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 0,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 0,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 0,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 0,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 1700,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 1700,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 1700,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 1700,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 1700,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 1700,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3500,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3500,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3500,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3500,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3500,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3500,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3900,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3900,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3900,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3900,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3900,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {},
+      "time": 3900,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 0,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 0,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 0,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 0,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 0,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 0,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 1700,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 1700,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 1700,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 1700,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 1700,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 1700,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 3500,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 3500,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 3500,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 3500,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 3500,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 3500,
+      "still": true,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 3900,
+      "still": false,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 3900,
+      "still": false,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 3900,
+      "still": false,
+      "pitch": 4,
+      "scale": 0.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 3900,
+      "still": true,
+      "pitch": 6,
+      "scale": 1
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
+      },
+      "time": 3900,
+      "still": true,
+      "pitch": 8,
+      "scale": 1.5
+    },
+    {
+      "name": "cycle",
+      "options": {
+        "holdMs": 800,
+        "blendMs": 200
       },
       "time": 3900,
       "still": true,

@@ -578,3 +578,44 @@ test('delay never hides a placeholder already on the page, only new ones', async
   });
   expect(result).toEqual([false, true]);
 });
+
+// With pointer-response="lift", a skeleton's marks light up around the
+// pointer. The redesign left it brightening only the drifting glow band
+// (nearly invisible) and only during the first seconds of idle motion.
+for (const kind of ['skeleton-block', 'skeleton-text'] as const)
+  test(`${kind}: pointer lift lights the marks around the pointer`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await open(page, `component=${kind}`);
+    const host = page.locator(`dotquilt-${kind}`).first();
+    await host.evaluate((element) =>
+      element.setAttribute('pointer-response', 'lift'),
+    );
+    const box = await host.boundingBox();
+    if (!box) throw new Error('no box');
+    const glow = () =>
+      host.evaluate((element) => {
+        const layer = element.shadowRoot?.querySelector<HTMLElement>('.lift');
+        if (!layer) return null;
+        const style = getComputedStyle(layer);
+        return {
+          opacity: Number(style.opacity),
+          x: style.getPropertyValue('--dotquilt-pointer-x'),
+        };
+      });
+    await page.mouse.move(box.x + 40, box.y + box.height / 2);
+    await expect
+      .poll(async () => (await glow())?.opacity ?? 0)
+      .toBeGreaterThan(0.5);
+    expect((await glow())?.x).toBe('40px');
+    await page.mouse.move(box.x + box.width + 50, box.y + box.height + 50);
+    await expect.poll(async () => (await glow())?.opacity).toBe(0);
+    // Without lift, the pointer changes nothing.
+    await host.evaluate((element) =>
+      element.removeAttribute('pointer-response'),
+    );
+    await page.mouse.move(box.x + 40, box.y + box.height / 2);
+    await page.waitForTimeout(400);
+    expect((await glow())?.opacity).toBe(0);
+  });

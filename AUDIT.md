@@ -77,6 +77,10 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
   - **Not done:**
     - On charts, dashes stay horizontal. The spec says they follow the line, which needs an angle on painter commands, a change to the authoring API.
     - Squares and dashes have a fixed size, so `--dotquilt-dot-size` and `--dotquilt-dot-gap` change dots only.
+- **I. Feature parity restored — 2026-11-19, at the owner's request ("make sure we have all the functionality we had before").**
+  - **Animations:** the six variants slice H dropped are back: chart idles `scan`, `terrain` and `cycle` (moves between line, bars and scatter), and text `scrambleCharacters`, `scrambleWords` and `printText`. They follow the spec's rule that every mark is the same size, with shape coming from opacity. The kept recipes draw exactly as before (all 144 snapshot cases unchanged).
+  - **Pointer lift:** `pointer-response="lift"` on skeletons again lights the marks around the pointer, now as a glow that follows it, for as long as the placeholder shows. After the redesign it only brightened the drifting glow band, and only during the first seconds.
+  - **Playground and docs:** every option the old playground had is back: pointer lift, every animation with its own sliders (written into the code and the link), the handoff length, lines/rows/dots, text samples (including international text), table cell styles. The docs list `pointerResponse` and every animation's options; the gallery has examples for each restored feature.
 - **H. Prune old variants — done on `design/4b-prune`.** Each built-in recipe was kept, changed or dropped:
   - **Kept as defaults** (already reworked in A–F): `pulse`, `dissolve`, `ridge`, `morphWipe`, `tableShimmer`, `rows`, `scramble`, `lock`.
   - **Kept as options:**

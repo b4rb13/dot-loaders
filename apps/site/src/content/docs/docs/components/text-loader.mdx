@@ -43,6 +43,7 @@ TextLoader is its own loading region: set its state, and put the value in as its
 | `mask` | `mask` | string | the text | The shape the placeholder shows. |
 | `mark` | `mark` | `dot` \| `square` \| `dash` | `dot` | Squares make a clean pixel font. Dashes read as hatching here. |
 | `speed` | `speed` | number | `1` | How fast the characters change. |
+| `pointer-response` | `pointerResponse` | `none` \| `lift` | `none` | `lift` lights the marks around the pointer while the placeholder shows, on devices with a fine pointer. |
 | `motion` | `motion` | `system` \| `paused` | `system` | `system` follows the visitor's reduced-motion setting; `paused` stills the characters. |
 | | `timing` | `{ duration?, easing? }` | | The handoff's length and curve. `{ duration: 0 }` swaps at once. |
 
@@ -52,8 +53,15 @@ Import alternatives from `@dotquilt-internal/core/animations/text` and pass them
 
 | Phase | Default | Also available |
 | --- | --- | --- |
-| Idle | `scramble`: characters cross-fade about every 280 ms | `labelPulse`: a calm highlight moves across the placeholder |
-| Handoff | `lock`: characters lock left to right, each easing in over 300 ms | `fade`: the value fades in |
+| Idle | `scramble`: characters cross-fade about every 280 ms | `scrambleCharacters`: each character changes on its own clock; `scrambleWords`: one word changes at a time, in reading order; `labelPulse`: a calm highlight moves across the placeholder |
+| Handoff | `lock`: characters lock left to right, each easing in over 300 ms | `printText`: the value prints in from the left as the characters lock; `fade`: the value fades in |
+
+| Animation | Options (default) |
+| --- | --- |
+| `scramble`, `scrambleCharacters`, `scrambleWords` | `changesPerSecond` 0.5–4 |
+| `labelPulse` | `travelPxPerSecond` 20–140 (70) |
+| `lock`, `printText` | `staggerMs` 0–60 (40), `reelMs` 0–100 (55), `settleMs` 40–400 (300), `pop` 0–0.3 (0) |
+| `fade` | `duration` ms (150) |
 
 ## Languages and long text
 
