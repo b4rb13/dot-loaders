@@ -1,27 +1,44 @@
 ---
 /**
- * A live preview: the loader inside a LoadingRegion, with Start loading and
- * Reveal (design/SPEC.md, "Docs"). Put one <dotquilt-region> in the slot.
+ * A live preview with Start loading and Reveal (design/SPEC.md, "Docs").
+ * Put one <dotquilt-region> or <dotquilt-text-loader> in the slot; the
+ * preview drives it from a simulated request, as an app would.
  */
 interface Props {
   /** Accessible name of the preview frame. */
   label?: string;
   /** How long the simulated request takes, in ms. */
   delay?: number;
+  /**
+   * Values each load brings, in turn. They fill the TextLoader, or the
+   * element marked `data-value` inside the region.
+   */
+  values?: readonly string[];
+  /** `refresh`: after the first load, reloads keep the content visible. */
+  mode?: 'replace' | 'refresh';
 }
-const { label = 'Live preview', delay = 2400 } = Astro.props;
+const {
+  label = 'Live preview',
+  delay = 2400,
+  values,
+  mode = 'replace',
+} = Astro.props;
 ---
 
 <figure
   class="dq-preview not-content"
   data-preview
   data-delay={delay}
+  data-mode={mode}
+  data-values={values ? JSON.stringify(values) : undefined}
   aria-label={label}
 >
   <div class="dq-preview-bar">
     <span class="dq-preview-title">Preview</span>
     <div class="dq-preview-actions">
-      <button type="button" class="dq-button" data-start>Start loading</button>
+      <button type="button" class="dq-button" data-start>
+        {mode === 'refresh' ? 'Refresh' : 'Start loading'}
+      </button>
       <button type="button" class="dq-button primary" data-reveal>Reveal</button>
       <span class="dq-preview-status" role="status" data-status>Loading</span>
     </div>
@@ -53,18 +70,27 @@ const { label = 'Live preview', delay = 2400 } = Astro.props;
   for (const preview of document.querySelectorAll<HTMLElement>(
     '[data-preview]',
   )) {
-    const region = preview.querySelector('dotquilt-region');
+    const owner = preview.querySelector<
+      HTMLElementTagNameMap['dotquilt-region' | 'dotquilt-text-loader']
+    >('dotquilt-region, dotquilt-text-loader');
     const status = preview.querySelector<HTMLElement>('[data-status]');
     const start = preview.querySelector<HTMLButtonElement>('[data-start]');
     const reveal = preview.querySelector<HTMLButtonElement>('[data-reveal]');
-    if (!region || !status || !start || !reveal) continue;
+    if (!owner || !status || !start || !reveal) continue;
     const delay = Number(preview.dataset.delay) || 2400;
+    const refresh = preview.dataset.mode === 'refresh';
+    const values: string[] = JSON.parse(preview.dataset.values ?? '[]');
+    const target =
+      owner.localName === 'dotquilt-text-loader'
+        ? owner
+        : preview.querySelector<HTMLElement>('[data-value]');
     let current: ReturnType<typeof request> | undefined;
     let loads = 0;
 
     const show = (state: 'loading' | 'ready') => {
       preview.dataset.state = state;
-      status.textContent = state === 'loading' ? 'Loading' : 'Ready';
+      status.textContent =
+        state === 'ready' ? 'Ready' : refresh && loads > 1 ? 'Updating' : 'Loading';
       start.disabled = state === 'loading';
       reveal.disabled = state !== 'loading';
     };
@@ -73,13 +99,19 @@ const { label = 'Live preview', delay = 2400 } = Astro.props;
       const cycle = `load-${++loads}`;
       const pending = request(delay);
       current = pending;
-      region?.update({ state: 'pending', cycle });
+      // In refresh mode, later loads keep the content visible and usable.
+      owner?.update({
+        state: refresh && loads > 1 ? 'refreshing' : 'pending',
+        cycle,
+      });
       show('loading');
       await pending.done;
       // A newer load took over; only the latest request may reveal.
-      if (current !== pending || region?.cycle !== cycle) return;
+      if (!owner || current !== pending || owner.cycle !== cycle) return;
       current = undefined;
-      region.update({ state: 'ready' });
+      const value = values[(loads - 1) % values.length];
+      if (target && value !== undefined) target.textContent = value;
+      owner.update({ state: 'ready' });
       show('ready');
     }
 
@@ -88,11 +120,14 @@ const { label = 'Live preview', delay = 2400 } = Astro.props;
 
     // The first load starts when the preview comes into view, so nobody
     // misses it further down the page.
-    const observer = new IntersectionObserver((entries) => {
-      if (!entries.some((entry) => entry.isIntersecting)) return;
-      observer.disconnect();
-      void load();
-    }, { threshold: 0.4 });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        void load();
+      },
+      { threshold: 0.4 },
+    );
     observer.observe(preview);
     show('loading');
     reveal.disabled = true;

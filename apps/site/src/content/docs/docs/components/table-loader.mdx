@@ -1,0 +1,57 @@
+---
+title: TableLoader
+description: Rows of marks shaped like your columns, settling in row by row when the data arrives.
+---
+
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+import Preview from '../../../../components/Preview.astro';
+import TableDemo from '../../../../components/demos/TableDemo.astro';
+// Real files, type-checked with the repository, so the code here always works.
+import tableTsx from '../../../../../../../examples/site/invoice-table.tsx?raw';
+import tableHtml from '../../../../../../../examples/site/invoice-table.html?raw';
+import tableTs from '../../../../../../../examples/site/invoice-table.ts?raw';
+import dataTs from '../../../../../../../examples/site/data.ts?raw';
+
+TableLoader holds the place of a table. Each cell shows a short bar of marks shaped like what the column holds, with a glow drifting across. When the data arrives, your rows settle in one after another.
+
+<Preview label="A table loading">
+  <TableDemo />
+</Preview>
+
+## Usage
+
+Describe the columns, set how many rows to show, and hand the region your real rows as **reveal targets** so they settle in turn.
+
+<Tabs syncKey="framework">
+  <TabItem label="React">
+    <Code code={tableTsx} lang="tsx" title="InvoiceTable.tsx" />
+    <Code code={dataTs} lang="ts" title="data.ts" />
+  </TabItem>
+  <TabItem label="Native">
+    <Code code={tableHtml} lang="html" title="index.html" />
+    <Code code={tableTs} lang="ts" title="invoices.ts" />
+    <Code code={dataTs} lang="ts" title="data.ts" />
+  </TabItem>
+</Tabs>
+
+Without reveal targets, the whole table fades and rises in at once.
+
+## Options
+
+| Attribute | React | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| `rows` | `rows` | number | `5` | How many rows to show, up to 100. |
+| `row-height` | `rowHeight` | number | `32` | Row height in pixels. |
+| | `columns` | `{ kind, width? }[]` | three text columns | What each column holds (`text`, `number`, `badge` or `date`) and its share of the width. Up to 20. |
+| `mark` | `mark` | `dot` \| `square` \| `dash` | `dot` | Dashes suit table rows well. |
+| `speed` | `speed` | number | `1` | How fast the glow moves. |
+| `motion` | `motion` | `auto` \| `paused` | `auto` | `paused` stills the field. |
+
+## Animations
+
+Import alternatives from `@dotquilt-internal/core/animations/table` and pass them as `animations`.
+
+| Phase | Default | Also available |
+| --- | --- | --- |
+| Idle | `tableShimmer`: still bars under a drifting glow | `typeOn`: bars grow as if being typed |
+| Handoff | `rows`: rows settle in 80 ms apart, cells 28 ms apart | |

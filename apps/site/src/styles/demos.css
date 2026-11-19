@@ -1,0 +1,42 @@
+/* Shared looks for the live previews' content. */
+.dq-preview-stage .kpi {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+}
+.dq-preview-stage .bubble {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--dq-radius-md);
+  background: var(--dq-surface);
+  border: 1px solid var(--dq-line);
+  max-width: 28rem;
+}
+.dq-preview-stage .feed {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dq-preview-stage .feed li {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--dq-radius-sm);
+  background: var(--dq-surface);
+  border: 1px solid var(--dq-line);
+}
+.dq-preview-stage .updating {
+  position: absolute;
+  inset-block-start: 0.5rem;
+  inset-inline-end: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: var(--dq-accent-soft);
+  color: var(--dq-accent);
+  font-size: 0.75rem;
+  font-weight: 500;
+}

@@ -1,0 +1,81 @@
+---
+// The TableLoader preview: the same rows and columns as the usage example.
+import { invoices } from '../../../../../examples/site/data';
+---
+
+<dotquilt-region class="table-demo" state="pending" aria-label="Invoices">
+  <dotquilt-table-loader slot="placeholder" rows="4" row-height="40"
+  ></dotquilt-table-loader>
+  <table>
+    <thead>
+      <tr><th>Customer</th><th>Amount</th><th>Status</th><th>Due</th></tr>
+    </thead>
+    <tbody>
+      {
+        invoices.map((invoice) => (
+          <tr>
+            <td>{invoice.customer}</td>
+            <td>{invoice.amount}</td>
+            <td>
+              <span class:list={['badge', invoice.status.toLowerCase()]}>
+                {invoice.status}
+              </span>
+            </td>
+            <td>{invoice.due}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</dotquilt-region>
+
+<script>
+  import type { LoadingRegion } from '@dotquilt-internal/core/region';
+  import type { TableLoader } from '@dotquilt-internal/core/table';
+  import { invoiceColumns } from '../../../../../examples/site/data';
+
+  for (const region of document.querySelectorAll<LoadingRegion>(
+    'dotquilt-region.table-demo',
+  )) {
+    const table = region.querySelector<TableLoader>('dotquilt-table-loader');
+    if (table) table.columns = invoiceColumns;
+    // Each real row settles in after the one above it.
+    region.revealTargets = [
+      ...(region.querySelector('tbody')?.rows ?? []),
+    ].map((element, i) => ({ id: `row-${i}`, element }));
+  }
+</script>
+
+<style>
+  .table-demo table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .table-demo :is(th, td) {
+    height: 40px;
+    padding: 0 0.75rem;
+    text-align: start;
+    border-bottom: 1px solid var(--dq-line);
+  }
+  .table-demo th {
+    height: 34px;
+    font-weight: 600;
+    color: var(--dq-muted);
+    border-bottom-color: var(--dq-line-2);
+  }
+  .table-demo .badge {
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    background: var(--dq-subtle);
+  }
+  .table-demo .paid {
+    background: var(--dq-positive-soft);
+    color: var(--dq-positive);
+  }
+  .table-demo .overdue {
+    color: var(--dq-negative);
+  }
+</style>

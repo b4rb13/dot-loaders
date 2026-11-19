@@ -1,0 +1,68 @@
+---
+title: ChartLoader
+description: A field of marks with a soft ridge that glides onto your real line when the data arrives.
+---
+
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+import Preview from '../../../../components/Preview.astro';
+import ChartDemo from '../../../../components/demos/ChartDemo.astro';
+// Real files, type-checked with the repository, so the code here always works.
+import chartTsx from '../../../../../../../examples/site/revenue-chart.tsx?raw';
+import chartHtml from '../../../../../../../examples/site/revenue-chart.html?raw';
+import chartTs from '../../../../../../../examples/site/revenue-chart.ts?raw';
+import dataTs from '../../../../../../../examples/site/data.ts?raw';
+
+ChartLoader holds the place of a chart. A faint field of marks carries a slow ridge and a drifting glow. When the data arrives, the marks glide onto your real line, turning teal, and then your chart draws in.
+
+<Preview label="A chart loading">
+  <ChartDemo />
+</Preview>
+
+## Usage
+
+Put a ChartLoader in a region's placeholder slot, sized like the chart it stands in for. Give it a **target provider**: a function that says where your real line will be, in the loader's own size. The marks glide onto it during the handoff.
+
+<Tabs syncKey="framework">
+  <TabItem label="React">
+    <Code code={chartTsx} lang="tsx" title="RevenueChart.tsx" />
+    <Code code={dataTs} lang="ts" title="data.ts" />
+  </TabItem>
+  <TabItem label="Native">
+    <Code code={chartHtml} lang="html" title="index.html" />
+    <Code code={chartTs} lang="ts" title="revenue.ts" />
+    <Code code={dataTs} lang="ts" title="data.ts" />
+  </TabItem>
+</Tabs>
+
+Without a target provider, or if it returns `null`, the chart fades in over the marks instead.
+
+## Target geometry
+
+The provider receives the loader's `width` and `height` and returns one of these, in the same pixels:
+
+| `kind` | Fields | Use |
+| --- | --- | --- |
+| `line` | `points`, `baseline` | line and area charts |
+| `bar` | `bars` (rects), `baseline` | bar charts |
+| `scatter` | `points` | scatter plots |
+
+## Options
+
+| Attribute | React | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| `variant` | `variant` | `line` \| `bar` \| `scatter` | `line` | The kind of chart it stands in for. |
+| | `targetProvider` | function | | Where the real chart is, for the handoff. |
+| `mark` | `mark` | `dot` \| `square` \| `dash` | `dot` | The shape of each mark. |
+| `speed` | `speed` | number | `1` | How fast the ridge and glow move. |
+| `motion` | `motion` | `auto` \| `paused` | `auto` | `paused` stills the field. |
+
+The chart sizes like a block: it fills its width and is 12rem tall unless you set a height.
+
+## Animations
+
+Import alternatives from `@dotquilt-internal/core/animations/chart` and pass them as `animations`.
+
+| Phase | Default | Also available |
+| --- | --- | --- |
+| Idle | `ridge`: a soft line drifting through the field | `bars`, `scatter`: still shapes under the glow, for those chart types |
+| Handoff | `morphWipe`: marks glide onto the line, then the chart draws in | |

@@ -1,11 +1,34 @@
 import { expect, type Page, test } from '@playwright/test';
 
+const components = [
+  'skeleton',
+  'text-loader',
+  'chart-loader',
+  'table-loader',
+  'typing-dots',
+  'loading-region',
+];
 const pages = [
   '/',
   '/docs/',
   '/docs/installation/',
-  '/docs/components/skeleton/',
+  ...components.map((name) => `/docs/components/${name}/`),
 ];
+
+/** Records how each handoff on the page ends. */
+async function recordHandoffs(page: Page) {
+  await page.evaluate(() => {
+    const reasons: string[] = [];
+    Reflect.set(window, 'handoffs', reasons);
+    document.addEventListener(
+      'dotquilt-handoff-end',
+      (event) =>
+        reasons.push((event as CustomEvent<{ reason: string }>).detail.reason),
+      true,
+    );
+  });
+  return () => page.evaluate(() => Reflect.get(window, 'handoffs'));
+}
 
 function watchErrors(page: Page) {
   const errors: string[] = [];
@@ -42,17 +65,7 @@ test('every preview load hands over with the full animation', async ({
 }) => {
   const errors = watchErrors(page);
   await page.goto('/docs/components/skeleton/');
-  await page.evaluate(() => {
-    const reasons: string[] = [];
-    Reflect.set(window, 'handoffs', reasons);
-    document.addEventListener(
-      'dotquilt-handoff-end',
-      (event) =>
-        reasons.push((event as CustomEvent<{ reason: string }>).detail.reason),
-      true,
-    );
-  });
-  const handoffs = () => page.evaluate(() => Reflect.get(window, 'handoffs'));
+  const handoffs = await recordHandoffs(page);
   const preview = page.locator('[data-preview]').first();
   const status = preview.getByRole('status');
   const start = preview.getByRole('button', { name: 'Start loading' });
@@ -82,6 +95,56 @@ test('every preview load hands over with the full animation', async ({
   await expect(content).toBeVisible();
   await expect.poll(handoffs).toEqual(['complete', 'complete', 'complete']);
   expect(errors).toEqual([]);
+});
+
+for (const name of components.slice(1))
+  test(`the ${name} preview loads by itself and hands over with the full animation`, async ({
+    page,
+  }) => {
+    const errors = watchErrors(page);
+    await page.goto(`/docs/components/${name}/`);
+    const handoffs = await recordHandoffs(page);
+    const status = page.locator('[data-preview]').first().getByRole('status');
+    await expect(status).toHaveText('Ready', { timeout: 5000 });
+    await expect.poll(handoffs).toEqual(['complete']);
+    expect(errors).toEqual([]);
+  });
+
+test('a TextLoader preview locks into the next value on each load', async ({
+  page,
+}) => {
+  await page.goto('/docs/components/text-loader/');
+  const preview = page.locator('[data-preview]').first();
+  // The loader's own text is the value; its shadow holds the mask.
+  const value = () =>
+    preview
+      .locator('dotquilt-text-loader')
+      .evaluate((loader) => loader.textContent);
+  await expect(preview.getByRole('status')).toHaveText('Ready', {
+    timeout: 5000,
+  });
+  expect(await value()).toBe('$48,120');
+  await preview.getByRole('button', { name: 'Start loading' }).click();
+  await preview.getByRole('button', { name: 'Reveal' }).click();
+  await expect(preview.getByRole('status')).toHaveText('Ready');
+  expect(await value()).toBe('$51,904');
+});
+
+test('the LoadingRegion preview keeps the feed usable while it refreshes', async ({
+  page,
+}) => {
+  await page.goto('/docs/components/loading-region/');
+  const preview = page.locator('[data-preview]').first();
+  const region = preview.locator('dotquilt-region');
+  const status = preview.getByRole('status');
+  await expect(status).toHaveText('Ready', { timeout: 5000 });
+  await preview.getByRole('button', { name: 'Refresh' }).click();
+  await expect(status).toHaveText('Updating');
+  await expect(region).toHaveAttribute('state', 'refreshing');
+  await expect(preview.getByText('Globex invoice is overdue')).toBeVisible();
+  await expect(preview.getByText('Updating…')).toBeVisible();
+  await expect(status).toHaveText('Ready', { timeout: 5000 });
+  await expect(preview.getByText('Updating…')).toBeHidden();
 });
 
 test('the theme follows the system and the switch, with the spec colours', async ({

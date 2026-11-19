@@ -1,0 +1,51 @@
+---
+// The ChartLoader preview: the same data and geometry as the usage example.
+import { linePath, revenue } from '../../../../../examples/site/data';
+
+const path = linePath(revenue, 320, 160);
+---
+
+<dotquilt-region class="chart-demo" state="pending" aria-label="Revenue in 2026">
+  <dotquilt-chart-loader slot="placeholder" variant="line"
+  ></dotquilt-chart-loader>
+  <svg
+    viewBox="0 0 320 160"
+    preserveAspectRatio="none"
+    role="img"
+    aria-label="Revenue in 2026, by month"
+  >
+    <path
+      d={path}
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      vector-effect="non-scaling-stroke"></path>
+  </svg>
+</dotquilt-region>
+
+<script>
+  import type { ChartLoader } from '@dotquilt-internal/core/chart';
+  import { linePoints, revenue } from '../../../../../examples/site/data';
+
+  for (const chart of document.querySelectorAll<ChartLoader>(
+    '.chart-demo dotquilt-chart-loader',
+  ))
+    // Where the real line is, in the loader's own size.
+    chart.targetProvider = ({ width, height }) => ({
+      kind: 'line',
+      points: linePoints(revenue, width, height),
+      baseline: height,
+    });
+</script>
+
+<style>
+  .chart-demo dotquilt-chart-loader,
+  .chart-demo svg {
+    display: block;
+    width: 100%;
+    height: 160px;
+  }
+  .chart-demo svg {
+    color: var(--dq-accent);
+  }
+</style>
