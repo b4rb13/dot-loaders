@@ -254,11 +254,6 @@ const nav = ['Overview', 'Invoices', 'Customers', 'Reports', 'Settings'];
         { kind: 'number' },
         { kind: 'badge' },
       ];
-    const rows = board.querySelector<LoadingRegion>('[data-rows]');
-    if (rows)
-      rows.revealTargets = [...(rows.querySelector('tbody')?.rows ?? [])].map(
-        (element, i) => ({ id: `row-${i}`, element }),
-      );
 
     let run = 0;
     let timers: number[] = [];

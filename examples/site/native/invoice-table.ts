@@ -39,14 +39,8 @@ export async function showInvoices(): Promise<void> {
         return row;
       }),
     );
-    // Hand each real row to the region, so rows settle in one after another.
-    region.update({
-      revealTargets: [...body.rows].map((element, i) => ({
-        id: `row-${i}`,
-        element,
-      })),
-      state: 'ready',
-    });
+    // The handoff reads the real table: each cell's marks become its text.
+    region.update({ state: 'ready' });
   } catch {
     const message = document.createElement('td');
     message.colSpan = 4;
