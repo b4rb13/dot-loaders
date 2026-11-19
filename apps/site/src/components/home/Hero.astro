@@ -1,0 +1,105 @@
+---
+/**
+ * The homepage hero (Starlight's Hero, overridden): the headline, actions and
+ * install command above the live dashboard (design/SPEC.md, "Homepage").
+ */
+import Dashboard from './Dashboard.astro';
+
+const { title, tagline } = Astro.locals.starlightRoute.entry.data.hero ?? {};
+const install = 'npm install @dotquilt-internal/react';
+---
+
+<section class="home-hero not-content">
+  <h1 id="_top" data-page-title>{title}</h1>
+  {tagline && <p class="lead">{tagline}</p>}
+  <div class="actions">
+    <a class="home-button primary" href="/docs/">Get started</a>
+    <a class="home-button" href="/docs/components/skeleton/">See the components</a>
+  </div>
+  <div class="install">
+    <code>{install}</code>
+    <button type="button" class="copy" data-copy={install} aria-label="Copy the install command">
+      Copy
+    </button>
+  </div>
+</section>
+<Dashboard />
+
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    '[data-copy]',
+  ))
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy ?? '');
+        button.textContent = 'Copied';
+      } catch {
+        button.textContent = 'Press ⌘C';
+      }
+      setTimeout(() => {
+        button.textContent = 'Copy';
+      }, 1600);
+    });
+</script>
+
+<style>
+  .home-hero {
+    padding-block: clamp(2.5rem, 7vw, 5rem) 2.5rem;
+    max-width: 46rem;
+  }
+  .home-hero h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 4.6vw, 3.4rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--dq-ink);
+  }
+  .lead {
+    margin: 1.25rem 0 0;
+    font-size: 1.09375rem;
+    line-height: 1.65;
+    color: var(--dq-muted);
+    max-width: 40rem;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    margin-top: 2rem;
+  }
+  .install {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 1.25rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.875rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+    max-width: 100%;
+  }
+  .install code {
+    font: 0.8125rem/1.4 var(--dq-font-mono);
+    color: var(--dq-muted);
+    background: none;
+    padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .copy {
+    height: 28px;
+    padding: 0 0.625rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dq-muted);
+    font: 500 0.75rem/1 var(--dq-font);
+    cursor: pointer;
+  }
+  .copy:hover {
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+  }
+</style>

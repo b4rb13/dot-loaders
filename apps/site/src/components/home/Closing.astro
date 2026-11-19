@@ -1,0 +1,71 @@
+---
+/** The last word, over a calm field of marks. */
+---
+
+<section class="home-section not-content closing" aria-labelledby="closing-title">
+  <dotquilt-skeleton-block class="field" aria-hidden="true"></dotquilt-skeleton-block>
+  <div class="closing-copy">
+    <h2 id="closing-title">Give every wait its own shape.</h2>
+    <p>Start with a skeleton. Add the rest when your screens need them.</p>
+    <div class="actions">
+      <a class="home-button primary" href="/docs/">Get started</a>
+      <a class="home-button" href="/docs/components/skeleton/">Browse the components</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { registerSkeletonBlock } from '@dotquilt-internal/core/skeleton';
+
+  registerSkeletonBlock();
+</script>
+
+<style>
+  .closing {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 22rem;
+    padding: 3rem 1.5rem;
+    border-radius: var(--dq-radius-lg);
+    overflow: hidden;
+    text-align: center;
+  }
+  .field {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    /* Fade the field out towards the edges and behind the words. */
+    mask: radial-gradient(
+      ellipse 75% 85% at 50% 50%,
+      #0000 28%,
+      #000 58%,
+      #0000 96%
+    );
+  }
+  .closing-copy {
+    position: relative;
+    max-width: 34rem;
+  }
+  h2 {
+    margin: 0;
+    font-size: clamp(1.9rem, 4vw, 2.75rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--dq-ink);
+  }
+  p {
+    margin: 1rem 0 0;
+    color: var(--dq-muted);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.625rem;
+    margin-top: 1.75rem;
+  }
+</style>

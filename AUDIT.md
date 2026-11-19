@@ -421,6 +421,7 @@ This is a rebuild, not a polish pass. The current site, docs and default visuals
 - One layout system, one theme system, one URL-settings schema and one playground/preview component reused everywhere.
 - Gallery variants are generated from data rather than as copy-pasted files.
 - Stack: Astro + Starlight (decision 8).
+- **Homepage — done 2026-11-19.** A live dashboard whose cards hand over as their data arrives (with Replay, Pause and a mark switch), the component family as live tiles, the handoff with a timeline at full speed or slowed down, a make-it-yours playground that writes the CSS, the features, a three-step start and a closing field of marks. Gallery and playground pages are still to come.
 - Skip the exotic failure handling (CSS-fetch gates, failed-JS retry) unless it serves real users.
 - ~~Delete `apps/website` and its tests when the new site reaches parity.~~ Retired early on 2026-11-19 (decision 9).
 

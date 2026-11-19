@@ -19,7 +19,15 @@ export default defineConfig({
       title: 'Dotquilt',
       description:
         'Dot-based loading placeholders that hand off gently to your real content.',
-      customCss: ['./src/styles/theme.css', './src/styles/demos.css'],
+      customCss: [
+        './src/styles/theme.css',
+        './src/styles/demos.css',
+        './src/styles/home.css',
+      ],
+      components: {
+        // The homepage's hero: headline, actions and the live dashboard.
+        Hero: './src/components/home/Hero.astro',
+      },
       head: [
         {
           tag: 'link',

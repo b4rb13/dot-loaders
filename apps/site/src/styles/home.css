@@ -1,0 +1,131 @@
+/* Shared pieces of the homepage. Starlight marks a page with a hero with
+   data-has-hero on <html>; only the homepage has one. */
+:root[data-has-hero] .sl-container {
+  max-width: 1200px;
+}
+:root[data-has-hero] .content-panel {
+  border-top: 0;
+}
+
+.home-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 40px;
+  padding: 0 1.125rem;
+  border: 1px solid var(--dq-line-2);
+  border-radius: var(--dq-radius-sm);
+  background: var(--dq-surface);
+  color: var(--dq-ink);
+  font: 500 0.875rem / 1 var(--dq-font);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--dq-duration-ui) var(--dq-ease-settle),
+    border-color var(--dq-duration-ui) var(--dq-ease-settle);
+}
+.home-button:hover {
+  background: var(--dq-subtle);
+  color: var(--dq-ink);
+}
+.home-button.primary {
+  border-color: transparent;
+  background: var(--dq-accent);
+  color: var(--dq-accent-ink);
+}
+.home-button.primary:hover {
+  background: color-mix(in srgb, var(--dq-accent) 88%, var(--dq-ink));
+  color: var(--dq-accent-ink);
+}
+.home-button.small {
+  height: 34px;
+  padding: 0 0.875rem;
+  font-size: 0.8125rem;
+}
+.home-button:focus-visible,
+.segmented button:focus-visible {
+  outline: 2px solid var(--dq-accent);
+  outline-offset: 2px;
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--dq-line);
+  border-radius: var(--dq-radius-sm);
+  background: var(--dq-surface);
+}
+.segmented button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  height: 28px;
+  padding: 0 0.625rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dq-muted);
+  font: 500 0.8125rem / 1 var(--dq-font);
+  cursor: pointer;
+}
+.segmented button[aria-checked="true"] {
+  background: var(--dq-subtle);
+  color: var(--dq-ink);
+  box-shadow: inset 0 0 0 1px var(--dq-line);
+}
+.mark-glyph {
+  display: inline-block;
+  background: currentColor;
+}
+.mark-glyph.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+.mark-glyph.square {
+  width: 5px;
+  height: 5px;
+  border-radius: 1.4px;
+}
+.mark-glyph.dash {
+  width: 11px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+/* Section rhythm. */
+.home-section {
+  margin-block: clamp(4rem, 10vw, 7rem);
+}
+.home-section > header {
+  max-width: 40rem;
+  margin-bottom: 2.5rem;
+}
+.home-eyebrow {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--dq-faint);
+}
+.home-section h2 {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.2vw, 2.375rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--dq-ink);
+}
+.home-section header p:not(.home-eyebrow) {
+  margin: 1rem 0 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--dq-muted);
+}
+.home-card {
+  border: 1px solid var(--dq-line);
+  border-radius: var(--dq-radius-md);
+  background: var(--dq-surface);
+  box-shadow: var(--dq-shadow);
+}

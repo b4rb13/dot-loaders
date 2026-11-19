@@ -1,0 +1,414 @@
+---
+/**
+ * Make it yours: the loaders respond live to a mark, a colour, a size and a
+ * speed, and the CSS to get the same look updates beside them.
+ */
+const palettes = [
+  { name: 'Slate', mark: '', glow: '', swatch: '#6e7889' },
+  {
+    name: 'Sage',
+    mark: 'light-dark(#5f7a6c, #9db8aa)',
+    glow: 'light-dark(#3f8a6e, #86c9ad)',
+    swatch: '#5f7a6c',
+  },
+  {
+    name: 'Ink',
+    mark: 'light-dark(#56607e, #a6afcc)',
+    glow: 'light-dark(#4b67b8, #9db3ec)',
+    swatch: '#56607e',
+  },
+  {
+    name: 'Clay',
+    mark: 'light-dark(#87705f, #c6b1a1)',
+    glow: 'light-dark(#b0714b, #e0a582)',
+    swatch: '#87705f',
+  },
+  {
+    name: 'Plum',
+    mark: 'light-dark(#776479, #bba7bd)',
+    glow: 'light-dark(#8e5a95, #c99bd0)',
+    swatch: '#776479',
+  },
+];
+---
+
+<section class="home-section not-content" aria-labelledby="yours-title">
+  <header>
+    <p class="home-eyebrow">Make it yours</p>
+    <h2 id="yours-title">Quiet by default. Yours in a few lines.</h2>
+    <p>
+      The marks start in a slate that sits beside any text, with a soft glow
+      drifting through. Change the shape, the colour, the size or the pace,
+      and take the CSS with you.
+    </p>
+  </header>
+
+  <div class="yours" data-yours>
+    <div class="controls home-card">
+      <fieldset>
+        <legend>Mark</legend>
+        <div class="segmented" role="radiogroup" aria-label="Mark">
+          {
+            ['dot', 'dash', 'square'].map((mark) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={mark === 'dot' ? 'true' : 'false'}
+                data-set-mark={mark}
+              >
+                <span class:list={['mark-glyph', mark]} aria-hidden="true" />
+                {mark[0]?.toUpperCase()}{mark.slice(1)}
+              </button>
+            ))
+          }
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Colour</legend>
+        <div class="swatches" role="radiogroup" aria-label="Colour">
+          {
+            palettes.map((palette, i) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={i === 0 ? 'true' : 'false'}
+                aria-label={palette.name}
+                title={palette.name}
+                data-mark-color={palette.mark}
+                data-glow-color={palette.glow}
+                style={`--swatch:${palette.swatch}`}
+              />
+            ))
+          }
+        </div>
+      </fieldset>
+      <label class="range">
+        <span>Dot size <output data-size-out>4.4 px</output></span>
+        <small class="hint" data-size-hint hidden>Squares and dashes have a fixed size.</small>
+        <input type="range" min="3.4" max="6" step="0.2" value="4.4" data-size />
+      </label>
+      <label class="range">
+        <span>Pace <output data-speed-out>1×</output></span>
+        <input type="range" min="0.5" max="2" step="0.25" value="1" data-speed />
+      </label>
+      <button type="button" class="home-button small" data-again>Play again</button>
+    </div>
+
+    <div class="preview home-card" data-preview-loaders>
+      <dotquilt-region state="pending" aria-label="Example profile" data-owner>
+        <div slot="placeholder" class="grid">
+          <div class="profile">
+            <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+            <div class="lines">
+              <dotquilt-skeleton-line></dotquilt-skeleton-line>
+              <dotquilt-skeleton-line style="width: 55%"></dotquilt-skeleton-line>
+            </div>
+          </div>
+          <dotquilt-skeleton-text lines="3"></dotquilt-skeleton-text>
+          <dotquilt-chart-loader></dotquilt-chart-loader>
+          <div class="bubble"><dotquilt-typing-dots></dotquilt-typing-dots></div>
+        </div>
+        <span aria-hidden="true"></span>
+      </dotquilt-region>
+    </div>
+
+    <div class="css home-card">
+      <div class="css-head">
+        <span>Your CSS</span>
+        <button type="button" class="copy" data-copy-css>Copy</button>
+      </div>
+      <pre><code data-css></code></pre>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { refreshStyles } from '@dotquilt-internal/core';
+  import type { LoadingRegion } from '@dotquilt-internal/core/region';
+  import { registerAll } from '@dotquilt-internal/core/register-all';
+
+  registerAll();
+  const root = document.querySelector<HTMLElement>('[data-yours]');
+  const preview = root?.querySelector<HTMLElement>('[data-preview-loaders]');
+  const region = preview?.querySelector<LoadingRegion>('[data-owner]');
+  const output = root?.querySelector<HTMLElement>('[data-css]');
+  if (root && preview && region && output) {
+    const state = { mark: 'dot', color: '', glow: '', size: 4.4, speed: 1 };
+    const loaders = () =>
+      preview.querySelectorAll(
+        'dotquilt-skeleton-circle, dotquilt-skeleton-line, dotquilt-skeleton-text, dotquilt-chart-loader, dotquilt-typing-dots',
+      );
+    let count = 0;
+    const size = root.querySelector<HTMLInputElement>('[data-size]');
+
+    /** A fresh loading period, so the idle plays again with the new look. */
+    function again() {
+      region?.update({ state: 'ready', timing: { duration: 0 } });
+      requestAnimationFrame(() =>
+        region?.update({ state: 'pending', cycle: `yours-${++count}` }),
+      );
+    }
+
+    function apply() {
+      const style = preview?.style;
+      if (!style) return;
+      if (state.color) style.setProperty('--dotquilt-color', state.color);
+      else style.removeProperty('--dotquilt-color');
+      if (state.glow) style.setProperty('--dotquilt-accent-color', state.glow);
+      else style.removeProperty('--dotquilt-accent-color');
+      style.setProperty('--dotquilt-dot-size', `${state.size}px`);
+      // Squares and dashes have a fixed size; only dots follow the slider.
+      if (size) size.disabled = state.mark !== 'dot';
+      root
+        ?.querySelector('[data-size-hint]')
+        ?.toggleAttribute('hidden', state.mark === 'dot');
+      for (const loader of loaders()) {
+        if (state.mark === 'dot') loader.removeAttribute('mark');
+        else loader.setAttribute('mark', state.mark);
+        loader.setAttribute('speed', String(state.speed));
+      }
+      // The chart draws on a canvas: it reads the new colours on request.
+      refreshStyles(preview);
+      const lines = [
+        state.color && `  --dotquilt-color: ${state.color};`,
+        state.glow && `  --dotquilt-accent-color: ${state.glow};`,
+        state.mark === 'dot' &&
+          state.size !== 4.4 &&
+          `  --dotquilt-dot-size: ${state.size}px;`,
+      ].filter(Boolean);
+      const attributes = [
+        state.mark !== 'dot' && `mark="${state.mark}"`,
+        state.speed !== 1 && `speed="${state.speed}"`,
+      ].filter(Boolean);
+      output.textContent = [
+        lines.length ? `.your-app {\n${lines.join('\n')}\n}` : '/* The defaults: nothing to add. */',
+        attributes.length
+          ? `\n<dotquilt-skeleton-text ${attributes.join(' ')}>`
+          : '',
+      ].join('\n');
+      again();
+    }
+
+    const choose = (group: string, button: HTMLElement) => {
+      for (const other of root.querySelectorAll(`[${group}]`))
+        other.setAttribute('aria-checked', String(other === button));
+    };
+    for (const button of root.querySelectorAll<HTMLElement>('[data-set-mark]'))
+      button.addEventListener('click', () => {
+        choose('data-set-mark', button);
+        state.mark = button.dataset.setMark ?? 'dot';
+        apply();
+      });
+    for (const button of root.querySelectorAll<HTMLElement>('[data-mark-color]'))
+      button.addEventListener('click', () => {
+        choose('data-mark-color', button);
+        state.color = button.dataset.markColor ?? '';
+        state.glow = button.dataset.glowColor ?? '';
+        apply();
+      });
+    size?.addEventListener('change', () => {
+      state.size = Number(size.value);
+      const out = root.querySelector('[data-size-out]');
+      if (out) out.textContent = `${state.size} px`;
+      apply();
+    });
+    const speed = root.querySelector<HTMLInputElement>('[data-speed]');
+    speed?.addEventListener('change', () => {
+      state.speed = Number(speed.value);
+      const out = root.querySelector('[data-speed-out]');
+      if (out) out.textContent = `${state.speed}×`;
+      apply();
+    });
+    root.querySelector('[data-again]')?.addEventListener('click', again);
+    root.querySelector('[data-copy-css]')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget as HTMLButtonElement;
+      try {
+        await navigator.clipboard.writeText(output.textContent ?? '');
+        button.textContent = 'Copied';
+      } catch {
+        button.textContent = 'Select and copy';
+      }
+      setTimeout(() => {
+        button.textContent = 'Copy';
+      }, 1600);
+    });
+    apply();
+
+    new IntersectionObserver(
+      (entries, observer) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        again();
+      },
+      { threshold: 0.4 },
+    ).observe(preview);
+  }
+</script>
+
+<style>
+  .yours {
+    display: grid;
+    grid-template-columns: 17rem minmax(0, 1fr);
+    grid-template-areas: 'controls preview' 'controls css';
+    gap: 1rem;
+  }
+  .controls {
+    grid-area: controls;
+    display: grid;
+    align-content: start;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  legend,
+  .range span {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  output {
+    font-weight: 400;
+    color: var(--dq-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .swatches {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .swatches button {
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 0;
+    border-radius: 50%;
+    background: var(--swatch);
+    box-shadow:
+      inset 0 0 0 2px var(--dq-surface),
+      0 0 0 1px var(--dq-line-2);
+    cursor: pointer;
+  }
+  .swatches button[aria-checked='true'] {
+    box-shadow:
+      inset 0 0 0 2px var(--dq-surface),
+      0 0 0 2px var(--dq-ink);
+  }
+  .swatches button:focus-visible {
+    outline: 2px solid var(--dq-accent);
+    outline-offset: 3px;
+  }
+  .range {
+    display: block;
+  }
+  .range input {
+    width: 100%;
+    accent-color: var(--dq-ink);
+  }
+  .range input:disabled {
+    opacity: 0.4;
+  }
+  .hint {
+    display: block;
+    margin: -0.25rem 0 0.5rem;
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+  }
+  .controls .home-button {
+    justify-self: start;
+  }
+  .preview {
+    grid-area: preview;
+    padding: 1.5rem;
+    background: var(--dq-surface);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem 2rem;
+    align-items: center;
+  }
+  .profile {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 0.875rem;
+    align-items: center;
+  }
+  .profile dotquilt-skeleton-circle {
+    width: 3rem;
+  }
+  .lines {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .grid dotquilt-chart-loader {
+    height: 7rem;
+  }
+  .bubble {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: var(--dq-radius-md) var(--dq-radius-md) var(--dq-radius-md) 4px;
+    border: 1px solid var(--dq-line);
+    background: var(--dq-bg);
+  }
+  .css {
+    grid-area: css;
+    overflow: hidden;
+    background: var(--dq-code-bg);
+    border-color: transparent;
+  }
+  .css-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+    font-size: 0.75rem;
+    color: #8892a2;
+  }
+  .copy {
+    height: 26px;
+    padding: 0 0.625rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #c4ccd8;
+    font: 500 0.75rem/1 var(--dq-font);
+    cursor: pointer;
+  }
+  .copy:hover {
+    background: rgb(255 255 255 / 0.08);
+  }
+  pre {
+    margin: 0;
+    padding: 1rem;
+    background: none;
+    border: 0;
+    overflow-x: auto;
+  }
+  pre code {
+    font: 0.8125rem/1.6 var(--dq-font-mono);
+    color: var(--dq-code-fg);
+    background: none;
+    padding: 0;
+    white-space: pre;
+  }
+  @media (max-width: 56rem) {
+    .yours {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'preview' 'controls' 'css';
+    }
+  }
+  @media (max-width: 40rem) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
