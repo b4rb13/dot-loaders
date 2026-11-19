@@ -552,13 +552,16 @@ Object.assign(window, {
       calls.chart = calls.table = calls.table2 = 0;
       const chartIdles = [
         chartAnimations.ridge(),
+        chartAnimations.scan(),
+        chartAnimations.terrain(),
         chartAnimations.bars(),
         chartAnimations.scatter(),
+        chartAnimations.cycle(),
       ];
       patch('chart', {
         variant,
         animations: {
-          idle: chartIdles[index % 3],
+          idle: chartIdles[index % 6],
           handoff: chartAnimations.morphWipe(),
         },
       });
@@ -581,7 +584,7 @@ Object.assign(window, {
     idleOnly: () => {
       patch('chart', {
         animations: {
-          idle: chartAnimations.ridge({ amplitude: 0 }),
+          idle: chartAnimations.scan({ amplitude: 0 }),
           handoff: undefined,
         },
       });

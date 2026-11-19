@@ -26,7 +26,7 @@ export const skeletonCircleStyles: readonly string[] =
 export const skeletonTextStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze(
     /* @__PURE__ */ skeletonStyles.concat(
-      `:host{height:auto;overflow:visible;display:grid;gap:.5em;border-radius:0}:host .lines{display:grid;gap:inherit}:host .lines.pulse{position:absolute;inset:0}:host .line{box-sizing:border-box;height:${lineHeight};position:relative;border-radius:999px;overflow:hidden;${dotGrid('0 0')}}${markShapes((mark) => `:host([mark=${mark}])`, '.line', '0 0')}${markLineHeights((mark) => `:host([mark=${mark}]) .line`)}`,
+      `:host{height:auto;overflow:visible;display:grid;gap:.5em;border-radius:0}:host .lines{display:grid;gap:inherit}:host .lines:is(.pulse,.lift){position:absolute;inset:0}:host .line{box-sizing:border-box;height:${lineHeight};position:relative;border-radius:999px;overflow:hidden;${dotGrid('0 0')}}${markShapes((mark) => `:host([mark=${mark}])`, '.line', '0 0')}${markLineHeights((mark) => `:host([mark=${mark}]) .line`)}`,
     ),
   );
 export const typingStyles: readonly string[] = /* @__PURE__ */ Object.freeze([

@@ -623,22 +623,21 @@ test('pointer lift is opt-in and suppressed for touch, pause and content handoff
   const box = await page.locator('#block').boundingBox();
   if (!box) throw new Error('Missing pointer target');
   await page.mouse.move(box.x + 10, box.y + 10);
-  const translate = () =>
-    page.evaluate(
-      () =>
-        getComputedStyle(
-          document
-            .getElementById('block')
-            ?.shadowRoot?.querySelector('.pulse') as Element,
-        ).translate,
-    );
-  expect(await translate()).toBe('none');
+  // Lift lights the marks around the pointer through the `.lift` layer.
+  const lit = () =>
+    page.evaluate(() => {
+      const layer = document
+        .getElementById('block')
+        ?.shadowRoot?.querySelector('.lift');
+      return layer ? Number(getComputedStyle(layer).opacity) > 0.5 : false;
+    });
+  expect(await lit()).toBe(false);
   await page.evaluate(() => {
     (document.getElementById('block') as SkeletonBlock).pointerResponse =
       'lift';
   });
   await page.mouse.move(box.x + 20, box.y + 20);
-  await expect.poll(translate).toBe('0px -1px');
+  await expect.poll(lit).toBe(true);
   await page.evaluate(() =>
     document.getElementById('block')?.dispatchEvent(
       new PointerEvent('pointermove', {
@@ -648,20 +647,20 @@ test('pointer lift is opt-in and suppressed for touch, pause and content handoff
       }),
     ),
   );
-  await expect.poll(translate).toBe('none');
+  await expect.poll(lit).toBe(false);
   await page.mouse.move(box.x + 25, box.y + 25);
-  await expect.poll(translate).toBe('0px -1px');
+  await expect.poll(lit).toBe(true);
   await page.evaluate(() => {
     (document.getElementById('region') as LoadingRegion).motion = 'paused';
   });
-  await expect.poll(translate).toBe('none');
+  await expect.poll(lit).toBe(false);
   await page.evaluate(() => {
     const region = document.getElementById('region') as LoadingRegion;
     region.motion = 'system';
     region.state = 'ready';
   });
   await page.mouse.move(box.x + 30, box.y + 30);
-  await expect.poll(translate).toBe('none');
+  await expect.poll(lit).toBe(false);
 });
 
 test('a minified production chart bundle draws every variant and hands off under strict CSP', async ({

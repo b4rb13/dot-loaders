@@ -61,19 +61,17 @@ test('changing a setting restyles the stage, rewrites the code and the link', as
     .getByRole('radio', { name: 'TextLoader', exact: true })
     .check();
   await playground.getByRole('radio', { name: 'Dash', exact: true }).check();
-  await playground
-    .getByRole('radio', { name: 'Scramble', exact: true })
-    .check();
+  await playground.getByRole('radio', { name: 'Words', exact: true }).check();
   await playground.getByRole('radio', { name: 'Plum', exact: true }).check();
   await expect(page).toHaveURL(/component=text/);
   await expect(page).toHaveURL(/mark=dash/);
-  await expect(page).toHaveURL(/idle=scramble/);
+  await expect(page).toHaveURL(/idle=scrambleWords/);
   await expect(page).toHaveURL(/palette=plum/);
   const loader = playground.locator('[data-demo="text"] dotquilt-text-loader');
   await expect(loader).toHaveAttribute('mark', 'dash');
   const code = playground.locator('[data-code-out]');
   await expect(code).toContainText('mark="dash"');
-  await expect(code).toContainText('idle: scramble()');
+  await expect(code).toContainText('idle: scrambleWords()');
   await playground.getByRole('tab', { name: 'CSS' }).click();
   await expect(code).toContainText('--dotquilt-color: light-dark(#776479');
   // Squares and dashes have a fixed size: the size sliders step aside.
@@ -94,4 +92,50 @@ test('Reveal hands over at once, and Start loading begins again', async ({
   await expect(region).toHaveAttribute('state', 'pending');
   await playground.getByRole('button', { name: 'Reset to defaults' }).click();
   await expect(page).toHaveURL(/\?component=skeleton$/);
+});
+
+test('animation options live in the link, the sliders and the code', async ({
+  page,
+}) => {
+  await page.goto('/playground/?component=chart&idle=scan&i.bandWidth=48');
+  const playground = page.locator('[data-playground]');
+  await expect(playground.locator('input[name="i.bandWidth"]')).toHaveValue(
+    '48',
+  );
+  const code = playground.locator('[data-code-out]');
+  await expect(code).toContainText('scan({ bandWidth: 48 })');
+  // Tuning the default handoff names it in the code too.
+  await playground.locator('input[name="h.edge"]').fill('20');
+  await expect(code).toContainText('morphWipe({ edge: 20 })');
+  await expect(page).toHaveURL(/h\.edge=20/);
+  // A new animation starts from its own defaults.
+  await playground.getByRole('radio', { name: 'Terrain', exact: true }).check();
+  await expect(code).toContainText('idle: terrain()');
+  await expect(page).not.toHaveURL(/i\.bandWidth/);
+});
+
+test('pointer lift, handoff length and text samples reach the stage and the code', async ({
+  page,
+}) => {
+  await page.goto('/playground/?component=text');
+  const playground = page.locator('[data-playground]');
+  await playground.getByRole('radio', { name: 'Lift', exact: true }).check();
+  await playground.getByRole('radio', { name: '0.6 s', exact: true }).check();
+  await playground
+    .getByRole('radio', { name: 'こんにちは', exact: true })
+    .check();
+  const loader = playground.locator('[data-demo="text"] dotquilt-text-loader');
+  await expect(loader).toHaveAttribute('pointer-response', 'lift');
+  await expect(loader).toHaveAttribute('mask', 'こんにちは世界');
+  const code = playground.locator('[data-code-out]');
+  await expect(code).toContainText('pointerResponse="lift"');
+  await expect(code).toContainText('timing={{ duration: 600 }}');
+  await expect(page).toHaveURL(/pointer=lift/);
+  // TypingDots take no pointer response: the control steps aside.
+  await playground
+    .getByRole('radio', { name: 'TypingDots', exact: true })
+    .check();
+  await expect(
+    playground.getByRole('radio', { name: 'Lift', exact: true }),
+  ).toBeHidden();
 });

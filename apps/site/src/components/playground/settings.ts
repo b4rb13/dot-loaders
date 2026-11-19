@@ -4,6 +4,12 @@
  * use the same parameters (see `playgroundHref` in ../examples/recipes.ts).
  */
 import type { Demo, Family, Mark, Recipe } from '../examples/recipes';
+import {
+  animationOptions,
+  changed,
+  defaultHandoff,
+  defaultIdle,
+} from './animation-options';
 
 export type Component = 'skeleton' | 'text' | 'chart' | 'table' | 'typing';
 
@@ -35,13 +41,17 @@ export const idles: Record<Component, readonly [string, string][]> = {
   ],
   text: [
     ['', 'Default'],
-    ['scramble', 'Scramble'],
+    ['scrambleCharacters', 'Characters'],
+    ['scrambleWords', 'Words'],
     ['labelPulse', 'Label pulse'],
   ],
   chart: [
     ['', 'Default'],
+    ['scan', 'Scan'],
+    ['terrain', 'Terrain'],
     ['bars', 'Bars'],
     ['scatter', 'Scatter'],
+    ['cycle', 'Cycle'],
   ],
   table: [
     ['', 'Default'],
@@ -56,12 +66,31 @@ export const handoffs: Record<Component, readonly [string, string][]> = {
   ],
   text: [
     ['', 'Default'],
+    ['printText', 'Print'],
     ['fade', 'Fade'],
   ],
   chart: [['', 'Default']],
   table: [['', 'Default']],
   typing: [['', 'Default']],
 };
+
+/** Choices that take a short list of values. */
+export const pointers = [
+  ['none', 'Off'],
+  ['lift', 'Lift'],
+] as const;
+export const durations = [
+  ['auto', 'Default'],
+  ['0', 'Instant'],
+  ['300', '0.3 s'],
+  ['600', '0.6 s'],
+  ['2000', '2 s'],
+] as const;
+export const samples = [
+  ['number', 'Number'],
+  ['label', 'Label'],
+  ['international', 'こんにちは'],
+] as const;
 
 /** Mark colours that sit well beside text, light and dark. */
 export const palettes = [
@@ -110,6 +139,19 @@ export interface Settings {
   speed: number;
   /** How long the simulated request takes, in ms. */
   delay: number;
+  /** `lift`: marks light up around the pointer. Not for TypingDots. */
+  pointer: 'none' | 'lift';
+  /** The handoff's length: `auto` or ms. */
+  duration: (typeof durations)[number][0];
+  /** SkeletonText lines, table rows and TypingDots. */
+  lines: number;
+  rows: number;
+  count: number;
+  /** What the TextLoader waits for. */
+  sample: (typeof samples)[number][0];
+  /** Options for the idle and handoff animations (URL `i.key` / `h.key`). */
+  idleOptions: Readonly<Record<string, number | string>>;
+  handoffOptions: Readonly<Record<string, number | string>>;
 }
 
 export const defaults: Settings = {
@@ -123,6 +165,14 @@ export const defaults: Settings = {
   gap: 4.6,
   speed: 1,
   delay: 2400,
+  pointer: 'none',
+  duration: 'auto',
+  lines: 3,
+  rows: 3,
+  count: 3,
+  sample: 'number',
+  idleOptions: {},
+  handoffOptions: {},
 };
 
 export const ranges = {
@@ -130,6 +180,9 @@ export const ranges = {
   gap: { min: 2.6, max: 9, step: 0.2 },
   speed: { min: 0.5, max: 2, step: 0.25 },
   delay: { min: 800, max: 6000, step: 200 },
+  lines: { min: 1, max: 6, step: 1 },
+  rows: { min: 2, max: 8, step: 1 },
+  count: { min: 2, max: 8, step: 1 },
 } as const;
 
 const oneOf = <T extends string>(
@@ -173,14 +226,73 @@ export function parse(search: string): Settings {
     gap: within(params.get('gap'), 'gap', defaults.gap),
     speed: within(params.get('speed'), 'speed', defaults.speed),
     delay: within(params.get('delay'), 'delay', defaults.delay),
+    pointer: oneOf(params.get('pointer'), pointers, defaults.pointer),
+    duration: oneOf(params.get('duration'), durations, defaults.duration),
+    lines: within(params.get('lines'), 'lines', defaults.lines),
+    rows: within(params.get('rows'), 'rows', defaults.rows),
+    count: within(params.get('count'), 'count', defaults.count),
+    sample: oneOf(params.get('sample'), samples, defaults.sample),
+    idleOptions: optionsFrom(params, 'i', idle(component, params.get('idle'))),
+    handoffOptions: optionsFrom(
+      params,
+      'h',
+      handoff(component, params.get('handoff')),
+    ),
   };
+}
+
+/** The animation in effect: the chosen one, or the component's default. */
+export function idle(
+  component: Component,
+  chosen: string | null,
+): string | undefined {
+  return (
+    (chosen && idles[component].some(([key]) => key === chosen) && chosen) ||
+    defaultIdle[component]
+  );
+}
+export function handoff(
+  component: Component,
+  chosen: string | null,
+): string | undefined {
+  return (
+    (chosen && handoffs[component].some(([key]) => key === chosen) && chosen) ||
+    defaultHandoff[component]
+  );
+}
+
+/** `i.bandWidth=48` and the like, checked against the animation's options. */
+function optionsFrom(
+  params: URLSearchParams,
+  prefix: 'i' | 'h',
+  name: string | undefined,
+): Record<string, number | string> {
+  const out: Record<string, number | string> = {};
+  for (const option of (name && animationOptions[name]) || []) {
+    const value = params.get(`${prefix}.${option.key}`);
+    if (value === null) continue;
+    if ('values' in option) {
+      if (option.values.some(([key]) => key === value)) out[option.key] = value;
+      continue;
+    }
+    const number = Number(value);
+    if (Number.isFinite(number))
+      out[option.key] = Math.min(option.max, Math.max(option.min, number));
+  }
+  return changed(name, out);
 }
 
 /** The query for these settings: only what differs from the defaults. */
 export function serialize(settings: Settings): string {
   const params = new URLSearchParams();
-  for (const key of Object.keys(defaults) as (keyof Settings)[])
+  for (const key of Object.keys(defaults) as (keyof Settings)[]) {
+    if (key === 'idleOptions' || key === 'handoffOptions') continue;
     if (settings[key] !== defaults[key]) params.set(key, String(settings[key]));
+  }
+  for (const [key, value] of Object.entries(settings.idleOptions))
+    params.set(`i.${key}`, String(value));
+  for (const [key, value] of Object.entries(settings.handoffOptions))
+    params.set(`h.${key}`, String(value));
   // A component is always named, so a link says what it shows.
   params.set('component', settings.component);
   return params.toString();
@@ -196,16 +308,36 @@ const demos: Record<Component, Demo> = {
 
 /** The settings as a recipe, so the playground's code matches the gallery's. */
 export function recipe(settings: Settings): Recipe {
+  const { component } = settings;
+  const idleName = idle(component, settings.idle);
+  const handoffName = handoff(component, settings.handoff);
+  const idleOptions = changed(idleName, settings.idleOptions);
+  const handoffOptions = changed(handoffName, settings.handoffOptions);
+  // A default animation is named only when one of its options changed.
+  const idleUsed =
+    settings.idle || (Object.keys(idleOptions).length ? idleName : '');
+  const handoffUsed =
+    settings.handoff || (Object.keys(handoffOptions).length ? handoffName : '');
   return {
     id: 'playground',
-    family: settings.component as Family,
-    demo: demos[settings.component],
-    title: 'Playground',
+    family: component as Family,
+    demo: demos[component],
+    // Names what loads, as the TextLoader's accessible label.
+    title: 'Revenue this month',
     text: '',
     ...(settings.mark !== 'dot' && { mark: settings.mark }),
-    ...(settings.idle && { idle: settings.idle }),
-    ...(settings.handoff && { handoff: settings.handoff }),
-    ...(settings.component === 'chart' && { variant: settings.variant }),
+    ...(idleUsed && { idle: idleUsed, idleOptions }),
+    ...(handoffUsed && { handoff: handoffUsed, handoffOptions }),
+    ...(component === 'chart' && { variant: settings.variant }),
+    ...(settings.pointer === 'lift' &&
+      component !== 'typing' && { pointer: 'lift' as const }),
+    ...(settings.duration !== 'auto' && {
+      duration: Number(settings.duration),
+    }),
+    ...(component === 'skeleton' && { lines: settings.lines }),
+    ...(component === 'table' && { rows: settings.rows }),
+    ...(component === 'typing' && { count: settings.count }),
+    ...(component === 'text' && { sample: settings.sample }),
     speed: settings.speed,
     delay: settings.delay,
   };

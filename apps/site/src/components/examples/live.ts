@@ -4,9 +4,12 @@
  */
 import {
   bars,
+  cycle,
   morphWipe,
   ridge,
+  scan,
   scatter,
+  terrain,
 } from '@dotquilt-internal/core/animations/chart';
 import { dissolve, pulse } from '@dotquilt-internal/core/animations/skeleton';
 import {
@@ -18,7 +21,10 @@ import {
   fade,
   labelPulse,
   lock,
+  printText,
   scramble,
+  scrambleCharacters,
+  scrambleWords,
 } from '@dotquilt-internal/core/animations/text';
 import type { ChartLoader } from '@dotquilt-internal/core/chart';
 import type { LoadingRegion } from '@dotquilt-internal/core/region';
@@ -26,21 +32,28 @@ import type { TableColumn, TableLoader } from '@dotquilt-internal/core/table';
 import type { TextLoader } from '@dotquilt-internal/core/text';
 import { linePoints, revenue } from '../../../../../examples/site/data';
 
-/** Every animation a recipe can name, by name. */
-const animations: Record<string, () => unknown> = {
-  bars: () => bars(),
-  morphWipe: () => morphWipe(),
-  ridge: () => ridge(),
-  scatter: () => scatter(),
-  dissolve: () => dissolve(),
-  pulse: () => pulse(),
-  rows: () => rows(),
-  tableShimmer: () => tableShimmer(),
-  typeOn: () => typeOn(),
-  fade: () => fade(),
-  labelPulse: () => labelPulse(),
-  lock: () => lock(),
-  scramble: () => scramble(),
+/** Every animation a recipe can name, by name, taking its options. */
+type Options = Readonly<Record<string, number | string>>;
+const animations: Record<string, (options?: Options) => unknown> = {
+  bars: (o) => bars(o as never),
+  morphWipe: (o) => morphWipe(o as never),
+  ridge: (o) => ridge(o as never),
+  scatter: (o) => scatter(o as never),
+  scan: (o) => scan(o as never),
+  terrain: (o) => terrain(o as never),
+  cycle: (o) => cycle(o as never),
+  dissolve: (o) => dissolve(o as never),
+  pulse: (o) => pulse(o as never),
+  rows: (o) => rows(o as never),
+  tableShimmer: (o) => tableShimmer(o as never),
+  typeOn: (o) => typeOn(o as never),
+  fade: (o) => fade(o as never),
+  labelPulse: (o) => labelPulse(o as never),
+  lock: (o) => lock(o as never),
+  printText: (o) => printText(o as never),
+  scramble: (o) => scramble(o as never),
+  scrambleCharacters: (o) => scrambleCharacters(o as never),
+  scrambleWords: (o) => scrambleWords(o as never),
 };
 
 /** Deals by size and days to close, as drawn in the demo (320 × 180). */
@@ -76,14 +89,23 @@ export const loaderSelector =
   'dotquilt-skeleton-block, dotquilt-skeleton-circle, dotquilt-skeleton-line, dotquilt-skeleton-text, dotquilt-text-loader, dotquilt-chart-loader, dotquilt-table-loader, dotquilt-typing-dots';
 
 /** Gives every loader in `scope` these animations; empty names clear them. */
-export function animate(scope: ParentNode, idle?: string, handoff?: string) {
+export function animate(
+  scope: ParentNode,
+  idle?: string,
+  handoff?: string,
+  idleOptions: Options = {},
+  handoffOptions: Options = {},
+) {
   for (const loader of scope.querySelectorAll<
     HTMLElement & { animations: unknown }
   >(loaderSelector)) {
     if (loader.localName === 'dotquilt-typing-dots') continue;
     loader.animations = {
-      ...(idle && animations[idle] && { idle: animations[idle]() }),
-      ...(handoff && animations[handoff] && { handoff: animations[handoff]() }),
+      ...(idle && animations[idle] && { idle: animations[idle](idleOptions) }),
+      ...(handoff &&
+        animations[handoff] && {
+          handoff: animations[handoff](handoffOptions),
+        }),
     };
   }
 }

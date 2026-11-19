@@ -9,9 +9,12 @@ import type { Recipe } from '../examples/recipes';
 import {
   components,
   defaults,
+  durations,
   marks,
   palettes,
+  pointers,
   ranges,
+  samples,
   variants,
 } from './settings';
 
@@ -99,6 +102,53 @@ const slider = (key: keyof typeof ranges) => ranges[key];
       <div class="choices" data-options="handoff"></div>
     </fieldset>
 
+    <div class="tune" data-tune hidden>
+      <p class="tune-title">Fine-tune</p>
+      <div data-tune-list></div>
+    </div>
+
+    <fieldset data-not="typing">
+      <legend>Pointer</legend>
+      <div class="choices">
+        {
+          pointers.map(([value, label]) => (
+            <label>
+              <input type="radio" name="pointer" value={value} checked={value === defaults.pointer} />
+              <span>{label}</span>
+            </label>
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Handoff length</legend>
+      <div class="choices">
+        {
+          durations.map(([value, label]) => (
+            <label>
+              <input type="radio" name="duration" value={value} checked={value === defaults.duration} />
+              <span>{label}</span>
+            </label>
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <fieldset data-only="text">
+      <legend>Text</legend>
+      <div class="choices">
+        {
+          samples.map(([value, label]) => (
+            <label>
+              <input type="radio" name="sample" value={value} checked={value === defaults.sample} />
+              <span>{label}</span>
+            </label>
+          ))
+        }
+      </div>
+    </fieldset>
+
     <fieldset>
       <legend>Colour</legend>
       <div class="swatches">
@@ -131,6 +181,18 @@ const slider = (key: keyof typeof ranges) => ranges[key];
     <label class="range">
       <span>Pace <output name="speed-out">{defaults.speed}×</output></span>
       <input type="range" name="speed" {...slider('speed')} value={defaults.speed} />
+    </label>
+    <label class="range" data-only="skeleton">
+      <span>Lines <output name="lines-out">{defaults.lines}</output></span>
+      <input type="range" name="lines" {...slider('lines')} value={defaults.lines} />
+    </label>
+    <label class="range" data-only="table">
+      <span>Rows <output name="rows-out">{defaults.rows}</output></span>
+      <input type="range" name="rows" {...slider('rows')} value={defaults.rows} />
+    </label>
+    <label class="range" data-only="typing">
+      <span>Dots <output name="count-out">{defaults.count}</output></span>
+      <input type="range" name="count" {...slider('count')} value={defaults.count} />
     </label>
     <label class="range">
       <span>Request time <output name="delay-out">{defaults.delay / 1000} s</output></span>
@@ -185,12 +247,15 @@ const slider = (key: keyof typeof ranges) => ranges[key];
   import { refreshStyles } from '@dotquilt-internal/core';
   import { registerAll } from '@dotquilt-internal/core/register-all';
   import { animate, load, loaderSelector, wire } from '../examples/live';
-  import { htmlCode, reactCode } from '../examples/recipes';
+  import { htmlCode, reactCode, textMask } from '../examples/recipes';
+  import { animationOptions, changed } from './animation-options';
   import {
     type Component,
     css,
     defaults,
+    handoff,
     handoffs,
+    idle,
     idles,
     palettes,
     parse,
@@ -236,15 +301,70 @@ const slider = (key: keyof typeof ranges) => ranges[key];
       box.closest('fieldset')?.toggleAttribute('data-single', list.length < 2);
     }
 
+    /** Sliders for the options of the animations in effect. */
+    function tune() {
+      const box = form?.querySelector<HTMLElement>('[data-tune]');
+      const list = box?.querySelector<HTMLElement>('[data-tune-list]');
+      if (!box || !list) return;
+      const rows: HTMLElement[] = [];
+      for (const [prefix, name, values] of [
+        ['i', idle(settings.component, settings.idle), settings.idleOptions],
+        ['h', handoff(settings.component, settings.handoff), settings.handoffOptions],
+      ] as const)
+        for (const option of (name && animationOptions[name]) || []) {
+          const row = document.createElement('label');
+          row.className = 'range';
+          const head = document.createElement('span');
+          const output = document.createElement('output');
+          output.setAttribute('name', `${prefix}.${option.key}-out`);
+          const value = values[option.key] ?? option.default;
+          head.append(`${option.label} `, output);
+          if ('values' in option) {
+            const select = document.createElement('select');
+            select.name = `${prefix}.${option.key}`;
+            for (const [key, text] of option.values) {
+              const choice = document.createElement('option');
+              choice.value = key;
+              choice.textContent = text;
+              select.append(choice);
+            }
+            select.value = String(value);
+            row.append(head, select);
+          } else {
+            const input = document.createElement('input');
+            input.type = 'range';
+            input.name = `${prefix}.${option.key}`;
+            input.min = String(option.min);
+            input.max = String(option.max);
+            input.step = String(option.step);
+            input.value = String(value);
+            input.dataset.unit = option.unit;
+            output.value = `${value}${option.unit ? ` ${option.unit}` : ''}`;
+            row.append(head, input);
+          }
+          rows.push(row);
+        }
+      list.replaceChildren(...rows);
+      box.hidden = rows.length === 0;
+    }
+
     /** The form shows `settings`. */
     function show() {
-      for (const name of ['component', 'mark', 'variant', 'palette'] as const) {
+      for (const name of [
+        'component',
+        'mark',
+        'variant',
+        'palette',
+        'pointer',
+        'duration',
+        'sample',
+      ] as const) {
         const control = field(name);
         if (control && 'value' in control) control.value = settings[name];
       }
       options('idle', settings.component);
       options('handoff', settings.component);
-      for (const name of ['size', 'gap', 'speed', 'delay'] as const) {
+      for (const name of ['size', 'gap', 'speed', 'delay', 'lines', 'rows', 'count'] as const) {
         const input = field(name) as HTMLInputElement | null;
         if (input) input.value = String(settings[name]);
       }
@@ -256,8 +376,14 @@ const slider = (key: keyof typeof ranges) => ranges[key];
       label('gap', `${settings.gap} px`);
       label('speed', `${settings.speed}×`);
       label('delay', `${settings.delay / 1000} s`);
+      label('lines', String(settings.lines));
+      label('rows', String(settings.rows));
+      label('count', String(settings.count));
       for (const only of form?.querySelectorAll<HTMLElement>('[data-only]') ?? [])
         only.hidden = only.dataset.only !== settings.component;
+      for (const not of form?.querySelectorAll<HTMLElement>('[data-not]') ?? [])
+        not.hidden = not.dataset.not === settings.component;
+      tune();
       const dots = settings.mark === 'dot';
       for (const range of form?.querySelectorAll<HTMLElement>('[data-dots-only]') ?? [])
         range.hidden = !dots;
@@ -285,7 +411,37 @@ const slider = (key: keyof typeof ranges) => ranges[key];
         if (settings.speed === 1) loader.removeAttribute('speed');
         else loader.setAttribute('speed', String(settings.speed));
       }
-      animate(stage, settings.idle, settings.handoff);
+      for (const loader of stage.querySelectorAll(loaderSelector)) {
+        if (loader.localName === 'dotquilt-typing-dots') continue;
+        if (settings.pointer === 'lift') loader.setAttribute('pointer-response', 'lift');
+        else loader.removeAttribute('pointer-response');
+      }
+      for (const owner of stage.querySelectorAll<HTMLElement & { timing: unknown }>('[data-owner]'))
+        owner.timing =
+          settings.duration === 'auto' ? undefined : { duration: Number(settings.duration) };
+      stage
+        .querySelector('[data-demo="skeleton"] dotquilt-skeleton-text')
+        ?.setAttribute('lines', String(settings.lines));
+      stage
+        .querySelector('[data-demo="table"] dotquilt-table-loader')
+        ?.setAttribute('rows', String(settings.rows));
+      stage
+        .querySelector('[data-demo="typing"] dotquilt-typing-dots')
+        ?.setAttribute('count', String(settings.count));
+      const text = stage.querySelector<HTMLElement>('[data-demo="text"] dotquilt-text-loader');
+      if (text) {
+        const value = {
+          number: '$48,210',
+          label: 'Shipped, Nov 2',
+          international: 'こんにちは世界',
+        }[settings.sample];
+        text.setAttribute('mask', textMask(recipe(settings)));
+        text.dataset.value = value;
+        text.textContent = value;
+      }
+      // The same animations the code shows, with their options.
+      const current = recipe(settings);
+      animate(stage, current.idle, current.handoff, current.idleOptions, current.handoffOptions);
       // Canvas loaders read new colours on request.
       refreshStyles(stage);
       write();
@@ -320,12 +476,32 @@ const slider = (key: keyof typeof ranges) => ranges[key];
 
     form.addEventListener('change', (event) => {
       const input = event.target as HTMLInputElement;
+      // An animation option: i.key for the idle, h.key for the handoff.
+      const option = /^([ih])\.(.+)$/.exec(input.name);
+      if (option) {
+        const kind = option[1] === 'i' ? 'idleOptions' : 'handoffOptions';
+        const name =
+          kind === 'idleOptions'
+            ? idle(settings.component, settings.idle)
+            : handoff(settings.component, settings.handoff);
+        const raw = input.type === 'range' ? Number(input.value) : input.value;
+        settings = {
+          ...settings,
+          [kind]: changed(name, { ...settings[kind], [option[2] ?? '']: raw }),
+        };
+        apply();
+        return;
+      }
       const name = input.name as keyof Settings;
       if (!(name in defaults)) return;
       const value = typeof defaults[name] === 'number' ? Number(input.value) : input.value;
       settings = { ...settings, [name]: value };
-      // A new component starts from its own default animations.
-      if (name === 'component') settings = { ...settings, idle: '', handoff: '' };
+      // A new component starts from its own default animations; a new
+      // animation from its own default options.
+      if (name === 'component')
+        settings = { ...settings, idle: '', handoff: '', idleOptions: {}, handoffOptions: {} };
+      if (name === 'idle') settings = { ...settings, idleOptions: {} };
+      if (name === 'handoff') settings = { ...settings, handoffOptions: {} };
       show();
       apply();
     });
@@ -337,7 +513,15 @@ const slider = (key: keyof typeof ranges) => ranges[key];
       if (!output) return;
       const value = Number(input.value);
       output.value =
-        input.name === 'speed' ? `${value}×` : input.name === 'delay' ? `${value / 1000} s` : `${value} px`;
+        input.dataset.unit !== undefined
+          ? `${value}${input.dataset.unit ? ` ${input.dataset.unit}` : ''}`
+          : input.name === 'speed'
+            ? `${value}×`
+            : input.name === 'delay'
+              ? `${value / 1000} s`
+              : ['lines', 'rows', 'count'].includes(input.name)
+                ? String(value)
+                : `${value} px`;
     });
     form.querySelector('[data-reset]')?.addEventListener('click', () => {
       settings = { ...defaults };
@@ -484,8 +668,55 @@ const slider = (key: keyof typeof ranges) => ranges[key];
   .swatches input:checked + span {
     border-color: var(--dq-ink);
   }
-  .range {
+  .range,
+  .tune :global(.range) {
     display: grid;
+  }
+  .tune {
+    display: grid;
+    gap: 0.875rem;
+    padding: 0.875rem;
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-subtle);
+  }
+  .tune[hidden] {
+    display: none;
+  }
+  .tune-title {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .tune [data-tune-list] {
+    display: grid;
+    gap: 0.875rem;
+  }
+  .tune :global(.range > span) {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--dq-ink);
+  }
+  .tune :global(output) {
+    font-weight: 500;
+    color: var(--dq-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .tune :global(input[type='range']) {
+    width: 100%;
+    accent-color: var(--dq-accent);
+  }
+  .tune :global(select) {
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--dq-line-2);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+    color: var(--dq-ink);
+    font: 500 0.8125rem / 1 var(--dq-font);
   }
   .range input {
     width: 100%;

@@ -44,6 +44,19 @@ export interface Recipe {
   speed?: number;
   /** Placeholder rows, for tables. */
   rows?: number;
+  /** Lines of a SkeletonText placeholder. */
+  lines?: number;
+  /** How many TypingDots. */
+  count?: number;
+  /** Options for the idle and handoff animations, only those that differ. */
+  idleOptions?: Readonly<Record<string, number | string>>;
+  handoffOptions?: Readonly<Record<string, number | string>>;
+  /** `lift`: the marks light up around the pointer. */
+  pointer?: 'lift';
+  /** The handoff's length in ms; omitted, it is the default. */
+  duration?: number;
+  /** TextLoader only: what kind of text it waits for. */
+  sample?: 'number' | 'label' | 'international';
   /** How long the simulated request takes, in ms. */
   delay: number;
 }
@@ -190,6 +203,62 @@ export const recipes: readonly Recipe[] = [
     delay: 1800,
   },
   {
+    id: 'chart-cycle',
+    family: 'chart',
+    demo: 'chart',
+    title: 'Changing chart',
+    text: 'Moves between a line, bars and scatter while the type is unknown.',
+    idle: 'cycle',
+    delay: 3400,
+  },
+  {
+    id: 'hover-skeleton',
+    family: 'skeleton',
+    demo: 'profile',
+    title: 'Hover to light',
+    text: 'Marks light up around the pointer while the card waits.',
+    pointer: 'lift',
+    delay: 3200,
+  },
+  {
+    id: 'chart-scan',
+    family: 'chart',
+    demo: 'chart',
+    title: 'Scanning line',
+    text: 'A band sweeps along the line while it waits.',
+    idle: 'scan',
+    mark: 'dash',
+    delay: 2600,
+  },
+  {
+    id: 'word-by-word',
+    family: 'text',
+    demo: 'status',
+    title: 'Word by word',
+    text: 'One word changes at a time, in reading order.',
+    idle: 'scrambleWords',
+    delay: 2400,
+  },
+  {
+    id: 'chart-terrain',
+    family: 'chart',
+    demo: 'chart',
+    title: 'Area chart',
+    text: 'The field below the line is shaded, like the area it will fill.',
+    idle: 'terrain',
+    delay: 2600,
+  },
+  {
+    id: 'printed-value',
+    family: 'text',
+    demo: 'kpi',
+    title: 'Printed value',
+    text: 'The value prints in from the left as its characters lock.',
+    handoff: 'printText',
+    mark: 'square',
+    delay: 2200,
+  },
+  {
     id: 'search-results',
     family: 'region',
     demo: 'results',
@@ -209,6 +278,11 @@ export function playgroundHref(recipe: Recipe): string {
     params.set('variant', recipe.variant);
   if (recipe.idle) params.set('idle', recipe.idle);
   if (recipe.handoff) params.set('handoff', recipe.handoff);
+  if (recipe.pointer) params.set('pointer', recipe.pointer);
+  for (const [key, value] of Object.entries(recipe.idleOptions ?? {}))
+    params.set(`i.${key}`, String(value));
+  for (const [key, value] of Object.entries(recipe.handoffOptions ?? {}))
+    params.set(`h.${key}`, String(value));
   return `/playground/?${params}`;
 }
 
@@ -220,18 +294,40 @@ const animationEntry: Partial<Record<Family, string>> = {
   table: 'table',
 };
 
-/** The recipe's React props: variant, mark and animations. */
-function reactProps(recipe: Recipe): string[] {
+/** A factory call: `scan()` or `scan({ bandWidth: 48 })`. */
+function call(
+  name: string,
+  options: Readonly<Record<string, number | string>> = {},
+): string {
+  const entries = Object.entries(options);
+  if (!entries.length) return `${name}()`;
+  return `${name}({ ${entries
+    .map(
+      ([key, value]) =>
+        `${key}: ${typeof value === 'string' ? `'${value}'` : value}`,
+    )
+    .join(', ')} })`;
+}
+
+/** `idle: …` and `handoff: …` for an `animations` object. */
+function phases(recipe: Recipe): string[] {
+  return [
+    recipe.idle && `idle: ${call(recipe.idle, recipe.idleOptions)}`,
+    recipe.handoff && `handoff: ${call(recipe.handoff, recipe.handoffOptions)}`,
+  ].filter((phase): phase is string => !!phase);
+}
+
+/** The recipe's React props: variant, mark, pace, pointer and animations. */
+function reactProps(recipe: Recipe, pointer = true): string[] {
   const props: string[] = [];
   if (recipe.variant && recipe.variant !== 'line')
     props.push(`variant="${recipe.variant}"`);
   if (recipe.mark) props.push(`mark="${recipe.mark}"`);
   if (recipe.speed && recipe.speed !== 1) props.push(`speed={${recipe.speed}}`);
-  const phases = [
-    recipe.idle && `idle: ${recipe.idle}()`,
-    recipe.handoff && `handoff: ${recipe.handoff}()`,
-  ].filter(Boolean);
-  if (phases.length) props.push(`animations={{ ${phases.join(', ')} }}`);
+  if (pointer && recipe.pointer)
+    props.push(`pointerResponse="${recipe.pointer}"`);
+  const list = phases(recipe);
+  if (list.length) props.push(`animations={{ ${list.join(', ')} }}`);
   return props;
 }
 
@@ -248,14 +344,26 @@ ${props
   .join('')}${indent}/>`;
 }
 
-/** ` mark="square"` for an HTML element. */
-function htmlProps(recipe: Recipe): string {
+/** ` mark="square"` and the like, for an HTML element. */
+function htmlProps(recipe: Recipe, pointer = true): string {
   let out = '';
   if (recipe.variant && recipe.variant !== 'line')
     out += ` variant="${recipe.variant}"`;
   if (recipe.mark) out += ` mark="${recipe.mark}"`;
   if (recipe.speed && recipe.speed !== 1) out += ` speed="${recipe.speed}"`;
+  if (pointer && recipe.pointer) out += ` pointer-response="${recipe.pointer}"`;
   return out;
+}
+
+/** The mask a TextLoader shows while it waits. */
+export function textMask(recipe: Recipe): string {
+  if (recipe.sample === 'label') return 'Shipped, Nov 0';
+  if (recipe.sample === 'international') return 'こんにちは世界';
+  return recipe.demo === 'order'
+    ? 'INV-0000'
+    : recipe.demo === 'status'
+      ? 'Shipped, Nov 0'
+      : '$00,000';
 }
 
 function animationImport(recipe: Recipe): string {
@@ -266,12 +374,20 @@ function animationImport(recipe: Recipe): string {
 }
 
 function animationScript(recipe: Recipe, selector: string): string {
-  const phases = [
-    recipe.idle && `idle: ${recipe.idle}()`,
-    recipe.handoff && `handoff: ${recipe.handoff}()`,
-  ].filter(Boolean);
-  if (!phases.length) return '';
-  return `\nfor (const loader of document.querySelectorAll('${selector}'))\n  loader.animations = { ${phases.join(', ')} };`;
+  const list = phases(recipe);
+  if (!list.length) return '';
+  return `\nfor (const loader of document.querySelectorAll('${selector}'))\n  loader.animations = { ${list.join(', ')} };`;
+}
+
+/** TypingDots take no pointer response, but a count. */
+function typingProps(recipe: Recipe): string[] {
+  const props = reactProps(recipe, false);
+  if (recipe.count && recipe.count !== 3)
+    props.unshift(`count={${recipe.count}}`);
+  return props;
+}
+function typingHtml(recipe: Recipe): string {
+  return `${recipe.count && recipe.count !== 3 ? ` count="${recipe.count}"` : ''}${htmlProps(recipe, false)}`;
 }
 
 interface Shape {
@@ -322,12 +438,12 @@ function shape(recipe: Recipe): Shape {
         ready: 'article',
         placeholder: `<div className="article">
           ${element('SkeletonBlock', ['className="cover"', ...p], '          ')}
-          ${element('SkeletonText', ['lines={3}', ...p], '          ')}
+          ${element('SkeletonText', [`lines={${recipe.lines ?? 3}}`, ...p], '          ')}
         </div>`,
         content: '{article && <Preview article={article} />}',
         html: `<div slot="placeholder" class="article">
     <dotquilt-skeleton-block class="cover"${h}></dotquilt-skeleton-block>
-    <dotquilt-skeleton-text lines="3"${h}></dotquilt-skeleton-text>
+    <dotquilt-skeleton-text lines="${recipe.lines ?? 3}"${h}></dotquilt-skeleton-text>
   </div>`,
         selector: '[slot=placeholder] > *',
         label: 'Article',
@@ -392,11 +508,11 @@ function shape(recipe: Recipe): Shape {
         signature: 'Reply({ reply }: { reply: string | null })',
         ready: 'reply',
         placeholder: `<div className="bubble">
-          ${element('TypingDots', p, '          ')}
+          ${element('TypingDots', typingProps(recipe), '          ')}
         </div>`,
         content: '<div className="bubble">{reply}</div>',
         html: `<div slot="placeholder" class="bubble">
-    <dotquilt-typing-dots${h}></dotquilt-typing-dots>
+    <dotquilt-typing-dots${typingHtml(recipe)}></dotquilt-typing-dots>
   </div>`,
         selector: 'dotquilt-typing-dots',
         label: 'Assistant reply',
@@ -406,9 +522,9 @@ function shape(recipe: Recipe): Shape {
         imports: ['TypingDots'],
         signature: 'SaveStatus({ saved }: { saved: boolean })',
         ready: 'saved',
-        placeholder: element('TypingDots', p, '        '),
+        placeholder: element('TypingDots', typingProps(recipe), '        '),
         content: '<span>Saved</span>',
-        html: `<dotquilt-typing-dots slot="placeholder"${h}></dotquilt-typing-dots>`,
+        html: `<dotquilt-typing-dots slot="placeholder"${typingHtml(recipe)}></dotquilt-typing-dots>`,
         selector: 'dotquilt-typing-dots',
         label: 'Save status',
       };
@@ -440,15 +556,17 @@ function shape(recipe: Recipe): Shape {
   }
 }
 
+/** `timing={{ duration: 600 }}` when the handoff has its own length. */
+function timing(recipe: Recipe, before: string): string {
+  return recipe.duration === undefined
+    ? ''
+    : `${before}timing={{ duration: ${recipe.duration} }}`;
+}
+
 /** The React code for a recipe: a component that waits for its data. */
 export function reactCode(recipe: Recipe): string {
   if (recipe.family === 'text') {
-    const mask =
-      recipe.demo === 'kpi'
-        ? '$00,000'
-        : recipe.demo === 'order'
-          ? 'INV-0000'
-          : 'Shipped, Nov 0';
+    const mask = textMask(recipe);
     const name =
       recipe.demo === 'kpi'
         ? 'Total'
@@ -461,11 +579,10 @@ export function ${name}({ value }: { value: string | null }) {
   return (
     <TextLoader
       aria-label="${recipe.title}"
-      mask="${mask}"${recipe.mark ? `\n      mark="${recipe.mark}"` : ''}${recipe.speed && recipe.speed !== 1 ? `\n      speed={${recipe.speed}}` : ''}${
-        recipe.idle || recipe.handoff
-          ? `\n      animations={{ ${[recipe.idle && `idle: ${recipe.idle}()`, recipe.handoff && `handoff: ${recipe.handoff}()`].filter(Boolean).join(', ')} }}`
-          : ''
-      }
+      mask="${mask}"${reactProps(recipe)
+        .filter((prop) => !prop.startsWith('variant'))
+        .map((prop) => `\n      ${prop}`)
+        .join('')}${timing(recipe, '\n      ')}
       state={value ? 'ready' : 'pending'}
     >
       {value}
@@ -486,7 +603,7 @@ ${animationImport(recipe)}${columns}
 export function ${s.signature} {
   return (
     <LoadingRegion
-      aria-label="${s.label}"
+      aria-label="${s.label}"${timing(recipe, '\n      ')}
       state={${refresh ? "loading ? 'refreshing' : items ? 'ready' : 'pending'" : `${s.ready} ? 'ready' : 'pending'`}}
       placeholder={
         ${s.placeholder}
@@ -501,19 +618,14 @@ export function ${s.signature} {
 /** The HTML for a recipe, with the script that sets it up. */
 export function htmlCode(recipe: Recipe): string {
   if (recipe.family === 'text') {
-    const mask =
-      recipe.demo === 'kpi'
-        ? '$00,000'
-        : recipe.demo === 'order'
-          ? 'INV-0000'
-          : 'Shipped, Nov 0';
+    const mask = textMask(recipe);
     return `<dotquilt-text-loader state="pending" mask="${mask}"${htmlProps(recipe)} aria-label="${recipe.title}"></dotquilt-text-loader>
 
 <script type="module">
   import { registerTextLoader } from '@dotquilt-internal/core/text';
   ${animationImport(recipe).trim()}
   registerTextLoader();
-  const loader = document.querySelector('dotquilt-text-loader');${animationScript(recipe, 'dotquilt-text-loader').replaceAll('\n', '\n  ')}
+  const loader = document.querySelector('dotquilt-text-loader');${animationScript(recipe, 'dotquilt-text-loader').replaceAll('\n', '\n  ')}${recipe.duration === undefined ? '' : `\n  loader.timing = { duration: ${recipe.duration} };`}
   // When the value arrives:
   // loader.textContent = value;
   // loader.update({ state: 'ready' });
@@ -529,7 +641,7 @@ export function htmlCode(recipe: Recipe): string {
   import { registerAll } from '@dotquilt-internal/core/register-all';
   ${animationImport(recipe).trim()}
   registerAll();
-  const region = document.querySelector('dotquilt-region');${animationScript(recipe, s.selector).replaceAll('\n', '\n  ')}
+  const region = document.querySelector('dotquilt-region');${animationScript(recipe, s.selector).replaceAll('\n', '\n  ')}${recipe.duration === undefined ? '' : `\n  region.timing = { duration: ${recipe.duration} };`}
   // When your data arrives:
   // region.update({ state: '${recipe.demo === 'feed' ? 'ready' : 'ready'}' });
 </script>`.replace('\n  \n', '\n');
