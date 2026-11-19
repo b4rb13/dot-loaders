@@ -43,7 +43,8 @@ interface RunningHandoff {
   /** Render revision it belongs to; a newer revision makes it stale. */
   readonly revision: number;
   readonly detail: HandoffDetail;
-  readonly started: number;
+  /** When its clock started; later than the start while a view transition runs. */
+  started: number;
   readonly duration: number;
   /** Every Web Animation it owns, cancelled when it finishes. */
   readonly animations: Animation[];
@@ -667,6 +668,27 @@ export abstract class LoadingController<
         if (this.#work?.revision === revision) this.#finish('end', 'complete');
       };
       driver?.draw?.(0);
+      // A view transition (React's <ViewTransition>, or startViewTransition)
+      // shows frozen snapshots while it runs. Hold the handoff's first frame
+      // until it finishes, so the reveal plays where people can see it
+      // instead of jumping ahead when the snapshots lift.
+      const transition = (
+        this.ownerDocument as Document & {
+          activeViewTransition?: { finished: Promise<unknown> } | null;
+        }
+      ).activeViewTransition;
+      if (transition) {
+        const work = this.#work;
+        for (const animation of work.animations) animation.pause();
+        const go = () => {
+          if (this.#work !== work || work.revision !== revision) return;
+          work.started = now(this);
+          for (const animation of work.animations) animation.play();
+          driver?.activate(() => this.frame());
+        };
+        transition.finished.then(go, go);
+        return;
+      }
       if (this.#work?.revision === revision)
         driver?.activate(() => this.frame());
     } catch {

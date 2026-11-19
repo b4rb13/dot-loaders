@@ -35,7 +35,7 @@ While it refreshes, a row of marks sits just above the region's top edge and the
 
 For fast responses, `delay` and `min-display` keep the placeholder from flickering: a load shorter than `delay` never shows it, and a placeholder that did show stays for at least `min-display`. Values around 150 ms and 500 ms suit most screens.
 
-Going from `pending` to `ready` plays the handoff. First the marks take your content's shape: skeleton lines grow or shrink to each real line of text, blocks and circles reshape to the real image or avatar, typing dots unroll into the message, and a placeholder card or bubble grows to the real one's size. Then your content wipes in along a soft front, and the marks leave where it passes them. It takes about a second, and right-to-left text wipes from the right. With reduced motion, a pause, or focus inside the content, it swaps at once.
+Going from `pending` to `ready` plays the handoff. First the marks take your content's shape: skeleton lines grow or shrink to each real line of text, blocks and circles reshape to the real image or avatar, typing dots unroll into the message, and a placeholder card or bubble grows to the real one's size. Then your content wipes in along a soft front, and the marks leave where it passes them. It takes about a second, and right-to-left text wipes from the right. With reduced motion, a pause, or focus inside the content, it swaps at once. During a view transition it waits for the transition to end, then plays.
 
 ## Usage
 
