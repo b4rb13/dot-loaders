@@ -9,13 +9,60 @@ permissions:
 concurrency:
   group: quality-${{ github.ref }}
   cancel-in-progress: true
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+  NEXT_TELEMETRY_DISABLED: '1'
 jobs:
-  quality:
+  # What changed decides what runs:
+  #   docs only (Markdown, docs/, design/)  nothing else
+  #   the site only (apps/site, examples)   checks + the site's browser tests
+  #   anything else (packages, tests, ...)  checks + every browser test, in 3 shards
+  # A merge to main runs the checks only: its pull request already ran the
+  # browser tests. A manual run runs everything.
+  changes:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      TURBO_TELEMETRY_DISABLED: '1'
-      NEXT_TELEMETRY_DISABLED: '1'
+    timeout-minutes: 5
+    outputs:
+      runtime: ${{ steps.scope.outputs.runtime }}
+      site: ${{ steps.scope.outputs.site }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE: ${{ github.event.before }}
+        run: |
+          base="$PUSH_BASE"
+          [ "$EVENT" = pull_request ] && base="$PR_BASE"
+          if [ "$EVENT" = workflow_dispatch ] || [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            echo "runtime=true" >> "$GITHUB_OUTPUT"
+            echo "site=true" >> "$GITHUB_OUTPUT"
+            echo "Running everything ($EVENT)."
+            exit 0
+          fi
+          runtime=false
+          site=false
+          while IFS= read -r file; do
+            case "$file" in
+              '') ;;
+              *.md | docs/* | design/* | .agents/* | LICENSE) ;;
+              apps/site/* | examples/site/* | tests/site/*) site=true ;;
+              *) runtime=true ;;
+            esac
+          done < <(git diff --name-only "$base" HEAD)
+          echo "runtime=$runtime" >> "$GITHUB_OUTPUT"
+          echo "site=$site" >> "$GITHUB_OUTPUT"
+          echo "runtime=$runtime site=$site, from:"
+          git diff --name-only "$base" HEAD
+
+  checks:
+    needs: changes
+    if: needs.changes.outputs.runtime == 'true' || needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
@@ -25,10 +72,9 @@ jobs:
         with:
           node-version: '24'
       - run: bun install --frozen-lockfile --ignore-scripts
-      - run: bunx --no-install playwright install --with-deps chromium
       - name: Lint
         run: bun run lint
-      - name: Build packages
+      - name: Build
         run: bun run build
       - name: Typecheck
         run: bun run check
@@ -36,13 +82,72 @@ jobs:
         run: bun run test
       - name: Size report
         run: bun run size
+
+  browser:
+    needs: changes
+    if: github.event_name != 'push' && needs.changes.outputs.runtime == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    name: browser (${{ matrix.shard }}/3)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bunx --no-install playwright install --with-deps chromium
+      - name: Build
+        run: bun run build
       - name: Browser tests (Chromium)
-        run: bun run test:e2e
+        run: bunx --no-install playwright test --shard=${{ matrix.shard }}/3
       - name: Upload Playwright report
         if: ${{ failure() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
+          path: |
+            playwright-report/
+            test-results/
+
+  site:
+    needs: changes
+    if: github.event_name != 'push' && needs.changes.outputs.runtime != 'true' && needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bunx --no-install playwright install --with-deps chromium
+      - name: Build
+        run: bun run build
+      - name: Site browser tests (Chromium)
+        run: bunx --no-install playwright test --project=site-chromium
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report-site
           path: |
             playwright-report/
             test-results/

@@ -35,7 +35,7 @@ Use Bun (pinned in `.bun-version`) and Node 24+.
 - **Legacy suites:** `bun run test:legacy` (under a minute). Only two checks need packed tarballs: the React suite rerun on React 19.0, the oldest supported version, and catalog SSR under Node and Bun. Run them before a release or when touching the React adapter's hydration or nonce handling.
 - **Sizes:** `bun run size` prints gzip sizes per entry and fails when one is over its budget in `scripts/size-budgets.json` (about 15% headroom). Raise a budget only on purpose, in a PR that says why.
 - **Docs site:** `bun run --cwd apps/site dev` (http://127.0.0.1:4330; Astro runs it in the background, `bunx astro dev stop` ends it). `bun run build` builds it; `tests/site` checks the built pages.
-- **Everything CI runs:** `bun run verify`
+- **Everything CI runs:** `bun run verify`. CI itself runs only what a change needs: docs-only changes skip it, site-only changes run the checks and the site's browser tests, and anything else runs the checks plus every browser test in three parallel shards. A merge to main reruns the checks only.
 
 ## Rules
 
