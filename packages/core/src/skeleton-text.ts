@@ -26,7 +26,8 @@ export class SkeletonText extends SkeletonBlock {
       this.#widths = [];
     } else {
       const source = value ?? [];
-      if (source.length > this.lines) this.report('excess-widths', 'widths');
+      let valid = source.length <= this.lines;
+      if (!valid) this.report('excess-widths', 'widths');
       this.#widths = Object.freeze(
         source.slice(0, 50).map((width) => {
           if (
@@ -36,10 +37,12 @@ export class SkeletonText extends SkeletonBlock {
             width <= 1
           )
             return width;
+          valid = false;
           this.report('invalid-width', 'widths');
           return Number.NaN;
         }),
       );
+      if (valid) this.accept('widths');
     }
     this.requestRender();
   }

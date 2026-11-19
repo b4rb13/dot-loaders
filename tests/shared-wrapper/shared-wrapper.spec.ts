@@ -341,7 +341,12 @@ for (const framework of ['native', 'react']) {
         );
         await page.clock.runFor(50);
       }
+      // Bad provider output is a failure while loading: it reports once per
+      // loading cycle (AUDIT.md decision 10), here for throw, invalid and
+      // oversize.
       expect(await page.evaluate(() => window.shared.errors)).toEqual([
+        'invalid-geometry',
+        'invalid-geometry',
         'invalid-geometry',
       ]);
     });

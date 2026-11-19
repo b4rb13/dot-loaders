@@ -99,11 +99,14 @@ test('font listeners release from the original document on adoption and from the
     const original = document.fonts;
     const next = document.implementation.createHTMLDocument('text-adoption');
     const replacement = next.fonts;
+    // A font load re-checks the text's geometry (refreshing only if it
+    // changed), so count those checks.
+    const target = host as unknown as { environmentChanged(): void };
     let refreshes = 0;
-    const refresh = host.refresh.bind(host);
-    host.refresh = () => {
+    const check = target.environmentChanged.bind(host);
+    target.environmentChanged = () => {
       refreshes++;
-      refresh();
+      check();
     };
     original.dispatchEvent(new Event('loadingdone'));
     const initial = refreshes;
@@ -138,11 +141,13 @@ test('font and shadow stylesheet load invalidation stops observing after disconn
   await expect(page.locator('#text')).toHaveAttribute('data-moving', '');
   const calls = await page.evaluate(() => {
     const host = document.getElementById('text') as TextLoader;
-    const refresh = host.refresh.bind(host);
+    // Each load re-checks the text's geometry (refreshing only if it changed).
+    const target = host as unknown as { environmentChanged(): void };
+    const check = target.environmentChanged.bind(host);
     let count = 0;
-    host.refresh = () => {
+    target.environmentChanged = () => {
       count++;
-      refresh();
+      check();
     };
     document.fonts.dispatchEvent(new Event('loadingdone'));
     host.shadowRoot?.querySelector('link')?.dispatchEvent(new Event('load'));
@@ -867,9 +872,11 @@ test('normal-speed rich variants complete and release all owned resources', asyn
         ).toHaveText(value);
       }
     }
-    expect(await page.evaluate(() => window.m4Text.errors)).toEqual([
-      'generic-text-fallback',
-    ]);
+    // Text outside the character effect reports its fallback again after
+    // plain text came in between (AUDIT.md decision 10): once per round here.
+    expect(await page.evaluate(() => window.m4Text.errors)).toEqual(
+      Array(4).fill('generic-text-fallback'),
+    );
   } finally {
     await context.close();
   }

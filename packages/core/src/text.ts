@@ -206,7 +206,10 @@ export class TextLoader extends LoadingController<'text'> {
       }),
     );
   }
-  #fontChanged = () => this.refresh();
+  // A font or stylesheet finished loading somewhere on the page. Re-measure
+  // only if this text's geometry changed, so an unrelated font doesn't end a
+  // handoff in flight.
+  #fontChanged = () => this.environmentChanged();
   #leave = () => {
     Reflect.deleteProperty(this, pointer);
     this.#drawIdle();
@@ -361,7 +364,9 @@ export class TextLoader extends LoadingController<'text'> {
       rect.width > 0 &&
       rect.height > 0;
     this.toggleAttribute('data-dotquilt-glyphs', precise);
+    // Content that isn't plain text reports again only after it was plain.
     if (!plain) this.report('generic-text-fallback', 'children');
+    else this.accept('children');
     this.#surface = Object.freeze({
       family: 'text',
       width: rect.width,
