@@ -79,7 +79,7 @@ interface Shape {
 function maskGrid(
   mark: keyof typeof shapes,
   shape: Shape,
-  place: { position: string; repeat: string },
+  place: { position: string; repeat: string; trim?: boolean },
   color: string,
 ): string {
   const { width, height, across, down } = shape;
@@ -98,6 +98,13 @@ function maskGrid(
           band(x + height / 2, x + width - height / 2, '90deg,'),
         ];
   const composite = mark === 'square' ? 'intersect' : 'add,add,intersect';
+  if (place.trim) {
+    // A line ends on its last whole mark: one more layer, on top, keeps only
+    // whole tiles from the left (lineTrim).
+    const n = layers.length;
+    const size = `${px(across)} ${px(down)}`;
+    return `mask-image:linear-gradient(#000 0 0),${layers.join(',')};mask-size:round(down,100%,${px(across)}) 100%${`,${size}`.repeat(n)};mask-position:0 0${`,${place.position}`.repeat(n)};mask-repeat:no-repeat${`,${place.repeat}`.repeat(n)};mask-composite:intersect,${composite}`;
+  }
   const size = `${px(across)} ${px(down)}`;
   // Every layer shares one tile. The fill carries it too, so code that reads
   // the grid from the background (the dissolve, the chart and table fields)
@@ -122,6 +129,32 @@ export function shapeGrid(
     markColor,
   );
 }
+
+/**
+ * Lines end on their last whole mark instead of a mark cut in half: a mask
+ * keeps whole tiles from the left. It needs CSS round(); without it a line
+ * looks as before. Forced colours draw an outline, so they keep no mask.
+ */
+export function lineTrim(
+  host: (mark?: keyof typeof shapes) => string,
+  surface: string,
+  marks: readonly Mark[] = ['dot', 'square', 'dash'],
+): string {
+  const rules = marks
+    .map((mark) =>
+      mark === 'dot'
+        ? `${host()} ${surface}{mask:linear-gradient(#000 0 0) 0 0/round(down,100%,var(--g)) 100% no-repeat}`
+        : `${host(mark)} ${surface}{${maskGrid(mark, shapes[mark], { position: '0 0', repeat: 'repeat', trim: true }, markColor)}}`,
+    )
+    .join('');
+  return `@supports (width:round(down,1px,1px)){@media(forced-colors:none){${rules}}}`;
+}
+
+/**
+ * A circle fades out over its last few pixels, so marks its edge would cut
+ * read as softly faded instead of as slivers.
+ */
+export const circleEdge = `mask:radial-gradient(closest-side,#000 calc(100% - ${markSize}*.7),#0000)`;
 
 /**
  * TextLoader's placeholder has 2 px dots at a 6 px pitch; squares and dashes

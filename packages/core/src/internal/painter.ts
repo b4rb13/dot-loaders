@@ -20,15 +20,33 @@ type Entry = SVGElement &
   Partial<Record<0 | 1 | 2 | 3, number>> & { 4?: boolean };
 const svgns = 'http://www.w3.org/2000/svg';
 
+/**
+ * TextLoader's glyph marks sit on a matrix whose pitch is about 2.8 radii, much
+ * tighter than a field's: squares and dashes are fitted to it, so the marks of
+ * a character stay distinct. A dash spans nearly the whole pitch, like a
+ * scanline; a square is two thirds of it.
+ */
+function glyphBox(mark: 'square' | 'dash', r: number) {
+  return mark === 'square'
+    ? { width: 1.85 * r, height: 1.85 * r, radius: 0.45 * r }
+    : { width: 2.55 * r, height: 0.9 * r, radius: 0.45 * r };
+}
 /** Places a dot as a circle, or a square or dash as a rounded rectangle. */
-function place(entry: Entry, mark: Mark, x: number, y: number, r: number) {
+function place(
+  entry: Entry,
+  mark: Mark,
+  x: number,
+  y: number,
+  r: number,
+  glyphs: boolean,
+) {
   if (mark === 'dot') {
     entry.setAttribute('cx', String(x));
     entry.setAttribute('cy', String(y));
     entry.setAttribute('r', String(r));
     return;
   }
-  const box = markBox(mark, r);
+  const box = glyphs ? glyphBox(mark, r) : markBox(mark, r);
   entry.setAttribute('x', String(x - box.width / 2));
   entry.setAttribute('y', String(y - box.height / 2));
   entry.setAttribute('width', String(box.width));
@@ -39,6 +57,8 @@ export function createPainter(
   host: HTMLElement,
   report: (code: string) => void,
   part?: string,
+  /** Draws glyph marks (TextLoader), fitted to their matrix. */
+  glyphs = false,
 ): Painter {
   const doc = host.ownerDocument;
   // The surface cap is checked per command below, so a refused lease means
@@ -105,7 +125,7 @@ export function createPainter(
           }
           const r = clamp(size, 0, 32);
           if (entry[0] !== x || entry[1] !== y || entry[2] !== r) {
-            place(entry, mark, x, y, r);
+            place(entry, mark, x, y, r, glyphs);
             entry[0] = x;
             entry[1] = y;
             entry[2] = r;

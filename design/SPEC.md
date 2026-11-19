@@ -50,6 +50,8 @@ Composed and unhurried; data settles into place instead of snapping.
 - **Alternative marks** are a component option with the same positions and motion. Only the drawn shape and spacing change.
   - dash: 9.4 × 3.4 px, rounded caps, 13 × 9.5 px pitch. Best for text lines and table rows; on charts it follows the line. Avoid it for TextLoader glyphs and large fields, where it reads as hatching.
   - square: 4 × 4 px, 1.1 px corner radius, 8.5 px pitch. Crisp at small sizes; makes a clean pixel font for TextLoader.
+- **Only whole marks** (2026-11-19). Blocks spread whole marks to their edges; lines end on their last whole mark (CSS `round()`, so older browsers keep the cut mark); a circle fades over its last few pixels, so marks its edge cuts read as soft, not as slivers.
+- **TextLoader glyphs** sit on a 5 × 7 matrix with a square pitch that follows the line height, centred in each character, with marks about 70% of the pitch: distinct, LED-like marks that never touch. Squares are two thirds of the pitch; dashes span nearly all of it, like scanlines.
 - Marks use only the text-adjacent slate plus the soft glow, so they sit inside any app without imposing a brand colour. Apps can override all of this through the component CSS variables.
 
 ## Typography

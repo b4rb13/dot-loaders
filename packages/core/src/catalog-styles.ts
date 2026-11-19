@@ -1,6 +1,8 @@
 import {
+  circleEdge,
   dotGrid,
   lineHeight,
+  lineTrim,
   markColor,
   markLineHeights,
   markShapes,
@@ -14,19 +16,19 @@ import { skeletonStyles } from './styles.js';
 export const skeletonLineStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze(
     /* @__PURE__ */ skeletonStyles.concat(
-      `:host{height:${lineHeight};border-radius:999px}:host .surface{${dotGrid('0 0')}}${markShapes((mark) => `:host([mark=${mark}])`, '.surface', '0 0')}${markLineHeights((mark) => `:host([mark=${mark}])`)}`,
+      `:host{height:${lineHeight};border-radius:999px}:host .surface{${dotGrid('0 0')}}${markShapes((mark) => `:host([mark=${mark}])`, '.surface', '0 0')}${markLineHeights((mark) => `:host([mark=${mark}])`)}${lineTrim((mark) => (mark ? `:host([mark=${mark}])` : ':host'), '.surface')}`,
     ),
   );
 export const skeletonCircleStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze(
     /* @__PURE__ */ skeletonStyles.concat(
-      ':host{width:2.5rem;height:auto;aspect-ratio:1;border-radius:50%}',
+      `:host{width:2.5rem;height:auto;aspect-ratio:1;border-radius:50%;${circleEdge}}@media(forced-colors:active){:host{mask:none}}`,
     ),
   );
 export const skeletonTextStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze(
     /* @__PURE__ */ skeletonStyles.concat(
-      `:host{height:auto;overflow:visible;display:grid;gap:.5em;border-radius:0}:host .lines{display:grid;gap:inherit}:host .lines:is(.pulse,.lift){position:absolute;inset:0}:host .line{box-sizing:border-box;height:${lineHeight};position:relative;border-radius:999px;overflow:hidden;${dotGrid('0 0')}}${markShapes((mark) => `:host([mark=${mark}])`, '.line', '0 0')}${markLineHeights((mark) => `:host([mark=${mark}]) .line`)}`,
+      `:host{height:auto;overflow:visible;display:grid;gap:.5em;border-radius:0}:host .lines{display:grid;gap:inherit}:host .lines:is(.pulse,.lift){position:absolute;inset:0}:host .line{box-sizing:border-box;height:${lineHeight};position:relative;border-radius:999px;overflow:hidden;${dotGrid('0 0')}}${markShapes((mark) => `:host([mark=${mark}])`, '.line', '0 0')}${markLineHeights((mark) => `:host([mark=${mark}]) .line`)}${lineTrim((mark) => (mark ? `:host([mark=${mark}])` : ':host'), '.line')}`,
     ),
   );
 export const typingStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
