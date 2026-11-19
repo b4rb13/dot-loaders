@@ -124,7 +124,7 @@ export class SkeletonBlock extends ManagedElement {
         }
       : { driftPx: -handoff.markDriftPx, shrink: handoff.markShrink };
     return (duration, easing, own, invalidate) => {
-      if (!builtin || !this.allowed(this.activity)) return () => {};
+      if (!builtin || !this.canAnimate()) return () => {};
       const effect = dissolveSkeleton(
         this,
         duration,

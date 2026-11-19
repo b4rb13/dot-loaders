@@ -436,7 +436,8 @@ for (const framework of ['native', 'react']) {
       if (action === 'focus') await expect(page.locator('#keep')).toBeFocused();
     });
   }
-  test(`${framework}: max recommended sequence must fit the remaining shared four-second window`, async ({
+  // Decision 3: the reveal plays however long the shared load took.
+  test(`${framework}: a long shared load still gets the full coordinated handoff`, async ({
     page,
   }) => {
     await open(page, framework);
@@ -444,14 +445,19 @@ for (const framework of ['native', 'react']) {
     await ready(page);
     await expect(page.locator('#owner')).toHaveAttribute(
       'data-presentation',
-      'ready',
-    );
-    expect(await page.evaluate(() => window.shared.events.at(-1)?.reason)).toBe(
-      'immediate',
+      'handoff',
     );
     expect(
       await page.locator('#row-a').evaluate((el) => el.getAnimations().length),
-    ).toBe(0);
+    ).toBe(1);
+    await page.clock.runFor(2000);
+    await expect(page.locator('#owner')).toHaveAttribute(
+      'data-presentation',
+      'ready',
+    );
+    expect(await page.evaluate(() => window.shared.events.at(-1)?.reason)).toBe(
+      'complete',
+    );
   });
   test(`${framework}: missing chart geometry falls back locally while table convergence remains active`, async ({
     page,

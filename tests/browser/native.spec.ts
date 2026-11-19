@@ -6,7 +6,12 @@ declare global {
   interface Window {
     booted: boolean;
     contentIdentity: Element;
-    events: { type: string; cycle?: string; handoffId: number }[];
+    events: {
+      type: string;
+      cycle?: string;
+      handoffId: number;
+      reason?: string;
+    }[];
     violations: string[];
   }
 }
@@ -228,7 +233,7 @@ test('four-second window is not renewed by cycle churn or same-instance reconnec
     'end',
   ]);
 });
-test('oversized requested handoff skips instead of exceeding remaining window', async ({
+test('a requested handoff longer than the 4-second motion limit is skipped', async ({
   page,
 }) => {
   await boot(page);
@@ -237,6 +242,28 @@ test('oversized requested handoff skips instead of exceeding remaining window', 
     'start',
     'end',
   ]);
+  expect(await page.evaluate(() => window.events.map((e) => e.reason))).toEqual(
+    [undefined, 'immediate'],
+  );
+});
+// Decision 3: the idle stops after 4 s, but the reveal always animates.
+test('a load longer than the motion window still animates the reveal', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await boot(page);
+  await page.clock.runFor(6000);
+  await page.evaluate(() =>
+    (document.getElementById('region') as LoadingRegion).update({
+      state: 'ready',
+    }),
+  );
+  await expect(page.locator(r)).toHaveAttribute('data-presentation', 'handoff');
+  await page.clock.runFor(1200);
+  await expect(page.locator(r)).toHaveAttribute('data-presentation', 'ready');
+  expect(await page.evaluate(() => window.events.map((e) => e.reason))).toEqual(
+    [undefined, 'complete'],
+  );
 });
 test('invalid state/motion recover conservatively; immediate error/zero/empty stay app-owned', async ({
   page,

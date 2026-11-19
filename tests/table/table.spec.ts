@@ -142,17 +142,10 @@ test('missing targets fall back; custom definitions share cancellation and revok
   expect(await page.evaluate(() => window.tableTest.identity())).toBe(true);
   expect(await page.evaluate(() => window.tableTest.errors)).toEqual([]);
 });
-for (const restriction of [
-  'reduced',
-  'pause',
-  'hidden',
-  'offscreen',
-  'exhaustion',
-])
+for (const restriction of ['reduced', 'pause', 'hidden', 'offscreen'])
   test(`restriction ${restriction} reveals current content immediately`, async ({
     page,
   }) => {
-    if (restriction === 'exhaustion') await page.clock.install();
     if (restriction === 'reduced')
       await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/table');
@@ -169,7 +162,6 @@ for (const restriction of [
       await page
         .locator('#table-region')
         .evaluate((e) => e.setAttribute('data-dotquilt-offscreen', ''));
-    if (restriction === 'exhaustion') await page.clock.runFor(4100);
     await expect(page.locator('#table')).not.toHaveAttribute('data-moving', '');
     await page.evaluate(() => window.tableTest.ready());
     await expect(page.locator('#table-region')).toHaveAttribute(
@@ -183,6 +175,30 @@ for (const restriction of [
       await page.locator('#row-0').evaluate((e) => e.getAnimations().length),
     ).toBe(0);
   });
+// Decision 3: after the 4-second window the idle stays still, but the rows
+// handoff still plays.
+test('after the motion window the idle stops and the rows still hand off', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto('/table');
+  await expectPaint(page.locator('#table'));
+  await page.clock.runFor(4100);
+  await expect(page.locator('#table')).not.toHaveAttribute('data-moving', '');
+  await page.evaluate(() => window.tableTest.ready());
+  await expect(page.locator('#table-region')).toHaveAttribute(
+    'data-presentation',
+    'handoff',
+  );
+  await page.clock.runFor(1200);
+  await expect(page.locator('#table-region')).toHaveAttribute(
+    'data-presentation',
+    'ready',
+  );
+  expect(
+    await page.evaluate(() => window.tableTest.events.at(-1)?.reason),
+  ).toBe('complete');
+});
 test('pause, focus, row changes and competing effects settle without stale styles', async ({
   page,
 }) => {

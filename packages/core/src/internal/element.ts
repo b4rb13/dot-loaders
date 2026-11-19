@@ -298,13 +298,24 @@ export abstract class ManagedElement<
       remaining(this, activity),
     );
   }
-  protected allowed(activity: Activity): boolean {
+  /**
+   * Whether this element may animate at all: styled, admitted, and not
+   * stilled by reduced motion or a pause. A handoff needs only this, so the
+   * reveal animates however long the load took.
+   */
+  protected canAnimate(): boolean {
     // No motion on an unstyled shadow tree.
     if (this.#hold) return false;
-    if (!this.resources?.eligible() || remaining(this, activity) <= 0)
-      return false;
+    if (!this.resources?.eligible()) return false;
     this.#restricted ??= motionRestricted(this);
     return !this.#restricted;
+  }
+  /**
+   * Whether idle motion may run: it also stops when the loading period's
+   * 4-second window is used up, so a long load never loops indefinitely.
+   */
+  protected allowed(activity: Activity): boolean {
+    return this.canAnimate() && remaining(this, activity) > 0;
   }
 
   /** The property names update() applies; subclasses add their own. */
