@@ -6,7 +6,9 @@
       "scripts/**",
       "tests/**",
       "examples/**",
+      "apps/site/**",
       "!**/dist",
+      "!**/.astro",
       "*.json",
       "playwright*.config.ts",
       ".changeset/*.json",
@@ -31,5 +33,18 @@
     "parser": {
       "tailwindDirectives": true
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.astro"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
+          }
+        }
+      }
+    }
+  ]
 }

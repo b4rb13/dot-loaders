@@ -1,0 +1,186 @@
+---
+/**
+ * A live preview: the loader inside a LoadingRegion, with Start loading and
+ * Reveal (design/SPEC.md, "Docs"). Put one <dotquilt-region> in the slot.
+ */
+interface Props {
+  /** Accessible name of the preview frame. */
+  label?: string;
+  /** How long the simulated request takes, in ms. */
+  delay?: number;
+}
+const { label = 'Live preview', delay = 2400 } = Astro.props;
+---
+
+<figure
+  class="dq-preview not-content"
+  data-preview
+  data-delay={delay}
+  aria-label={label}
+>
+  <div class="dq-preview-bar">
+    <span class="dq-preview-title">Preview</span>
+    <div class="dq-preview-actions">
+      <button type="button" class="dq-button" data-start>Start loading</button>
+      <button type="button" class="dq-button primary" data-reveal>Reveal</button>
+      <span class="dq-preview-status" role="status" data-status>Loading</span>
+    </div>
+  </div>
+  <div class="dq-preview-stage">
+    <slot />
+  </div>
+</figure>
+
+<script>
+  import { registerAll } from '@dotquilt-internal/core/register-all';
+
+  registerAll();
+
+  /**
+   * A stand-in for a real request: it settles after `ms`, or as soon as
+   * Reveal is pressed. The preview drives the region exactly as an app would,
+   * from the request's promise.
+   */
+  function request(ms: number) {
+    let settle = () => {};
+    const done = new Promise<void>((resolve) => {
+      settle = resolve;
+      setTimeout(resolve, ms);
+    });
+    return { done, settle };
+  }
+
+  for (const preview of document.querySelectorAll<HTMLElement>(
+    '[data-preview]',
+  )) {
+    const region = preview.querySelector('dotquilt-region');
+    const status = preview.querySelector<HTMLElement>('[data-status]');
+    const start = preview.querySelector<HTMLButtonElement>('[data-start]');
+    const reveal = preview.querySelector<HTMLButtonElement>('[data-reveal]');
+    if (!region || !status || !start || !reveal) continue;
+    const delay = Number(preview.dataset.delay) || 2400;
+    let current: ReturnType<typeof request> | undefined;
+    let loads = 0;
+
+    const show = (state: 'loading' | 'ready') => {
+      preview.dataset.state = state;
+      status.textContent = state === 'loading' ? 'Loading' : 'Ready';
+      start.disabled = state === 'loading';
+      reveal.disabled = state !== 'loading';
+    };
+
+    async function load() {
+      const cycle = `load-${++loads}`;
+      const pending = request(delay);
+      current = pending;
+      region?.update({ state: 'pending', cycle });
+      show('loading');
+      await pending.done;
+      // A newer load took over; only the latest request may reveal.
+      if (current !== pending || region?.cycle !== cycle) return;
+      current = undefined;
+      region.update({ state: 'ready' });
+      show('ready');
+    }
+
+    start.addEventListener('click', () => void load());
+    reveal.addEventListener('click', () => current?.settle());
+
+    // The first load starts when the preview comes into view, so nobody
+    // misses it further down the page.
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      void load();
+    }, { threshold: 0.4 });
+    observer.observe(preview);
+    show('loading');
+    reveal.disabled = true;
+  }
+</script>
+
+<style>
+  .dq-preview {
+    margin: 1.5rem 0;
+    background: var(--dq-surface);
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-md);
+    box-shadow: var(--dq-shadow);
+    overflow: hidden;
+  }
+  .dq-preview-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--dq-line);
+  }
+  .dq-preview-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--dq-muted);
+    padding-inline: 0.25rem;
+  }
+  .dq-preview-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .dq-button {
+    height: 34px;
+    padding: 0 0.875rem;
+    border-radius: var(--dq-radius-sm);
+    border: 1px solid var(--dq-line-2);
+    background: var(--dq-surface);
+    color: var(--dq-ink);
+    font: 500 0.8125rem/1 var(--dq-font);
+    cursor: pointer;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      border-color var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .dq-button:hover:not(:disabled) {
+    background: var(--dq-subtle);
+  }
+  .dq-button:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+  .dq-button.primary {
+    background: var(--dq-accent);
+    border-color: transparent;
+    color: var(--dq-accent-ink);
+  }
+  .dq-button.primary:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--dq-accent) 88%, var(--dq-ink));
+  }
+  .dq-button:focus-visible {
+    outline: 2px solid var(--dq-accent);
+    outline-offset: 2px;
+  }
+  .dq-preview-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 4.5rem;
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+  }
+  .dq-preview-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--dq-faint);
+  }
+  [data-state='ready'] .dq-preview-status::before {
+    background: var(--dq-positive);
+  }
+  .dq-preview-stage {
+    padding: 1.75rem;
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+  }
+</style>

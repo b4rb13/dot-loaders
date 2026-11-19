@@ -1,0 +1,81 @@
+---
+title: Skeleton
+description: Blocks, lines, circles and paragraphs of marks that hold the shape of your content.
+---
+
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+import Preview from '../../../../components/Preview.astro';
+// Real files, type-checked with the repository, so the code here always works.
+import memberCard from '../../../../../../../examples/site/member-card.tsx?raw';
+import memberHtml from '../../../../../../../examples/site/member.html?raw';
+import memberTs from '../../../../../../../examples/site/member.ts?raw';
+
+Skeletons hold the shape of images, text and avatars while they load. A soft glow drifts across the marks, and when the region hands over they leave from left to right.
+
+<Preview label="A profile loading">
+  <dotquilt-region state="pending" aria-label="Team member">
+    <div slot="placeholder" class="skeleton-demo">
+      <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+      <div class="skeleton-demo-lines">
+        <dotquilt-skeleton-line></dotquilt-skeleton-line>
+        <dotquilt-skeleton-line style="width: 60%"></dotquilt-skeleton-line>
+      </div>
+      <dotquilt-skeleton-block style="grid-column: 1 / -1; height: 96px"></dotquilt-skeleton-block>
+    </div>
+    <div class="skeleton-demo">
+      <span class="skeleton-demo-avatar">AL</span>
+      <div><strong>Ada Lovelace</strong><br />Analytical engines</div>
+      <p style="grid-column: 1 / -1; margin: 0">Wrote the first published algorithm intended for a machine.</p>
+    </div>
+  </dotquilt-region>
+</Preview>
+
+<style>{`
+  .skeleton-demo { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; min-height: 160px; }
+  .skeleton-demo-lines { display: grid; gap: 8px; }
+  .skeleton-demo dotquilt-skeleton-circle { width: 48px; }
+  .skeleton-demo-avatar { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--dq-accent-soft); color: var(--dq-accent); font-weight: 600; }
+`}</style>
+
+## Usage
+
+Put a skeleton in a region's `placeholder` slot and size it with CSS like any other element: blocks fill their width and take the height you give them, and lines are two rows of marks tall. Your code owns the request; the region only needs to know whether the data is pending or ready.
+
+<Tabs syncKey="framework">
+  <TabItem label="React">
+    <Code code={memberCard} lang="tsx" title="MemberCard.tsx" />
+  </TabItem>
+  <TabItem label="Native">
+    <Code code={memberHtml} lang="html" title="index.html" />
+    <Code code={memberTs} lang="ts" title="member.ts" />
+  </TabItem>
+</Tabs>
+
+## Elements
+
+| Element | React | Use |
+| --- | --- | --- |
+| `<dotquilt-skeleton-block>` | `SkeletonBlock` | images, charts and other rectangles |
+| `<dotquilt-skeleton-line>` | `SkeletonLine` | one line of text |
+| `<dotquilt-skeleton-circle>` | `SkeletonCircle` | avatars and icons |
+| `<dotquilt-skeleton-text>` | `SkeletonText` | a paragraph of lines |
+
+## Options
+
+| Attribute | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mark` | `dot` \| `dash` \| `square` | `dot` | The shape of each mark. Dashes suit text lines; squares stay crisp at small sizes. |
+| `motion` | `auto` \| `paused` | `auto` | `paused` stills the marks. Reduced motion does the same. |
+| `speed` | number | `1` | How fast the idle glow moves, from above 0 up to 4. |
+| `lines` | number | `3` | SkeletonText only: how many lines, up to 50. |
+
+## Colours
+
+The marks use a slate that sits inside any app, with a soft teal glow. Change them with custom properties:
+
+```css
+.profile {
+  --dotquilt-color: #627467;
+  --dotquilt-accent-color: #3f7f86;
+}
+```

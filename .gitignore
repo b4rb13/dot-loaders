@@ -22,3 +22,6 @@ apps/website/public/dotquilt/
 
 # Local Claude settings
 .claude/settings.local.json
+
+# Astro
+.astro/
