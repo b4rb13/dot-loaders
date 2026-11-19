@@ -444,7 +444,43 @@ This is a rebuild, not a polish pass. The current site, docs and default visuals
 - deploy the site behind protection
 - get feedback
 
+Before the alpha, from the product research (2026-11-19, [docs/planning/product-strategy-2026-11.md](docs/planning/product-strategy-2026-11.md)):
+- **Anti-flicker timing** on LoadingRegion: a `delay` before the placeholder shows, and a minimum display time. Element Plus and react-placeholder have both; fast responses flash a placeholder today.
+- **A size diet.** Entries measure 6.4–16 KB gzip, against about 2.2 KB for react-loading-skeleton. Target −30%, then lower the budgets.
+- **ViewTransition compatibility.** React 19.3 made `<ViewTransition>` stable; document and test the handoff alongside it.
+- **README, changelog and a publish dry run**, a Next.js example project, and React fast tests.
+- **Agent-ready docs:** `/llms.txt`, per-page Markdown and "Copy page".
+
 Performance qualification on real devices comes after there are users, against budgets you choose, not before.
+
+### Phase 6 — grow, then Pro (proposed 2026-11-19)
+The full reasoning, with sources, is in the product strategy and `docs/research/2026-11/`.
+
+**Growth (free):**
+- **A shadcn registry** (`npx shadcn add dotquilt/...`). The `shadcn` package has 18.9M weekly downloads.
+- **Thin, typed Vue, Svelte and Angular wrappers.** NumberFlow shows a custom element plus wrappers can reach millions of weekly downloads.
+- **An AI pack:**
+  - a streaming-text placeholder;
+  - a tool-result region (chart, table or text placeholder for a pending tool call);
+  - a status indicator for thinking, searching, working and error.
+
+  No library shapes tool results today.
+- **Auto-skeletons:** `LoadingRegion auto` measures the last rendered content, plus a CLI or Vite plugin that snapshots real components. boneyard-js reached 143k weekly downloads in seven months with this, without accessibility or CSP rigour.
+- **A presets gallery and a Tailwind preset.**
+- **A "What a placeholder has to get right" page.** Accessibility is a claim no competitor can make.
+
+**Pro (after the commercial policy's 10/5/3 gates):**
+- **Dotquilt Screens:** 8–12 complete app screens with every state, in React and HTML.
+- **A Pro motion collection** of new animations.
+- **Playground Pro:** saved presets and token/Tailwind export.
+- **A Figma kit.**
+- **Delivery:** a private repo and a token-gated registry, with no runtime keys.
+
+**Later:**
+- React Native;
+- a devtools overlay;
+- testing utilities;
+- a Builder/OEM license.
 
 ## Decisions only you can make
 
@@ -479,3 +515,9 @@ Performance qualification on real devices comes after there are users, against b
     - (d) leave it to the app, and document `hidden`/`inert` on pending server content.
 
     I recommend (a) as the default, with (d) documented for apps that would rather hide.
+12. **Business model and license (from the 2026-11-19 research).** Confirm "MIT core, promised to stay free, plus a one-time Dotquilt Pro bundle", as already planned. The research weighed six alternatives and found none better for a loader library.
+13. **Pro pricing:** Solo $149 / Team (10) $449 / Company $999 with about 50% renewal, or the earlier guess of $99 / $299.
+14. **The seller and the country.** This decides the merchant of record: Polar, Paddle, or Stripe Managed Payments. Lemon Squeezy closed to new sellers on 2026-11-16.
+15. **A Pro waitlist** by email (needs a privacy page and a mail provider), or GitHub Releases only.
+16. **The npm name and a "Dotquilt" trademark.**
+17. **Pro v1 scope** (which screens first), and **who runs the 10 discovery conversations**.
