@@ -1,6 +1,7 @@
 import type { ChartLoader } from '@dotquilt-internal/core/chart';
 import type { LoadingRegion } from '@dotquilt-internal/core/region';
 import { expect, test } from '@playwright/test';
+import { capture } from '../capture';
 import { expectPaint, paintCount, readPaint } from '../paint-output';
 
 declare global {
@@ -120,20 +121,25 @@ test('all six idle silhouettes and all three final geometries: fixed progress an
     viewport: { width: 640, height: 480 },
   });
   try {
-    const live = await context.newPage();
-    for (const variant of ['line', 'bar', 'scatter'])
-      for (const name of names) {
-        await live.goto(`/chart?variant=${variant}`);
-        await expectPaint(live.locator(chart));
-        await live.evaluate((n) => window.m4Chart.recipe(n), name);
-        await live.waitForTimeout(150);
-        await live.evaluate(() => window.m4Chart.ready());
-        await expect(live.locator('#chart-region')).toHaveAttribute(
-          'data-presentation',
-          'ready',
-        );
-        expect(await live.evaluate(() => window.m4Chart.errors)).toEqual([]);
-      }
+    // One page per variant, side by side: each still plays every idle and its
+    // handoff at natural speed, in a third of the time.
+    await Promise.all(
+      ['line', 'bar', 'scatter'].map(async (variant) => {
+        const live = await context.newPage();
+        for (const name of names) {
+          await live.goto(`/chart?variant=${variant}`);
+          await expectPaint(live.locator(chart));
+          await live.evaluate((n) => window.m4Chart.recipe(n), name);
+          await live.waitForTimeout(150);
+          await live.evaluate(() => window.m4Chart.ready());
+          await expect(live.locator('#chart-region')).toHaveAttribute(
+            'data-presentation',
+            'ready',
+          );
+          expect(await live.evaluate(() => window.m4Chart.errors)).toEqual([]);
+        }
+      }),
+    );
   } finally {
     await context.close();
   }
@@ -171,7 +177,7 @@ test('all six idle silhouettes and all three final geometries: fixed progress an
               animation.currentTime = 1;
             }
         }, index);
-        await page.screenshot({
+        await capture(page, {
           path: testInfo.outputPath(
             `chart-fixed-${variant}-${name}-${index}.png`,
           ),

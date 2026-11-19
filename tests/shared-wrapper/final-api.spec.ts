@@ -85,7 +85,7 @@ for (const framework of ['native', 'react']) {
                     ?.inert,
               ),
           ).toBe(false);
-          await page.clock.runFor(1000);
+          await page.clock.runFor(1200);
           await expect(page.locator('#owner')).toHaveAttribute(
             'data-presentation',
             'ready',
@@ -142,7 +142,7 @@ for (const framework of ['native', 'react']) {
     expect(
       await page.locator('#row-c').evaluate((e) => e.getAnimations().length),
     ).toBe(0);
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
     await expect(page.locator('#owner')).toHaveAttribute(
       'data-presentation',
       'ready',

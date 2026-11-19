@@ -1,5 +1,6 @@
 import type { TextLoader } from '@dotquilt-internal/core/text';
 import { expect, test } from '@playwright/test';
+import { capture } from '../capture';
 
 declare global {
   interface Window {
@@ -354,7 +355,7 @@ test('fixed-progress captures retain outgoing dots and overlap the incoming text
             animation.currentTime = 1;
           }
       });
-      await page.screenshot({
+      await capture(page, {
         path: info.outputPath(`${idle}-${handoff}-${index}.png`),
         caret: 'initial',
       });
@@ -566,7 +567,7 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
       'dotquilt/text/morph-wipe',
     );
     if (mode === 'inline')
-      await page.screenshot({
+      await capture(page, {
         path: info.outputPath('text-handoff.png'),
         caret: 'initial',
       });

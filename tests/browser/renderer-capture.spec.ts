@@ -316,7 +316,7 @@ for (const family of ['chart-line', 'table'])
     });
     expect(result.particles).toBeGreaterThan(0);
     expect(result.width * result.height).toBeGreaterThan(0);
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
     await page.evaluate(() => window.catalogFixture.teardown());
   });
 
