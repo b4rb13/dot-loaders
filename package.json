@@ -23,7 +23,8 @@
     "size": "bun run scripts/size.ts",
     "verify": "bun run lint && bun run check && bun run test && bun run build && bun run size && bun run test:e2e",
     "verify:packed": "bun run scripts/verify-packed.ts",
-    "changeset": "changeset"
+    "changeset": "changeset",
+    "release:check": "bun run scripts/release-check.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
