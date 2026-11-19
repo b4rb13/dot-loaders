@@ -45,6 +45,20 @@ Suspense and a loading region do different jobs. Suspense waits for server-side 
 
 A placeholder on its own is decoration, hidden from assistive technology. If the wait matters, say so in your own words nearby.
 
+## View transitions
+
+Dotquilt works inside React's `<ViewTransition>` (and `document.startViewTransition`). A view transition shows frozen snapshots of the page while it runs, so when one is running as a region becomes ready, the region holds the first frame of its handoff and plays it in full once the transition ends. Nothing jumps when the snapshots lift.
+
+```tsx
+<ViewTransition>
+  <LoadingRegion state={data ? 'ready' : 'pending'} placeholder={<SkeletonText lines={3} />}>
+    {data && <Summary data={data} />}
+  </LoadingRegion>
+</ViewTransition>
+```
+
+To let the view transition alone reveal the content, pass `timing={{ duration: 0 }}` to the region.
+
 ## Styles and CSP
 
 By default each component adds its styles inline, once per page. If your site has a Content Security Policy, pass a `stylePolicy` to every component: a nonce, or an external stylesheet. See [Content Security Policy](/docs/guides/csp/).

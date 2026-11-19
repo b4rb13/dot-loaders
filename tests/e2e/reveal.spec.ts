@@ -306,3 +306,62 @@ test('the morph cleans up after itself and the next loading period starts fresh'
   ]);
   expect(result.visible).toEqual(['visible', 'visible']);
 });
+
+test('a handoff that starts during a view transition holds its first frame until it ends, then plays in full', async ({
+  page,
+}) => {
+  await open(page);
+  const result = await page.evaluate(async () => {
+    const region = window.e2e.owner as HTMLElement & {
+      update(patch: object): void;
+    };
+    const doc = document as Document & {
+      startViewTransition?: (update: () => void) => {
+        finished: Promise<void>;
+      };
+    };
+    if (!doc.startViewTransition || !('activeViewTransition' in document))
+      return null;
+    for (let i = 0; i < 8; i++) await new Promise(requestAnimationFrame);
+    const marks = () =>
+      [
+        ...(region.shadowRoot?.querySelector('[data-dotquilt-morph]')
+          ?.children ?? []),
+      ]
+        .slice(0, 12)
+        .map((mark) => `${mark.getAttribute('cx')},${mark.getAttribute('cy')}`)
+        .join(' ');
+    let first = '';
+    let ended = 0;
+    region.addEventListener(
+      'dotquilt-handoff-start',
+      () => requestAnimationFrame(() => (first = marks())),
+      { once: true },
+    );
+    const done = new Promise<string>((resolve) =>
+      region.addEventListener(
+        'dotquilt-handoff-end',
+        (event) => {
+          ended = performance.now();
+          resolve((event as CustomEvent<{ reason: string }>).detail.reason);
+        },
+        { once: true },
+      ),
+    );
+    const transition = doc.startViewTransition(() =>
+      region.update({ state: 'ready' }),
+    );
+    await transition.finished;
+    const lifted = performance.now();
+    const held = marks();
+    const reason = await done;
+    return { first, held, reason, after: Math.round(ended - lifted) };
+  });
+  test.skip(result === null, 'This browser has no activeViewTransition');
+  if (!result) return;
+  // Nothing moved under the snapshots; the full handoff came after them.
+  expect(result.first).not.toBe('');
+  expect(result.held).toBe(result.first);
+  expect(result.reason).toBe('complete');
+  expect(result.after).toBeGreaterThanOrEqual(1000);
+});
