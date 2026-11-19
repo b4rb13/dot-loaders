@@ -26,6 +26,7 @@ const links = [
     href: '/docs/guides/react/',
     current: path.startsWith('/docs/guides/'),
   },
+  { label: 'Pricing', href: '/pricing/', current: path === '/pricing/' },
 ];
 ---
 
@@ -150,7 +151,9 @@ const links = [
   .seam {
     position: absolute;
     inset-inline: 0;
-    bottom: -5px;
+    /* Positioned against the fixed header itself: inside its lower edge,
+       so it never covers the page. */
+    bottom: 0;
     width: auto;
     height: 9px;
     border-radius: 0;

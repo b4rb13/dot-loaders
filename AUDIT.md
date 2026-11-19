@@ -422,6 +422,7 @@ This is a rebuild, not a polish pass. The current site, docs and default visuals
 - Gallery variants are generated from data rather than as copy-pasted files.
 - Stack: Astro + Starlight (decision 8).
 - **Homepage — done 2026-11-19.** A live dashboard whose cards hand over as their data arrives (with Replay, Pause and a mark switch), the component family as live tiles, the handoff with a timeline at full speed or slowed down, a make-it-yours playground that writes the CSS, the features, a three-step start and a closing field of marks. Gallery and playground pages are still to come.
+- **Pricing — owner decision 2026-11-19: a free core and a one-time Pro bundle.** Free stays everything in the library: the nine components, every animation, the React adapter, the docs, the examples and the standard playground, with fixes. Pro will be complete application screens with every loading state, additional motion packs and playground export tools, sold one-time with 12 months of updates (the approved commercial policy's template-first path). The page shows Pro as coming later, with no price or checkout, until the policy's demand and terms gates pass. New pro loaders beyond the nine would need a policy amendment; existing components never move behind payment.
 - Skip the exotic failure handling (CSS-fetch gates, failed-JS retry) unless it serves real users.
 - ~~Delete `apps/website` and its tests when the new site reaches parity.~~ Retired early on 2026-11-19 (decision 9).
 

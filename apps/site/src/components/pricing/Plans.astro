@@ -1,0 +1,245 @@
+---
+/**
+ * The pricing plans: everything in the library is free; Pro is a one-time
+ * bundle that is coming later, with no price or checkout until it is ready
+ * (owner decision 2026-11-19, under the approved commercial policy).
+ */
+import Glyph from '../site/Glyph.astro';
+
+const free = [
+  'All nine components: skeletons, text, chart, table, typing and the loading region',
+  'Every idle and handoff animation, and your own with the authoring API',
+  'The React adapter, with server rendering',
+  'The docs, the examples and the playground',
+  'Fixes and improvements, for as long as the project lives',
+];
+const pro = [
+  'Complete application screens, from dashboards to inboxes, with every loading, refreshing, empty and error state',
+  'For React and plain HTML, wired to the way real apps fetch data',
+  'Additional idle and handoff motion packs',
+  'Playground extras: saved presets and export to code and design tokens',
+  'Source you keep, with twelve months of updates',
+  'Help setting up your first integration',
+];
+const faq = [
+  [
+    'Is the library really free?',
+    'Yes. Every component, every animation and the React adapter are MIT licensed. There is no account, no license key and nothing to unlock.',
+  ],
+  [
+    'Can I use it in commercial products?',
+    'Yes. The MIT license allows commercial use, changes and distribution. Keep the license notice with the code.',
+  ],
+  [
+    'Will anything free move to Pro?',
+    'No. The nine components, every animation that ships with them, the React adapter, the docs, the examples, the playground and fixes stay free. Pro only adds things on top.',
+  ],
+  [
+    'What will Pro cost, and when?',
+    "It isn't for sale yet, and there is no price. It will be a one-time purchase, not a subscription, and this page will say so when it's ready.",
+  ],
+  [
+    'Will my app depend on Pro?',
+    'No. Pro screens use the same free library, with no license check and nothing that calls home. What you buy, you keep using.',
+  ],
+];
+const check = '<span class="check" aria-hidden="true"></span>';
+---
+
+<div class="plans not-content">
+  <article class="plan featured" aria-labelledby="plan-free">
+    <dotquilt-skeleton-block class="plan-field" motion="paused" aria-hidden="true"
+    ></dotquilt-skeleton-block>
+    <p class="plan-name" id="plan-free"><Glyph /> Dotquilt</p>
+    <p class="price"><span>$0</span> forever</p>
+    <p class="note">MIT licensed. Use it anywhere, change it as you like.</p>
+    <ul>{free.map((item) => <li set:html={`${check}${item}`} />)}</ul>
+    <a class="home-button primary" href="/docs/">Get started</a>
+  </article>
+
+  <article class="plan" aria-labelledby="plan-pro">
+    <p class="plan-name" id="plan-pro">
+      Dotquilt Pro <span class="badge">Coming later</span>
+    </p>
+    <p class="price soon">One-time purchase</p>
+    <p class="note">
+      Ready-made screens and tools built on the free library, for when you
+      want to move faster.
+    </p>
+    <ul>{pro.map((item) => <li set:html={`${check}${item}`} />)}</ul>
+    <a class="home-button" href="/docs/">Start with the free library</a>
+  </article>
+</div>
+
+<section class="promise not-content" aria-labelledby="promise-title">
+  <h2 id="promise-title">What's free stays free.</h2>
+  <p>
+    The library is the whole product, not a trial. Nothing that ships free
+    will move behind a payment, and Pro will never be needed to use it well.
+  </p>
+</section>
+
+<section class="faq not-content" aria-labelledby="faq-title">
+  <h2 id="faq-title">Questions</h2>
+  {
+    faq.map(([question, answer]) => (
+      <details>
+        <summary>{question}</summary>
+        <p>{answer}</p>
+      </details>
+    ))
+  }
+</section>
+
+<script>
+  import { registerSkeletonBlock } from '@dotquilt-internal/core/skeleton';
+
+  registerSkeletonBlock();
+</script>
+
+<style>
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    max-width: 56rem;
+    margin: 1.5rem auto 0;
+  }
+  .plan {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+    padding: 1.75rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-md);
+    background: var(--dq-surface);
+    box-shadow: var(--dq-shadow);
+    overflow: hidden;
+  }
+  .plan.featured {
+    box-shadow: var(--dq-shadow-lg);
+  }
+  .plan-field {
+    position: absolute;
+    top: -1rem;
+    right: -1rem;
+    width: 9rem;
+    height: 9rem;
+    mask: radial-gradient(circle at 100% 0, #000 20%, #0000 70%);
+  }
+  .plan-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .badge {
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    background: var(--dq-subtle);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--dq-muted);
+  }
+  .price {
+    margin: 0;
+    color: var(--dq-muted);
+  }
+  .price span {
+    margin-right: 0.25rem;
+    font-size: 2.75rem;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: var(--dq-ink);
+  }
+  .price.soon {
+    padding-block: 0.9rem;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--dq-ink);
+  }
+  .note {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--dq-muted);
+  }
+  ul {
+    display: grid;
+    gap: 0.625rem;
+    margin: 0.5rem 0 1rem;
+    padding: 0;
+    list-style: none;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--dq-ink);
+  }
+  li {
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr);
+    gap: 0.625rem;
+  }
+  li :global(.check) {
+    width: 6px;
+    height: 6px;
+    margin: 0.55em 0 0 0.25rem;
+    border-radius: 50%;
+    background: var(--dq-ink);
+    box-shadow: 0 0 0 3px var(--dq-subtle);
+  }
+  .plan .home-button {
+    justify-self: start;
+  }
+  .promise {
+    max-width: 40rem;
+    margin: clamp(3.5rem, 8vw, 5rem) auto 0;
+    text-align: center;
+  }
+  h2 {
+    margin: 0;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: var(--dq-ink);
+  }
+  .promise p {
+    margin: 1rem 0 0;
+    color: var(--dq-muted);
+    line-height: 1.65;
+  }
+  .faq {
+    display: grid;
+    gap: 0.5rem;
+    max-width: 40rem;
+    margin: clamp(3.5rem, 8vw, 5rem) auto 0;
+  }
+  .faq h2 {
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  details {
+    padding: 0.875rem 1.125rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-md);
+    background: var(--dq-surface);
+  }
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--dq-ink);
+  }
+  details p {
+    margin: 0.625rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--dq-muted);
+  }
+  @media (max-width: 48rem) {
+    .plans {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
