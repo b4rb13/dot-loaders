@@ -3,8 +3,12 @@ title: Skeleton
 description: Blocks, lines, circles and paragraphs of marks that hold the shape of your content.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import Preview from '../../../../components/Preview.astro';
+// Real files, type-checked with the repository, so the code here always works.
+import memberCard from '../../../../../../../examples/site/member-card.tsx?raw';
+import memberHtml from '../../../../../../../examples/site/member.html?raw';
+import memberTs from '../../../../../../../examples/site/member.ts?raw';
 
 Skeletons hold the shape of images, text and avatars while they load. A soft glow drifts across the marks, and when the region hands over they leave from left to right.
 
@@ -35,30 +39,15 @@ Skeletons hold the shape of images, text and avatars while they load. A soft glo
 
 ## Usage
 
-Put a skeleton in a region's `placeholder` slot. Size it with CSS like any other element: blocks fill their width and take the height you give them, and lines are two rows of marks tall.
+Put a skeleton in a region's `placeholder` slot and size it with CSS like any other element: blocks fill their width and take the height you give them, and lines are two rows of marks tall. Your code owns the request; the region only needs to know whether the data is pending or ready.
 
 <Tabs syncKey="framework">
-  <TabItem label="Native">
-    ```html
-    <dotquilt-region state="pending" aria-label="Team member">
-      <div slot="placeholder">
-        <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
-        <dotquilt-skeleton-text lines="2" mark="dash"></dotquilt-skeleton-text>
-      </div>
-      <article>…</article>
-    </dotquilt-region>
-    ```
-  </TabItem>
   <TabItem label="React">
-    ```tsx
-    <LoadingRegion
-      state={member ? 'ready' : 'pending'}
-      aria-label="Team member"
-      placeholder={<SkeletonText lines={2} mark="dash" />}
-    >
-      <article>…</article>
-    </LoadingRegion>
-    ```
+    <Code code={memberCard} lang="tsx" title="MemberCard.tsx" />
+  </TabItem>
+  <TabItem label="Native">
+    <Code code={memberHtml} lang="html" title="index.html" />
+    <Code code={memberTs} lang="ts" title="member.ts" />
   </TabItem>
 </Tabs>
 

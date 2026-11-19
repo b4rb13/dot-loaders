@@ -34,22 +34,53 @@ for (const path of pages)
     expect(errors).toEqual([]);
   });
 
-test('the live preview hands over on Reveal and loads again on Start loading', async ({
+// Previews behave like an app: each load is a request that settles on its own
+// within the motion window, or at once on Reveal. Every load must end with
+// the full handoff, never an instant swap.
+test('every preview load hands over with the full animation', async ({
   page,
 }) => {
   const errors = watchErrors(page);
   await page.goto('/docs/components/skeleton/');
+  await page.evaluate(() => {
+    const reasons: string[] = [];
+    Reflect.set(window, 'handoffs', reasons);
+    document.addEventListener(
+      'dotquilt-handoff-end',
+      (event) =>
+        reasons.push((event as CustomEvent<{ reason: string }>).detail.reason),
+      true,
+    );
+  });
+  const handoffs = () => page.evaluate(() => Reflect.get(window, 'handoffs'));
   const preview = page.locator('[data-preview]').first();
   const status = preview.getByRole('status');
+  const start = preview.getByRole('button', { name: 'Start loading' });
+  const reveal = preview.getByRole('button', { name: 'Reveal' });
   const content = preview.getByText('Ada Lovelace');
+
+  // The first load starts in view and settles by itself.
+  await expect(status).toHaveText('Loading');
+  await expect(start).toBeDisabled();
+  await expect(content).toBeHidden();
+  await expect(status).toHaveText('Ready', { timeout: 5000 });
+  await expect(content).toBeVisible();
+  await expect(reveal).toBeDisabled();
+  await expect.poll(handoffs).toEqual(['complete']);
+
+  // Start loading runs a new request that settles by itself.
+  await start.click();
   await expect(status).toHaveText('Loading');
   await expect(content).toBeHidden();
-  await preview.getByRole('button', { name: 'Reveal' }).click();
+  await expect(status).toHaveText('Ready', { timeout: 5000 });
+  await expect.poll(handoffs).toEqual(['complete', 'complete']);
+
+  // Reveal settles the request at once.
+  await start.click();
+  await reveal.click();
   await expect(status).toHaveText('Ready');
   await expect(content).toBeVisible();
-  await preview.getByRole('button', { name: 'Start loading' }).click();
-  await expect(status).toHaveText('Loading');
-  await expect(content).toBeHidden();
+  await expect.poll(handoffs).toEqual(['complete', 'complete', 'complete']);
   expect(errors).toEqual([]);
 });
 
