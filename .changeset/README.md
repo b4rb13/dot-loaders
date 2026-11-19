@@ -1,5 +1,5 @@
-# Private release records
+# Changesets
 
-Changesets versions the native and React packages as a fixed group. Both receive the same version, and React depends on that exact native version. React/ReactDOM remain external peers; native has no runtime dependencies.
+Each file here is a pending changelog entry. `changeset version` turns them into `CHANGELOG.md` entries and bumps both packages together (a fixed group: React depends on the exact native version).
 
-Changesets are pending records, not automatic publication. The current provisional tarballs retain their matching development version and are distinguished by SHA-256. Final npm import identity and all registry/public launch prerequisites remain separately gated. Both manifests are private, their prepublish hooks fail closed, and there is no credential-bearing publishing workflow.
+Nothing publishes automatically. Both manifests are `"private": true` until the npm name is decided and a release is approved. `bun run release:check` shows what a release would contain without publishing anything.

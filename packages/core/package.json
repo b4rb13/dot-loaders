@@ -1,6 +1,6 @@
 {
   "name": "@dotquilt-internal/core",
-  "version": "0.0.0-m2.0",
+  "version": "0.0.0",
   "description": "Loading placeholders that hold the shape of your content, then hand over to it. Native Web Components.",
   "private": true,
   "type": "module",

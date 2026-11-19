@@ -23,13 +23,13 @@ For a separate local Bun app, copy the two reviewed tarballs into an app-owned `
   "private": true,
   "type": "module",
   "dependencies": {
-    "@dotquilt-internal/core": "file:./vendor/dotquilt-internal-core-0.0.0-m2.0.tgz",
-    "@dotquilt-internal/react": "file:./vendor/dotquilt-internal-react-0.0.0-m2.0.tgz",
+    "@dotquilt-internal/core": "file:./vendor/dotquilt-internal-core-0.0.0.tgz",
+    "@dotquilt-internal/react": "file:./vendor/dotquilt-internal-react-0.0.0.tgz",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "overrides": {
-    "@dotquilt-internal/core": "file:./vendor/dotquilt-internal-core-0.0.0-m2.0.tgz"
+    "@dotquilt-internal/core": "file:./vendor/dotquilt-internal-core-0.0.0.tgz"
   }
 }
 ```

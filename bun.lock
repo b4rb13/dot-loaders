@@ -31,13 +31,13 @@
     },
     "packages/core": {
       "name": "@dotquilt-internal/core",
-      "version": "0.0.0-m2.0",
+      "version": "0.0.0",
     },
     "packages/react": {
       "name": "@dotquilt-internal/react",
-      "version": "0.0.0-m2.0",
+      "version": "0.0.0",
       "dependencies": {
-        "@dotquilt-internal/core": "0.0.0-m2.0",
+        "@dotquilt-internal/core": "0.0.0",
       },
       "peerDependencies": {
         "react": "^19.0.0",
