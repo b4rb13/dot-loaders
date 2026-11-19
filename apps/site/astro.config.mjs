@@ -8,6 +8,8 @@ const fonts =
   'https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400..700&display=swap';
 
 export default defineConfig({
+  // The production address: canonical links and the sitemap use it.
+  site: 'https://dotquilt.dev',
   vite: {
     // Starlight's Tabs load satteri's native binary at render time. Bundled,
     // it can't find the binary under Bun's isolated installs, so keep it

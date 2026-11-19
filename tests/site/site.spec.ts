@@ -172,3 +172,18 @@ test('the theme follows the system and the switch, with the spec colours', async
     .selectOption('light');
   expect(await background()).toBe('rgb(244, 245, 247)'); // #F4F5F7
 });
+
+test('pages name dotquilt.dev as their address, and the sitemap lists them', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/docs/installation/');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    'https://dotquilt.dev/docs/installation/',
+  );
+  const index = await request.get('/sitemap-index.xml');
+  expect(index.status()).toBe(200);
+  const sitemap = await request.get('/sitemap-0.xml');
+  expect(await sitemap.text()).toContain('https://dotquilt.dev/pricing/');
+});
