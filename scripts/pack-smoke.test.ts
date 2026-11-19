@@ -240,6 +240,42 @@ test('selective skeleton and region bundles leave the dense renderer out', async
   }
 }, 30_000);
 
+// Each loader carries only its own styles: TypingDots, TextLoader and the
+// region don't bring the skeletons' stylesheets, and TextLoader doesn't
+// bring the region's refresh cue.
+test('typing, text and region bundles leave the skeleton stylesheets out', async () => {
+  for (const [name, source, absent] of [
+    [
+      'typing',
+      "import {registerTypingDots} from '@dotquilt-internal/core/typing';registerTypingDots();",
+      ['.pulse', '--dotquilt-refresh-gap'],
+    ],
+    [
+      'text',
+      "import {registerTextLoader} from '@dotquilt-internal/core/text';registerTextLoader();",
+      ['.pulse', '--dotquilt-refresh-gap'],
+    ],
+    [
+      'region-only',
+      "import {registerLoadingRegion} from '@dotquilt-internal/core/region';registerLoadingRegion();",
+      ['.pulse'],
+    ],
+  ] as const) {
+    const entry = resolve(work, `${name}-styles-entry.ts`);
+    await writeFile(entry, source);
+    const bundle = await Bun.build({
+      entrypoints: [entry],
+      minify: true,
+      target: 'browser',
+      format: 'esm',
+    });
+    expect(bundle.success).toBe(true);
+    const code = (await bundle.outputs[0]?.text()) ?? '';
+    for (const text of absent)
+      expect(code.includes(text), `${name}: ${text}`).toBe(false);
+  }
+}, 30_000);
+
 // Server components may import the adapter directly; the directive is what
 // keeps its hooks on the client side of that boundary.
 test('react: every component entry keeps its client directive', async () => {

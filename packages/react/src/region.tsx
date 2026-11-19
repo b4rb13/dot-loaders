@@ -12,7 +12,7 @@ import {
 } from '@dotquilt-internal/core/region';
 import { Children, forwardRef, type ReactNode, useState } from 'react';
 import { useHost } from './host.js';
-import { reactRegionStyles } from './server.js';
+import { reactRegionStyles } from './region-styles.js';
 import {
   initialPolicy,
   policyAttributes,

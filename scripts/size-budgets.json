@@ -16,7 +16,7 @@
     "react": 14200
   },
   "TypingDots": {
-    "native": 7900,
+    "native": 6500,
     "react": 9900
   },
   "TextLoader": {
@@ -32,7 +32,7 @@
     "react": 21200
   },
   "LoadingRegion": {
-    "native": 16200,
+    "native": 15600,
     "react": 18000
   },
   "Everything": {

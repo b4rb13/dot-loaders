@@ -44,13 +44,13 @@ const thread = (page: Page) =>
       above: box ? Math.round(own.top - box.bottom) : null,
       width: box ? Math.round(box.width) : null,
       regionWidth: Math.round(own.width),
-      animations: [element, element?.firstElementChild].flatMap(
-        (node) =>
-          node?.getAnimations().map((animation) => {
+      animations:
+        element?.parentElement
+          ?.getAnimations({ subtree: true })
+          .map((animation) => {
             const timing = animation.effect?.getTiming();
             return `${timing?.duration}x${timing?.iterations}`;
           }) ?? [],
-      ),
     };
   });
 
@@ -126,13 +126,12 @@ test('in forced colours the row is a dotted line', async ({ page }) => {
   await page.emulateMedia({ forcedColors: 'active' });
   await refreshing(page);
   const line = await page.evaluate(() => {
-    const element = window.e2e.owner.shadowRoot?.querySelector('.thread');
-    const before = element && getComputedStyle(element, '::before');
+    const root = window.e2e.owner.shadowRoot;
+    const marks = root?.querySelector('.thread:not(.glow)');
+    const glow = root?.querySelector('.glow');
     return {
-      style: before?.borderTopStyle,
-      glow: element?.firstElementChild
-        ? getComputedStyle(element.firstElementChild).display
-        : null,
+      style: marks ? getComputedStyle(marks).borderTopStyle : null,
+      glow: glow ? getComputedStyle(glow).display : null,
     };
   });
   expect(line).toEqual({ style: 'dotted', glow: 'none' });
