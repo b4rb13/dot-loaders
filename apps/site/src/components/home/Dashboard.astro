@@ -1,0 +1,665 @@
+---
+/**
+ * The homepage's live dashboard: each card waits for its own data and hands
+ * over when it arrives, then the whole board loads again a few seconds later.
+ */
+import { linePath } from '../../../../../examples/site/data';
+import { arrivals, customers, invoices, kpis, weekly } from './data';
+
+const width = 600;
+const height = 180;
+const line = linePath(weekly, width, height);
+const area = `${line} L${width} ${height} L0 ${height} Z`;
+const nav = ['Overview', 'Invoices', 'Customers', 'Reports', 'Settings'];
+---
+
+<div class="home-dashboard not-content" data-dashboard>
+  <div class="app" role="group" aria-label="Example dashboard">
+    <aside class="app-nav" aria-hidden="true">
+      <div class="brand"><span class="logo"></span> Fernhill Studio</div>
+      {
+        nav.map((item, i) => (
+          <div class:list={['nav-item', { current: i === 0 }]}>
+            <span class="nav-icon" />
+            {item}
+          </div>
+        ))
+      }
+    </aside>
+    <div class="app-main">
+      <header class="app-header">
+        <h2>Overview</h2>
+        <div class="app-tools" aria-hidden="true">
+          <span class="chip">Last 30 days</span>
+          <span class="avatar">JD</span>
+        </div>
+      </header>
+
+      <div class="kpis">
+        {
+          kpis.map((kpi) => (
+            <div class="card kpi" data-card>
+              <p class="card-label">{kpi.label}</p>
+              <p class="kpi-value">
+                <dotquilt-text-loader
+                  state="pending"
+                  mask={kpi.mask}
+                  aria-label={kpi.label}
+                  data-owner
+                  data-at={kpi.at}
+                  data-value={kpi.value}
+                />
+              </p>
+              <p class="delta">
+                <span class:list={['delta-chip', kpi.trend]}>{kpi.delta}</span>
+                vs. last month
+              </p>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="row">
+        <div class="card chart-card" data-card>
+          <div class="card-head">
+            <p class="card-label">Revenue by week</p>
+            <span class="card-note">USD</span>
+          </div>
+          <dotquilt-region
+            state="pending"
+            aria-label="Revenue by week"
+            data-owner
+            data-at={arrivals.chart}
+          >
+            <dotquilt-chart-loader slot="placeholder" variant="line"
+            ></dotquilt-chart-loader>
+            <div class="chart">
+              <p class="chart-total">
+                <span><strong>$412,880</strong> in 12 weeks</span>
+                <span class="faint">+41% on the prior period</span>
+              </p>
+              <svg
+                viewBox={`0 0 ${width} ${height}`}
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Weekly revenue rising from $24k to $49k"
+              >
+                <defs>
+                  <linearGradient id="home-area" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0" stop-color="currentColor" stop-opacity="0.16"
+                    ></stop>
+                    <stop offset="1" stop-color="currentColor" stop-opacity="0"
+                    ></stop>
+                  </linearGradient>
+                </defs>
+                <path d={area} fill="url(#home-area)"></path>
+                <path
+                  d={line}
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  vector-effect="non-scaling-stroke"></path>
+              </svg>
+              <div class="axis" aria-hidden="true">
+                <span>Aug 4</span><span>Sep 8</span><span>Oct 20</span>
+              </div>
+            </div>
+          </dotquilt-region>
+        </div>
+
+        <div class="card customers-card" data-card>
+          <div class="card-head">
+            <p class="card-label">Top customers</p>
+            <span class="card-note">This month</span>
+          </div>
+          <dotquilt-region
+            state="pending"
+            aria-label="Top customers"
+            data-owner
+            data-at={arrivals.customers}
+          >
+            <div slot="placeholder" class="customer-skeleton">
+              {
+                customers.map(() => (
+                  <div class="customer-row">
+                    <dotquilt-skeleton-circle />
+                    <dotquilt-skeleton-line />
+                    <dotquilt-skeleton-line class="short" />
+                  </div>
+                ))
+              }
+            </div>
+            <ul class="customers">
+              {
+                customers.map((customer) => (
+                  <li class="customer-row">
+                    <span class="avatar small">{customer.initials}</span>
+                    <span>{customer.name}</span>
+                    <strong>{customer.amount}</strong>
+                  </li>
+                ))
+              }
+            </ul>
+          </dotquilt-region>
+        </div>
+      </div>
+
+      <div class="card invoices-card" data-card>
+        <div class="card-head">
+          <p class="card-label">Recent invoices</p>
+          <span class="card-note">4 of 38</span>
+        </div>
+        <dotquilt-region
+          state="pending"
+          aria-label="Recent invoices"
+          data-owner
+          data-at={arrivals.invoices}
+          data-rows
+        >
+          <dotquilt-table-loader slot="placeholder" rows="4" row-height="44"
+          ></dotquilt-table-loader>
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice</th><th>Customer</th><th>Due</th><th
+                  class="num">Amount</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                invoices.map((invoice) => (
+                  <tr>
+                    <td>{invoice.id}</td>
+                    <td>{invoice.customer}</td>
+                    <td>{invoice.due}</td>
+                    <td class="num">{invoice.amount}</td>
+                    <td>
+                      <span class:list={['status', invoice.status.toLowerCase()]}>
+                        {invoice.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </dotquilt-region>
+      </div>
+    </div>
+  </div>
+
+  <div class="board-controls">
+    <p class="board-note">
+      Example data. Each card hands over when its own data arrives.
+    </p>
+    <div class="board-buttons">
+      <div class="segmented" role="radiogroup" aria-label="Mark">
+        {
+          ['dot', 'dash', 'square'].map((mark) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked={mark === 'dot' ? 'true' : 'false'}
+              data-mark={mark}
+            >
+              <span class:list={['mark-glyph', mark]} aria-hidden="true" />
+              {mark[0]?.toUpperCase()}{mark.slice(1)}
+            </button>
+          ))
+        }
+      </div>
+      <button type="button" class="home-button small" data-replay>Replay</button>
+      <button type="button" class="home-button small" data-pause aria-pressed="false"
+        >Pause</button
+      >
+    </div>
+  </div>
+</div>
+
+<script>
+  import type { ChartLoader } from '@dotquilt-internal/core/chart';
+  import type { LoadingRegion } from '@dotquilt-internal/core/region';
+  import { registerAll } from '@dotquilt-internal/core/register-all';
+  import type { TableLoader } from '@dotquilt-internal/core/table';
+  import type { TextLoader } from '@dotquilt-internal/core/text';
+  import { linePoints } from '../../../../../examples/site/data';
+  import { weekly } from './data';
+
+  registerAll();
+
+  type Owner = LoadingRegion | TextLoader;
+  const board = document.querySelector<HTMLElement>('[data-dashboard]');
+  const app = board?.querySelector<HTMLElement>('.app');
+  if (board && app) {
+    const owners = [...board.querySelectorAll<Owner & HTMLElement>('[data-owner]')];
+    const chart = board.querySelector<ChartLoader>('dotquilt-chart-loader');
+    const table = board.querySelector<TableLoader>('dotquilt-table-loader');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const pause = board.querySelector<HTMLButtonElement>('[data-pause]');
+    // Hold the finished board this long before loading it again.
+    const hold = 7000;
+
+    // The marks glide onto the real line, in the loader's own size.
+    if (chart)
+      chart.targetProvider = ({ width, height }) => ({
+        kind: 'line',
+        points: linePoints(weekly, width, height),
+        baseline: height,
+      });
+    if (table)
+      table.columns = [
+        { kind: 'text' },
+        { kind: 'text', width: 1.6 },
+        { kind: 'date' },
+        { kind: 'number' },
+        { kind: 'badge' },
+      ];
+    const rows = board.querySelector<LoadingRegion>('[data-rows]');
+    if (rows)
+      rows.revealTargets = [...(rows.querySelector('tbody')?.rows ?? [])].map(
+        (element, i) => ({ id: `row-${i}`, element }),
+      );
+
+    let run = 0;
+    let timers: number[] = [];
+    let visible = false;
+    let due = false;
+    let paused = false;
+
+    const later = (ms: number, task: () => void) =>
+      timers.push(window.setTimeout(task, ms));
+
+    function play() {
+      for (const timer of timers) clearTimeout(timer);
+      timers = [];
+      due = false;
+      const cycle = `board-${++run}`;
+      let settled = 0;
+      for (const owner of owners) {
+        owner.closest('[data-card]')?.removeAttribute('data-ready');
+        owner.update({ state: 'pending', cycle });
+        // Each card's request settles on its own schedule.
+        later(Number(owner.dataset.at) || 1000, () => {
+          if (owner.cycle !== cycle) return;
+          if (owner.dataset.value) owner.textContent = owner.dataset.value;
+          owner.update({ state: 'ready' });
+          owner.closest<HTMLElement>('[data-card]')?.setAttribute('data-ready', '');
+          if (++settled === owners.length) scheduleNext();
+        });
+      }
+    }
+
+    function scheduleNext() {
+      if (paused || reduced.matches) return;
+      later(hold, () => {
+        if (visible && !paused) play();
+        else due = true;
+      });
+    }
+
+    new IntersectionObserver(
+      (entries) => {
+        visible = entries.some((entry) => entry.isIntersecting);
+        if (visible && (run === 0 || due)) play();
+      },
+      // It sits right under the headline: start as soon as any of it shows.
+      { threshold: 0 },
+    ).observe(app);
+
+    board.querySelector('[data-replay]')?.addEventListener('click', play);
+
+    pause?.addEventListener('click', () => {
+      paused = !paused;
+      pause.setAttribute('aria-pressed', String(paused));
+      pause.textContent = paused ? 'Play' : 'Pause';
+      // A paused ancestor stills every loader inside it.
+      if (paused) app.setAttribute('motion', 'paused');
+      else {
+        app.removeAttribute('motion');
+        play();
+      }
+    });
+
+    for (const button of board.querySelectorAll<HTMLButtonElement>('[data-mark]'))
+      button.addEventListener('click', () => {
+        const mark = button.dataset.mark ?? 'dot';
+        for (const other of board.querySelectorAll('[data-mark]'))
+          other.setAttribute('aria-checked', String(other === button));
+        for (const loader of app.querySelectorAll(
+          'dotquilt-text-loader, dotquilt-chart-loader, dotquilt-table-loader, dotquilt-skeleton-circle, dotquilt-skeleton-line',
+        ))
+          loader.setAttribute('mark', mark);
+        play();
+      });
+  }
+</script>
+
+<style>
+  .home-dashboard {
+    margin-bottom: clamp(4rem, 10vw, 7rem);
+  }
+  .app {
+    display: grid;
+    grid-template-columns: 13rem minmax(0, 1fr);
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-lg);
+    background: var(--dq-surface);
+    box-shadow: var(--dq-shadow-lg);
+    overflow: hidden;
+  }
+  .app-nav {
+    display: grid;
+    align-content: start;
+    gap: 0.125rem;
+    padding: 1.125rem 0.75rem;
+    border-inline-end: 1px solid var(--dq-line);
+    font-size: 0.875rem;
+    color: var(--dq-muted);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0.375rem 1rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .logo {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 6px;
+    background:
+      radial-gradient(circle, var(--dq-surface) 1.6px, #0000 2.2px) 0 0 / 50% 50%,
+      var(--dq-ink);
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.4375rem 0.5rem;
+    border-radius: var(--dq-radius-sm);
+  }
+  .nav-item.current {
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+    font-weight: 500;
+  }
+  .nav-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    border: 1.5px solid currentColor;
+    border-radius: 4px;
+    opacity: 0.7;
+  }
+  .app-main {
+    display: grid;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: var(--dq-bg);
+    min-width: 0;
+  }
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .app-header h2 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .app-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .chip {
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+    font-size: 0.75rem;
+    color: var(--dq-muted);
+  }
+  .avatar {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--dq-subtle);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--dq-muted);
+  }
+  .avatar.small {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    min-width: 0;
+    padding: 1rem 1.125rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-md);
+    background: var(--dq-surface);
+    box-shadow: var(--dq-shadow);
+  }
+  .card p {
+    margin: 0;
+  }
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.875rem;
+  }
+  .card-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .card-note {
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+  }
+  .kpi-value {
+    margin-top: 0.5rem !important;
+    font-size: 1.75rem;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-ink);
+  }
+  .kpi-value dotquilt-text-loader {
+    min-width: 5ch;
+  }
+  .delta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem !important;
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+    opacity: 0;
+    translate: 0 4px;
+    transition:
+      opacity 700ms var(--dq-ease-fade),
+      translate 910ms var(--dq-ease-settle);
+  }
+  [data-ready] .delta {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .delta-chip {
+    padding: 0.125rem 0.4375rem;
+    border-radius: 999px;
+    font-weight: 600;
+    background: var(--dq-positive-soft);
+    color: var(--dq-positive);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    gap: 1rem;
+  }
+  .chart-card dotquilt-chart-loader {
+    height: 13.5rem;
+  }
+  .chart {
+    display: grid;
+    gap: 0.5rem;
+    color: var(--dq-accent);
+  }
+  .chart-total {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    justify-content: space-between;
+    font-size: 0.8125rem;
+    color: var(--dq-ink);
+  }
+  .chart-total .faint {
+    color: var(--dq-faint);
+  }
+  .chart svg {
+    display: block;
+    width: 100%;
+    height: 10rem;
+  }
+  .axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6875rem;
+    color: var(--dq-faint);
+  }
+  .customers,
+  .customer-skeleton {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .customer-row {
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    height: 2.25rem;
+    font-size: 0.8125rem;
+    color: var(--dq-ink);
+  }
+  .customer-row strong {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .customer-skeleton dotquilt-skeleton-circle {
+    width: 1.75rem;
+  }
+  .customer-skeleton dotquilt-skeleton-line {
+    width: 70%;
+  }
+  .customer-skeleton dotquilt-skeleton-line.short {
+    width: 3.5rem;
+  }
+  .invoices-card table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+    display: table;
+  }
+  .invoices-card :is(th, td) {
+    height: 44px;
+    padding: 0 0.5rem;
+    text-align: start;
+    border-bottom: 1px solid var(--dq-line);
+    color: var(--dq-ink);
+    white-space: nowrap;
+  }
+  .invoices-card th {
+    height: 32px;
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+  }
+  .invoices-card tr:last-child td {
+    border-bottom: 0;
+  }
+  .invoices-card .num {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+  .status {
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    background: var(--dq-subtle);
+    color: var(--dq-muted);
+  }
+  .status.paid {
+    background: var(--dq-positive-soft);
+    color: var(--dq-positive);
+  }
+  .status.sent {
+    background: var(--dq-info-soft);
+    color: var(--dq-info);
+  }
+  .status.overdue {
+    background: var(--dq-warning-soft);
+    color: var(--dq-warning);
+  }
+  /* Before the components register, keep the content out of sight. */
+  :is(dotquilt-region, dotquilt-text-loader):not(:defined) > :not([slot]) {
+    visibility: hidden;
+  }
+  .board-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+  .board-note {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--dq-faint);
+  }
+  .board-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  @media (max-width: 64rem) {
+    .app {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .app-nav {
+      display: none;
+    }
+    .row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 40rem) {
+    .kpis {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .app-main {
+      padding: 0.75rem;
+    }
+    .invoices-card {
+      overflow-x: auto;
+    }
+  }
+</style>

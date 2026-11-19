@@ -1,0 +1,108 @@
+---
+/** What Dotquilt takes care of, in plain words. */
+const features = [
+  {
+    title: 'Accessible by default',
+    text: 'Reduced motion stills every loader. Pending content is out of reach of the keyboard and screen readers, focus is kept, and high-contrast mode shows a clear outline.',
+    dots: [1, 0, 1, 0, 1, 0, 1, 0, 1],
+  },
+  {
+    title: 'Rendered on the server',
+    text: 'Placeholders are in the first HTML, in the size of your content, so nothing jumps when JavaScript arrives.',
+    dots: [1, 1, 1, 0, 0, 0, 1, 1, 1],
+  },
+  {
+    title: 'Strict CSP',
+    text: 'No inline style attributes. Allow the stylesheets with a nonce, with hashes, or serve them as files.',
+    dots: [1, 1, 1, 1, 0, 1, 1, 1, 1],
+  },
+  {
+    title: 'Any framework',
+    text: 'Native web components work in plain HTML, Vue, Svelte or anywhere else. A typed React adapter adds server rendering.',
+    dots: [0, 1, 0, 1, 1, 1, 0, 1, 0],
+  },
+  {
+    title: 'Calm by design',
+    text: 'The idle stops after four seconds and rests. Reveals take about a second, on long eased curves, and never snap.',
+    dots: [0, 0, 1, 0, 1, 0, 1, 0, 0],
+  },
+  {
+    title: 'Only what you use',
+    text: 'Each component has its own entry point and registers itself on demand, so a page ships just the loaders it shows.',
+    dots: [1, 0, 0, 0, 0, 0, 0, 0, 0],
+  },
+];
+---
+
+<section class="home-section not-content" aria-labelledby="features-title">
+  <header>
+    <p class="home-eyebrow">Built for real products</p>
+    <h2 id="features-title">The details are already handled.</h2>
+  </header>
+  <ul class="features">
+    {
+      features.map((feature) => (
+        <li class="home-card">
+          <span class="glyph" aria-hidden="true">
+            {feature.dots.map((on) => (
+              <span class:list={{ on: on === 1 }} />
+            ))}
+          </span>
+          <h3>{feature.title}</h3>
+          <p>{feature.text}</p>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .features {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .features li {
+    padding: 1.375rem 1.5rem 1.5rem;
+  }
+  .glyph {
+    display: grid;
+    grid-template-columns: repeat(3, 6px);
+    gap: 4px;
+    margin-bottom: 1.125rem;
+  }
+  .glyph span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--dq-line-2);
+  }
+  .glyph span.on {
+    background: var(--dq-ink);
+  }
+  h3 {
+    margin: 0 0 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--dq-muted);
+  }
+  @media (max-width: 64rem) {
+    .features {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 40rem) {
+    .features {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

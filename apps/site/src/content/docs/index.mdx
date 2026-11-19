@@ -1,15 +1,22 @@
 ---
 title: Loading placeholders for real product screens
-description: Loading placeholders built for real product screens.
+description: Loading placeholders that hold the shape of your content and hand over gently when your data arrives.
 template: splash
 hero:
   title: Loading states built for real product screens.
   tagline: Metrics, charts, tables and chat all arrive at different times. Dotquilt gives each one a placeholder in its own shape and hands over gently when its data lands, so your page settles into place instead of jumping.
-  actions:
-    - text: Get started
-      link: /docs/
-      variant: primary
-    - text: See the components
-      link: /docs/components/skeleton/
-      variant: secondary
 ---
+
+import Family from '../../components/home/Family.astro';
+import Handoff from '../../components/home/Handoff.astro';
+import Playground from '../../components/home/Playground.astro';
+import Features from '../../components/home/Features.astro';
+import GetStarted from '../../components/home/GetStarted.astro';
+import Closing from '../../components/home/Closing.astro';
+
+<Family />
+<Handoff />
+<Playground />
+<Features />
+<GetStarted />
+<Closing />
