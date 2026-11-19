@@ -1,7 +1,14 @@
 import type { Dot } from '../animations.js';
 import { paintLayer } from './dom.js';
 import { lease } from './ledger.js';
-import { glowColor, type Mark, markBox, markColor, markOf } from './marks.js';
+import {
+  glowColor,
+  type Mark,
+  markBox,
+  markColor,
+  markOf,
+  peakOpacity,
+} from './marks.js';
 import { clamp } from './math.js';
 export interface Painter {
   draw(callback: (dot: (value: Dot) => void) => void): void;
@@ -15,6 +22,14 @@ export type PaintEntry = Partial<Record<0 | 1 | 2 | 3, number>> & {
 // Optional authoring support, reached only through an imported custom definition.
 // The engine creates/disposes this painter. Author callbacks see bounded commands only.
 export const pointer: unique symbol = Symbol.for('dotquilt.pointer.v1');
+/**
+ * The pointer lift (design/SPEC.md): marks within 56 px of the pointer light
+ * up in the accent, strongest at the pointer, like the skeleton's lift layer.
+ * Returns the accent's opacity at offset (dx, dy).
+ */
+export function liftAt(dx: number, dy: number): number {
+  return peakOpacity * Math.max(0, 1 - Math.hypot(dx, dy) / 56);
+}
 /** A drawn mark; the indexes cache x, y, radius, opacity and accent. */
 type Entry = SVGElement &
   Partial<Record<0 | 1 | 2 | 3, number>> & { 4?: boolean };
@@ -93,25 +108,16 @@ export function createPainter(
         shape = mark;
       }
       try {
-        callback((value) => {
-          if (!active || disposed) return;
+        const write = (
+          x: number,
+          y: number,
+          size: number,
+          opacity: number,
+          accent: boolean,
+        ) => {
           if (++count > 4096) {
             report('dot-limit');
             return;
-          }
-          let { x, y, size, opacity, tone } = value;
-          if (![x, y, size, opacity].every(Number.isFinite)) {
-            report('invalid-dot');
-            return;
-          }
-          if (position) {
-            const lift = Math.max(
-              0,
-              1 - Math.hypot(x - position.x, y - position.y) / 40,
-            );
-            y -= lift * 2;
-            size *= 1 + lift * 0.2;
-            opacity = Math.min(1, opacity + lift * 0.3);
           }
           let entry = dots[count - 1];
           if (!entry) {
@@ -135,11 +141,23 @@ export function createPainter(
             entry.setAttribute('opacity', String(opacity));
             entry[3] = opacity;
           }
-          const accent = tone === 'accent';
           if (entry[4] !== accent) {
             entry.setAttribute('fill', accent ? glowColor : markColor);
             entry[4] = accent;
           }
+        };
+        callback((value) => {
+          if (!active || disposed) return;
+          const { x, y, size, opacity, tone } = value;
+          if (![x, y, size, opacity].every(Number.isFinite)) {
+            report('invalid-dot');
+            return;
+          }
+          write(x, y, size, opacity, tone === 'accent');
+          // The pointer lights the marks around it, as a skeleton's lift does.
+          const halo = position ? liftAt(x - position.x, y - position.y) : 0;
+          if (halo > 0.02 && tone !== 'accent')
+            write(x, y, size, halo * Math.min(1, opacity * 3), true);
         });
       } finally {
         active = false;
