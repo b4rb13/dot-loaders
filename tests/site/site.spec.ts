@@ -21,6 +21,7 @@ const pages = [
   '/docs/installation/',
   '/docs/theming/',
   '/license/',
+  '/pricing/',
   ...components.map((name) => `/docs/components/${name}/`),
   ...guides.map((name) => `/docs/guides/${name}/`),
 ];

@@ -7,8 +7,23 @@ import Dashboard from './Dashboard.astro';
 
 const { title, tagline } = Astro.locals.starlightRoute.entry.data.hero ?? {};
 const install = 'npm install @dotquilt-internal/react';
+// Other pages with a hero, such as Pricing, get a centred headline only.
+const home = Astro.url.pathname === '/';
 ---
 
+{
+  !home && (
+    <section class="page-hero not-content">
+      <h1 id="_top" data-page-title>
+        {title}
+      </h1>
+      {tagline && <p class="lead">{tagline}</p>}
+    </section>
+  )
+}
+{
+  home && (
+    <>
 <section class="home-hero not-content">
   <h1 id="_top" data-page-title>{title}</h1>
   {tagline && <p class="lead">{tagline}</p>}
@@ -24,6 +39,9 @@ const install = 'npm install @dotquilt-internal/react';
   </div>
 </section>
 <Dashboard />
+    </>
+  )
+}
 
 <script>
   for (const button of document.querySelectorAll<HTMLButtonElement>(
@@ -43,6 +61,23 @@ const install = 'npm install @dotquilt-internal/react';
 </script>
 
 <style>
+  .page-hero {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding-block: clamp(2.5rem, 7vw, 4.5rem) 1rem;
+    text-align: center;
+  }
+  .page-hero h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 4.6vw, 3.4rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--dq-ink);
+  }
+  .page-hero .lead {
+    margin-inline: auto;
+  }
   .home-hero {
     padding-block: clamp(2.5rem, 7vw, 5rem) 2.5rem;
     max-width: 46rem;
