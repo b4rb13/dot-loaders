@@ -3,14 +3,9 @@ import {
   dotGrid,
   lineHeight,
   lineTrim,
-  markColor,
   markLineHeights,
   markShapes,
-  typingGap,
-  typingShapes,
-  typingSize,
 } from './internal/marks.js';
-import { unstyledHold } from './internal/unstyled.js';
 import { skeletonStyles } from './styles.js';
 
 export const skeletonLineStyles: readonly string[] =
@@ -31,7 +26,4 @@ export const skeletonTextStyles: readonly string[] =
       `:host{height:auto;overflow:visible;display:grid;gap:.5em;border-radius:0}:host .lines{display:grid;gap:inherit}:host .lines:is(.pulse,.lift){position:absolute;inset:0}:host .line{box-sizing:border-box;height:${lineHeight};position:relative;border-radius:999px;overflow:hidden;${dotGrid('0 0')}}${markShapes((mark) => `:host([mark=${mark}])`, '.line', '0 0')}${markLineHeights((mark) => `:host([mark=${mark}]) .line`)}${lineTrim((mark) => (mark ? `:host([mark=${mark}])` : ':host'), '.line')}`,
     ),
   );
-export const typingStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
-  `:host,dotquilt-typing-dots{display:inline-flex;position:relative;align-items:center;height:1em}:host .dot{display:inline-block;vertical-align:middle;width:${typingSize};height:${typingSize};border-radius:50%;background:${markColor};opacity:.3}:host .dot+.dot{margin-inline-start:${typingGap}}${typingShapes((mark) => `:host([mark=${mark}])`, '.dot')}:host([hidden]){display:none}@media(forced-colors:active){:host .dot{background:CanvasText}}`,
-  unstyledHold,
-]);
+export { typingStyles } from './typing-styles.js';

@@ -1,4 +1,3 @@
-import { typingStyles } from './catalog-styles.js';
 import {
   ancestors,
   node,
@@ -15,6 +14,7 @@ import { morphMarks, type Part, typingPart } from './internal/morph-marks.js';
 import type { Preset } from './internal/preset.js';
 import { typingPreset } from './internal/preset.js';
 import { capturePresetData } from './internal/preset-data.js';
+import { typingStyles } from './typing-styles.js';
 
 interface Owner extends HTMLElement {
   activity: Activity;

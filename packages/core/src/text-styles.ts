@@ -1,5 +1,5 @@
 import { markColor, textMarkShapes } from './internal/marks.js';
-import { regionCss } from './styles.js';
+import { regionCss } from './region-css.js';
 export const textStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
   regionCss +
     ':host{display:inline-grid;vertical-align:baseline;min-height:1em}:host .mask{display:block;min-height:1em;white-space:pre;opacity:.3;color:transparent;background:radial-gradient(circle,' +

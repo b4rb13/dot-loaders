@@ -5,8 +5,8 @@ import type { HandoffSource } from './internal/handoff.js';
 import { LoadingController } from './internal/loading-controller.js';
 import { curves } from './internal/marks.js';
 import { createSkeletonSource } from './internal/skeleton-source.js';
+import { regionStyles } from './region-styles.js';
 import type { SkeletonBlock } from './skeleton.js';
-import { regionStyles } from './styles.js';
 import type { TableLoader } from './table.js';
 import type { LoadingState } from './types.js';
 import type { TypingDots } from './typing.js';
@@ -19,12 +19,16 @@ export class LoadingRegion extends LoadingController<'region'> {
    */
   protected override refreshCue(): Element {
     if (!this.#thread) {
+      // The marks, and their accent copy beside them for the glow; the
+      // wrapper fades both in.
       this.#thread = node(this.ownerDocument, 'span', {
-        class: 'thread',
         part: 'refresh-thread',
         'aria-hidden': 'true',
       });
-      this.#thread.append(node(this.ownerDocument, 'span', { class: 'glow' }));
+      this.#thread.append(
+        node(this.ownerDocument, 'span', { class: 'thread' }),
+        node(this.ownerDocument, 'span', { class: 'thread glow' }),
+      );
     }
     return this.#thread;
   }
@@ -38,7 +42,7 @@ export class LoadingRegion extends LoadingController<'region'> {
           { opacity: [0, 1] },
           { duration: 320, easing: curves.settle },
         ),
-        (cue.firstElementChild as Element).animate(
+        (cue.lastElementChild as Element).animate(
           { maskPosition: ['-70% 0', '170% 0'] },
           { duration: 2800, easing: curves.sine },
         ),

@@ -103,7 +103,7 @@ function maskGrid(
     // whole tiles from the left (lineTrim).
     const n = layers.length;
     const size = `${px(across)} ${px(down)}`;
-    return `mask-image:linear-gradient(#000 0 0),${layers.join(',')};mask-size:round(down,100%,${px(across)}) 100%${`,${size}`.repeat(n)};mask-position:0 0${`,${place.position}`.repeat(n)};mask-repeat:no-repeat${`,${place.repeat}`.repeat(n)};mask-composite:intersect,${composite}`;
+    return `mask-image:linear-gradient(#000 0 0),${layers.join(',')};mask-size:round(down,100%,${px(across)})${`,${size}`.repeat(n)};mask-position:0${`,${place.position}`.repeat(n)};mask-repeat:no-repeat${`,${place.repeat}`.repeat(n)};mask-composite:intersect,${composite}`;
   }
   const size = `${px(across)} ${px(down)}`;
   // Every layer shares one tile. The fill carries it too, so code that reads
@@ -143,7 +143,7 @@ export function lineTrim(
   const rules = marks
     .map((mark) =>
       mark === 'dot'
-        ? `${host()} ${surface}{mask:linear-gradient(#000 0 0) 0 0/round(down,100%,var(--g)) 100% no-repeat}`
+        ? `${host()} ${surface}{mask:linear-gradient(#000 0 0) 0/round(down,100%,var(--g)) no-repeat}`
         : `${host(mark)} ${surface}{${maskGrid(mark, shapes[mark], { position: '0 0', repeat: 'repeat', trim: true }, markColor)}}`,
     )
     .join('');
