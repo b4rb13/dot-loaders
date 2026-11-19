@@ -3,6 +3,7 @@ import {
   glowColor,
   glowMask,
   markColor,
+  markGap,
   markShapes,
   markSize,
   peakOpacity,
@@ -18,8 +19,14 @@ export const skeletonStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
 // The `:state(unstyled)` rules apply in the document while a region's external
 // stylesheet loads, mirroring the layer visibility below.
 export const regionCss = `dotquilt-region:state(unstyled)::part(placeholder),dotquilt-region:state(unstyled)::part(refresh-indicator){visibility:hidden;pointer-events:none}dotquilt-region:state(unstyled)[data-presentation=pending]::part(placeholder),dotquilt-region:state(unstyled)[data-presentation=handoff]::part(placeholder),dotquilt-region:state(unstyled)[data-presentation=refreshing]::part(refresh-indicator){visibility:inherit}dotquilt-region:state(unstyled)[data-presentation=pending]::part(content){visibility:hidden}:host{display:grid;position:relative}:host(:focus){outline:none}:host(:focus-visible:not([data-dotquilt-focus=pointer])),:host([data-dotquilt-focus=""]:focus){outline:2px solid currentColor;outline-offset:3px}:host .f{display:grid;min-width:0;min-height:100%}:host [part]{display:block;grid-area:1/1;min-width:0}:host .p,:host .r{visibility:hidden;pointer-events:none}:host([data-presentation=pending]) .p,:host([data-presentation=handoff]) .p,:host([data-presentation=refreshing]) .r{visibility:inherit}:host([data-presentation=pending]) .c{visibility:hidden}:host([hidden]){display:none}:host > svg{position:absolute;inset:0;pointer-events:none}:host .fallback{display:block;min-height:1em;border:1px dotted currentColor}:host([data-dotquilt-waiting]) .p{visibility:hidden}`;
+/**
+ * The refresh cue: a row of whole marks just above the region's top edge
+ * (`--dotquilt-refresh-gap` above it), and an accent copy the glow drifts
+ * along. Forced colours draw a dotted line.
+ */
+const threadCss = `:host .thread{position:absolute;left:0;right:0;bottom:calc(100% + var(--dotquilt-refresh-gap,6px));height:${markSize};pointer-events:none}:host .thread::before,:host .thread>.glow{content:"";position:absolute;inset:0;--s:${markSize};--g:calc(var(--s) + ${markGap});background:radial-gradient(circle,${markColor} calc(var(--s)/2 - .5px),#0000 calc(var(--s)/2 + .5px)) 0 50%/var(--g) var(--s) space no-repeat}:host .thread::before{opacity:${restOpacity}}:host .thread>.glow{--dotquilt-color:${glowColor};opacity:${peakOpacity};mask:linear-gradient(90deg,#0000,#0006 25%,#000 50%,#0006 75%,#0000) -70% 0/40% 100% no-repeat}@media(forced-colors:active){:host .thread::before{background:none;border-top:1px dotted CanvasText;opacity:1}:host .thread>.glow{display:none}}`;
 export const regionStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
-  regionCss,
+  regionCss + threadCss,
 ]);
 
 // Static markup never runs idle, pointer or custom-drawing effects.

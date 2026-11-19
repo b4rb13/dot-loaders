@@ -15,7 +15,6 @@ A loading region decides when to switch. It shows its placeholder while your dat
 <Preview label="A feed loading and refreshing" mode="refresh" values={['Northwind paid $4,200', 'Acme Labs opened an invoice']}>
   <dotquilt-region state="pending" aria-label="Recent activity">
     <dotquilt-skeleton-text slot="placeholder" lines="3"></dotquilt-skeleton-text>
-    <span slot="refresh-indicator" class="updating">Updating…</span>
     <ul class="feed">
       <li data-value>Northwind paid $4,200</li>
       <li>Globex invoice is overdue</li>
@@ -29,8 +28,10 @@ A loading region decides when to switch. It shows its placeholder while your dat
 | State | The placeholder | Your content |
 | --- | --- | --- |
 | `pending` | shown | hidden, inert and hidden from assistive technology |
-| `refreshing` | the `refresh-indicator` slot, if any | visible and usable |
+| `refreshing` | a row of marks just above the top edge, or your `refresh-indicator` | visible and usable |
 | `ready` | gone, after the handoff | visible |
+
+While it refreshes, a row of marks sits just above the region's top edge and the glow drifts along it once, so your content never moves. With reduced motion or a pause the row stays still. Move it with `--dotquilt-refresh-gap` (6 px above the edge by default), style it through `::part(refresh-thread)`, or pass your own `refresh-indicator` instead.
 
 For fast responses, `delay` and `min-display` keep the placeholder from flickering: a load shorter than `delay` never shows it, and a placeholder that did show stays for at least `min-display`. Values around 150 ms and 500 ms suit most screens.
 
@@ -53,7 +54,7 @@ Going from `pending` to `ready` plays the handoff. First the marks take your con
 | Slot | React | Holds |
 | --- | --- | --- |
 | `placeholder` | `placeholder` | the loader shown while pending |
-| `refresh-indicator` | `refreshIndicator` | an optional cue shown while refreshing |
+| `refresh-indicator` | `refreshIndicator` | your own cue while refreshing, in place of the row of marks |
 | (default) | `children` | your content |
 
 ## Options

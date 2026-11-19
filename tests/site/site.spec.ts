@@ -155,9 +155,14 @@ test('the LoadingRegion preview keeps the feed usable while it refreshes', async
   await expect(status).toHaveText('Updating');
   await expect(region).toHaveAttribute('state', 'refreshing');
   await expect(preview.getByText('Globex invoice is overdue')).toBeVisible();
-  await expect(preview.getByText('Updating…')).toBeVisible();
+  // The built-in cue: a row of marks above the feed.
+  const thread = () =>
+    region.evaluate(
+      (host) => !!host.shadowRoot?.querySelector('.thread')?.checkVisibility(),
+    );
+  await expect.poll(thread).toBe(true);
   await expect(status).toHaveText('Ready', { timeout: 5000 });
-  await expect(preview.getByText('Updating…')).toBeHidden();
+  await expect.poll(thread).toBe(false);
 });
 
 test('the theme follows the system and the switch, with the spec colours', async ({

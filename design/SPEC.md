@@ -102,6 +102,8 @@ Composed and unhurried; data settles into place instead of snapping.
 
 **TextLoader:** while pending, characters cross-fade every 280 ms. On handoff the dot-matrix marks slide into the real characters' shapes, lit while they travel, then the value wipes in left to right as they leave.
 
+**Refreshing (owner's pick, 2026-11-19: "Thread"):** while a region refreshes, a single row of whole marks sits 6 px above its top edge, across its width, so the content never moves. It eases in over 320 ms and the glow drifts along it once (2.8 s, sine), then the row rests until the refresh ends. Reduced motion and pause show the still row; forced colours draw a dotted line. An app's own `refresh-indicator` replaces it.
+
 **Pointer lift (opt-in, `pointer-response="lift"`):** on devices with a fine pointer, the marks within 56 px of the pointer light up in the accent, strongest at the pointer and fading linearly to nothing at the edge, over the resting marks. Marks never move or grow. Every loader draws it the same way (2026-11-19).
 
 **Reduced motion / pause:**

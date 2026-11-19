@@ -77,6 +77,12 @@ export abstract class LoadingController<
   ): void {}
   protected abstract contentChanged(): void;
   protected abstract settled(): void;
+  /** A built-in cue shown while refreshing, when the app gives none. */
+  protected refreshCue(): Element | undefined {
+    return undefined;
+  }
+  /** Called once each time refreshing starts with the built-in cue. */
+  protected refreshStarted(_cue: Element): void {}
   protected override capturePreset(value: Preset<F>): Preset<F> {
     return capturePresetData(value, this.family, () => regionPreset);
   }
@@ -517,7 +523,15 @@ export abstract class LoadingController<
           node(this.ownerDocument, 'span', { class: 'fallback' }),
         );
       this.report('missing-content', 'state');
-    } else if (indicator.firstChild) indicator.replaceChildren();
+    } else {
+      // The built-in cue is the slot's fallback: an app's own indicator,
+      // slotted in, replaces it.
+      const cue = state === 'refreshing' ? this.refreshCue() : undefined;
+      if (cue) {
+        if (indicator.firstChild !== cue) indicator.replaceChildren(cue);
+        if (prior !== 'refreshing') this.refreshStarted(cue);
+      } else if (indicator.firstChild) indicator.replaceChildren();
+    }
     if (revision !== this.#revision) return;
     if (state !== 'ready') {
       if (this.#settled) {

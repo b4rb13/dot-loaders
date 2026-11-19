@@ -96,7 +96,6 @@ const spark = linePath(weekly, 240, 80);
       <div class="stage">
         <dotquilt-region state="pending" aria-label="Activity" data-owner data-refresh>
           <dotquilt-skeleton-text slot="placeholder" lines="3"></dotquilt-skeleton-text>
-          <span slot="refresh-indicator" class="updating">Updating</span>
           <ul class="activity">
             <li>Northwind paid $4,200</li>
             <li>Globex invoice is overdue</li>
@@ -308,16 +307,6 @@ const spark = linePath(weekly, 240, 80);
     list-style: none;
     font-size: 0.8125rem;
     color: var(--dq-ink);
-  }
-  .updating {
-    position: absolute;
-    inset-block-start: -0.25rem;
-    inset-inline-end: -0.25rem;
-    padding: 0.0625rem 0.5rem;
-    border-radius: 999px;
-    background: var(--dq-subtle);
-    font-size: 0.6875rem;
-    color: var(--dq-muted);
   }
   :is(dotquilt-region, dotquilt-text-loader):not(:defined) > :not([slot]) {
     visibility: hidden;
