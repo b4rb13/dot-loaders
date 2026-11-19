@@ -1,10 +1,17 @@
-/* Shared pieces of the homepage. Starlight marks a page with a hero with
-   data-has-hero on <html>; only the homepage has one. */
-:root[data-has-hero] .sl-container {
-  max-width: 1200px;
-}
+/* Shared pieces of the wide pages (home, examples, playground, pricing).
+   Starlight marks a page with a hero with data-has-hero on <html>; their
+   content lines up with the edges of the homepage's first screen
+   (FieldHero): 82 px in at 1440, 1276 px at most. */
 :root[data-has-hero] .content-panel {
   border-top: 0;
+  padding-inline: clamp(1.25rem, 5.7vw, 82px);
+}
+:root[data-has-hero] .sl-container {
+  max-width: 1276px;
+}
+/* The closing field hands straight to the footer's seam. */
+:root:has(.field-hero) .site-footer {
+  margin-top: 0;
 }
 
 .home-button {
@@ -103,12 +110,6 @@
   max-width: 40rem;
   margin-bottom: 2.5rem;
 }
-.home-eyebrow {
-  margin: 0 0 0.75rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--dq-faint);
-}
 .home-section h2 {
   margin: 0;
   font-size: clamp(1.75rem, 3.2vw, 2.375rem);
@@ -117,7 +118,7 @@
   line-height: 1.1;
   color: var(--dq-ink);
 }
-.home-section header p:not(.home-eyebrow) {
+.home-section header p {
   margin: 1rem 0 0;
   font-size: 1rem;
   line-height: 1.65;

@@ -1,0 +1,317 @@
+---
+/**
+ * The examples gallery: the analytics dashboard, then every recipe as a live
+ * card. A card loads when it scrolls into view and again on request; its code
+ * opens beside it. Filters and open code are kept in the URL, so a view can
+ * be shared.
+ */
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+import Dashboard from '../home/Dashboard.astro';
+import Demo from './Demo.astro';
+import {
+  type Family,
+  families,
+  htmlCode,
+  playgroundHref,
+  reactCode,
+  recipes,
+} from './recipes';
+
+const filters: [Family | 'all', string][] = [
+  ['all', 'All'],
+  ...(Object.entries(families) as [Family, string][]),
+];
+---
+
+<div class="gallery not-content" data-gallery>
+  <div class="filters" role="group" aria-label="Show examples for">
+    {
+      filters.map(([key, label], i) => (
+        <button type="button" data-filter={key} aria-pressed={i === 0 ? 'true' : 'false'}>
+          {label}
+        </button>
+      ))
+    }
+  </div>
+
+  <section class="feature" id="dashboard" data-family="all" aria-labelledby="dashboard-title">
+    <header>
+      <h2 id="dashboard-title">Analytics dashboard</h2>
+      <p>
+        A whole screen where every card waits for its own request and hands over
+        when it lands. Switch the marks, replay it, or pause it.
+      </p>
+    </header>
+    <Dashboard />
+  </section>
+
+  <div class="grid">
+    {
+      recipes.map((recipe) => (
+        <article
+          class="recipe home-card"
+          id={recipe.id}
+          data-recipe
+          data-family={recipe.family}
+          data-delay={recipe.delay}
+          data-idle={recipe.idle}
+          data-handoff={recipe.handoff}
+          aria-labelledby={`${recipe.id}-title`}
+        >
+          <div class="stage">
+            <Demo recipe={recipe} />
+          </div>
+          <div class="meta">
+            <h3 id={`${recipe.id}-title`}>{recipe.title}</h3>
+            <p>{recipe.text}</p>
+            <p class="uses">
+              {families[recipe.family]}
+              {recipe.mark && ` · ${recipe.mark} marks`}
+              {recipe.idle && ` · ${recipe.idle}`}
+              {recipe.handoff && ` · ${recipe.handoff}`}
+            </p>
+          </div>
+          <div class="actions">
+            <button type="button" class="home-button small" data-again>
+              Load again
+            </button>
+            <button
+              type="button"
+              class="home-button small"
+              aria-expanded="false"
+              aria-controls={`${recipe.id}-code`}
+              data-show-code
+            >
+              Code
+            </button>
+            <a class="playground-link" href={playgroundHref(recipe)}>
+              Open in playground
+            </a>
+          </div>
+          <div class="code" id={`${recipe.id}-code`} hidden>
+            <Tabs syncKey="framework">
+              <TabItem label="React">
+                <Code code={reactCode(recipe)} lang="tsx" />
+              </TabItem>
+              <TabItem label="HTML">
+                <Code code={htmlCode(recipe)} lang="html" />
+              </TabItem>
+            </Tabs>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</div>
+
+<script>
+  import { registerAll } from '@dotquilt-internal/core/register-all';
+  import { animate, load, wire } from './live';
+
+  registerAll();
+  const gallery = document.querySelector<HTMLElement>('[data-gallery]');
+
+  if (gallery) {
+    const cards = [...gallery.querySelectorAll<HTMLElement>('[data-recipe]')];
+    for (const card of cards) {
+      const { idle, handoff } = card.dataset;
+      if (idle || handoff) animate(card, idle, handoff);
+      wire(card);
+    }
+    const run = (card: HTMLElement) => load(card, Number(card.dataset.delay) || 2400);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          observer.unobserve(entry.target);
+          run(entry.target as HTMLElement);
+        }
+      },
+      { threshold: 0.4 },
+    );
+    for (const card of cards) {
+      observer.observe(card);
+      card.querySelector('[data-again]')?.addEventListener('click', () => run(card));
+      const toggle = card.querySelector<HTMLButtonElement>('[data-show-code]');
+      const code = card.querySelector<HTMLElement>('.code');
+      toggle?.addEventListener('click', () => {
+        const open = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.textContent = open ? 'Hide code' : 'Code';
+        if (code) code.hidden = !open;
+        card.toggleAttribute('data-open', open);
+      });
+    }
+
+    // Filters, kept in the URL as ?show=chart.
+    const buttons = [...gallery.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+    function show(family: string) {
+      for (const button of buttons)
+        button.setAttribute('aria-pressed', String(button.dataset.filter === family));
+      for (const card of cards)
+        card.hidden = family !== 'all' && card.dataset.family !== family;
+      const feature = gallery?.querySelector<HTMLElement>('.feature');
+      if (feature) feature.hidden = family !== 'all';
+    }
+    for (const button of buttons)
+      button.addEventListener('click', () => {
+        const family = button.dataset.filter ?? 'all';
+        show(family);
+        const url = new URL(location.href);
+        if (family === 'all') url.searchParams.delete('show');
+        else url.searchParams.set('show', family);
+        history.replaceState(null, '', url);
+      });
+    const initial = new URL(location.href).searchParams.get('show');
+    if (initial && buttons.some((button) => button.dataset.filter === initial)) show(initial);
+  }
+</script>
+
+<style>
+  .gallery {
+    display: grid;
+    gap: 2.5rem;
+    margin-top: 1rem;
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+  .filters button {
+    height: 34px;
+    padding: 0 14px;
+    border: 1px solid var(--dq-line);
+    border-radius: 999px;
+    background: var(--dq-surface);
+    color: var(--dq-muted);
+    font: 500 0.8125rem / 1 var(--dq-font);
+    cursor: pointer;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      color var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .filters button:hover {
+    color: var(--dq-ink);
+  }
+  .filters button[aria-pressed='true'] {
+    border-color: var(--dq-ink);
+    background: var(--dq-ink);
+    color: var(--dq-surface);
+  }
+  .filters button:focus-visible,
+  .actions button:focus-visible,
+  .playground-link:focus-visible {
+    outline: 2px solid var(--dq-accent);
+    outline-offset: 2px;
+  }
+  .feature header {
+    max-width: 40rem;
+    margin-bottom: 1.25rem;
+  }
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+    letter-spacing: var(--dq-heading-tracking);
+    color: var(--dq-ink);
+  }
+  .feature header p {
+    margin: 0.5rem 0 0;
+    color: var(--dq-muted);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    grid-auto-flow: dense;
+  }
+  .recipe {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 'stage' 'meta' 'actions' 'code';
+    padding: 1.375rem 1.375rem 1.125rem;
+    scroll-margin-top: 6rem;
+  }
+  .recipe[hidden],
+  .feature[hidden] {
+    display: none;
+  }
+  .stage {
+    grid-area: stage;
+    display: grid;
+    align-content: center;
+    min-height: 11rem;
+    padding-bottom: 1.25rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--dq-line);
+  }
+  .meta {
+    grid-area: meta;
+  }
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .meta p {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--dq-muted);
+  }
+  .meta .uses {
+    margin-top: 0.625rem;
+    font: 0.75rem / 1.4 var(--dq-font-mono);
+    color: var(--dq-muted);
+  }
+  .actions {
+    grid-area: actions;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 1rem;
+  }
+  .playground-link {
+    margin-left: auto;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--dq-accent);
+    text-underline-offset: 3px;
+  }
+  .code {
+    grid-area: code;
+    min-width: 0;
+  }
+  /* With its code open, a card takes the whole row: the demo on the left,
+     the code beside it. */
+  .recipe[data-open] {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+    grid-template-areas: 'stage code' 'meta code' 'actions code';
+    column-gap: 2rem;
+  }
+  @media (max-width: 68rem) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 44rem) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .recipe[data-open] {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'stage' 'meta' 'actions' 'code';
+    }
+    .recipe[data-open] .code {
+      margin-top: 1rem;
+    }
+  }
+</style>

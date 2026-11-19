@@ -25,59 +25,98 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-test('the dashboard resolves card by card, each with the full handoff', async ({
+test('the first screen arrives: the line draws in and each metric hands over', async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  // Tall enough to show the whole board: offscreen cards swap at once.
-  await page.setViewportSize({ width: 1280, height: 1600 });
   await page.goto('/');
-  const handoffs = await recordHandoffs(page, '[data-dashboard]');
-  const board = page.locator('[data-dashboard]');
-  // Three KPIs, the chart, the customers and the invoices.
+  const hero = page.locator('[data-field-hero]');
+  const handoffs = await recordHandoffs(page, '[data-field-hero]');
+  await expect(
+    hero.getByRole('heading', {
+      level: 1,
+      name: 'Loading states that hand over.',
+    }),
+  ).toBeVisible();
+  await expect(hero.getByRole('link', { name: 'Get started' })).toHaveAttribute(
+    'href',
+    '/docs/',
+  );
+  await expect(
+    hero.getByRole('link', { name: 'See the components' }),
+  ).toBeVisible();
+  // The values wait in square marks, then hand over one after another.
+  const values = hero.locator('dotquilt-text-loader');
+  await expect(values.first()).toHaveAttribute('state', 'pending');
   await expect
     .poll(handoffs, { timeout: 8000 })
-    .toEqual(Array(6).fill('complete'));
-  await expect(board.getByText('Ana Ribeiro').first()).toBeVisible();
+    .toEqual(Array(3).fill('complete'));
   expect(
-    await board
-      .locator('dotquilt-text-loader')
-      .evaluateAll((loaders) => loaders.map((loader) => loader.textContent)),
+    await values.evaluateAll((loaders) =>
+      loaders.map((loader) => loader.textContent?.trim()),
+    ),
   ).toEqual(['$48,210', '1,284', '0.8%']);
+  await expect(
+    hero.getByText('Example data. Each value is a live TextLoader.'),
+  ).toBeVisible();
+  // At rest the chart line is fully drawn.
+  await expect
+    .poll(() =>
+      hero
+        .locator('.line')
+        .evaluate((line) => getComputedStyle(line).strokeDashoffset),
+    )
+    .toMatch(/^0(px)?$/);
   expect(errors).toEqual([]);
 });
 
-test('the dashboard can be paused, replayed and redrawn with another mark', async ({
+test('with reduced motion the first screen shows at rest, values in place', async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  const board = page.locator('[data-dashboard]');
-  const app = board.locator('.app');
-  await board.getByRole('button', { name: 'Pause' }).click();
-  await expect(app).toHaveAttribute('motion', 'paused');
-  await board.getByRole('button', { name: 'Play', exact: true }).click();
-  await expect(app).not.toHaveAttribute('motion');
-  await board.getByRole('radio', { name: 'Dash' }).click();
-  await expect(board.getByRole('radio', { name: 'Dash' })).toHaveAttribute(
-    'aria-checked',
-    'true',
-  );
+  const hero = page.locator('[data-field-hero]');
+  await expect(hero).not.toHaveAttribute('data-arrive');
+  await expect(
+    hero.locator('dotquilt-text-loader').first(),
+  ).not.toHaveAttribute('state', 'pending');
+  // The loader's own text, not the marks drawn in its shadow root.
   expect(
-    await app
-      .locator(
-        'dotquilt-chart-loader, dotquilt-table-loader, dotquilt-text-loader',
-      )
-      .evaluateAll((loaders) =>
-        loaders.map((loader) => loader.getAttribute('mark')),
-      ),
-  ).toEqual(Array(5).fill('dash'));
-  // Replaying starts a fresh load: the KPIs are pending again.
-  await board.getByRole('button', { name: 'Replay' }).click();
-  await expect(app.locator('dotquilt-text-loader').first()).toHaveAttribute(
-    'state',
-    'pending',
-  );
+    await hero
+      .locator('dotquilt-text-loader')
+      .first()
+      .evaluate((loader) => loader.textContent?.trim()),
+  ).toBe('$48,210');
+});
+
+test('the first screen fits the window at desktop, tablet and phone widths', async ({
+  page,
+}) => {
+  for (const [width, height] of [
+    [1440, 960],
+    [820, 1100],
+    [375, 812],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBe(width);
+    const box = await page.locator('[data-field-hero] h1').boundingBox();
+    expect(box && box.x + box.width).toBeLessThanOrEqual(width);
+  }
+  // At 1440 the drawing reaches the window's right edge and the metric
+  // cards sit inside the first screen.
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.goto('/');
+  const art = await page.locator('[data-field-hero] .art').boundingBox();
+  expect(art && Math.round(art.x + art.width)).toBe(1440);
+  const card = await page
+    .locator('[data-field-hero] .metric')
+    .last()
+    .boundingBox();
+  expect(card && card.y + card.height).toBeLessThanOrEqual(960);
 });
 
 test('every family tile loads and hands over in turn', async ({ page }) => {

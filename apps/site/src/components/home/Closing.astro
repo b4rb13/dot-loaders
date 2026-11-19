@@ -29,6 +29,7 @@
     padding: 3rem 1.5rem;
     border-radius: var(--dq-radius-lg);
     overflow: hidden;
+    margin-bottom: 0;
     text-align: center;
   }
   .field {
@@ -37,11 +38,15 @@
     width: 100%;
     height: 100%;
     border-radius: 0;
+    /* The first screen's field: small, sparse marks. */
+    --dotquilt-dot-size: 2.8px;
+    --dotquilt-dot-gap: 19.6px;
+    --dotquilt-color: var(--dq-ink);
     /* Fade the field out towards the edges and behind the words. */
     mask: radial-gradient(
       ellipse 75% 85% at 50% 50%,
-      #0000 28%,
-      #000 58%,
+      #0000 30%,
+      rgb(0 0 0 / 0.55) 60%,
       #0000 96%
     );
   }

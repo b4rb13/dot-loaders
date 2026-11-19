@@ -57,7 +57,7 @@ Composed and unhurried; data settles into place instead of snapping.
 - **Faces:**
   - Manrope (Google Fonts, 400–700) for display and body.
   - DM Mono (400/500) for code, component names and keyboard hints.
-- **Display headings:** weight 500, letter-spacing −0.03em, line-height 1.1. Hero is clamp(2.2rem, 4.6vw, 3.4rem); docs H1 is 34 px.
+- **Display headings:** weight 500, letter-spacing −0.03em, line-height 1.1. Hero is clamp(2.2rem, 4.6vw, 3.4rem); docs H1 is 34 px. The homepage's first screen is larger: 72 px at line-height 1 on wide screens (owner's pick, 2026-11-19).
 - **Section headings and titles:** weight 600.
 - **Large numbers (KPIs, TextLoader content):** weight 500, letter-spacing −0.025em, tabular figures.
 - **Body:** 14.5 px / 1.65 in UI, 15 px in docs prose, 17.5 px lead text. Measure about 68ch.
@@ -106,7 +106,7 @@ Composed and unhurried; data settles into place instead of snapping.
 
 ## Website and docs
 
-- **Homepage:** a live product dashboard whose cards resolve one by one, with the headline and actions above it. Teal appears only on the primary action.
+- **Homepage (owner's pick, 2026-11-19: "The field becomes the page"):** beside the headline and actions, a field of marks rises into a solid teal chart line, and three metric cards below it hand over from square marks. Teal appears only on the arrived line and the primary action. The live dashboard moved to the examples page.
 - **Docs:** left navigation, a reading column of about 68ch, an on-page table of contents and a live preview with Start loading / Reveal. Code tabs cover React and native. API tables list type, default and description per prop.
 - **Copy:** plain user-facing language only. No milestones, freezes or "provisional" wording.
 - **Themes:** light and dark at parity, following the system setting, with a manual switch.
