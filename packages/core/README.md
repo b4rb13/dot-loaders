@@ -1,17 +1,63 @@
-# Dotquilt — private native validation slice
+# Dotquilt
 
-`@dotquilt-internal/core` is a provisional local tarball name, not a claimed npm scope. Publication is blocked with `private: true`. MIT source; no runtime dependencies.
+Loading placeholders that hold the shape of your content, then hand over to it. Marks wait where your content will be. When the data arrives they dim and drift away while the content settles in, in about a second.
 
-This slice implements `registerSkeletonBlock()` from `/skeleton` and `registerLoadingRegion()` from `/region`, or named root exports. Imports are inert; registration is explicit and idempotent for this supported build. Root and selective entries share implementations. `/animations` provides typed `defineAnimation`; `/animations/skeleton` provides `pulse` and `dissolve`. `/server` exports pure `renderStatic`, `skeletonStyles`, `staticSkeletonStyles` and `regionStyles`. M4 also provides line/circle/multiline skeletons, TypingDots and an initial TextLoader via `/text`, with `scramble`/`labelPulse` and `lock`/`printText`/`fade` factories via `/animations/text`. Text uses the shared loading controller, retains actual content and falls back safely for unsupported scripts/layouts. Matching React wrappers and static output exist. The measured default TextLoader entry passes its 10 KiB ceiling. `/chart` now exports the decorative ChartLoader with typed geometry providers; `/animations/chart` exports ridge, scan, terrain, bars, scatter, cycle and morphWipe. The owning LoadingRegion controls its handoff; actual chart content stays application-owned. TableLoader, complete catalog qualification, owner visual acceptance and the website remain unfinished.
+Native Web Components with no runtime dependencies, for any framework or none. For React, see `@dotquilt-internal/react`.
 
-Use a `<dotquilt-region state="pending" aria-label="Account activity">` with a named `slot="placeholder"` skeleton and default-slot application content. `update({ state: 'ready', cycle: requestId })` presents the current outcome. The app owns requests and stale-result rejection; empty/zero are valid. Use ready plus timing duration zero atomically for immediate error/cancel outcomes. Refreshing keeps useful content visible and interactive. Supply your own localized status outside the busy/hidden content.
+> **Status:** pre-alpha and not yet published to npm. The package name is provisional.
 
-Configure `stylePolicy` before upgrade. Default embedded styles, nonce/hash-authorized styles and shadow-root external styles are supported; `/styles/skeleton.css` and `/styles/region.css` are exported. Strict CSP uses application classes, not style attributes. `renderStatic` accepts validated library descriptions only; application templates render real content. Available real content stays accessible without JavaScript. No animation, callbacks or credentials are stored globally. Static helpers are DOM-free. Static markup embeds only fallback styles; hash policies authorize `staticSkeletonStyles` as well as the enhanced shadow styles.
+## Install
 
-See the workspace native quickstart and evidence register for runnable examples, limits and actually tested environments. No full browser-floor, manual assistive-technology, physical reference-device or full-catalog React/Next release support is claimed by this private slice.
+```bash
+npm install @dotquilt-internal/core
+```
 
-## Private TableLoader slice
+## Quick start
 
-`/table` now exposes the native decorative TableLoader, explicit registration, typed weighted columns and copied semantic cell/glyph geometry. `/animations/table` supplies typeOn/tableShimmer and coordinated rows. Compose actual application tables and explicit revealTargets in LoadingRegion; the same controller owns readiness, focus, restrictions and cancellation. `/server` supplies tableStyles/staticTableStyles and validated static descriptions, with `/styles/table.css` for external delivery. This remains incremental M4: TableLoader download gates and full visual/reference/catalog qualification are held. npm publication remains disabled.
+```html
+<dotquilt-region state="pending" aria-label="Revenue">
+  <dotquilt-skeleton-text slot="placeholder" lines="3"></dotquilt-skeleton-text>
+  <p>Your content</p>
+</dotquilt-region>
 
-Table layout helpers are private implementation details. The adapter includes their pure data subset at build time; consumers use the documented component and server entries. No internal package subpath is exported.
+<script type="module">
+  import { registerAll } from '@dotquilt-internal/core/register-all';
+
+  registerAll();
+  const region = document.querySelector('dotquilt-region');
+  const data = await fetch('/api/revenue').then((response) => response.json());
+  // …render your content, then:
+  region.update({ state: 'ready' });
+</script>
+```
+
+Register only what a page uses to keep it small. Each component has its own entry, for example `@dotquilt-internal/core/skeleton` with `registerSkeletonBlock()`.
+
+## Components
+
+| Element | Entry | Use it for |
+| --- | --- | --- |
+| `<dotquilt-region>` | `/region` | Wraps content: shows a placeholder while pending, keeps content usable while refreshing, and hands over when ready |
+| `<dotquilt-skeleton-block>`, `-line`, `-circle`, `-text` | `/skeleton` | Images, lines, avatars and paragraphs |
+| `<dotquilt-text-loader>` | `/text` | Numbers and short labels that lock into place |
+| `<dotquilt-chart-loader>` | `/chart` | Line, bar and scatter charts: marks glide onto your real data |
+| `<dotquilt-table-loader>` | `/table` | Tables: rows settle in one after another |
+| `<dotquilt-typing-dots>` | `/typing` | A reply that is being written |
+
+Animations live in `/animations/<family>` (for example `scan`, `cycle` and `morphWipe` for charts). Server rendering is in `/server` (`renderStatic`), and stylesheets are at `/styles/*.css` for strict CSP setups.
+
+## What it takes care of
+
+- **Accessibility.** Pending content is inert and hidden from assistive technology. Focus is kept. Reduced motion stills every loader, and forced-colours mode shows a clear outline.
+- **Server rendering.** Placeholders are in the first HTML, at your content's size, so nothing jumps when JavaScript arrives.
+- **Strict CSP.** No inline style attributes. Allow the stylesheets with a nonce or hashes, or serve them as files.
+- **Calm by design.** The idle motion stops after four seconds. `delay` and `min-display` keep fast loads from flickering.
+- **Cleanup.** Listeners and observers are released when a loader leaves the page.
+
+## Docs
+
+Guides, every option and live examples are at [dotquilt.dev](https://dotquilt.dev). You can also try every loader in the [playground](https://dotquilt.dev/playground/).
+
+## License
+
+MIT

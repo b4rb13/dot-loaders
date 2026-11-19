@@ -1,6 +1,6 @@
 # Dotquilt
 
-Dot-based loading components for the web. Placeholder dots animate while your data loads, then hand off to your real content: a skeleton dissolves into text, dots converge into a chart, rows type into a table.
+Dot-based loading components for the web. Placeholder marks wait where your content will be, then hand over to it when the data arrives: a number locks into place, marks glide onto a chart, rows settle into a table.
 
 - **Native core** (`packages/core`): framework-free Web Components with nine elements:
   - SkeletonBlock, SkeletonLine, SkeletonCircle, SkeletonText
@@ -36,15 +36,12 @@ bun run --cwd apps/site dev
 
 The docs site runs at http://127.0.0.1:4330.
 
-## Guides
+## Docs and plans
 
-- [Native quickstart](docs/implementation/native-quickstart.md)
-- [React quickstart](docs/implementation/react-quickstart.md)
-- [Testing private tarballs](docs/implementation/private-testing.md)
-- [npm account setup](docs/implementation/npm-setup.md)
-- [Product brief](docs/product-brief.md) and [vocabulary](GLOSSARY.md)
-
-These guides predate the November 2026 cleanup and may still mention milestone history.
+- **Docs, examples and the playground:** [dotquilt.dev](https://dotquilt.dev)
+- **The current state, known issues and the plan:** [AUDIT.md](AUDIT.md)
+- **The product strategy and the research behind it:** `docs/planning/` and `docs/research/`
+- **Working in this repository:** [AGENTS.md](AGENTS.md)
 
 ## License
 
