@@ -1,10 +1,20 @@
 {
   "name": "@dotquilt-internal/react",
   "version": "0.0.0-m2.0",
-  "description": "Private Dotquilt React adapter for the implemented native slice",
+  "description": "React components for Dotquilt: loading placeholders that hold the shape of your content, then hand over to it.",
   "private": true,
   "type": "module",
   "license": "MIT",
+  "homepage": "https://dotquilt.dev",
+  "keywords": [
+    "react",
+    "loading",
+    "skeleton",
+    "placeholder",
+    "loader",
+    "accessibility",
+    "ssr"
+  ],
   "sideEffects": [
     "**/*.css"
   ],

@@ -1,10 +1,20 @@
 {
   "name": "@dotquilt-internal/core",
   "version": "0.0.0-m2.0",
-  "description": "Private provisional Dotquilt native artifact; dense renderer proof remains experimental",
+  "description": "Loading placeholders that hold the shape of your content, then hand over to it. Native Web Components.",
   "private": true,
   "type": "module",
   "license": "MIT",
+  "homepage": "https://dotquilt.dev",
+  "keywords": [
+    "loading",
+    "skeleton",
+    "placeholder",
+    "loader",
+    "web-components",
+    "accessibility",
+    "ssr"
+  ],
   "sideEffects": [
     "**/*.css"
   ],
