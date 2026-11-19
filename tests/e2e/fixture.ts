@@ -144,7 +144,7 @@ function build(): Fixture {
     }
     case 'text-loader': {
       const loader = el('dotquilt-text-loader') as unknown as Owner;
-      loader.textContent = 'Revenue up 12%';
+      loader.textContent = params.get('text') ?? 'Revenue up 12%';
       stage.append(loader);
       loader.update({ state: 'pending', cycle: 'fixture' });
       return {

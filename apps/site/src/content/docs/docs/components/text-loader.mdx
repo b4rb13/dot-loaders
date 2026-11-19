@@ -53,6 +53,10 @@ Import alternatives from `@dotquilt-internal/core/animations/text` and pass them
 | Idle | `scramble`: characters cross-fade about every 280 ms | `labelPulse`: a calm highlight moves across the placeholder |
 | Handoff | `lock`: characters lock left to right, each easing in over 300 ms | `fade`: the value fades in |
 
+## Languages and long text
+
+The character effect draws Latin letters, digits and punctuation (printable ASCII) on a single line, up to 256 characters. Anything else still gets a placeholder: accented or non-Latin letters, right-to-left text, text that wraps, or longer text all show a plain field of marks in the text's place, and the value fades in when it arrives. Wider character support may come in a later release.
+
 ## Accessibility
 
 While pending, the scrambled characters are hidden from assistive technology, so give the loader a label that says what is loading. When the value is ready, it is ordinary text.

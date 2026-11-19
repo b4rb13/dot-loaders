@@ -7,9 +7,11 @@
 // styles. "React adds" is the React entry minus the native one, with react and
 // react-dom left external.
 //
-// Budgets are not enforced yet: the owner is deciding them (AUDIT.md decision 1).
-// When decided, put them in scripts/size-budgets.json as
-// { "<component>": <max total gzip bytes> } and this script fails on overruns.
+// Budgets (AUDIT.md decision 1): scripts/size-budgets.json holds, per entry,
+// the most gzip bytes the native usage and the React usage (native included)
+// may reach: the size when they were set plus about 15% headroom. This script
+// fails when an entry goes over. Raising a budget is a deliberate change made
+// in a PR that says why.
 import { existsSync } from 'node:fs';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -90,11 +92,15 @@ async function gzipSize(name: string, source: string, external: string[] = []) {
 await rm(work, { recursive: true, force: true });
 await mkdir(work, { recursive: true });
 const budgetFile = resolve(import.meta.dir, 'size-budgets.json');
-const budgets: Record<string, number> = existsSync(budgetFile)
+const budgets: Record<string, { native: number; react: number }> = existsSync(
+  budgetFile,
+)
   ? await Bun.file(budgetFile).json()
   : {};
 const rows: Record<string, string | number>[] = [];
 const overruns: string[] = [];
+const left = (bytes: number, budget?: number) =>
+  budget === undefined ? '—' : `${Math.round((1 - bytes / budget) * 100)}%`;
 for (const [name, native, react] of components) {
   const nativeBytes = await gzipSize(`${name}-native`, native);
   const reactBytes = await gzipSize(`${name}-react`, `${native}\n${react}`, [
@@ -103,18 +109,21 @@ for (const [name, native, react] of components) {
     'react/jsx-runtime',
   ]);
   const budget = budgets[name];
-  if (budget !== undefined && nativeBytes > budget)
-    overruns.push(`${name}: ${nativeBytes} B > ${budget} B`);
+  if (budget && nativeBytes > budget.native)
+    overruns.push(`${name} (native): ${nativeBytes} B > ${budget.native} B`);
+  if (budget && reactBytes > budget.react)
+    overruns.push(`${name} (React): ${reactBytes} B > ${budget.react} B`);
   rows.push({
     component: name,
     'native gzip (B)': nativeBytes,
-    'React adds (B)': reactBytes - nativeBytes,
-    budget: budget ?? '—',
+    'native left': left(nativeBytes, budget?.native),
+    'React gzip (B)': reactBytes,
+    'React left': left(reactBytes, budget?.react),
   });
 }
 console.table(rows);
 if (!Object.keys(budgets).length)
-  console.log('No budgets set yet (scripts/size-budgets.json); report only.');
+  console.log('No budgets set (scripts/size-budgets.json); report only.');
 if (overruns.length) {
   console.error(`Over budget:\n  ${overruns.join('\n  ')}`);
   process.exit(1);

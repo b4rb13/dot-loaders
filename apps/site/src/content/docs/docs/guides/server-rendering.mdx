@@ -35,3 +35,7 @@ Every kind also takes `mark`, `preset` and `stylePolicy`.
 ## Without JavaScript
 
 If scripts never load, a pending region keeps showing its still placeholder, and your content stays visible and usable below it. Keep a way forward that works without JavaScript, such as a link to reload the page, outside the region.
+
+This is the default on purpose: a page whose bundle fails to load still works. The cost is a short moment, while JavaScript loads, when the placeholder and your server content show together and a screen reader can read content that isn't final.
+
+If you would rather hide pending content until the runtime takes over, render it with `hidden` and `inert` yourself, and remove both when it is ready. Only do this when the content has a way to appear without JavaScript, or when it is safe for it to stay hidden if scripts fail.

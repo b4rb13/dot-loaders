@@ -448,7 +448,7 @@ Performance qualification on real devices comes after there are users, against b
 
 ## Decisions only you can make
 
-1. **Size budgets.** Are the 6 KiB / 8 KiB / 2 KiB-increment ceilings real requirements? I'd replace them with a total gzipped budget per entry with ~15–20% headroom.
+1. ~~**Size budgets.**~~ **Decided 2026-11-19 by the owner: a gzip budget per entry, at its size then plus about 15% headroom.** `scripts/size-budgets.json` holds a native and a React budget for each of the ten entries; `bun run size` (in `verify` and CI) fails when one goes over. Raising a budget is a deliberate change in a PR that says why.
 2. ~~**Renderer.**~~ **Decided 2026-11-18 (delegated to the agent): Canvas for ChartLoader and TableLoader, SVG for everything else.**
    - **Why Canvas stays:** the archived M2 study measured 6.5–9.9 ms of main-thread rendering per frame (p95) for SVG against 1.3–1.8 ms for Canvas, with ten dense loaders drawing 1,106 dots on a desktop. On a phone several times slower, the SVG cost alone fills a 16.7 ms frame. Loaders animate while the page is busiest: hydrating and receiving data.
    - **Cost for basic loaders:** none. Only the chart and table entries import Canvas.
@@ -456,7 +456,7 @@ Performance qualification on real devices comes after there are users, against b
    - **What goes instead:** the 768 lines of benchmark-only proof code in `src/` and its comparison hook. The proof answered its question.
    - **Kept:** the SVG fallback for bitmaps that can't be allocated, lost contexts and dot CSS that Canvas can't honour. Revisit those conditions with the mark-styling API in Phase 4.
 3. ~~**4-second motion cap.**~~ **Decided 2026-11-19 by the owner: keep the cap on idle motion, and always animate the reveal.** The idle glow still stops after 4 seconds, so a long load never loops indefinitely. The handoff runs however long the load took: it is about a second long and happens because the data arrived. Reduced motion, a pause or focus inside the content still skip it.
-4. **TextLoader international text.** Is ASCII-only acceptable for v1?
+4. ~~**TextLoader international text.**~~ **Decided 2026-11-19 by the owner: ASCII-only is fine for v1, documented.** The character effect covers printable ASCII on one line, up to 256 characters; anything else shows a plain field of marks and fades the value in. That fallback used to draw its marks in a transparent colour, so it showed nothing; fixed with this decision. Wider support can follow the alpha.
 5. ~~**Multiple library copies on one page.**~~ **Decided 2026-11-18 (delegated to the agent): one copy per page.** A second copy reports a registration error instead of sharing.
    - **The registry is global:** each tag can be defined once per document, so a second copy never owns its own elements. "Support" was glue: about 13 global symbols, ~56 `Reflect` calls, four dot ledgers and an 84-test suite.
    - **Only one case was supported:** registration already rejects a copy of another version. What remained was the same version bundled twice, which bundlers deduplicate and micro-frontends avoid by sharing the dependency.
@@ -466,13 +466,13 @@ Performance qualification on real devices comes after there are users, against b
 7. ~~**Visual direction.**~~ **Decided 2026-11-18:** "System, refined" (see design/SPEC.md). Dots stay as the core idea, with dot/dash/square as mark options.
 8. ~~**Website stack.**~~ **Decided 2026-11-19 by the owner: Astro + Starlight.** It is static and light, and it brings docs navigation, an on-page table of contents and a theme switch. Pages show the native loaders directly, with React only where an example needs it. A runnable Next.js example project covers the React adapter's SSR and hydration instead of the site.
 9. ~~**Old site retirement.**~~ **Decided 2026-11-19 by the owner: retire it now.** `apps/website` and its workspace, scripts and dependencies are deleted, so the old animation variants it used can be pruned (Phase 4b slice H). It stays in git history as reference; the new site is Phase 4c–4d.
-10. **How often errors repeat.** Today each loader reports a given problem once in its lifetime ("bounded diagnostics"), and legacy tests pin that. So a problem that recurs after being fixed stays silent, which weakens telemetry. Options:
+10. ~~**How often errors repeat.**~~ **Decided 2026-11-19 by the owner: (b) for configuration errors and (c) for runtime failures.** Today each loader reports a given problem once in its lifetime ("bounded diagnostics"), and legacy tests pin that. So a problem that recurs after being fixed stays silent, which weakens telemetry. Options:
     - (a) keep once per element;
     - (b) report again after the field was set to a valid value in between;
     - (c) once per loading cycle.
 
     I recommend (b) for configuration errors and (c) for runtime failures.
-11. **Pending server content before JavaScript.** Today a server-rendered pending region shows its placeholder *and* its content until the runtime upgrades it. If JavaScript is off or fails to load, the content stays visible and usable. The cost is that, while JavaScript loads, people see both and screen readers announce content that is not ready. Hiding it with CSS until upgrade (tried in Phase 2) leaves it hidden forever when JavaScript never runs. Options:
+11. ~~**Pending server content before JavaScript.**~~ **Decided 2026-11-19 by the owner: (a) keep it visible and usable by default, with (d) documented** (the server-rendering guide shows how to render it `hidden`/`inert`). Today a server-rendered pending region shows its placeholder *and* its content until the runtime upgrades it. If JavaScript is off or fails to load, the content stays visible and usable. The cost is that, while JavaScript loads, people see both and screen readers announce content that is not ready. Hiding it with CSS until upgrade (tried in Phase 2) leaves it hidden forever when JavaScript never runs. Options:
     - (a) keep content visible and usable (today; the legacy React tests pin this);
     - (b) hide it only while scripting is on (`@media (scripting: enabled)`), accepting that a failed bundle hides it;
     - (c) (b) plus a CSS-only timeout that reveals it again if the element never upgrades;
