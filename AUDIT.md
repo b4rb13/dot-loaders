@@ -73,7 +73,7 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
   - **CSS surfaces:** skeletons, lines, text lines and the chart's static field draw squares and dashes with CSS masks, so a strict CSP still works. Lines are two rows of the mark tall: 17 px for squares, 19 px for dashes. Static markup carries a mark's CSS only when it uses one, so default server output is unchanged.
   - **Painters and handoff:** the SVG and Canvas painters draw rounded rectangles. The dissolve leaves as the same shapes, on the same grid. Chart and table fields use the mark's own pitch across and down.
   - **TypingDots and TextLoader:** squares are 90% of the dot size; dashes are 80% of it tall and 2.7 times as wide (the mockup). TextLoader's squares make a pixel font.
-  - **Size:** the mark rules add about 1.5 KB gzip across the nine external stylesheets. The owner raised the legacy catalog SSR gate (24 loaders with every external stylesheet) from 8 KB to 9 KB; the page now measures 8.36 KB.
+  - **Size:** the mark rules add about 1.5 KB gzip across the nine external stylesheets. The owner raised the legacy catalog SSR gate (24 loaders with every external stylesheet) from 8 KB to 9 KB; the page then measured 8.36 KB. The refresh cue took it to about 9.2 KB, and the owner raised the gate to 9.5 KB (2026-11-19).
   - **Not done:**
     - On charts, dashes stay horizontal. The spec says they follow the line, which needs an angle on painter commands, a change to the authoring API.
     - Squares and dashes have a fixed size, so `--dotquilt-dot-size` and `--dotquilt-dot-gap` change dots only.
