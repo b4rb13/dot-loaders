@@ -1,6 +1,6 @@
 ---
 title: TableLoader
-description: Rows of marks shaped like your columns, settling in row by row when the data arrives.
+description: Rows of marks shaped like your columns that gather into each cell's real text when the data arrives.
 ---
 
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
@@ -12,7 +12,7 @@ import tableHtml from '../../../../../../../examples/site/native/invoice-table.h
 import tableTs from '../../../../../../../examples/site/native/invoice-table.ts?raw';
 import dataTs from '../../../../../../../examples/site/data.ts?raw';
 
-TableLoader holds the place of a table. Each cell shows a short bar of marks shaped like what the column holds, with a glow drifting across. When the data arrives, your rows settle in one after another.
+TableLoader holds the place of a table. Each cell shows a short bar of marks shaped like what the column holds, with a glow drifting across. When the data arrives, each cell's marks gather into the text in its place, then the rows wipe in as the marks leave.
 
 <Preview label="A table loading">
   <TableDemo />
@@ -20,7 +20,7 @@ TableLoader holds the place of a table. Each cell shows a short bar of marks sha
 
 ## Usage
 
-Describe the columns, set how many rows to show, and hand the region your real rows as **reveal targets** so they settle in turn.
+Describe the columns and set how many rows to show. The handoff reads your real table, so it needs nothing else.
 
 <Tabs syncKey="framework">
   <TabItem label="React">
@@ -34,7 +34,7 @@ Describe the columns, set how many rows to show, and hand the region your real r
   </TabItem>
 </Tabs>
 
-Without reveal targets, the whole table fades and rises in at once.
+With a `targetProvider`, the table uses the `rows` handoff instead: each cell's marks form its characters, glyph by glyph, and the rows you pass as the region's **reveal targets** settle in one after another.
 
 ## Options
 
@@ -55,7 +55,7 @@ Import alternatives from `@dotquilt-internal/core/animations/table` and pass the
 | Phase | Default | Also available |
 | --- | --- | --- |
 | Idle | `tableShimmer`: still bars under a drifting glow | `typeOn`: bars grow as if being typed |
-| Handoff | `rows`: rows settle in 80 ms apart, cells 28 ms apart | |
+| Handoff | the marks gather into each cell's real text, then the rows wipe in | `rows` (with a `targetProvider`): cells form their characters and rows settle in 80 ms apart |
 
 | Animation | Options (default) |
 | --- | --- |

@@ -12,6 +12,11 @@ import {
   remaining,
 } from './internal/element.js';
 import { handoff } from './internal/marks.js';
+import {
+  morphMarks,
+  type Part,
+  skeletonParts,
+} from './internal/morph-marks.js';
 import type { Preset } from './internal/preset.js';
 import { skeletonPreset } from './internal/preset.js';
 import { capturePresetData } from './internal/preset-data.js';
@@ -111,6 +116,10 @@ export class SkeletonBlock extends ManagedElement {
   }
   protected override presetChanged(): void {
     this.#runner?.reset?.();
+  }
+  /** Its marks where the stylesheet draws them, for the region's morph handoff. */
+  [morphMarks](origin: DOMRect): readonly Part[] {
+    return skeletonParts(this, origin);
   }
   #handoffCheck: (() => void) | undefined;
   [skeletonHandoff](): import('./internal/skeleton-handoff.js').SkeletonDeparture {

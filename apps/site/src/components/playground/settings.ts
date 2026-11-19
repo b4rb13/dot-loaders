@@ -66,6 +66,7 @@ export const handoffs: Record<Component, readonly [string, string][]> = {
   ],
   text: [
     ['', 'Default'],
+    ['lock', 'Lock'],
     ['printText', 'Print'],
     ['fade', 'Fade'],
   ],

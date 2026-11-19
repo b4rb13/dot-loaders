@@ -39,9 +39,9 @@ Your app owns the request; the region only needs to know whether the data is `pe
 | --- | --- |
 | `LoadingRegion` | Wraps content: a placeholder while pending, a refresh cue while refreshing, a handoff when ready |
 | `SkeletonBlock`, `SkeletonLine`, `SkeletonCircle`, `SkeletonText` | Images, lines, avatars and paragraphs |
-| `TextLoader` | Numbers and short labels that lock into place |
+| `TextLoader` | Numbers and short labels that take shape in marks, then hand over |
 | `ChartLoader` | Line, bar and scatter charts; give it a `targetProvider` so marks glide onto your data |
-| `TableLoader` | Tables; pass your rows as the region's `revealTargets` so they settle in turn |
+| `TableLoader` | Tables: each cell's marks gather into its real text |
 | `TypingDots` | A reply that is being written |
 
 Each component is also available from its own entry (for example `@dotquilt-internal/react/region`), so a page loads only what it uses. Animations come from `@dotquilt-internal/core/animations/<family>` and are passed as `animations={{ idle: scan() }}`.

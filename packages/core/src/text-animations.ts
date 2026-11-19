@@ -8,6 +8,10 @@ import {
   textBinding,
 } from './internal/text-definitions.js';
 import {
+  type TextMorphOptions,
+  textMorphDefinition,
+} from './internal/text-morph.js';
+import {
   scrambleCharactersDefinition,
   scrambleWordsDefinition,
 } from './internal/text-scramble.js';
@@ -78,6 +82,16 @@ const handoffSchema = {
   settleMs: [300, 40, 400],
   pop: [0, 0, 0.3],
 } as const;
+
+export type { TextMorphOptions };
+/**
+ * The default handoff: the marks take the real characters' shapes, then the
+ * text wipes in along a soft front.
+ */
+export const morphWipe = /* @__PURE__ */ factory<TextMorphOptions, 'handoff'>(
+  textMorphDefinition,
+  { travel: [0.34, 0.2, 0.5], wipeStart: [0.46, 0.3, 0.6], edge: [36, 4, 80] },
+);
 export const lock = /* @__PURE__ */ factory<TextHandoffOptions, 'handoff'>(
   lockDefinition,
   handoffSchema,

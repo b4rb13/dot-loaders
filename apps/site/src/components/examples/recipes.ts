@@ -84,7 +84,7 @@ export const recipes: readonly Recipe[] = [
     family: 'text',
     demo: 'kpi',
     title: 'Revenue total',
-    text: 'A number that locks into place, glyph by glyph.',
+    text: 'A number whose marks take the shape of its digits, then hand over.',
     mark: 'square',
     delay: 2000,
   },

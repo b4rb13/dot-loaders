@@ -9,6 +9,8 @@ declare global {
       ready(duration?: number): void;
       pending(cycle: string): void;
       identity(): boolean;
+      /** Gives a skeleton an explicit dissolve() handoff. */
+      dissolve(id: string, options: object): void;
     };
     m4React: {
       errors: string[];

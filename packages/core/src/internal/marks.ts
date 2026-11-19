@@ -260,3 +260,21 @@ export const handoff = {
   markShrink: 0.3,
   markDriftPx: 3,
 } as const;
+
+/**
+ * The "take shape, then hand over" handoff (design/SPEC.md), shared by every
+ * loader: marks travel in a wave to the real content's shape, then the content
+ * wipes in along a soft front and the marks leave where it passes them.
+ */
+export const morphTiming = {
+  /** Each mark's own journey, as a share of the handoff. */
+  travel: 0.34,
+  /** How much later the far end of the content starts travelling. */
+  stagger: 0.2,
+  /** When the content starts to wipe in. */
+  wipeStart: 0.46,
+  /** Width of the soft front, in px. */
+  edge: 36,
+  /** Opacity of a mark that has arrived. */
+  arrive: 0.62,
+} as const;
