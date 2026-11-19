@@ -22,6 +22,10 @@ export interface TextLoaderProps extends HostProps<NativeTextLoader> {
   mask?: string | undefined;
   state?: LoadingState | undefined;
   cycle?: string | undefined;
+  /** Milliseconds to wait before showing the placeholder. */
+  delay?: number | undefined;
+  /** Milliseconds a placeholder stays once shown. */
+  minDisplay?: number | undefined;
   timing?: Timing | undefined;
   speed?: number | undefined;
   pointerResponse?: 'none' | 'lift' | undefined;
@@ -37,6 +41,8 @@ export const TextLoader = /* @__PURE__ */ forwardRef<
     mask,
     state = 'ready',
     cycle,
+    delay,
+    minDisplay,
     timing,
     speed,
     pointerResponse,
@@ -76,6 +82,8 @@ export const TextLoader = /* @__PURE__ */ forwardRef<
     {
       state,
       cycle,
+      delay,
+      minDisplay,
       timing,
       speed,
       pointerResponse,

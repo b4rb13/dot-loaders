@@ -6,7 +6,7 @@ export const textStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
     markColor +
     ' 1px,#0000 0) 0 0/6px 6px}' +
     textMarkShapes((mark) => `:host([mark=${mark}])`, '.mask') +
-    ':host ::slotted([slot=placeholder]){display:none}:host([data-custom][data-dotquilt-glyphs]) .mask{visibility:hidden}:host > svg{width:100%;height:100%;overflow:visible}@media(forced-colors:active){:host > svg{display:none}:host .mask{visibility:visible;border:1px dotted CanvasText}}',
+    ':host([data-dotquilt-waiting]) .mask,:host([data-dotquilt-waiting])>svg{visibility:hidden}:host ::slotted([slot=placeholder]){display:none}:host([data-custom][data-dotquilt-glyphs]) .mask{visibility:hidden}:host > svg{width:100%;height:100%;overflow:visible}@media(forced-colors:active){:host > svg{display:none}:host .mask{visibility:visible;border:1px dotted CanvasText}}',
 ]);
 // Static rules also apply while the element's external stylesheet loads
 // (`:state(unstyled)`); browsers without custom states ignore that part.

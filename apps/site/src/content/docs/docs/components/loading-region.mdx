@@ -32,6 +32,8 @@ A loading region decides when to switch. It shows its placeholder while your dat
 | `refreshing` | the `refresh-indicator` slot, if any | visible and usable |
 | `ready` | gone, after the handoff | visible |
 
+For fast responses, `delay` and `min-display` keep the placeholder from flickering: a load shorter than `delay` never shows it, and a placeholder that did show stays for at least `min-display`. Values around 150 ms and 500 ms suit most screens.
+
 Going from `pending` to `ready` plays the handoff: the marks fade and drift as your content rises in, in about a second. With reduced motion, a pause, or focus inside the content, it swaps at once.
 
 ## Usage
@@ -60,6 +62,8 @@ Going from `pending` to `ready` plays the handoff: the marks fade and drift as y
 | --- | --- | --- | --- | --- |
 | `state` | `state` | `pending` \| `refreshing` \| `ready` | `ready` | Whether the content is loading. |
 | `cycle` | `cycle` | string | | Names one load, so a stale answer can't settle a newer one. |
+| `delay` | `delay` | number (ms) | `0` | Wait this long before showing the placeholder. A response inside it shows no placeholder and no handoff, so fast loads don't flicker. A placeholder already on the page, such as server markup, is never hidden. Up to 10000. |
+| `min-display` | `minDisplay` | number (ms) | `0` | Once a placeholder shows, keep it at least this long before handing over, so it never flashes. Up to 10000. |
 | | `timing` | `{ duration?, easing? }` | | The handoff's length and curve. `{ duration: 0 }` swaps at once, for errors. |
 | | `revealTargets` | `{ id, element }[]` | | Parts of your content that settle in turn, such as table rows. |
 | `motion` | `motion` | `system` \| `paused` | `system` | `system` follows the visitor's reduced-motion setting; `paused` stills every loader inside. |

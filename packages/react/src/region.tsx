@@ -28,6 +28,10 @@ export interface LoadingRegionProps
   refreshIndicator?: ReactNode;
   state?: LoadingState | undefined;
   cycle?: string | undefined;
+  /** Milliseconds to wait before showing the placeholder. */
+  delay?: number | undefined;
+  /** Milliseconds a placeholder stays once shown. */
+  minDisplay?: number | undefined;
   timing?: Timing | undefined;
   animations?: Pick<Animations<'region'>, 'handoff'> | undefined;
   preset?: RegionPreset | undefined;
@@ -44,6 +48,8 @@ export const LoadingRegion = /* @__PURE__ */ forwardRef<
     refreshIndicator,
     state = 'ready',
     cycle,
+    delay,
+    minDisplay,
     timing,
     animations,
     preset,
@@ -69,6 +75,8 @@ export const LoadingRegion = /* @__PURE__ */ forwardRef<
     {
       state,
       cycle,
+      delay,
+      minDisplay,
       timing,
       animations,
       preset,

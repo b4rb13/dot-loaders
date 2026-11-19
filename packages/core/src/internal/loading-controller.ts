@@ -65,6 +65,8 @@ export abstract class LoadingController<
       'state',
       'cycle',
       'motion',
+      'delay',
+      'minDisplay',
     ]);
   }
   protected abstract get family(): F;
@@ -83,6 +85,8 @@ export abstract class LoadingController<
     'state',
     'cycle',
     'tabindex',
+    'delay',
+    'min-display',
   ];
   #revision = 0;
   #serial = 0;
@@ -97,6 +101,16 @@ export abstract class LoadingController<
   #clockTiming: Timing = {};
   #contentObserver: MutationObserver | undefined;
   #temporaryTabIndex = false;
+  /**
+   * Anti-flicker timing. `#shownAt` is when the placeholder became visible;
+   * `#timer` ends a delay or a minimum display. A loader upgraded from markup
+   * already on the page (server rendering) has its placeholder on screen, so
+   * its first render is never delayed.
+   */
+  #shownAt: number | undefined;
+  #timer: ReturnType<typeof setTimeout> | undefined;
+  #rendered = false;
+  readonly #inPlace = this.isConnected;
   get activity() {
     return this.ownActivity;
   }
@@ -117,6 +131,26 @@ export abstract class LoadingController<
   }
   get cycle(): string | undefined {
     return this.getAttribute('cycle') ?? undefined;
+  }
+  /** Milliseconds to wait before showing the placeholder (0–10000). */
+  get delay(): number {
+    return this.#milliseconds('delay');
+  }
+  set delay(value: number | undefined) {
+    if (value === undefined) this.removeAttribute('delay');
+    else this.setAttribute('delay', String(value));
+  }
+  /** Milliseconds a placeholder stays once shown (0–10000). */
+  get minDisplay(): number {
+    return this.#milliseconds('min-display');
+  }
+  set minDisplay(value: number | undefined) {
+    if (value === undefined) this.removeAttribute('min-display');
+    else this.setAttribute('min-display', String(value));
+  }
+  #milliseconds(name: string): number {
+    const value = Number(this.getAttribute(name) ?? 0);
+    return Number.isFinite(value) && value >= 0 ? Math.min(10000, value) : 0;
   }
   set cycle(value: string | undefined) {
     if (value === undefined) this.removeAttribute('cycle');
@@ -199,6 +233,8 @@ export abstract class LoadingController<
     readonly motion?: Motion | undefined;
     readonly stylePolicy?: StylePolicy;
     readonly preset?: import('./preset.js').Preset<F> | undefined;
+    readonly delay?: number | undefined;
+    readonly minDisplay?: number | undefined;
   }): void {
     const priorState = this.state;
     const priorCycle = this.cycle;
@@ -224,6 +260,8 @@ export abstract class LoadingController<
       'timing',
       'animations',
       'revealTargets',
+      'delay',
+      'minDisplay',
     ];
   }
   override attributeChangedCallback(
@@ -235,6 +273,12 @@ export abstract class LoadingController<
       this.#temporaryTabIndex = false;
       return;
     }
+    if (
+      (name === 'delay' || name === 'min-display') &&
+      value !== null &&
+      !(Number.isFinite(Number(value)) && Number(value) >= 0)
+    )
+      this.invalidOption(name);
     if (
       !this.#batching &&
       old !== value &&
@@ -313,6 +357,9 @@ export abstract class LoadingController<
     this.#contentObserver?.disconnect();
     this.#contentObserver = undefined;
     this.#finish('cancel', 'removed');
+    clearTimeout(this.#timer);
+    this.#timer = undefined;
+    this.removeAttribute('data-dotquilt-waiting');
   }
   refresh(): void {
     this.resources?.eligible(true);
@@ -374,9 +421,43 @@ export abstract class LoadingController<
     if (!w) return;
     const [content, placeholder, refresh] = w;
     const revision = this.#revision;
-    const state = this.state;
+    const requested = this.state;
     const attribute = this.getAttribute('state');
-    const invalid = attribute !== null && attribute !== state;
+    const invalid = attribute !== null && attribute !== requested;
+    const waiting = this.hasAttribute('data-dotquilt-waiting');
+    const first = !this.#rendered;
+    this.#rendered = true;
+    let state = requested;
+    // Minimum display: a placeholder that showed stays until min-display.
+    if (
+      requested === 'ready' &&
+      this.#previous === 'pending' &&
+      !waiting &&
+      this.#shownAt !== undefined
+    ) {
+      const left = this.#shownAt + this.minDisplay - now(this);
+      if (left > 0) {
+        this.#later(left, () => this.requestRender());
+        state = 'pending';
+      }
+    }
+    // Delay: entering pending, the placeholder stays hidden for `delay`; a
+    // response inside it skips the placeholder and its handoff altogether.
+    let skipHandoff = false;
+    if (state === 'pending' && (this.#previous !== 'pending' || first)) {
+      if (this.delay > 0 && !(first && this.#inPlace)) {
+        this.setAttribute('data-dotquilt-waiting', '');
+        this.#shownAt = undefined;
+        this.#later(this.delay, () => {
+          this.removeAttribute('data-dotquilt-waiting');
+          this.#shownAt = now(this);
+        });
+      } else if (!waiting) this.#shownAt = now(this);
+    } else if (state !== 'pending' && waiting) {
+      clearTimeout(this.#timer);
+      this.removeAttribute('data-dotquilt-waiting');
+      skipHandoff = true;
+    }
     if (invalid) this.invalidOption('state');
     if (revision !== this.#revision) return;
     this.toggleAttribute('data-dotquilt-disabled', invalid);
@@ -447,8 +528,16 @@ export abstract class LoadingController<
       return;
     }
     this.#participants = undefined;
-    if (prior === 'pending') this.#start(revision, w);
+    if (prior === 'pending' && !skipHandoff) this.#start(revision, w);
     else this.#settled = true;
+  }
+  /** Runs `task` after `ms`, replacing any earlier timer. */
+  #later(ms: number, task: () => void): void {
+    clearTimeout(this.#timer);
+    this.#timer = setTimeout(() => {
+      this.#timer = undefined;
+      task();
+    }, ms);
   }
   #start(revision: number, [content, placeholder]: Layers): void {
     const timing = this.timing;

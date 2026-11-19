@@ -458,3 +458,123 @@ for (const kind of ['text-loader', 'table-loader'] as const)
     });
     expect(reason).toBe('complete');
   });
+
+// Anti-flicker timing: `delay` keeps a placeholder hidden for a moment, so a
+// fast response shows no placeholder and no handoff; `min-display` keeps a
+// placeholder that did show on screen long enough to read as intended.
+test('delay hides the placeholder until it passes, and a fast response skips it', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await open(page, 'component=region');
+  const result = await page.evaluate(async () => {
+    const region = window.e2e.owner as HTMLElement & {
+      update(patch: object): void;
+    };
+    const wait = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+    const placeholderVisible = () =>
+      getComputedStyle(region.shadowRoot?.querySelector('.p') as Element)
+        .visibility !== 'hidden';
+    region.update({ state: 'ready', timing: { duration: 0 } });
+    await wait(50);
+    region.update({ delay: 300, timing: undefined });
+    const starts: number[] = [];
+    region.addEventListener('dotquilt-handoff-start', () =>
+      starts.push(performance.now()),
+    );
+    region.update({ state: 'pending', cycle: 'slow' });
+    await wait(60);
+    const during = {
+      waiting: region.hasAttribute('data-dotquilt-waiting'),
+      visible: placeholderVisible(),
+    };
+    await wait(320);
+    const after = {
+      waiting: region.hasAttribute('data-dotquilt-waiting'),
+      visible: placeholderVisible(),
+    };
+    // A response inside the delay: no placeholder and no handoff.
+    region.update({ state: 'ready', timing: { duration: 0 } });
+    await wait(50);
+    starts.length = 0;
+    region.update({ state: 'pending', cycle: 'fast', timing: undefined });
+    await wait(80);
+    region.update({ state: 'ready' });
+    await wait(100);
+    return {
+      during,
+      after,
+      fast: {
+        starts: starts.length,
+        presentation: region.getAttribute('data-presentation'),
+        waiting: region.hasAttribute('data-dotquilt-waiting'),
+      },
+    };
+  });
+  expect(result).toEqual({
+    during: { waiting: true, visible: false },
+    after: { waiting: false, visible: true },
+    fast: { starts: 0, presentation: 'ready', waiting: false },
+  });
+});
+
+test('min-display keeps a placeholder that showed on screen for at least that long', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await open(page, 'component=region');
+  const result = await page.evaluate(async () => {
+    const region = window.e2e.owner as HTMLElement & {
+      update(patch: object): void;
+    };
+    const wait = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+    region.update({ state: 'ready', timing: { duration: 0 } });
+    await wait(50);
+    region.update({ minDisplay: 600, timing: undefined });
+    let started = 0;
+    region.addEventListener('dotquilt-handoff-start', () => {
+      started = performance.now();
+    });
+    const shown = performance.now();
+    region.update({ state: 'pending', cycle: 'held' });
+    await wait(100);
+    region.update({ state: 'ready' });
+    await wait(150);
+    const held = region.getAttribute('data-presentation');
+    await wait(500);
+    return { held, after: Math.round(started - shown) };
+  });
+  expect(result.held).toBe('pending');
+  expect(result.after).toBeGreaterThanOrEqual(580);
+});
+
+test('delay never hides a placeholder already on the page, only new ones', async ({
+  page,
+}) => {
+  await open(page, 'component=region');
+  const result = await page.evaluate(() => {
+    // Markup inserted as HTML is upgraded in place, as server markup is.
+    const holder = document.createElement('div');
+    document.body.append(holder);
+    holder.innerHTML =
+      '<dotquilt-region state="pending" delay="400" aria-label="From markup"><dotquilt-skeleton-line slot="placeholder"></dotquilt-skeleton-line></dotquilt-region>';
+    // A loader created by script (as a client-rendered app does).
+    const created = document.createElement('dotquilt-region');
+    created.setAttribute('delay', '400');
+    created.setAttribute('state', 'pending');
+    created.setAttribute('aria-label', 'Created');
+    holder.append(created);
+    return new Promise<[boolean, boolean]>((resolve) =>
+      requestAnimationFrame(() =>
+        resolve([
+          holder.firstElementChild?.hasAttribute('data-dotquilt-waiting') ??
+            false,
+          created.hasAttribute('data-dotquilt-waiting'),
+        ]),
+      ),
+    );
+  });
+  expect(result).toEqual([false, true]);
+});
