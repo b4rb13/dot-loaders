@@ -1,0 +1,144 @@
+---
+/**
+ * The page footer (Starlight's Footer, overridden): Starlight's own page
+ * footer, then the site footer with the brand, links and the license.
+ */
+import Default from '@astrojs/starlight/components/Footer.astro';
+import Glyph from './Glyph.astro';
+
+const columns = [
+  {
+    title: 'Components',
+    links: [
+      ['Skeleton', '/docs/components/skeleton/'],
+      ['TextLoader', '/docs/components/text-loader/'],
+      ['ChartLoader', '/docs/components/chart-loader/'],
+      ['TableLoader', '/docs/components/table-loader/'],
+      ['LoadingRegion', '/docs/components/loading-region/'],
+    ],
+  },
+  {
+    title: 'Learn',
+    links: [
+      ['Introduction', '/docs/'],
+      ['Installation', '/docs/installation/'],
+      ['React and Next.js', '/docs/guides/react/'],
+      ['Server rendering', '/docs/guides/server-rendering/'],
+      ['Motion and accessibility', '/docs/guides/motion/'],
+    ],
+  },
+  {
+    title: 'Project',
+    links: [
+      ['Theming', '/docs/theming/'],
+      ['Content Security Policy', '/docs/guides/csp/'],
+      ['Custom animations', '/docs/guides/custom-animations/'],
+      ['MIT License', '/license/'],
+    ],
+  },
+];
+---
+
+<Default {...Astro.props}><slot /></Default>
+<footer class="site-footer not-content">
+  <dotquilt-skeleton-block class="seam" motion="paused" aria-hidden="true"
+  ></dotquilt-skeleton-block>
+  <div class="grid">
+    <div class="about">
+      <a class="brand" href="/"><Glyph /> <span>dotquilt</span></a>
+      <p>
+        Loading placeholders that hold the shape of your content and hand over
+        gently when it arrives.
+      </p>
+    </div>
+    {
+      columns.map((column) => (
+        <nav aria-label={column.title}>
+          <h2>{column.title}</h2>
+          {column.links.map(([label, href]) => (
+            <a href={href}>{label}</a>
+          ))}
+        </nav>
+      ))
+    }
+  </div>
+  <p class="bottom">© 2026 Dotquilt. Free and open source under the MIT license.</p>
+</footer>
+
+<script>
+  import { registerSkeletonBlock } from '@dotquilt-internal/core/skeleton';
+
+  registerSkeletonBlock();
+</script>
+
+<style>
+  .site-footer {
+    position: relative;
+    margin-top: 4rem;
+    padding-top: 2.75rem;
+  }
+  .seam {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    width: auto;
+    height: 9px;
+    border-radius: 0;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--dq-ink);
+    text-decoration: none;
+  }
+  .about p {
+    margin: 0.875rem 0 0;
+    max-width: 22rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--dq-muted);
+  }
+  nav {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+  }
+  h2 {
+    margin: 0 0 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  nav a {
+    font-size: 0.875rem;
+    color: var(--dq-muted);
+    text-decoration: none;
+  }
+  nav a:hover {
+    color: var(--dq-ink);
+  }
+  .bottom {
+    margin: 2.5rem 0 0;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--dq-line);
+    font-size: 0.8125rem;
+    color: var(--dq-faint);
+  }
+  @media (max-width: 56rem) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .about {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

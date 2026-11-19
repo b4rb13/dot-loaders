@@ -128,9 +128,13 @@ The defaults live in `packages/core/src/internal/marks.ts`; each family adopts t
 - **Lines:** a line placeholder (SkeletonLine and each SkeletonText line) is two rows of marks tall, 18 px by default.
 - **Alternative marks:** `mark="dash"` or `mark="square"` draws the shapes above at their fixed size and pitch. The size and gap properties apply to dots only. Lines stay two rows tall: 17 px with squares, 19 px with dashes. TypingDots squares are 90% of the dot size, and dashes are 80% of it tall and 2.7 times as wide.
 
+## Brand (decided by the owner, 2026-11-19)
+
+- **Logo:** "Quilt", a rounded ink tile of four marks with one lit in the glow colour, beside the lowercase wordmark "dotquilt" (Manrope 600, −0.025em). The tile follows the theme's ink and glow colours; the favicon is the same tile.
+- **Header arrival:** on a first visit the wordmark is a TextLoader in square marks that locks into the name, and the glow drifts once along the row of marks under the header. Later pages and reduced motion show it at rest.
+
 ## Open details (decide during 4b–4d, then record here)
 
 - Spacing scale and the exact docs grid.
 - Icon set.
-- Logo mark. The mockup uses a placeholder 2×2 dot glyph.
 - Default mark per component, if it should differ from the global dot (e.g. dash for SkeletonText and TableLoader).

@@ -20,6 +20,7 @@ const pages = [
   '/docs/',
   '/docs/installation/',
   '/docs/theming/',
+  '/license/',
   ...components.map((name) => `/docs/components/${name}/`),
   ...guides.map((name) => `/docs/guides/${name}/`),
 ];

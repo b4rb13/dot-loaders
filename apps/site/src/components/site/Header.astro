@@ -1,0 +1,168 @@
+---
+/**
+ * The site header (Starlight's Header, overridden): the Quilt mark and a
+ * wordmark that, on a first visit, shimmers in square marks and locks into the
+ * name; the main links; search and theme. A row of marks forms its lower edge.
+ */
+import Search from 'virtual:starlight/components/Search';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+import Glyph from './Glyph.astro';
+
+const path = Astro.url.pathname;
+const links = [
+  {
+    label: 'Docs',
+    href: '/docs/',
+    current:
+      path.startsWith('/docs/') && !/\/docs\/(components|guides)\//.test(path),
+  },
+  {
+    label: 'Components',
+    href: '/docs/components/skeleton/',
+    current: path.startsWith('/docs/components/'),
+  },
+  {
+    label: 'Guides',
+    href: '/docs/guides/react/',
+    current: path.startsWith('/docs/guides/'),
+  },
+];
+---
+
+<div class="site-header">
+  <a class="brand" href="/" aria-label="Dotquilt, home">
+    <Glyph />
+    <dotquilt-text-loader
+      class="wordmark"
+      mask="dotquilt"
+      mark="square"
+      aria-hidden="true"
+      data-wordmark>dotquilt</dotquilt-text-loader
+    >
+  </a>
+  <script is:inline>
+    // A first visit plays the arrival, before anything paints. Later pages
+    // in the same visit, and reduced motion, show the header at rest.
+    try {
+      const brand = document.currentScript.previousElementSibling;
+      const seen = sessionStorage.getItem('dotquilt-arrived');
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!seen && !still) {
+        brand.querySelector('[data-wordmark]').setAttribute('state', 'pending');
+        document.documentElement.dataset.arrival = '';
+      }
+    } catch {}
+  </script>
+  <nav class="site-nav" aria-label="Main">
+    {
+      links.map((link) => (
+        <a href={link.href} aria-current={link.current ? 'page' : undefined}>
+          {link.label}
+        </a>
+      ))
+    }
+  </nav>
+  <div class="search"><Search /></div>
+  <div class="tools"><ThemeSelect /></div>
+  <dotquilt-skeleton-block class="seam" motion="paused" aria-hidden="true"
+  ></dotquilt-skeleton-block>
+</div>
+
+<script>
+  import { registerSkeletonBlock } from '@dotquilt-internal/core/skeleton';
+  import { registerTextLoader, type TextLoader } from '@dotquilt-internal/core/text';
+
+  const root = document.documentElement;
+  const seam = document.querySelector('.site-header .seam');
+  // On arrival the glow drifts along the seam once; otherwise it rests.
+  if ('arrival' in root.dataset) seam?.setAttribute('motion', 'system');
+  registerSkeletonBlock();
+  registerTextLoader();
+  const wordmark = document.querySelector<TextLoader>('[data-wordmark]');
+  if (wordmark?.state === 'pending') {
+    setTimeout(() => {
+      wordmark.update({ state: 'ready' });
+      try {
+        sessionStorage.setItem('dotquilt-arrived', '1');
+      } catch {}
+    }, 1200);
+  }
+</script>
+
+<style>
+  .site-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 100%;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex: none;
+    color: var(--dq-ink);
+    text-decoration: none;
+  }
+  .wordmark {
+    min-width: 4.4em;
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--dq-ink);
+  }
+  /* Until the wordmark upgrades, a pending one shows nothing rather than the name. */
+  .wordmark:not(:defined)[state='pending'] {
+    color: transparent;
+  }
+  .site-nav {
+    display: flex;
+    gap: 0.25rem;
+  }
+  .site-nav a {
+    padding: 0.4375rem 0.75rem;
+    border-radius: var(--dq-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--dq-muted);
+    text-decoration: none;
+    transition: background var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .site-nav a:hover {
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+  }
+  .site-nav a[aria-current='page'] {
+    color: var(--dq-ink);
+    background: var(--dq-subtle);
+  }
+  .search {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+  .tools {
+    display: flex;
+    align-items: center;
+  }
+  /* A single row of marks along the header's lower edge. */
+  .seam {
+    position: absolute;
+    inset-inline: 0;
+    bottom: -5px;
+    width: auto;
+    height: 9px;
+    border-radius: 0;
+    pointer-events: none;
+  }
+  @media (max-width: 50rem) {
+    .site-nav,
+    .tools {
+      display: none;
+    }
+    .site-header {
+      gap: 0.75rem;
+    }
+  }
+</style>

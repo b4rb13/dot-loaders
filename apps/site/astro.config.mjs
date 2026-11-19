@@ -27,6 +27,9 @@ export default defineConfig({
       components: {
         // The homepage's hero: headline, actions and the live dashboard.
         Hero: './src/components/home/Hero.astro',
+        // The brand, main links and a seam of marks; and the site footer.
+        Header: './src/components/site/Header.astro',
+        Footer: './src/components/site/Footer.astro',
       },
       head: [
         {
