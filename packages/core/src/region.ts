@@ -3,6 +3,7 @@ import { chartHandoff, richHandoff } from './internal/chart-participant.js';
 import { node, register } from './internal/dom.js';
 import type { HandoffSource } from './internal/handoff.js';
 import { LoadingController } from './internal/loading-controller.js';
+import { curves } from './internal/marks.js';
 import { createSkeletonSource } from './internal/skeleton-source.js';
 import type { SkeletonBlock } from './skeleton.js';
 import { regionStyles } from './styles.js';
@@ -10,6 +11,46 @@ import type { TableLoader } from './table.js';
 import type { LoadingState } from './types.js';
 import type { TypingDots } from './typing.js';
 export class LoadingRegion extends LoadingController<'region'> {
+  #thread: HTMLElement | undefined;
+  #pass: Animation[] = [];
+  /**
+   * The refresh cue (design/SPEC.md): a row of marks along the top edge.
+   * It sits just above the region, so the content never moves.
+   */
+  protected override refreshCue(): Element {
+    if (!this.#thread) {
+      this.#thread = node(this.ownerDocument, 'span', {
+        class: 'thread',
+        part: 'refresh-thread',
+        'aria-hidden': 'true',
+      });
+      this.#thread.append(node(this.ownerDocument, 'span', { class: 'glow' }));
+    }
+    return this.#thread;
+  }
+  /** It eases in, and the glow drifts along it once (2.8 s, under the 4 s limit). */
+  protected override refreshStarted(cue: Element): void {
+    for (const animation of this.#pass.splice(0)) animation.cancel();
+    if (!this.canAnimate()) return;
+    try {
+      this.#pass.push(
+        cue.animate(
+          { opacity: [0, 1] },
+          { duration: 320, easing: curves.settle },
+        ),
+        (cue.firstElementChild as Element).animate(
+          { maskPosition: ['-70% 0', '170% 0'] },
+          { duration: 2800, easing: curves.sine },
+        ),
+      );
+    } catch {
+      this.report('animation-failed', 'animations');
+    }
+  }
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    for (const animation of this.#pass.splice(0)) animation.cancel();
+  }
   /** A region draws no marks of its own; its placeholder takes `mark`. */
   protected override get optionNames(): readonly string[] {
     return super.optionNames.filter((name) => name !== 'mark');

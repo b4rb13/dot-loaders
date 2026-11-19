@@ -60,7 +60,6 @@ export function ActivityFeed() {
         }
         timing={failed && items === null ? { duration: 0 } : undefined}
         placeholder={<SkeletonText lines={3} />}
-        refreshIndicator={<span className="updating">Updating…</span>}
       >
         {failed && items === null ? (
           <p role="alert">We couldn't load activity. Try again later.</p>

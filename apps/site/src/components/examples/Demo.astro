@@ -313,7 +313,6 @@ const comments = [
       data-refresh
     >
       <dotquilt-skeleton-text slot="placeholder" lines="3" mark={mark} />
-      <span slot="refresh-indicator" class="updating">Updating</span>
       <ul class="feed">
         <li>Northwind paid <strong>$4,200</strong></li>
         <li>Globex invoice is overdue</li>
@@ -543,13 +542,6 @@ const comments = [
     list-style: none;
     font-size: 14px;
     color: var(--dq-ink);
-  }
-  .updating {
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: var(--dq-subtle);
-    color: var(--dq-muted);
-    font-size: 12px;
   }
   .search {
     display: grid;
