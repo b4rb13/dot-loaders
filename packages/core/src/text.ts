@@ -145,6 +145,9 @@ export class TextLoader extends LoadingController<'text'> {
           'aria-hidden': 'true',
         });
         placeholderLayer.append(this.#mask);
+        // A surface measured before the mask existed has no mask glyphs, and
+        // the geometry may not change again to replace it: measure anew.
+        this.#surface = undefined;
       }
     });
     for (const content of this.querySelectorAll(
