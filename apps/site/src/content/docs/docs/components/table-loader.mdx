@@ -45,6 +45,7 @@ Without reveal targets, the whole table fades and rises in at once.
 | | `columns` | `{ kind, width? }[]` | three text columns | What each column holds (`text`, `number`, `badge` or `date`) and its share of the width. Up to 20. |
 | `mark` | `mark` | `dot` \| `square` \| `dash` | `dot` | Dashes suit table rows well. |
 | `speed` | `speed` | number | `1` | How fast the glow moves. |
+| `pointer-response` | `pointerResponse` | `none` \| `lift` | `none` | `lift` lights the marks around the pointer while the placeholder shows, on devices with a fine pointer. |
 | `motion` | `motion` | `system` \| `paused` | `system` | `system` follows the visitor's reduced-motion setting; `paused` stills the field. |
 
 ## Animations
@@ -55,3 +56,8 @@ Import alternatives from `@dotquilt-internal/core/animations/table` and pass the
 | --- | --- | --- |
 | Idle | `tableShimmer`: still bars under a drifting glow | `typeOn`: bars grow as if being typed |
 | Handoff | `rows`: rows settle in 80 ms apart, cells 28 ms apart | |
+
+| Animation | Options (default) |
+| --- | --- |
+| `tableShimmer`, `typeOn` | `cadenceMs` 250–1200 (600), `cellStyle`: `auto` (from the columns), `text`, `number`, `badge`, `date`, `badge-text` or `text-badge` |
+| `rows` | `staggerMs` 0–120 (80), `settlePx` 0–8 (5) |

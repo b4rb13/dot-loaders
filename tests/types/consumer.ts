@@ -126,7 +126,13 @@ typing.state = 'ready';
 // @ts-expect-error typing has no separate pointer response
 typing.pointerResponse = 'lift';
 
-import { lock, scramble } from '@dotquilt-internal/core/animations/text';
+import {
+  lock,
+  printText,
+  scramble,
+  scrambleCharacters,
+  scrambleWords,
+} from '@dotquilt-internal/core/animations/text';
 import {
   registerTextLoader,
   type TextLoader,
@@ -145,11 +151,13 @@ label.update({
     handoff: lock({ pop: 0.15 }),
   },
 });
-label.animations = { handoff: lock({ staggerMs: 20 }) };
-// @ts-expect-error scramble cadence is numeric
-scramble({ changesPerSecond: 'fast' });
-// @ts-expect-error scramble has no per-element timer option
-scramble({ intervalMs: 500 });
+label.animations = { handoff: printText({ staggerMs: 20 }) };
+label.animations = { idle: scrambleCharacters({ changesPerSecond: 2 }) };
+label.animations = { idle: scrambleWords({ changesPerSecond: 1 }) };
+// @ts-expect-error independent scramble cadence is numeric
+scrambleCharacters({ changesPerSecond: 'fast' });
+// @ts-expect-error word scramble has no per-element timer option
+scrambleWords({ intervalMs: 500 });
 renderStatic({ kind: 'text-loader', text: 0, mask: '000', state: 'pending' });
 // @ts-expect-error text and skeleton binding families are distinct
 label.animations = { idle: pulse() };
@@ -158,9 +166,12 @@ lock({ reelMs: 'fast' });
 
 import {
   bars,
+  cycle,
   morphWipe,
   ridge,
+  scan,
   scatter,
+  terrain,
 } from '@dotquilt-internal/core/animations/chart';
 import {
   type ChartInput,
@@ -189,7 +200,13 @@ chartClass.update({
   },
 });
 chartClass.update({ variant: undefined, targetProvider: undefined });
-const chartIdleVariants = [bars({ sway: 0.1 }), scatter({ radius: 20 })];
+const chartIdleVariants = [
+  scan({ bandWidth: 50 }),
+  terrain({ relief: 1 }),
+  bars({ sway: 0.1 }),
+  scatter({ radius: 20 }),
+  cycle({ holdMs: 900 }),
+];
 void chartIdleVariants;
 const wrongChartText: import('@dotquilt-internal/core').Animations<'text'> = {
   // @ts-expect-error chart family cannot be used on text
@@ -197,7 +214,7 @@ const wrongChartText: import('@dotquilt-internal/core').Animations<'text'> = {
 };
 void wrongChartText;
 // @ts-expect-error wrong chart phase
-chart.animations = { handoff: bars() };
+chart.animations = { handoff: scan() };
 // @ts-expect-error invalid variant
 chart.variant = 'pie';
 // @ts-expect-error invalid provider cannot return a Promise

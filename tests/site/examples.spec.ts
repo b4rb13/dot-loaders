@@ -128,9 +128,20 @@ test('filters show one family and are kept in the link', async ({ page }) => {
   await expect(
     gallery.getByRole('button', { name: 'ChartLoader' }),
   ).toHaveAttribute('aria-pressed', 'true');
-  await expect(gallery.locator('[data-recipe]:visible')).toHaveCount(3);
+  await expect(gallery.locator('[data-recipe]:visible')).toHaveCount(6);
   await expect(gallery.locator('#dashboard')).toBeHidden();
   await gallery.getByRole('button', { name: 'All' }).click();
-  await expect(gallery.locator('[data-recipe]:visible')).toHaveCount(15);
+  await expect(gallery.locator('[data-recipe]:visible')).toHaveCount(21);
   await expect(page).toHaveURL(/\/examples\/$/);
+});
+
+test('the hover example lights its marks around the pointer', async ({
+  page,
+}) => {
+  await page.goto('/examples/');
+  const card = page.locator('#hover-skeleton');
+  await card.scrollIntoViewIfNeeded();
+  const circle = card.locator('dotquilt-skeleton-circle');
+  await expect(circle).toHaveAttribute('pointer-response', 'lift');
+  await expect(card.locator('.uses')).toContainText('pointer lift');
 });

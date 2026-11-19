@@ -67,7 +67,19 @@ Put a skeleton in a region's `placeholder` slot and size it with CSS like any ot
 | `mark` | `dot` \| `dash` \| `square` | `dot` | The shape of each mark. Dashes suit text lines; squares stay crisp at small sizes. |
 | `motion` | `system` \| `paused` | `system` | `system` follows the visitor's reduced-motion setting; `paused` stills the marks. |
 | `speed` | number | `1` | How fast the idle glow moves, from above 0 up to 4. |
+| `pointer-response` | `none` \| `lift` | `none` | `lift` lights the marks around the pointer while the placeholder shows, on devices with a fine pointer. |
 | `lines` | number | `3` | SkeletonText only: how many lines, up to 50. |
+
+In React the props have the same names in camelCase (`pointerResponse`).
+
+## Animations
+
+Import alternatives from `@dotquilt-internal/core/animations/skeleton` and pass them as `animations`.
+
+| Phase | Default | Also available | Options |
+| --- | --- | --- | --- |
+| Idle | a soft glow drifts across every 2.8 s | `pulse`: the same glow at your own pace | `periodMs` 800–4000 (2800) |
+| Handoff | marks dim, shrink and drift up, left to right | `dissolve`: marks fall away as the content arrives | `duration` ms (300), `fallPx` 0–8 (5) |
 
 ## Colours
 

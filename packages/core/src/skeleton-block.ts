@@ -215,7 +215,31 @@ export class SkeletonBlock extends ManagedElement {
     if (owner && owner.presentation !== 'pending') this.#runner?.dispose();
     this.requestRender();
   }
+  /**
+   * The layer whose marks light up around the pointer, made only for a
+   * loader that asks for `lift`: a copy of the surface under a round mask.
+   */
+  protected ensureLift(): void {
+    const root = this.shadowRoot;
+    if (
+      !root ||
+      [...root.children].some((child) => child.classList.contains('lift'))
+    )
+      return;
+    const layer = node(this.ownerDocument, 'div', {
+      class: 'lift',
+      'aria-hidden': 'true',
+    });
+    layer.append(
+      node(this.ownerDocument, 'div', {
+        class: 'surface',
+        'aria-hidden': 'true',
+      }),
+    );
+    root.append(layer);
+  }
   #trackPointer(active: boolean): void {
+    if (active) this.ensureLift();
     const target = active ? (this.owner ?? this) : undefined;
     if (target === this.#pointerHost) return;
     this.#pointerHost?.removeEventListener('pointermove', this.#onPointer);
@@ -230,14 +254,29 @@ export class SkeletonBlock extends ManagedElement {
   };
   #onPointer = (event: PointerEvent): void => {
     const r = this.getBoundingClientRect();
-    this.toggleAttribute(
-      'data-pointer',
+    const inside =
       event.pointerType !== 'touch' &&
-        event.clientX >= r.left &&
-        event.clientX <= r.right &&
-        event.clientY >= r.top &&
-        event.clientY <= r.bottom,
-    );
+      event.clientX >= r.left &&
+      event.clientX <= r.right &&
+      event.clientY >= r.top &&
+      event.clientY <= r.bottom;
+    this.toggleAttribute('data-pointer', inside);
+    if (!inside) return;
+    // The pointer glow is centred on the pointer, in the loader's own box.
+    // Set through the CSSOM on shadow layers, so strict CSP still applies.
+    for (const layer of this.shadowRoot?.querySelectorAll<HTMLElement>(
+      '.lift',
+    ) ?? []) {
+      const box = layer.getBoundingClientRect();
+      layer.style.setProperty(
+        '--dotquilt-pointer-x',
+        `${Math.round(event.clientX - box.left)}px`,
+      );
+      layer.style.setProperty(
+        '--dotquilt-pointer-y',
+        `${Math.round(event.clientY - box.top)}px`,
+      );
+    }
   };
   protected override render(): void {
     const owner = this.owner;
@@ -245,7 +284,14 @@ export class SkeletonBlock extends ManagedElement {
     const moving =
       this.allowed(activity) && (!owner || owner.presentation === 'pending');
     this.toggleAttribute('data-moving', moving);
-    this.#trackPointer(moving && this.pointerResponse === 'lift');
+    // The pointer glow answers the visitor, not the clock: it works for as
+    // long as the placeholder shows, after the idle motion has stopped too,
+    // but not while motion is paused or reduced.
+    this.#trackPointer(
+      this.canAnimate() &&
+        (!owner || owner.presentation === 'pending') &&
+        this.pointerResponse === 'lift',
+    );
     if (moving && (activity.started === undefined || !this.deadline))
       this.arm(activity);
     if (owner && owner.presentation !== 'pending') {

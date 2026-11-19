@@ -74,7 +74,7 @@ export function dissolveSkeleton(
   if (!root || !win || media(win, '(forced-colors: active)'))
     return { dispose() {}, check() {} };
   const surfaces = [...root.querySelectorAll<HTMLElement>('.surface')].filter(
-    (surface) => !surface.closest('.pulse'),
+    (surface) => !surface.closest('.pulse,.lift'),
   );
   const bounds = host.getBoundingClientRect();
   // Squares and dashes have a fixed spec size; dots follow --dotquilt-dot-size.

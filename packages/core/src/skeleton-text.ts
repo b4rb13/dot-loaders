@@ -82,19 +82,26 @@ export class SkeletonText extends SkeletonBlock {
   protected override get optionNames(): readonly string[] {
     return [...super.optionNames, 'lines', 'widths'];
   }
+  /** SkeletonText builds its pointer layer with its lines, in render. */
+  protected override ensureLift(): void {}
   protected override render(): void {
     const widths = lineWidths(this.lines, this.#widths);
-    const geometry = widths.join(',');
+    // The pointer glow's copy of the lines exists only for `lift`.
+    const lift = this.pointerResponse === 'lift';
+    const geometry = `${widths.join(',')}${lift ? '|lift' : ''}`;
     if (geometry !== this.#geometry && this.shadowRoot) {
       const layers = this.shadowRoot.querySelectorAll('.lines');
       if (!layers.length)
         for (const layer of [...this.shadowRoot.children])
           if (layer.localName === 'div') layer.remove();
-      for (const pulse of [false, true]) {
+      // The lines, the idle glow's copy and, for `lift`, the pointer glow's.
+      for (const [i, glow] of (
+        ['', 'pulse', ...(lift ? (['lift'] as const) : [])] as const
+      ).entries()) {
         const layer =
-          layers[pulse ? 1 : 0] ??
+          layers[i] ??
           node(this.ownerDocument, 'div', {
-            class: pulse ? 'lines pulse' : 'lines',
+            class: glow ? `lines ${glow}` : 'lines',
             'aria-hidden': 'true',
           });
         layer.replaceChildren();
