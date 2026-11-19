@@ -19,7 +19,7 @@ export default defineConfig({
       title: 'Dotquilt',
       description:
         'Dot-based loading placeholders that hand off gently to your real content.',
-      customCss: ['./src/styles/theme.css'],
+      customCss: ['./src/styles/theme.css', './src/styles/demos.css'],
       head: [
         {
           tag: 'link',
@@ -63,7 +63,14 @@ export default defineConfig({
         },
         {
           label: 'Components',
-          items: [{ label: 'Skeleton', slug: 'docs/components/skeleton' }],
+          items: [
+            { label: 'Skeleton', slug: 'docs/components/skeleton' },
+            { label: 'TextLoader', slug: 'docs/components/text-loader' },
+            { label: 'ChartLoader', slug: 'docs/components/chart-loader' },
+            { label: 'TableLoader', slug: 'docs/components/table-loader' },
+            { label: 'TypingDots', slug: 'docs/components/typing-dots' },
+            { label: 'LoadingRegion', slug: 'docs/components/loading-region' },
+          ],
         },
       ],
     }),

@@ -1,0 +1,83 @@
+---
+title: LoadingRegion
+description: The area that switches from placeholder to content, and owns the handoff between them.
+---
+
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+import Preview from '../../../../components/Preview.astro';
+// Real files, type-checked with the repository, so the code here always works.
+import feedTsx from '../../../../../../../examples/site/activity-feed.tsx?raw';
+import feedHtml from '../../../../../../../examples/site/activity-feed.html?raw';
+import feedTs from '../../../../../../../examples/site/activity-feed.ts?raw';
+
+A loading region decides when to switch. It shows its placeholder while your data is pending, keeps your content visible while it refreshes, and hands over when it's ready. Every loader except TextLoader lives inside one.
+
+<Preview label="A feed loading and refreshing" mode="refresh" values={['Northwind paid $4,200', 'Acme Labs opened an invoice']}>
+  <dotquilt-region state="pending" aria-label="Recent activity">
+    <dotquilt-skeleton-text slot="placeholder" lines="3"></dotquilt-skeleton-text>
+    <span slot="refresh-indicator" class="updating">Updating…</span>
+    <ul class="feed">
+      <li data-value>Northwind paid $4,200</li>
+      <li>Globex invoice is overdue</li>
+      <li>Initech paid $3,115</li>
+    </ul>
+  </dotquilt-region>
+</Preview>
+
+## States
+
+| State | The placeholder | Your content |
+| --- | --- | --- |
+| `pending` | shown | hidden, inert and hidden from assistive technology |
+| `refreshing` | the `refresh-indicator` slot, if any | visible and usable |
+| `ready` | gone, after the handoff | visible |
+
+Going from `pending` to `ready` plays the handoff: the marks fade and drift as your content rises in, in about a second. With reduced motion, a pause, or focus inside the content, it swaps at once.
+
+## Usage
+
+<Tabs syncKey="framework">
+  <TabItem label="React">
+    <Code code={feedTsx} lang="tsx" title="ActivityFeed.tsx" />
+  </TabItem>
+  <TabItem label="Native">
+    <Code code={feedHtml} lang="html" title="index.html" />
+    <Code code={feedTs} lang="ts" title="activity.ts" />
+  </TabItem>
+</Tabs>
+
+## Slots
+
+| Slot | React | Holds |
+| --- | --- | --- |
+| `placeholder` | `placeholder` | the loader shown while pending |
+| `refresh-indicator` | `refreshIndicator` | an optional cue shown while refreshing |
+| (default) | `children` | your content |
+
+## Options
+
+| Attribute | React | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| `state` | `state` | `pending` \| `refreshing` \| `ready` | `ready` | Whether the content is loading. |
+| `cycle` | `cycle` | string | | Names one load, so a stale answer can't settle a newer one. |
+| | `timing` | `{ duration?, easing? }` | | The handoff's length and curve. `{ duration: 0 }` swaps at once, for errors. |
+| | `revealTargets` | `{ id, element }[]` | | Parts of your content that settle in turn, such as table rows. |
+| `motion` | `motion` | `system` \| `paused` | `system` | `system` follows the visitor's reduced-motion setting; `paused` stills every loader inside. |
+
+## Events
+
+| Event | When |
+| --- | --- |
+| `dotquilt-handoff-start` | the handoff begins |
+| `dotquilt-handoff-end` | it finishes; `detail.reason` is `complete`, or why it swapped at once |
+| `dotquilt-handoff-cancel` | a newer state or cycle replaced it |
+| `dotquilt-error` | an option was invalid or an animation failed; `detail.code` says which |
+
+In React, use `onHandoffStart`, `onHandoffEnd`, `onHandoffCancel` and `onLoaderError`.
+
+## Accessibility
+
+- **Label every region** with `aria-label`, so people know what is loading.
+- **Pending content is out of reach:** it is inert and hidden from assistive technology until it is ready.
+- **Focus is kept:** if focus is inside content that becomes pending, it moves to the region; completion never moves it back by itself.
+- **Status is yours:** announce loading and errors in your own words, for example with a `role="status"` element outside the region.

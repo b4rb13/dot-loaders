@@ -1,0 +1,49 @@
+---
+title: TypingDots
+description: Three calm dots for a reply that is being written.
+---
+
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+import Preview from '../../../../components/Preview.astro';
+// Real files, type-checked with the repository, so the code here always works.
+import replyTsx from '../../../../../../../examples/site/assistant-reply.tsx?raw';
+import replyHtml from '../../../../../../../examples/site/assistant-reply.html?raw';
+import replyTs from '../../../../../../../examples/site/assistant-reply.ts?raw';
+
+TypingDots show that a reply is on its way. A slow wave passes through the dots; when the message arrives, it takes their place.
+
+<Preview label="A reply arriving" values={['The Globex invoice was due on October 28.', 'Northwind paid on November 2.']}>
+  <dotquilt-region state="pending" aria-label="Assistant reply">
+    <div slot="placeholder" class="bubble">
+      <dotquilt-typing-dots></dotquilt-typing-dots>
+    </div>
+    <div class="bubble" data-value>The Globex invoice was due on October 28.</div>
+  </dotquilt-region>
+</Preview>
+
+## Usage
+
+Use TypingDots as a region's placeholder, inside the same bubble your message will fill.
+
+<Tabs syncKey="framework">
+  <TabItem label="React">
+    <Code code={replyTsx} lang="tsx" title="AssistantReply.tsx" />
+  </TabItem>
+  <TabItem label="Native">
+    <Code code={replyHtml} lang="html" title="index.html" />
+    <Code code={replyTs} lang="ts" title="reply.ts" />
+  </TabItem>
+</Tabs>
+
+TypingDots are decorative: they have no state of their own. On their own, outside a region, they keep their wave for four seconds and then rest.
+
+## Options
+
+| Attribute | React | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| `count` | `count` | number | `3` | How many dots, up to 8. |
+| `mark` | `mark` | `dot` \| `square` \| `dash` | `dot` | The shape of each dot. |
+| `speed` | `speed` | number | `1` | How fast the wave moves. |
+| `motion` | `motion` | `system` \| `paused` | `system` | `system` follows the visitor's reduced-motion setting; `paused` stills the dots. |
+
+The dots are 8 px, 6 px apart. Change them with `--dotquilt-dot-size` and `--dotquilt-dot-gap`.

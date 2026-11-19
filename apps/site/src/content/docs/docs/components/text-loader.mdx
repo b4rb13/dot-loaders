@@ -1,0 +1,58 @@
+---
+title: TextLoader
+description: A number or short label that scrambles while it loads, then locks into the real value.
+---
+
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+import Preview from '../../../../components/Preview.astro';
+// Real files, type-checked with the repository, so the code here always works.
+import totalTsx from '../../../../../../../examples/site/revenue-total.tsx?raw';
+import totalHtml from '../../../../../../../examples/site/revenue-total.html?raw';
+import totalTs from '../../../../../../../examples/site/revenue-total.ts?raw';
+
+TextLoader holds the place of a number or a short label. While it loads, its characters cross-fade through look-alikes in the shape of the answer. When the value arrives, they lock into it from left to right.
+
+<Preview label="A total loading" values={['$48,120', '$51,904', '$46,385']}>
+  <p class="kpi">
+    <dotquilt-text-loader state="pending" mask="$00,000" aria-label="Revenue this month">$48,120</dotquilt-text-loader>
+  </p>
+</Preview>
+
+## Usage
+
+TextLoader is its own loading region: set its state, and put the value in as its text. The mask is the shape of the answer, such as `$00,000`; without one, the placeholder takes the shape of the current text.
+
+<Tabs syncKey="framework">
+  <TabItem label="React">
+    <Code code={totalTsx} lang="tsx" title="RevenueTotal.tsx" />
+  </TabItem>
+  <TabItem label="Native">
+    <Code code={totalHtml} lang="html" title="index.html" />
+    <Code code={totalTs} lang="ts" title="total.ts" />
+  </TabItem>
+</Tabs>
+
+## Options
+
+| Attribute | React | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| `state` | `state` | `pending` \| `refreshing` \| `ready` | `ready` | Whether the value is loading. |
+| `cycle` | `cycle` | string | | Names one load, so a stale answer can't settle a newer one. |
+| `mask` | `mask` | string | the text | The shape the placeholder shows. |
+| `mark` | `mark` | `dot` \| `square` \| `dash` | `dot` | Squares make a clean pixel font. Dashes read as hatching here. |
+| `speed` | `speed` | number | `1` | How fast the characters change. |
+| `motion` | `motion` | `system` \| `paused` | `system` | `system` follows the visitor's reduced-motion setting; `paused` stills the characters. |
+| | `timing` | `{ duration?, easing? }` | | The handoff's length and curve. `{ duration: 0 }` swaps at once. |
+
+## Animations
+
+Import alternatives from `@dotquilt-internal/core/animations/text` and pass them as `animations`.
+
+| Phase | Default | Also available |
+| --- | --- | --- |
+| Idle | `scramble`: characters cross-fade about every 280 ms | `labelPulse`: a calm highlight moves across the placeholder |
+| Handoff | `lock`: characters lock left to right, each easing in over 300 ms | `fade`: the value fades in |
+
+## Accessibility
+
+While pending, the scrambled characters are hidden from assistive technology, so give the loader a label that says what is loading. When the value is ready, it is ordinary text.
