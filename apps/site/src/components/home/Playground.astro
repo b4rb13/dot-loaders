@@ -55,14 +55,15 @@ import { palettes } from '../playground/settings';
           }
         </div>
       </fieldset>
-      <label class="range">
+      <!-- `for`: a label names its first form control, which would be the output. -->
+      <label class="range" for="home-dot-size">
         <span>Dot size <output data-size-out>4.4 px</output></span>
         <small class="hint" data-size-hint hidden>Squares and dashes have a fixed size.</small>
-        <input type="range" min="3.4" max="6" step="0.2" value="4.4" data-size />
+        <input type="range" id="home-dot-size" min="3.4" max="6" step="0.2" value="4.4" data-size />
       </label>
-      <label class="range">
+      <label class="range" for="home-pace">
         <span>Pace <output data-speed-out>1×</output></span>
-        <input type="range" min="0.5" max="2" step="0.25" value="1" data-speed />
+        <input type="range" id="home-pace" min="0.5" max="2" step="0.25" value="1" data-speed />
       </label>
       <button type="button" class="home-button small" data-again>Play again</button>
     </div>

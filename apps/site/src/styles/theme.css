@@ -88,6 +88,20 @@ h1#_top,
   letter-spacing: 0;
 }
 
+/* Code in a table cell stays whole (`--dotquilt-color`, not "--" "dotquilt-"
+   "color"): a narrow table scrolls sideways instead. Prose still wraps. */
+.sl-markdown-content :is(th, td) code {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+/* The phone menu button: the same quiet fill in both themes. Starlight
+   inverts it in dark mode, which makes it the loudest thing on the page. */
+:root[data-theme] .sl-menu-button {
+  background-color: var(--dq-bg);
+  color: var(--dq-ink);
+}
+
 /* Hairlines, never hard edges. */
 :focus-visible {
   outline-color: var(--dq-accent);

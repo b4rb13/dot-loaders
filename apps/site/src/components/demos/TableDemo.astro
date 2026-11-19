@@ -54,6 +54,22 @@ import { invoices } from '../../../../../examples/site/data';
     padding: 0 0.75rem;
     text-align: start;
     border-bottom: 1px solid var(--dq-line);
+    /* Amounts, statuses and dates stay on one line; names may wrap. */
+    white-space: nowrap;
+  }
+  .table-demo :is(th, td):first-child {
+    white-space: normal;
+  }
+  @media (max-width: 30rem) {
+    .table-demo :is(th, td) {
+      padding: 0 0.5rem;
+    }
+  }
+  /* Narrower still (a small phone, zoomed), wrapping beats losing a column. */
+  @media (max-width: 22.5rem) {
+    .table-demo :is(th, td) {
+      white-space: normal;
+    }
   }
   .table-demo th {
     height: 34px;

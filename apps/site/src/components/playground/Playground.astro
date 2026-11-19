@@ -169,34 +169,34 @@ const slider = (key: keyof typeof ranges) => ranges[key];
       </div>
     </fieldset>
 
-    <label class="range" data-dots-only>
+    <label class="range" data-dots-only for="pg-size">
       <span>Dot size <output name="size-out">{defaults.size} px</output></span>
-      <input type="range" name="size" {...slider('size')} value={defaults.size} />
+      <input type="range" id="pg-size" name="size" {...slider('size')} value={defaults.size} />
     </label>
-    <label class="range" data-dots-only>
+    <label class="range" data-dots-only for="pg-gap">
       <span>Spacing <output name="gap-out">{defaults.gap} px</output></span>
-      <input type="range" name="gap" {...slider('gap')} value={defaults.gap} />
+      <input type="range" id="pg-gap" name="gap" {...slider('gap')} value={defaults.gap} />
     </label>
     <p class="hint" data-fixed-hint hidden>Squares and dashes have a fixed size and spacing.</p>
-    <label class="range">
+    <label class="range" for="pg-speed">
       <span>Pace <output name="speed-out">{defaults.speed}×</output></span>
-      <input type="range" name="speed" {...slider('speed')} value={defaults.speed} />
+      <input type="range" id="pg-speed" name="speed" {...slider('speed')} value={defaults.speed} />
     </label>
-    <label class="range" data-only="skeleton">
+    <label class="range" data-only="skeleton" for="pg-lines">
       <span>Lines <output name="lines-out">{defaults.lines}</output></span>
-      <input type="range" name="lines" {...slider('lines')} value={defaults.lines} />
+      <input type="range" id="pg-lines" name="lines" {...slider('lines')} value={defaults.lines} />
     </label>
-    <label class="range" data-only="table">
+    <label class="range" data-only="table" for="pg-rows">
       <span>Rows <output name="rows-out">{defaults.rows}</output></span>
-      <input type="range" name="rows" {...slider('rows')} value={defaults.rows} />
+      <input type="range" id="pg-rows" name="rows" {...slider('rows')} value={defaults.rows} />
     </label>
-    <label class="range" data-only="typing">
+    <label class="range" data-only="typing" for="pg-count">
       <span>Dots <output name="count-out">{defaults.count}</output></span>
-      <input type="range" name="count" {...slider('count')} value={defaults.count} />
+      <input type="range" id="pg-count" name="count" {...slider('count')} value={defaults.count} />
     </label>
-    <label class="range">
+    <label class="range" for="pg-delay">
       <span>Request time <output name="delay-out">{defaults.delay / 1000} s</output></span>
-      <input type="range" name="delay" {...slider('delay')} value={defaults.delay} />
+      <input type="range" id="pg-delay" name="delay" {...slider('delay')} value={defaults.delay} />
     </label>
     <button type="button" class="reset" data-reset>Reset to defaults</button>
   </form>
@@ -314,6 +314,8 @@ const slider = (key: keyof typeof ranges) => ranges[key];
         for (const option of (name && animationOptions[name]) || []) {
           const row = document.createElement('label');
           row.className = 'range';
+          // `for`: a label names its first form control, which would be the output.
+          row.htmlFor = `pg-${prefix}-${option.key}`;
           const head = document.createElement('span');
           const output = document.createElement('output');
           output.setAttribute('name', `${prefix}.${option.key}-out`);
@@ -321,6 +323,7 @@ const slider = (key: keyof typeof ranges) => ranges[key];
           head.append(`${option.label} `, output);
           if ('values' in option) {
             const select = document.createElement('select');
+            select.id = row.htmlFor;
             select.name = `${prefix}.${option.key}`;
             for (const [key, text] of option.values) {
               const choice = document.createElement('option');
@@ -332,6 +335,7 @@ const slider = (key: keyof typeof ranges) => ranges[key];
             row.append(head, select);
           } else {
             const input = document.createElement('input');
+            input.id = row.htmlFor;
             input.type = 'range';
             input.name = `${prefix}.${option.key}`;
             input.min = String(option.min);
