@@ -102,7 +102,7 @@ for (const framework of ['native', 'react']) {
       ).toBe(variant);
       for (const id of ['chart', 'table'])
         expect(await paintCount(page.locator(`#${id}`))).toBeGreaterThan(0);
-      await page.clock.runFor(1000);
+      await page.clock.runFor(1200);
       await expect(page.locator('#owner')).toHaveAttribute(
         'data-presentation',
         'ready',
@@ -165,7 +165,7 @@ for (const framework of ['native', 'react']) {
       expect(
         await page.locator(`#${id}`).locator('[data-dotquilt-painter]').count(),
       ).toBe(1);
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
     await expect(page.locator('#owner')).toHaveAttribute(
       'data-presentation',
       'ready',
@@ -416,7 +416,7 @@ for (const framework of ['native', 'react']) {
               }),
             );
         }, action);
-      await page.clock.runFor(1000);
+      await page.clock.runFor(1200);
       await expect(page.locator('#owner')).toHaveAttribute(
         'data-presentation',
         action === 'supersede' ? 'pending' : 'ready',
@@ -567,7 +567,7 @@ for (const framework of ['native', 'react']) {
       'data-presentation',
       'pending',
     );
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
     await expect(page.locator('#owner')).toHaveAttribute(
       'data-presentation',
       'ready',

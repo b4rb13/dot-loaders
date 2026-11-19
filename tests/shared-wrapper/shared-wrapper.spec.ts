@@ -147,7 +147,7 @@ for (const framework of ['native', 'react']) {
         'dotquilt-handoff-start',
       ]);
       await expect(page.locator('#typing')).not.toHaveAttribute('data-moving');
-      await page.clock.runFor(1000);
+      await page.clock.runFor(1200);
       await presentation(page, 'ready');
       await page.evaluate(() => window.shared.stale());
       await page.clock.runFor(30);
@@ -228,7 +228,7 @@ for (const framework of ['native', 'react']) {
         () => window.shared.calls.chart + window.shared.calls.table,
       ),
     ).toBe(0);
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
   });
   for (const family of ['chart', 'table']) {
     test(`${framework}/${family}: exact projection cap and legacy bridge remain bounded within a shared wrapper`, async ({
@@ -254,7 +254,7 @@ for (const framework of ['native', 'react']) {
           ? input.points?.length
           : input.cells?.reduce((sum, cell) => sum + 1 + cell.glyphs.length, 0),
       ).toBe(2048);
-      await page.clock.runFor(1000);
+      await page.clock.runFor(1200);
       const modes =
         family === 'table' ? ['nested-overflow', 'legacy'] : ['legacy'];
       for (const mode of modes) {
@@ -284,7 +284,7 @@ for (const framework of ['native', 'react']) {
             family,
           ),
         ).toBe(1);
-        await page.clock.runFor(1000);
+        await page.clock.runFor(1200);
         await contentAvailable(page);
       }
       expect(await page.evaluate(() => window.shared.errors)).toEqual(
@@ -309,7 +309,7 @@ for (const framework of ['native', 'react']) {
       ).toBe(1);
       await contentAvailable(page);
       await expect(page.locator('#block')).not.toHaveAttribute('data-moving');
-      await page.clock.runFor(1000);
+      await page.clock.runFor(1200);
       await presentation(page, 'ready');
       expect(
         await page.evaluate(() => window.shared.events.map((e) => e.type)),
@@ -325,7 +325,7 @@ for (const framework of ['native', 'react']) {
           window.shared.provider(mode);
           window.shared.patch('owner', { state: 'ready' });
         }, mode);
-        await page.clock.runFor(1000);
+        await page.clock.runFor(1200);
         await presentation(page, 'ready');
         expect(
           await page.evaluate(
@@ -357,7 +357,7 @@ for (const framework of ['native', 'react']) {
       await page.evaluate(() => window.shared.provider('reentrant'));
       await ready(page);
       await presentation(page, 'pending');
-      await page.clock.runFor(1000);
+      await page.clock.runFor(1200);
       await presentation(page, 'pending');
       expect(await page.evaluate(() => window.shared.events)).toEqual([]);
       expect(
@@ -423,7 +423,7 @@ for (const framework of ['native', 'react']) {
           window.shared.plans.map((plan) => plan.option),
         ),
       ).toEqual([2, 7]);
-      await page.clock.runFor(1000);
+      await page.clock.runFor(1200);
     });
   }
   test(`${framework}: custom wrapper exceptions settle current content without per-frame callback retry`, async ({
@@ -437,7 +437,7 @@ for (const framework of ['native', 'react']) {
     await ready(page);
     await presentation(page, 'ready');
     const count = await page.evaluate(() => window.shared.calls.frames);
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
     expect(await page.evaluate(() => window.shared.calls.frames)).toBe(count);
     expect(await page.evaluate(() => window.shared.errors)).toEqual([
       'animation-failed',

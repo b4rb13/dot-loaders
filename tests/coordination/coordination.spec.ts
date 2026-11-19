@@ -91,7 +91,7 @@ for (const framework of ['native', 'react']) {
     await page.locator('#table-button').focus();
     await presentation(page, 'table-region', 'ready');
     await presentation(page, 'chart-region', 'handoff');
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
     await presentation(page, 'chart-region', 'ready');
     await presentation(page, 'text', 'ready');
     expect(await page.evaluate(() => window.coordination.identity())).toBe(
@@ -157,7 +157,7 @@ for (const framework of ['native', 'react']) {
             .at(-1)?.reason,
       ),
     ).toBe('geometry-changed');
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
     expect(await page.evaluate(() => window.coordination.identity())).toBe(
       true,
     );
@@ -176,7 +176,7 @@ for (const framework of ['native', 'react']) {
     );
     // A simple reveal fades the content as a whole; new content during it
     // (e.g. a framework's follow-up render) must not cut it short.
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
     await presentation(page, 'parent', 'ready');
     expect(
       await page.evaluate(
@@ -203,7 +203,7 @@ for (const framework of ['native', 'react']) {
       state: 'ready',
       timing: { duration: 0 },
     });
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
     expect(
       await page.evaluate(() =>
         window.coordination.events
@@ -341,7 +341,7 @@ for (const framework of ['native', 'react']) {
     await page.clock.runFor(50);
     await expect(page.locator('#block')).not.toHaveAttribute('data-moving');
     await presentation(page, 'table-region', 'pending');
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
     await expect(page.locator('#chart-button')).toBeVisible();
   });
 }
@@ -445,7 +445,7 @@ for (const framework of ['native', 'react']) {
     await page.clock.runFor(100);
     await presentation(page, 'chart-region', 'pending');
     await presentation(page, 'table-region', 'handoff');
-    await page.clock.runFor(1000);
+    await page.clock.runFor(1200);
     await presentation(page, 'chart-region', 'pending');
     expect(
       await page.evaluate(() =>

@@ -1,6 +1,7 @@
 import type { LoadingRegion } from '@dotquilt-internal/core/region';
 import type { TableLoader } from '@dotquilt-internal/core/table';
 import { expect, test } from '@playwright/test';
+import { capture } from '../capture';
 import { expectPaint, paintCount } from '../paint-output';
 import type {} from './api.js';
 
@@ -404,7 +405,7 @@ test('both idles and seven treatments: frozen convergence captures and natural-s
         { idle, cellStyle },
       );
       await page.clock.runFor(200);
-      await page.screenshot({
+      await capture(page, {
         path: info.outputPath(`${idle}-${cellStyle}-idle.png`),
       });
       // Keep the compositor and mocked RAF clocks on the same capture timeline.
@@ -459,7 +460,7 @@ test('both idles and seven treatments: frozen convergence captures and natural-s
           .locator('#row-0')
           .evaluate((e) => +getComputedStyle(e).opacity),
       ).toBeGreaterThan(0);
-      await page.screenshot({
+      await capture(page, {
         path: info.outputPath(`${idle}-${cellStyle}-mid.png`),
       });
       await page.clock.runFor(550);

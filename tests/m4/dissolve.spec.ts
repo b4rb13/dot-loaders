@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { capture } from '../capture';
 
 const field = '[data-dotquilt-dissolve]';
 const ledger = () =>
@@ -79,7 +80,7 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
     // Playwright/WebKit injects `body {}` to sync screenshots. Capture in the
     // inline fixture; strict CSP cases execute the same assertions without it.
     if (mode === 'inline')
-      await page.screenshot({
+      await capture(page, {
         path: info.outputPath('dissolve-start.png'),
         caret: 'initial',
       });
@@ -89,7 +90,7 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
           animation.currentTime = 150; // halfway through the fixture's 300 ms handoff
     });
     if (mode === 'inline')
-      await page.screenshot({
+      await capture(page, {
         path: info.outputPath('dissolve-middle.png'),
         caret: 'initial',
       });
