@@ -129,10 +129,6 @@ const spark = linePath(weekly, 240, 80);
       });
     for (const table of family.querySelectorAll<TableLoader>('dotquilt-table-loader'))
       table.columns = [{ kind: 'text', width: 1.6 }, { kind: 'number' }, { kind: 'badge' }];
-    for (const region of family.querySelectorAll<LoadingRegion>('[data-rows]'))
-      region.revealTargets = [...(region.querySelector('tbody')?.rows ?? [])].map(
-        (element, i) => ({ id: `row-${i}`, element }),
-      );
 
     const tiles = [...family.querySelectorAll<HTMLElement>('[data-tile]')];
     const loads = new WeakMap<HTMLElement, number>();

@@ -39,10 +39,6 @@ import { invoices } from '../../../../../examples/site/data';
   )) {
     const table = region.querySelector<TableLoader>('dotquilt-table-loader');
     if (table) table.columns = invoiceColumns;
-    // Each real row settles in after the one above it.
-    region.revealTargets = [
-      ...(region.querySelector('tbody')?.rows ?? []),
-    ].map((element, i) => ({ id: `row-${i}`, element }));
   }
 </script>
 

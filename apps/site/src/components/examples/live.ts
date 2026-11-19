@@ -146,10 +146,6 @@ export function wire(scope: ParentNode) {
   }
   for (const table of scope.querySelectorAll<TableLoader>('[data-columns]'))
     table.columns = columns[table.dataset.columns ?? ''] ?? columns.invoices;
-  for (const region of scope.querySelectorAll<LoadingRegion>('[data-rows]'))
-    region.revealTargets = [...(region.querySelector('tbody')?.rows ?? [])].map(
-      (element, i) => ({ id: `row-${i}`, element }),
-    );
 }
 
 type Owner = (LoadingRegion | TextLoader) & HTMLElement;
