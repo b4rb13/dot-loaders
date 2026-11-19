@@ -8,7 +8,7 @@ import {
 } from '../dom.js';
 import { available, lease } from '../ledger.js';
 import { glowColor, markBox, markColor, markOf } from '../marks.js';
-import { createPainter, type Painter, pointer } from '../painter.js';
+import { createPainter, liftAt, type Painter, pointer } from '../painter.js';
 
 type Capture = (limit?: number) => readonly Dot[];
 interface Context {
@@ -325,25 +325,16 @@ function createDensePainter(
         | { x: number; y: number }
         | undefined;
       try {
-        produce((value) => {
-          if (!active || disposed) return;
+        const store = (
+          x: number,
+          y: number,
+          size: number,
+          opacity: number,
+          accent: boolean,
+        ) => {
           if (++count > 4096) {
             report('dot-limit');
             return;
-          }
-          let { x, y, size, opacity, tone } = value;
-          if (![x, y, size, opacity].every(Number.isFinite)) {
-            report('invalid-dot');
-            return;
-          }
-          if (position) {
-            const lift = Math.max(
-              0,
-              1 - Math.hypot(x - position.x, y - position.y) / 40,
-            );
-            y -= lift * 2;
-            size *= 1 + lift * 0.2;
-            opacity = Math.min(1, opacity + lift * 0.3);
           }
           let slot = count - 1;
           if (slot >= length) {
@@ -356,7 +347,20 @@ function createDensePainter(
           data[at + 1] = y;
           data[at + 2] = r;
           data[at + 3] = Math.max(0, Math.min(1, opacity));
-          data[at + 4] = tone === 'accent' ? 1 : 0;
+          data[at + 4] = accent ? 1 : 0;
+        };
+        produce((value) => {
+          if (!active || disposed) return;
+          const { x, y, size, opacity, tone } = value;
+          if (![x, y, size, opacity].every(Number.isFinite)) {
+            report('invalid-dot');
+            return;
+          }
+          store(x, y, size, opacity, tone === 'accent');
+          // The pointer lights the marks around it, as a skeleton's lift does.
+          const halo = position ? liftAt(x - position.x, y - position.y) : 0;
+          if (halo > 0.02 && tone !== 'accent')
+            store(x, y, size, halo * Math.min(1, opacity * 3), true);
         });
       } catch (caught) {
         failed = true;

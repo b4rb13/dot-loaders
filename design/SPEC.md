@@ -102,6 +102,8 @@ Composed and unhurried; data settles into place instead of snapping.
 
 **TextLoader:** while pending, characters cross-fade every 280 ms. On handoff the dot-matrix marks slide into the real characters' shapes, lit while they travel, then the value wipes in left to right as they leave.
 
+**Pointer lift (opt-in, `pointer-response="lift"`):** on devices with a fine pointer, the marks within 56 px of the pointer light up in the accent, strongest at the pointer and fading linearly to nothing at the edge, over the resting marks. Marks never move or grow. Every loader draws it the same way (2026-11-19).
+
 **Reduced motion / pause:**
 - No idle glow or breathing.
 - The handoff becomes a 240 ms fade with no rise or blur.

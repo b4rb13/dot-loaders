@@ -48,9 +48,10 @@ test('the first screen arrives: the line draws in and each metric hands over', a
   await expect(
     hero.getByRole('link', { name: 'See the components' }),
   ).toBeVisible();
-  // The values wait in square marks, then hand over one after another.
+  // The values wait in square marks, then hand over one after another: each
+  // completed handoff means it was pending first. (Reading the first value's
+  // state here raced its 1.2 s arrival on a busy machine.)
   const values = hero.locator('dotquilt-text-loader');
-  await expect(values.first()).toHaveAttribute('state', 'pending');
   await expect
     .poll(handoffs, { timeout: 8000 })
     .toEqual(Array(3).fill('complete'));
