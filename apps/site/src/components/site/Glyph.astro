@@ -1,0 +1,35 @@
+---
+/**
+ * The Quilt mark: a tile of four marks, one of them lit, like the glow inside
+ * a placeholder. It follows the theme's ink and glow colours.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<svg viewBox="0 0 28 28" class:list={['glyph', className]} aria-hidden="true">
+  <rect width="28" height="28" rx="7.5" class="tile"></rect>
+  <circle cx="10" cy="10" r="2.9" class="mark"></circle>
+  <circle cx="18" cy="10" r="2.9" class="mark"></circle>
+  <circle cx="10" cy="18" r="2.9" class="mark"></circle>
+  <circle cx="18" cy="18" r="2.9" class="lit"></circle>
+</svg>
+
+<style>
+  .glyph {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: none;
+  }
+  .tile {
+    fill: var(--dq-ink);
+  }
+  .mark {
+    fill: var(--dq-surface);
+  }
+  .lit {
+    fill: var(--dq-mark-glow);
+  }
+</style>
