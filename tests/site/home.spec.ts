@@ -30,6 +30,8 @@ test('the first screen arrives: the line draws in and each metric hands over', a
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
+  // The whole first screen in view: a loader out of view hands over at once.
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
   const hero = page.locator('[data-field-hero]');
   const handoffs = await recordHandoffs(page, '[data-field-hero]');
