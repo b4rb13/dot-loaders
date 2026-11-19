@@ -6,6 +6,9 @@ import { invoices } from '../../../../../examples/site/data';
 <dotquilt-region class="table-demo" state="pending" aria-label="Invoices">
   <dotquilt-table-loader slot="placeholder" rows="4" row-height="40"
   ></dotquilt-table-loader>
+  <!-- A data table scrolls sideways when it can't fit (WCAG 1.4.10 exempts
+       tables from reflow); clipping a column would hide data. -->
+  <div class="scroll">
   <table>
     <thead>
       <tr><th>Customer</th><th>Amount</th><th>Status</th><th>Due</th></tr>
@@ -27,6 +30,7 @@ import { invoices } from '../../../../../examples/site/data';
       }
     </tbody>
   </table>
+  </div>
 </dotquilt-region>
 
 <script>
@@ -65,11 +69,8 @@ import { invoices } from '../../../../../examples/site/data';
       padding: 0 0.5rem;
     }
   }
-  /* Narrower still (a small phone, zoomed), wrapping beats losing a column. */
-  @media (max-width: 22.5rem) {
-    .table-demo :is(th, td) {
-      white-space: normal;
-    }
+  .table-demo .scroll {
+    overflow-x: auto;
   }
   .table-demo th {
     height: 34px;

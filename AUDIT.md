@@ -104,7 +104,7 @@ Mapping the spec's marks onto the runtime (an open detail in the spec):
 - **Fixed:**
   - `faint` text was 2.8–3.4:1. The token is now #687080 / #8A94A2, so every text colour meets AA on `bg`, `surface` and `subtle` (design/SPEC.md).
   - The homepage and playground sliders, and the playground's option menus, had no accessible name: each label named its `<output>`, the first form control inside it.
-  - At 320 px (WCAG reflow), "Copy page" pushed the LoadingRegion page sideways, and the TableLoader preview cut off its Due column.
+  - At 320 px (WCAG reflow), "Copy page" pushed the LoadingRegion page sideways, and the TableLoader preview cut off its Due column; the preview table now scrolls sideways in its card when it can't fit.
   - Phones: the dark-mode menu button was an inverted bright disc; code in table cells broke mid-name; the license kept its 80-column line breaks.
 - **Checked and fine:** visible focus on every tab stop, headings and landmarks, page language, unique ids, named regions, nothing looping under reduced motion, and tap targets (the small ones pass WCAG 2.5.8 by spacing).
 - **Kept as tests** (`tests/site/accessibility.spec.ts`, and the 320 px check in `site.spec.ts`): AA text contrast on every page in both themes, a name on every form control, visible focus, and no sideways scroll or cut-off text at 320 px.
