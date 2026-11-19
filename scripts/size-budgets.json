@@ -32,11 +32,11 @@
     "react": 21200
   },
   "LoadingRegion": {
-    "native": 15600,
-    "react": 18000
+    "native": 11700,
+    "react": 13400
   },
   "Everything": {
-    "native": 41600,
-    "react": 46400
+    "native": 39500,
+    "react": 44500
   }
 }

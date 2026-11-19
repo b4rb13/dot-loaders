@@ -51,6 +51,8 @@ Each component has its own entry point, so you only ship what you use. Register 
 
 To register every component at once, call `registerAll()` from `@dotquilt-internal/core/register-all`.
 
+`LoadingRegion` loads its reveal animation on its own, the first time a region shows its placeholder, so it doesn't weigh on the first page load. Bundlers such as Vite and webpack split it into its own file. If the data arrives before that file has loaded, that one handover uses the simpler dissolve.
+
 ## Show a placeholder
 
 <Tabs syncKey="framework">

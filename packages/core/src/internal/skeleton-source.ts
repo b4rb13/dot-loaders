@@ -4,9 +4,29 @@ import { definitionOf } from './binding.js';
 import { media } from './dom.js';
 import type { HandoffDriver, HandoffSource } from './handoff.js';
 import { handoff } from './marks.js';
-import { createMorph } from './morph.js';
 import { skeletonHandoff } from './skeleton-handoff.js';
 import { targetChanges } from './target-changes.js';
+
+/**
+ * The morph (morph.ts) is about a third of the region's code and runs only
+ * when data arrives, so it loads on its own: the first time a region shows
+ * its placeholder (owner decision, 2026-11-20). A region that becomes ready
+ * before it has loaded hands over with the spec's dissolve or fade instead.
+ */
+let morph: typeof import('./morph.js') | undefined;
+let requested = false;
+export function loadMorph(): void {
+  if (requested) return;
+  requested = true;
+  import('./morph.js').then(
+    (module) => {
+      morph = module;
+    },
+    // A failed load leaves the dissolve and fade in place.
+    () => {},
+  );
+}
+
 export function createSkeletonSource(
   child: SkeletonBlock | undefined,
   owner: LoadingRegion,
@@ -25,11 +45,12 @@ export function createSkeletonSource(
     prepare(binding, request) {
       const { targets, duration: requestedDuration, current, own } = request;
       // With no animation chosen anywhere, the placeholder takes the content's
-      // shape and then hands over (morph.ts). Anything it can't read falls
-      // back to the spec's dissolve.
+      // shape and then hands over (morph.ts). Anything it can't read, or a
+      // morph that hasn't loaded yet, falls back to the spec's dissolve.
       const win = owner.ownerDocument.defaultView;
       // Only for Dotquilt placeholders: a region around anything else fades.
       if (
+        morph &&
         !binding &&
         request.placeholder &&
         participants.length &&
@@ -37,7 +58,7 @@ export function createSkeletonSource(
         !media(win, '(forced-colors: active)')
       )
         try {
-          return createMorph(
+          return morph.createMorph(
             owner,
             participants as HTMLElement[],
             request.placeholder,

@@ -4,7 +4,7 @@ import { node, register } from './internal/dom.js';
 import type { HandoffSource } from './internal/handoff.js';
 import { LoadingController } from './internal/loading-controller.js';
 import { curves } from './internal/marks.js';
-import { createSkeletonSource } from './internal/skeleton-source.js';
+import { createSkeletonSource, loadMorph } from './internal/skeleton-source.js';
 import { regionStyles } from './region-styles.js';
 import type { SkeletonBlock } from './skeleton.js';
 import type { TableLoader } from './table.js';
@@ -73,6 +73,8 @@ export class LoadingRegion extends LoadingController<'region'> {
     placeholder: HTMLSlotElement,
     state: LoadingState,
   ): void {
+    // The placeholder shows: fetch the reveal it will hand over with.
+    if (state === 'pending') loadMorph();
     if (state === 'pending' && !placeholder.assignedNodes().length) {
       if (!placeholder.firstChild)
         placeholder.append(
