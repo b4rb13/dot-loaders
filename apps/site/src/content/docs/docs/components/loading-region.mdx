@@ -34,7 +34,7 @@ A loading region decides when to switch. It shows its placeholder while your dat
 
 For fast responses, `delay` and `min-display` keep the placeholder from flickering: a load shorter than `delay` never shows it, and a placeholder that did show stays for at least `min-display`. Values around 150 ms and 500 ms suit most screens.
 
-Going from `pending` to `ready` plays the handoff: the marks fade and drift as your content rises in, in about a second. With reduced motion, a pause, or focus inside the content, it swaps at once.
+Going from `pending` to `ready` plays the handoff. First the marks take your content's shape: skeleton lines grow or shrink to each real line of text, blocks and circles reshape to the real image or avatar, typing dots unroll into the message, and a placeholder card or bubble grows to the real one's size. Then your content wipes in along a soft front, and the marks leave where it passes them. It takes about a second, and right-to-left text wipes from the right. With reduced motion, a pause, or focus inside the content, it swaps at once.
 
 ## Usage
 
@@ -65,7 +65,7 @@ Going from `pending` to `ready` plays the handoff: the marks fade and drift as y
 | `delay` | `delay` | number (ms) | `0` | Wait this long before showing the placeholder. A response inside it shows no placeholder and no handoff, so fast loads don't flicker. A placeholder already on the page, such as server markup, is never hidden. Up to 10000. |
 | `min-display` | `minDisplay` | number (ms) | `0` | Once a placeholder shows, keep it at least this long before handing over, so it never flashes. Up to 10000. |
 | | `timing` | `{ duration?, easing? }` | | The handoff's length and curve. `{ duration: 0 }` swaps at once, for errors. |
-| | `revealTargets` | `{ id, element }[]` | | Parts of your content that settle in turn, such as table rows. |
+| | `revealTargets` | `{ id, element }[]` | | Parts of your content that settle in turn under a custom handoff, or a TableLoader with a `targetProvider`. The default handoff doesn't need them. |
 | `motion` | `motion` | `system` \| `paused` | `system` | `system` follows the visitor's reduced-motion setting; `paused` stills every loader inside. |
 
 ## Events

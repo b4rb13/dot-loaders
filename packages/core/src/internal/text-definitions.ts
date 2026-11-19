@@ -5,8 +5,10 @@ import type {
   TextHandoffOptions,
 } from '../text-animations.js';
 import { brand } from './binding.js';
+import { morphTiming } from './marks.js';
 import { clamp } from './math.js';
 import { glyph } from './text-glyphs.js';
+import { textMorphDefinition } from './text-morph.js';
 import { createTextHandoff, createTextRunner } from './text-playback.js';
 
 export interface TextDraw {
@@ -17,7 +19,15 @@ export interface TextDraw {
 export interface TextReveal<P = unknown> extends TextDraw {
   readonly progress: number;
   readonly prepared: Readonly<P>;
-  reveal(frame: RevealFrame): void;
+  /** Whether the text runs right to left. */
+  readonly rtl?: boolean;
+  reveal(frame: TextRevealFrame): void;
+}
+/** A reveal frame; `front` wipes the text in behind a soft edge `edge` px wide. */
+export interface TextRevealFrame extends RevealFrame {
+  readonly front?: number;
+  readonly edge?: number;
+  readonly rtl?: boolean;
 }
 function definition<P extends 'idle' | 'handoff', I extends object>(
   name: string,
@@ -301,14 +311,13 @@ export const defaultTextHandoff = /* @__PURE__ */ Object.freeze({
   contractVersion: 1 as const,
   family: 'text' as const,
   phase: 'handoff' as const,
-  id: 'dotquilt/lock',
+  id: 'dotquilt/text/morph-wipe',
   options: /* @__PURE__ */ Object.freeze({
-    staggerMs: 40,
-    reelMs: 55,
-    settleMs: 300,
-    pop: 0,
+    travel: morphTiming.travel,
+    wipeStart: morphTiming.wipeStart,
+    edge: morphTiming.edge,
   }),
-  [brand]: lockDefinition,
+  [brand]: textMorphDefinition,
 });
 
 /** Sine in-out, the curve the spec gives marks and text locks. */

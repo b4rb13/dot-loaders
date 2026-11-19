@@ -89,14 +89,16 @@ Composed and unhurried; data settles into place instead of snapping.
 
 **Idle (pending):** a soft glow drifts across each placeholder every 2.8 s on a sine curve, with a wide Gaussian edge so marks brighten and dim gradually. The whole field also breathes ±7% every 3.2 s. There are no hard bands and no on/off flicker.
 
-**Handoff (ready):**
-- Marks dim, shrink by 30% and drift up 3 px.
-- Content rises 5 px into place while fading in, and a 2 px blur clears.
-- It must never jump at the end.
+**Handoff (ready): take shape, then hand over** (owner's direction, 2026-11-19: every reveal at the level of the chart's):
+- **Take shape (first ~55%).** Each mark travels in a wave, on the sine curve, to where the real content is: skeleton lines grow or shrink to the length and place of each real text line (two rows of marks per line, more for large figures), blocks and circles reshape to the real image or avatar, typing dots unroll into the message's lines, a TableLoader's marks gather into each cell's text, and a placeholder card or bubble grows to the real one's width and height (settle curve). Marks the content doesn't need fold into the nearest line and fade.
+- **Lit while travelling.** A moving mark takes the teal accent, as if the idle glow carried it, and settles to ink (62%) on arrival. Teal stays brief and sparing.
+- **Hand over (from ~46%).** The content wipes in along a soft 36 px front at the idle glow's 104° angle, so lower lines follow a little later; right-to-left text wipes from the right. Marks leave exactly where the front passes them, and the placeholder's own shapes (a bubble) give way along the same front.
+- Total 1.1 s, as before. It must never jump at the end.
+- `dissolve()` (marks dim, shrink and drift up; content rises 5 px as a 2 px blur clears) stays available as an alternative.
 
-**Chart:** the field glides onto the real line over about 570 ms, then the line draws in over about 570 ms.
+**Chart:** the field glides onto the real line over about 570 ms, then the line draws in over about 570 ms. This is the reference the other handoffs follow.
 
-**TextLoader:** characters cross-fade every 280 ms and lock left to right, each easing in over 300 ms. Calm, not flickering.
+**TextLoader:** while pending, characters cross-fade every 280 ms. On handoff the dot-matrix marks slide into the real characters' shapes, lit while they travel, then the value wipes in left to right as they leave.
 
 **Reduced motion / pause:**
 - No idle glow or breathing.
@@ -131,7 +133,7 @@ The defaults live in `packages/core/src/internal/marks.ts`; each family adopts t
 ## Brand (decided by the owner, 2026-11-19)
 
 - **Logo:** "Quilt", a rounded ink tile of four marks with one lit in the glow colour, beside the lowercase wordmark "dotquilt" (Manrope 600, −0.025em). The tile follows the theme's ink and glow colours; the favicon is the same tile.
-- **Header arrival:** on a first visit the wordmark is a TextLoader in square marks that locks into the name, and the glow drifts once along the row of marks under the header. Later pages and reduced motion show it at rest.
+- **Header arrival:** on a first visit the wordmark is a TextLoader in square marks that takes the name's shape and hands over to it, and the glow drifts once along the row of marks under the header. Later pages and reduced motion show it at rest.
 
 ## Open details (decide during 4b–4d, then record here)
 

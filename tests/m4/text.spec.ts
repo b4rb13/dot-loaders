@@ -543,7 +543,7 @@ test('text glyph measurement is cached between frames and refreshStyles invalida
     .toBeGreaterThan(0);
 });
 for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
-  test(`TextLoader preserves content and completes lock under ${mode}`, async ({
+  test(`TextLoader preserves content and completes its default handoff under ${mode}`, async ({
     page,
   }, info) => {
     const errors: string[] = [];
@@ -563,11 +563,11 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
       'handoff',
     );
     expect(await page.evaluate(() => window.m4Text.events[0]?.animation)).toBe(
-      'dotquilt/lock',
+      'dotquilt/text/morph-wipe',
     );
     if (mode === 'inline')
       await page.screenshot({
-        path: info.outputPath('text-lock.png'),
+        path: info.outputPath('text-handoff.png'),
         caret: 'initial',
       });
     await expect(page.locator('#text')).toHaveAttribute(

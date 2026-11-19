@@ -1,6 +1,6 @@
 # Dotquilt
 
-Loading placeholders that hold the shape of your content, then hand over to it. Marks wait where your content will be. When the data arrives they dim and drift away while the content settles in, in about a second.
+Loading placeholders that hold the shape of your content, then hand over to it. Marks wait where your content will be. When the data arrives they travel to its real shape (each line's length, the image, the avatar), then the content wipes in as they leave, in about a second.
 
 Native Web Components with no runtime dependencies, for any framework or none. For React, see `@dotquilt-internal/react`.
 
@@ -39,9 +39,9 @@ Register only what a page uses to keep it small. Each component has its own entr
 | --- | --- | --- |
 | `<dotquilt-region>` | `/region` | Wraps content: shows a placeholder while pending, keeps content usable while refreshing, and hands over when ready |
 | `<dotquilt-skeleton-block>`, `-line`, `-circle`, `-text` | `/skeleton` | Images, lines, avatars and paragraphs |
-| `<dotquilt-text-loader>` | `/text` | Numbers and short labels that lock into place |
+| `<dotquilt-text-loader>` | `/text` | Numbers and short labels that take shape in marks, then hand over |
 | `<dotquilt-chart-loader>` | `/chart` | Line, bar and scatter charts: marks glide onto your real data |
-| `<dotquilt-table-loader>` | `/table` | Tables: rows settle in one after another |
+| `<dotquilt-table-loader>` | `/table` | Tables: each cell's marks gather into its real text |
 | `<dotquilt-typing-dots>` | `/typing` | A reply that is being written |
 
 Animations live in `/animations/<family>` (for example `scan`, `cycle` and `morphWipe` for charts). Server rendering is in `/server` (`renderStatic`), and stylesheets are at `/styles/*.css` for strict CSP setups.

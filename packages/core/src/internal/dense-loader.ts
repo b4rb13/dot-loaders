@@ -6,7 +6,11 @@ import type {
 } from '../animations.js';
 import type { LoadingRegion } from '../region.js';
 import { definitionOf, validateBindings } from './binding.js';
-import { chartHandoff, type RichParticipant } from './chart-participant.js';
+import {
+  chartHandoff,
+  type RichParticipant,
+  richHandoff,
+} from './chart-participant.js';
 import { contentBox, surfaceEnvironment } from './content-box.js';
 import { coordinatedHandoff } from './coordinated-handoff.js';
 import {
@@ -27,6 +31,7 @@ import {
   runHandoff,
 } from './handoff.js';
 import { dotRadius, markOf } from './marks.js';
+import { denseParts, morphMarks, type Part } from './morph-marks.js';
 import { pointer } from './painter.js';
 import type { Runner } from './runner.js';
 import { readSurface } from './surface.js';
@@ -272,6 +277,19 @@ export abstract class DenseLoader<
       }) as AnimationSurface<F>;
     }
     return this.#geometry;
+  }
+
+  /** Its marks as last drawn, for the region's morph handoff (morph.ts). */
+  [morphMarks](origin: DOMRect): readonly Part[] {
+    return denseParts(this, origin, this.#runner?.capture?.() ?? empty);
+  }
+  /** Whether it needs its rich handoff: real geometry from a provider, or a chosen animation. */
+  get [richHandoff](): boolean {
+    return !!(
+      this.#provider ??
+      this.#bindings.handoff ??
+      this.preset?.animations?.handoff
+    );
   }
 
   [chartHandoff](

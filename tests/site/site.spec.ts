@@ -123,7 +123,7 @@ for (const name of components.slice(1))
     expect(errors).toEqual([]);
   });
 
-test('a TextLoader preview locks into the next value on each load', async ({
+test('a TextLoader preview hands over to the next value on each load', async ({
   page,
 }) => {
   await page.goto('/docs/components/text-loader/');

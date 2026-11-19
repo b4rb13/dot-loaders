@@ -25,6 +25,10 @@ export interface HandoffDriver {
   restricted?: (() => boolean) | undefined;
   targetsChanged?: ((next: readonly RevealTarget[]) => boolean) | undefined;
   draw?: ((linear: number, eased?: number) => void) | undefined;
+  /** Set when the driver paints both layers itself, so the controller only keeps time. */
+  readonly paints?: boolean | undefined;
+  /** Hands a painting driver the layers' clock animations, to style per frame. */
+  attach?: ((outgoing: Animation, incoming: Animation) => void) | undefined;
   activate(callback: () => void): void;
   dispose(): void;
 }
@@ -35,6 +39,8 @@ export interface HandoffRequest {
   readonly host: HTMLElement;
   /** The region's content layer, which the handoff reveals. */
   readonly content: HTMLElement;
+  /** The region's placeholder layer, which the handoff hides. */
+  readonly placeholder?: HTMLElement | undefined;
   readonly targets: readonly RevealTarget[];
   /** The caller's `timing.duration`; undefined lets the definition decide. */
   readonly duration: number | undefined;

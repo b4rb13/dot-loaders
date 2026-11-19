@@ -11,6 +11,7 @@ import {
   remaining,
 } from './internal/element.js';
 import { curves } from './internal/marks.js';
+import { morphMarks, type Part, typingPart } from './internal/morph-marks.js';
 import type { Preset } from './internal/preset.js';
 import { typingPreset } from './internal/preset.js';
 import { capturePresetData } from './internal/preset-data.js';
@@ -129,6 +130,10 @@ export class TypingDots extends ManagedElement<'typing'> {
   refresh(): void {
     this.resources?.eligible(true);
     this.requestRender();
+  }
+  /** Its dots, for the region's morph handoff: they unroll into the message. */
+  [morphMarks](origin: DOMRect): readonly Part[] {
+    return typingPart(this, origin);
   }
   #stop(): void {
     this.#phase =

@@ -10,7 +10,7 @@ import memberCard from '../../../../../../../examples/site/react/member-card.tsx
 import memberHtml from '../../../../../../../examples/site/native/member.html?raw';
 import memberTs from '../../../../../../../examples/site/native/member.ts?raw';
 
-Skeletons hold the shape of images, text and avatars while they load. A soft glow drifts across the marks, and when the region hands over they leave from left to right.
+Skeletons hold the shape of images, text and avatars while they load. A soft glow drifts across the marks. When the region hands over, the marks take your content's real shape, then the content wipes in as they leave.
 
 <Preview label="A profile loading">
   <dotquilt-region state="pending" aria-label="Team member">
@@ -79,7 +79,7 @@ Import alternatives from `@dotquilt-internal/core/animations/skeleton` and pass 
 | Phase | Default | Also available | Options |
 | --- | --- | --- | --- |
 | Idle | a soft glow drifts across every 2.8 s | `pulse`: the same glow at your own pace | `periodMs` 800–4000 (2800) |
-| Handoff | marks dim, shrink and drift up, left to right | `dissolve`: marks fall away as the content arrives | `duration` ms (300), `fallPx` 0–8 (5) |
+| Handoff | the marks travel to the content's real shape (each line's length, the image, the avatar), then the content wipes in as they leave | `dissolve`: marks fall away as the content fades in | `duration` ms (300), `fallPx` 0–8 (5) |
 
 ## Colours
 

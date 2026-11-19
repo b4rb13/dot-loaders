@@ -1,4 +1,3 @@
-import type { RevealFrame } from '../animations.js';
 import type { TextLoader } from '../text.js';
 import { definitionOf } from './binding.js';
 import { capturePainter } from './capture.js';
@@ -9,7 +8,11 @@ import type { HandoffFactory } from './handoff.js';
 import { createPainter, type Painter } from './painter.js';
 import type { Runner } from './runner.js';
 import { readSurface } from './surface.js';
-import type { TextDraw, TextReveal } from './text-definitions.js';
+import type {
+  TextDraw,
+  TextReveal,
+  TextRevealFrame,
+} from './text-definitions.js';
 
 // Type-erased private recipe views. Public factories validate the family/phase
 // and parse options before the engine ever reaches these first-party intrinsics.
@@ -101,6 +104,8 @@ export const createTextHandoff: HandoffFactory = (
     requestedDuration ?? definition.duration(surface, binding.options);
   const prepared = definition.prepare(surface, binding.options);
   const reveal = createEffect(content, own);
+  const rtl =
+    host.ownerDocument.defaultView?.getComputedStyle(host).direction === 'rtl';
   let painter: Painter | undefined, release: (() => void) | undefined;
   return {
     duration,
@@ -112,14 +117,23 @@ export const createTextHandoff: HandoffFactory = (
           prepared: prepared as Readonly<unknown>,
           timeMs: duration * p,
           progress: p,
+          rtl,
           dot,
-          reveal(frame: RevealFrame) {
-            if (current())
-              reveal({
-                opacity: frame.opacity,
-                translate: `0 ${frame.translateY ?? 0}px`,
-                clipPath: `inset(0 ${(1 - (frame.clipStart ?? 1)) * 100}% 0 0)`,
-              });
+          reveal(frame: TextRevealFrame) {
+            if (!current()) return;
+            // A soft front: opaque behind it, clear ahead, `edge` px between.
+            const { front, edge = 0 } = frame;
+            reveal({
+              opacity: frame.opacity,
+              translate: `0 ${frame.translateY ?? 0}px`,
+              ...(front === undefined
+                ? {
+                    clipPath: `inset(0 ${(1 - (frame.clipStart ?? 1)) * 100}% 0 0)`,
+                  }
+                : {
+                    maskImage: `linear-gradient(${frame.rtl ? 270 : 90}deg,#000 ${(front - edge).toFixed(1)}px,#0000 ${front.toFixed(1)}px)`,
+                  }),
+            });
           },
         };
         definition.frame(context, binding.options);

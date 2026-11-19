@@ -5,7 +5,7 @@ const ledger = () =>
   Reflect.get(document, Symbol.for('dotquilt.v1.dot-ledger'));
 
 for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
-  test(`coordinated default dissolve uses real dot fields and one accessible reveal under ${mode}`, async ({
+  test(`coordinated dissolve uses real dot fields and one accessible reveal under ${mode}`, async ({
     page,
   }, info) => {
     const errors: string[] = [];
@@ -24,6 +24,8 @@ for (const mode of ['inline', 'nonce', 'hash', 'external', 'external-family']) {
           }),
         ),
       );
+      // The dissolve is no longer the default (morph.ts); choose it.
+      window.m4.dissolve('block', {});
       window.m4.ready();
       // Freeze this inspection in the same microtask turn as preparation;
       // cross-process polling must not race the 300ms compositor completion.
@@ -169,6 +171,7 @@ for (const mode of ['hash', 'external-family'] as const)
         document.addEventListener('securitypolicyviolation', (event) =>
           Reflect.get(window, 'violations').push(event.violatedDirective),
         );
+        window.m4.dissolve('block', {});
         window.m4.ready();
         queueMicrotask(() => {
           for (const host of document.querySelectorAll('[data-host]'))
@@ -413,6 +416,7 @@ test.describe('normal-speed visual recording', () => {
     const page = await context.newPage();
     try {
       await page.goto('/native');
+      await page.evaluate(() => window.m4.dissolve('block', {}));
       for (let cycle = 0; cycle < 3; cycle++) {
         if (cycle) {
           await page.evaluate(

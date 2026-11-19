@@ -1,6 +1,6 @@
 # Dotquilt
 
-Dot-based loading components for the web. Placeholder marks wait where your content will be, then hand over to it when the data arrives: a number locks into place, marks glide onto a chart, rows settle into a table.
+Dot-based loading components for the web. Placeholder marks wait where your content will be, then hand over to it when the data arrives: skeleton lines grow to the length of each real line, a number's marks take the shape of its digits, marks glide onto a chart, and the content wipes in as they leave.
 
 - **Native core** (`packages/core`): framework-free Web Components with nine elements:
   - SkeletonBlock, SkeletonLine, SkeletonCircle, SkeletonText

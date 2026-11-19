@@ -370,7 +370,14 @@ export abstract class LoadingController<
     // A simple reveal fades the content wrapper as a whole, so content updates
     // during it (e.g. a framework's follow-up render) must not cut it short.
     // Rich handoffs and row reveals captured content geometry and still settle.
-    if (this.#work && !this.#work.driver?.draw && !this.#targets.length) return;
+    // The default morph reads geometry once and reveals the whole wrapper, so
+    // it carries on like a simple reveal (its marks may land a little off).
+    const driver = this.#work?.driver;
+    if (
+      this.#work &&
+      (driver?.paints || (!driver?.draw && !this.#targets.length))
+    )
+      return;
     // Simple wrapper reveals are independent of nested content. Rich/custom
     // plans may capture geometry derived from it, so keep conservative invalidation.
     if (
@@ -553,6 +560,7 @@ export abstract class LoadingController<
       driver = runHandoff(source.prepare, binding, {
         host: source.host,
         content,
+        placeholder,
         targets: this.#targets,
         duration: timing.duration,
         current: () => this.#work?.revision === revision,
@@ -588,7 +596,8 @@ export abstract class LoadingController<
     const detail: HandoffDetail = {
       cycle: this.cycle,
       handoffId: ++this.#serial,
-      animation: binding?.id ?? source.animation,
+      animation:
+        binding?.id ?? (driver?.paints ? 'dotquilt/morph' : source.animation),
     };
     this.#work = {
       revision,
@@ -618,10 +627,11 @@ export abstract class LoadingController<
       return;
     }
     try {
-      const { outgoing, incoming, extra } =
-        !binding &&
-        (source.animation === 'dotquilt/dissolve' ||
-          source.animation === 'dotquilt/fade')
+      const { outgoing, incoming, extra } = driver?.paints
+        ? this.#heldHandoff(placeholder, content, duration)
+        : !binding &&
+            (source.animation === 'dotquilt/dissolve' ||
+              source.animation === 'dotquilt/fade')
           ? this.#specHandoff(placeholder, content, duration, source.animation)
           : {
               // Custom and dense sources keep one shared clock: they draw in
@@ -638,6 +648,7 @@ export abstract class LoadingController<
             };
       this.#work.animations.push(outgoing, incoming, ...extra);
       this.#work.incoming = incoming;
+      driver?.attach?.(outgoing, incoming);
       outgoing.onfinish = () => {
         if (this.#work?.revision === revision) this.#finish('end', 'complete');
       };
@@ -648,6 +659,22 @@ export abstract class LoadingController<
       this.report('animation-failed', 'animations');
       this.#finish('end', 'fallback');
     }
+  }
+  /**
+   * The driver paints both layers itself (morph.ts); these only keep the
+   * handoff's clock, so the layers stay fully opaque under its masks.
+   */
+  #heldHandoff(
+    placeholder: HTMLElement,
+    content: HTMLElement,
+    duration: number,
+  ) {
+    const timing = { duration, fill: 'both' as const };
+    return {
+      outgoing: placeholder.animate({ opacity: [1, 1] }, timing),
+      incoming: content.animate({ opacity: [1, 1] }, timing),
+      extra: [],
+    };
   }
   /**
    * design/SPEC.md: content fades in while a slight blur clears and rises

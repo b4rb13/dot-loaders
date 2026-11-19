@@ -116,11 +116,12 @@ export const defaultIdle: Record<Component, string | undefined> = {
   table: 'tableShimmer',
   typing: undefined,
 };
+/** Skeleton, text, table and typing hand over with the built-in morph, which has no options. */
 export const defaultHandoff: Record<Component, string | undefined> = {
   skeleton: undefined,
-  text: 'lock',
+  text: undefined,
   chart: 'morphWipe',
-  table: 'rows',
+  table: undefined,
   typing: undefined,
 };
 

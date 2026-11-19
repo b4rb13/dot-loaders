@@ -1,6 +1,6 @@
 ---
 title: TextLoader
-description: A number or short label that scrambles while it loads, then locks into the real value.
+description: A number or short label that scrambles while it loads, then takes the real value's shape and hands over to it.
 ---
 
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
@@ -10,7 +10,7 @@ import totalTsx from '../../../../../../../examples/site/react/revenue-total.tsx
 import totalHtml from '../../../../../../../examples/site/native/revenue-total.html?raw';
 import totalTs from '../../../../../../../examples/site/native/revenue-total.ts?raw';
 
-TextLoader holds the place of a number or a short label. While it loads, its characters cross-fade through look-alikes in the shape of the answer. When the value arrives, they lock into it from left to right.
+TextLoader holds the place of a number or a short label. While it loads, its characters cross-fade through look-alikes in the shape of the answer. When the value arrives, the marks slide into the shapes of its real characters, then the value wipes in from left to right as they leave.
 
 <Preview label="A total loading" values={['$48,120', '$51,904', '$46,385']}>
   <p class="kpi">
@@ -54,12 +54,13 @@ Import alternatives from `@dotquilt-internal/core/animations/text` and pass them
 | Phase | Default | Also available |
 | --- | --- | --- |
 | Idle | `scramble`: characters cross-fade about every 280 ms | `scrambleCharacters`: each character changes on its own clock; `scrambleWords`: one word changes at a time, in reading order; `labelPulse`: a calm highlight moves across the placeholder |
-| Handoff | `lock`: characters lock left to right, each easing in over 300 ms | `printText`: the value prints in from the left as the characters lock; `fade`: the value fades in |
+| Handoff | `morphWipe`: the marks take the real characters' shapes, then the value wipes in | `lock`: characters lock left to right, each easing in over 300 ms; `printText`: the value prints in from the left as the characters lock; `fade`: the value fades in |
 
 | Animation | Options (default) |
 | --- | --- |
 | `scramble`, `scrambleCharacters`, `scrambleWords` | `changesPerSecond` 0.5–4 |
 | `labelPulse` | `travelPxPerSecond` 20–140 (70) |
+| `morphWipe` | `travel` 0.2–0.5 (0.34), `wipeStart` 0.3–0.6 (0.46), `edge` 4–80 px (36) |
 | `lock`, `printText` | `staggerMs` 0–60 (40), `reelMs` 0–100 (55), `settleMs` 40–400 (300), `pop` 0–0.3 (0) |
 | `fade` | `duration` ms (150) |
 

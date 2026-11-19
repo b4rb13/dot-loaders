@@ -56,6 +56,52 @@ function gridAxis(repeat: string, position: string, box: number, tile: number) {
 }
 
 /**
+ * Where a CSS-painted surface draws its marks, relative to `bounds`: its box,
+ * the mark size and pitch, and the grid offsets that reproduce the pattern.
+ */
+export function measureSurface(
+  win: Window,
+  surface: HTMLElement,
+  bounds: DOMRect,
+) {
+  const box = surface.getBoundingClientRect();
+  const css = win.getComputedStyle(surface);
+  // The tile is the pitch across and down; dashes have different ones.
+  const [across = Number.NaN, down = across] = css.backgroundSize
+    .split(/\s+/)
+    .map(parseFloat);
+  const repeat = css.backgroundRepeat.split(/\s+/);
+  return {
+    size: parseFloat(css.getPropertyValue('--s')) || across / 2,
+    x: box.left - bounds.left,
+    y: box.top - bounds.top,
+    width: box.width,
+    height: box.height,
+    across,
+    down,
+    // Where the CSS grid puts its marks, so the fields line up with them.
+    ...flat(
+      'column',
+      gridAxis(
+        repeat[0] ?? 'repeat',
+        css.backgroundPositionX,
+        box.width,
+        across,
+      ),
+    ),
+    ...flat(
+      'row',
+      gridAxis(
+        repeat[1] ?? repeat[0] ?? 'repeat',
+        css.backgroundPositionY,
+        box.height,
+        down,
+      ),
+    ),
+  };
+}
+
+/**
  * The marks leave from left to right (design/SPEC.md): the field is cut into
  * vertical bands, and each band's marks dim, shrink and drift over half the
  * handoff, starting later the further right the band is. No per-dot loop.
@@ -79,43 +125,8 @@ export function dissolveSkeleton(
   const bounds = host.getBoundingClientRect();
   // Squares and dashes have a fixed spec size; dots follow --dotquilt-dot-size.
   const mark = markOf(host);
-  const measure = (surface: HTMLElement, bounds: DOMRect) => {
-    const box = surface.getBoundingClientRect();
-    const css = win.getComputedStyle(surface);
-    // The tile is the pitch across and down; dashes have different ones.
-    const [across = Number.NaN, down = across] = css.backgroundSize
-      .split(/\s+/)
-      .map(parseFloat);
-    const repeat = css.backgroundRepeat.split(/\s+/);
-    return {
-      size: parseFloat(css.getPropertyValue('--s')) || across / 2,
-      x: box.left - bounds.left,
-      y: box.top - bounds.top,
-      width: box.width,
-      height: box.height,
-      across,
-      down,
-      // Where the CSS grid puts its marks, so the fields line up with them.
-      ...flat(
-        'column',
-        gridAxis(
-          repeat[0] ?? 'repeat',
-          css.backgroundPositionX,
-          box.width,
-          across,
-        ),
-      ),
-      ...flat(
-        'row',
-        gridAxis(
-          repeat[1] ?? repeat[0] ?? 'repeat',
-          css.backgroundPositionY,
-          box.height,
-          down,
-        ),
-      ),
-    };
-  };
+  const measure = (surface: HTMLElement, bounds: DOMRect) =>
+    measureSurface(win, surface, bounds);
   const shapes = surfaces.map((surface) => measure(surface, bounds));
   if (
     !shapes.length ||

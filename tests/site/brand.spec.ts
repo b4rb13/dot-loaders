@@ -13,7 +13,7 @@ test('a first visit plays the wordmark arrival once; later pages are at rest', a
 }) => {
   await page.goto('/');
   const mark = page.locator(wordmark);
-  // It shimmers in marks, then locks into the name.
+  // It shimmers in marks, then takes the shape of the name and hands over.
   await expect(mark).toHaveAttribute('state', 'pending');
   await expect(page.locator('.site-header .seam')).toHaveAttribute(
     'motion',

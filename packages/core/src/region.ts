@@ -1,5 +1,5 @@
 import type { ChartLoader } from './chart.js';
-import { chartHandoff } from './internal/chart-participant.js';
+import { chartHandoff, richHandoff } from './internal/chart-participant.js';
 import { node, register } from './internal/dom.js';
 import type { HandoffSource } from './internal/handoff.js';
 import { LoadingController } from './internal/loading-controller.js';
@@ -58,7 +58,16 @@ export class LoadingRegion extends LoadingController<'region'> {
         chartHandoff in participant,
     );
     const chart = rich[0];
-    if (chart) {
+    // A table hands over like every other placeholder (morph.ts) unless a
+    // chart is in the placeholder or anyone picks an animation.
+    const morph =
+      !rich.some(
+        (participant) => participant.localName === 'dotquilt-chart-loader',
+      ) &&
+      !this.animations.handoff &&
+      !this.preset?.animations?.handoff &&
+      !rich.some((participant) => participant[richHandoff]);
+    if (chart && !morph) {
       const binding =
         this.animations.handoff ?? this.preset?.animations?.handoff;
       if (binding) return { binding, host: this, animation: binding.id };
@@ -66,7 +75,7 @@ export class LoadingRegion extends LoadingController<'region'> {
     }
     const child = participants.find(
       (participant): participant is SkeletonBlock =>
-        'animations' in participant,
+        'animations' in participant && !(chartHandoff in participant),
     );
     return createSkeletonSource(child, this, participants);
   }
