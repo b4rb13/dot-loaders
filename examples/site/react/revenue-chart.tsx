@@ -2,7 +2,7 @@
 import type { TargetProvider } from '@dotquilt-internal/core/chart';
 import { ChartLoader, LoadingRegion } from '@dotquilt-internal/react';
 import { useEffect, useState } from 'react';
-import { linePath, linePoints } from './data';
+import { linePath, linePoints } from '../data';
 
 async function fetchRevenue(
   year: number,

@@ -1,0 +1,39 @@
+---
+title: Motion and accessibility
+description: Reduced motion, pausing, the four-second limit, focus and announcements.
+---
+
+Dotquilt's motion is slow and short by design, and every part of it can be stilled.
+
+## Reduced motion
+
+When a visitor asks their system for reduced motion, loaders show their still picture with no glow or breathing, and the handoff swaps at once. You don't need to do anything.
+
+## Pausing
+
+Set `motion="paused"` on any element, and every loader inside it is still. To give visitors a pause control for the whole page, set it on `<html>`:
+
+```ts
+pauseButton.addEventListener('click', () => {
+  const paused = document.documentElement.getAttribute('motion') === 'paused';
+  document.documentElement.setAttribute('motion', paused ? 'system' : 'paused');
+});
+```
+
+## The four-second limit
+
+Automatic motion never runs longer than four seconds. A loader's idle stops four seconds into a load and rests, so a long load never animates indefinitely. The handoff still plays when the content arrives, however long the load took: it lasts about a second. A handoff you ask for that is longer than four seconds is skipped.
+
+## Focus
+
+- **Pending content is out of reach:** while a region is pending, its content is inert and hidden from assistive technology.
+- **Focus is kept:** if focus is inside content that becomes pending, it moves to the region. When the content is ready, focus is not moved back; your page decides.
+- **A focused handoff swaps at once,** so nothing moves under the keyboard.
+
+## Announcements
+
+Loaders are decoration: they don't announce anything. Label every region, so people know what is loading, and announce loading and errors in your own words, for example with a `role="status"` element outside the region.
+
+## Forced colours
+
+In Windows high-contrast mode the marks are replaced by a dotted outline in the system text colour.

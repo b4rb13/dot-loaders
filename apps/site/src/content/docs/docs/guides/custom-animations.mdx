@@ -1,0 +1,40 @@
+---
+title: Custom animations
+description: Write your own idle or handoff, and bundle options into presets.
+---
+
+import { Code } from '@astrojs/starlight/components';
+import customTs from '../../../../../../../examples/site/custom-animation.ts?raw';
+
+Every loader has two animations: an **idle** that plays while it waits, and a **handoff** that plays when the content arrives. You can swap either for a built-in alternative, or write your own with `defineAnimation`.
+
+```ts
+import { labelPulse } from '@dotquilt-internal/core/animations/text';
+
+totalLoader.animations = { idle: labelPulse() };
+```
+
+## Write your own
+
+An animation draws with commands, not with the DOM: an idle places marks with `dot()`, and a handoff can also move your content with `reveal()`. Dotquilt owns the timing, the restrictions and the cleanup, so a custom animation still pauses, respects reduced motion and stops after four seconds.
+
+<Code code={customTs} lang="ts" title="animations.ts" />
+
+| Part | Idle | Handoff |
+| --- | --- | --- |
+| `family` | `skeleton`, `text`, `chart` or `table` | `region`, `skeleton`, `text`, `chart` or `table` |
+| `options.parse` | turns the options you pass into frozen, valid values | the same |
+| `frame` | draws one moment, given `frame.timeMs` | draws one moment, given `frame.progress` from 0 to 1 |
+| `still` | the resting picture for reduced motion and pauses | |
+| `duration`, `prepare` | | how long it takes, and any setup it needs once |
+
+## Use it
+
+```tsx
+<SkeletonBlock animations={{ idle: tide({ wavelength: 160 }) }} />
+<LoadingRegion animations={{ handoff: rise() }} … />
+```
+
+## Presets
+
+`definePreset` bundles options you reuse, such as a speed and animations, and checks them once. Give it to any loader of the same kind as `preset`.

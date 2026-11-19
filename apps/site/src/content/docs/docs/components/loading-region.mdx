@@ -6,9 +6,9 @@ description: The area that switches from placeholder to content, and owns the ha
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import Preview from '../../../../components/Preview.astro';
 // Real files, type-checked with the repository, so the code here always works.
-import feedTsx from '../../../../../../../examples/site/activity-feed.tsx?raw';
-import feedHtml from '../../../../../../../examples/site/activity-feed.html?raw';
-import feedTs from '../../../../../../../examples/site/activity-feed.ts?raw';
+import feedTsx from '../../../../../../../examples/site/react/activity-feed.tsx?raw';
+import feedHtml from '../../../../../../../examples/site/native/activity-feed.html?raw';
+import feedTs from '../../../../../../../examples/site/native/activity-feed.ts?raw';
 
 A loading region decides when to switch. It shows its placeholder while your data is pending, keeps your content visible while it refreshes, and hands over when it's ready. Every loader except TextLoader lives inside one.
 
@@ -38,11 +38,11 @@ Going from `pending` to `ready` plays the handoff: the marks fade and drift as y
 
 <Tabs syncKey="framework">
   <TabItem label="React">
-    <Code code={feedTsx} lang="tsx" title="ActivityFeed.tsx" />
+    <Code code={feedTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="ActivityFeed.tsx" />
   </TabItem>
   <TabItem label="Native">
     <Code code={feedHtml} lang="html" title="index.html" />
-    <Code code={feedTs} lang="ts" title="activity.ts" />
+    <Code code={feedTs.replaceAll("'../data'", "'./data'")} lang="ts" title="activity.ts" />
   </TabItem>
 </Tabs>
 

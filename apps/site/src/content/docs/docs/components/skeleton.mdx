@@ -6,9 +6,9 @@ description: Blocks, lines, circles and paragraphs of marks that hold the shape 
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import Preview from '../../../../components/Preview.astro';
 // Real files, type-checked with the repository, so the code here always works.
-import memberCard from '../../../../../../../examples/site/member-card.tsx?raw';
-import memberHtml from '../../../../../../../examples/site/member.html?raw';
-import memberTs from '../../../../../../../examples/site/member.ts?raw';
+import memberCard from '../../../../../../../examples/site/react/member-card.tsx?raw';
+import memberHtml from '../../../../../../../examples/site/native/member.html?raw';
+import memberTs from '../../../../../../../examples/site/native/member.ts?raw';
 
 Skeletons hold the shape of images, text and avatars while they load. A soft glow drifts across the marks, and when the region hands over they leave from left to right.
 
@@ -43,11 +43,11 @@ Put a skeleton in a region's `placeholder` slot and size it with CSS like any ot
 
 <Tabs syncKey="framework">
   <TabItem label="React">
-    <Code code={memberCard} lang="tsx" title="MemberCard.tsx" />
+    <Code code={memberCard.replaceAll("'../data'", "'./data'")} lang="tsx" title="MemberCard.tsx" />
   </TabItem>
   <TabItem label="Native">
     <Code code={memberHtml} lang="html" title="index.html" />
-    <Code code={memberTs} lang="ts" title="member.ts" />
+    <Code code={memberTs.replaceAll("'../data'", "'./data'")} lang="ts" title="member.ts" />
   </TabItem>
 </Tabs>
 

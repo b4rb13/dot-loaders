@@ -6,7 +6,7 @@ import {
   type LoadingRegion,
   registerLoadingRegion,
 } from '@dotquilt-internal/core/region';
-import { linePath, linePoints } from './data';
+import { linePath, linePoints } from '../data';
 
 registerLoadingRegion();
 registerChartLoader();

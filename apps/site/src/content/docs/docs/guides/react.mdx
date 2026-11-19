@@ -1,0 +1,50 @@
+---
+title: React and Next.js
+description: Typed components with server rendering, for React 19 and the Next.js App Router.
+---
+
+import { Code } from '@astrojs/starlight/components';
+import chartTsx from '../../../../../../../examples/site/react/revenue-chart.tsx?raw';
+import pageTsx from '../../../../../../../examples/site/react/next-page.tsx?raw';
+
+The React adapter wraps the same native components in typed React components. They register themselves, render their placeholder on the server, and take their state from your props.
+
+```tsx
+import { LoadingRegion, SkeletonText } from '@dotquilt-internal/react';
+```
+
+Each component also has its own entry point, such as `@dotquilt-internal/react/region`, if you prefer to import only what a page uses.
+
+## State comes from your data
+
+A region needs only two things from you: whether the data is `pending`, `refreshing` or `ready`, and a `cycle` naming the current request. Keep the request in your own state, as in the component pages' examples:
+
+- **Start a new cycle per request**, such as the id you are loading. A stale answer for an older cycle can't settle a newer one.
+- **Use `refreshing`** when you already show data and are fetching a newer copy: the content stays visible and usable.
+- **On an error**, show your message with `state="ready"` and `timing={{ duration: 0 }}`, so it replaces the placeholder at once.
+
+## Next.js App Router
+
+The components are client components (`'use client'`), and they render on the server too: the placeholder is in the first HTML, before any JavaScript runs. Put your data loading in a client component of your own, and use it from a Server Component page:
+
+<Code code={pageTsx.replaceAll("'./revenue-chart'", "'@/components/revenue-chart'")} lang="tsx" title="app/revenue/page.tsx" />
+
+<Code code={chartTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="components/revenue-chart.tsx" />
+
+Keep functions such as `targetProvider` and custom animations inside client components: they can't be passed from a Server Component.
+
+### Suspense
+
+Suspense and a loading region do different jobs. Suspense waits for server-side work before sending HTML; a region shows a placeholder while the browser loads data. If you stream a server component through Suspense, you can use a Dotquilt placeholder as its fallback without a region:
+
+```tsx
+<Suspense fallback={<SkeletonText lines={3} />}>
+  <RevenueSummary />
+</Suspense>
+```
+
+A placeholder on its own is decoration, hidden from assistive technology. If the wait matters, say so in your own words nearby.
+
+## Styles and CSP
+
+By default each component adds its styles inline, once per page. If your site has a Content Security Policy, pass a `stylePolicy` to every component: a nonce, or an external stylesheet. See [Content Security Policy](/docs/guides/csp/).

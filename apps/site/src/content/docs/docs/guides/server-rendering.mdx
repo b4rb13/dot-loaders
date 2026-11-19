@@ -1,0 +1,37 @@
+---
+title: Server rendering
+description: Render placeholders on the server, so the page has its shape before JavaScript runs.
+---
+
+import { Code } from '@astrojs/starlight/components';
+import serverTs from '../../../../../../../examples/site/server-render.ts?raw';
+
+A placeholder rendered on the server reserves its space in the first HTML, so the page doesn't jump when JavaScript arrives. When the components register in the browser, they take over the same elements.
+
+## React
+
+The React components render their placeholder markup and styles on the server automatically. Render the same state on the server and in the first client render, so hydration matches. See [React and Next.js](/docs/guides/react/).
+
+## Native
+
+`renderStatic` from `@dotquilt-internal/core/server` returns a loader's HTML as a string. It runs anywhere: Node, Bun, Deno or an edge function. It draws only Dotquilt's own decoration; your content comes from your own template.
+
+<Code code={serverTs} lang="ts" title="server.ts" />
+
+Then register the components in the browser, as usual. The region continues from the state the server rendered.
+
+| `kind` | Fields |
+| --- | --- |
+| `region` | `state`, `label`, `placeholder` (any loader below) |
+| `skeleton-block`, `skeleton-line`, `skeleton-circle` | |
+| `skeleton-text` | `lines`, `widths` |
+| `text-loader` | `text`, `mask`, `state` |
+| `chart-loader` | `variant` |
+| `table-loader` | `rows`, `rowHeight`, `columns` |
+| `typing-dots` | `count` |
+
+Every kind also takes `mark`, `preset` and `stylePolicy`.
+
+## Without JavaScript
+
+If scripts never load, a pending region keeps showing its still placeholder, and your content stays visible and usable below it. Keep a way forward that works without JavaScript, such as a link to reload the page, outside the region.

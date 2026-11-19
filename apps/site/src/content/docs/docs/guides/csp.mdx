@@ -1,0 +1,61 @@
+---
+title: Content Security Policy
+description: Run Dotquilt under a strict style-src, with a nonce, hashes or external stylesheets.
+---
+
+import { Code } from '@astrojs/starlight/components';
+import hashesTs from '../../../../../../../examples/site/style-hashes.ts?raw';
+
+Dotquilt draws everything with CSS and never uses inline `style` attributes, so it works under a strict Content Security Policy. Choose how its stylesheets are allowed with `stylePolicy`, and pass the same policy to every loader and region on the page.
+
+## Nonce
+
+Generate a fresh nonce for every request, send it in your `Content-Security-Policy` header, and pass it to each component:
+
+```tsx
+<LoadingRegion
+  stylePolicy={{ mode: 'inline', nonce }}
+  placeholder={<SkeletonText stylePolicy={{ mode: 'inline', nonce }} />}
+>
+```
+
+```
+Content-Security-Policy: style-src 'self' 'nonce-…'
+```
+
+Never reuse a nonce across requests, and don't cache HTML that contains one.
+
+## Hashes
+
+If you can't send a nonce, allow Dotquilt's exact stylesheets by hash. Compute them from the installed version, and recompute them whenever you upgrade:
+
+<Code code={hashesTs} lang="ts" title="style-hashes.ts" />
+
+## External stylesheets
+
+Serve Dotquilt's stylesheets as files, and point each component at the one for its family:
+
+```tsx
+<LoadingRegion
+  stylePolicy={{ mode: 'external', href: '/styles/region.css' }}
+  placeholder={
+    <SkeletonText
+      stylePolicy={{ mode: 'external', href: '/styles/skeleton-text.css' }}
+    />
+  }
+>
+```
+
+The files ship in the package as `@dotquilt-internal/core/styles/<file>.css`. Copy them into your public folder from the same installed version as your JavaScript.
+
+| File | For |
+| --- | --- |
+| `region.css` | LoadingRegion |
+| `skeleton.css`, `line.css`, `circle.css`, `skeleton-text.css` | each skeleton |
+| `skeleton-family.css` | all four skeletons in one file |
+| `text.css` | TextLoader |
+| `chart.css` | ChartLoader |
+| `table.css` | TableLoader |
+| `typing.css` | TypingDots |
+
+Set the policy before a component connects. Changing it afterwards reports an error rather than restyling the component.

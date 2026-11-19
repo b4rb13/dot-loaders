@@ -8,11 +8,20 @@ const components = [
   'typing-dots',
   'loading-region',
 ];
+const guides = [
+  'react',
+  'server-rendering',
+  'csp',
+  'custom-animations',
+  'motion',
+];
 const pages = [
   '/',
   '/docs/',
   '/docs/installation/',
+  '/docs/theming/',
   ...components.map((name) => `/docs/components/${name}/`),
+  ...guides.map((name) => `/docs/guides/${name}/`),
 ];
 
 /** Records how each handoff on the page ends. */
