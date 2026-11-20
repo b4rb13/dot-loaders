@@ -466,7 +466,8 @@ Before the alpha, from the product research (2026-11-19, [docs/planning/product-
   - Step 1 (#81): each loader loads only its own styles.
   - Step 2 (#85): the region's morph loads when its placeholder first shows.
   - Step 3 (2026-11-20): only a region hands a skeleton or TypingDots over, so the skeleton's dissolve and the morph's reading of CSS-drawn marks are the region's code now. The dissolve loads with the region, so handoffs behave exactly as before.
-  - Where it stands: SkeletonBlock 10.0 → 7.0 KB (−30%), SkeletonLine and SkeletonCircle −30%, SkeletonText −28%, TypingDots 7.5 → 5.2 KB (−31%), LoadingRegion 14.5 → 11.6 KB (−20%; step 3 moved 1.4 KB into it). Left: TextLoader (−5%), ChartLoader and TableLoader (unchanged).
+  - Where it stands: SkeletonBlock 10.0 → 7.0 KB (−30%), SkeletonLine and SkeletonCircle −29%, SkeletonText −28%, TypingDots 7.5 → 5.2 KB (−31%), LoadingRegion 14.5 → 11.7 KB (−19%; step 3 moved about 1.9 KB into it, and its budget went back up to that size plus 15%). Left: TextLoader (−5%), ChartLoader and TableLoader (unchanged).
+  - CI's Bun (1.4.3, pinned) measures the budgets; an older local Bun can read 100–900 B differently.
 - **ViewTransition compatibility.** React 19.3 made `<ViewTransition>` stable; document and test the handoff alongside it.
 - **README, changelog and a publish dry run**, a Next.js example project, and React fast tests (already in `test:e2e`).
 - **Agent-ready docs:** `/llms.txt`, per-page Markdown and "Copy page".
