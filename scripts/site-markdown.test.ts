@@ -1,14 +1,47 @@
 import { afterEach, describe, expect, test } from 'bun:test';
-import middleware from '../apps/site/middleware';
-import {
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import middleware, {
   markdownFor,
   notFoundMarkdown,
   pageSummary,
   wantsMarkdown,
-} from '../apps/site/src/lib/negotiation';
+} from '../apps/site/middleware';
 
 // The docs site's Markdown for agents (apps/site/middleware.ts on Vercel):
 // requests that prefer text/markdown get Markdown, everyone else the page.
+
+test('the middleware loads on its own in Node, as Vercel runs it', async () => {
+  // Vercel compiles middleware.ts to a single middleware.js without bundling
+  // and runs it in Node, so an import of another source file can't be found
+  // and every request fails (MIDDLEWARE_INVOCATION_FAILED).
+  const source = await readFile(
+    resolve(import.meta.dirname, '../apps/site/middleware.ts'),
+    'utf8',
+  );
+  const work = await mkdtemp(resolve(tmpdir(), 'dotquilt-middleware-'));
+  try {
+    const file = resolve(work, 'middleware.mjs');
+    await writeFile(
+      file,
+      new Bun.Transpiler({ loader: 'ts' }).transformSync(source),
+    );
+    const run = Bun.spawnSync([
+      'node',
+      '--input-type=module',
+      '-e',
+      `const m = await import(${JSON.stringify(pathToFileURL(file).href)});
+       const answer = await m.default(new Request('https://dotquilt.dev/', { headers: { accept: 'text/html' } }));
+       console.log(typeof m.default, String(answer), m.config.matcher.length);`,
+    ]);
+    expect(run.stderr.toString()).toBe('');
+    expect(run.stdout.toString().trim()).toBe('function undefined 1');
+  } finally {
+    await rm(work, { recursive: true, force: true });
+  }
+});
 
 describe('wantsMarkdown', () => {
   test('a request that names Markdown first, or alone, gets Markdown', () => {
