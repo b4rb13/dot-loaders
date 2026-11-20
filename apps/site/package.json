@@ -9,8 +9,9 @@
   },
   "dependencies": {
     "@astrojs/starlight": "0.43.1",
-    "dotquilt": "workspace:*",
+    "@vercel/analytics": "2.0.1",
     "astro": "7.4.12",
+    "dotquilt": "workspace:*",
     "satteri": "0.10.5"
   }
 }

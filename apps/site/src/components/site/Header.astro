@@ -2,11 +2,15 @@
 /**
  * The site header (Starlight's Header, overridden): the Quilt mark and a
  * wordmark that, on a first visit, shimmers in square marks and locks into the
- * name; the main links; search and theme. A row of marks forms its lower edge.
+ * name; the main links; search, the repository on GitHub with its star count,
+ * and theme. A row of marks forms its lower edge.
  */
 import Search from 'virtual:starlight/components/Search';
 import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+import { repository, shortCount, starCount } from '../../lib/github';
 import Glyph from './Glyph.astro';
+
+const stars = await starCount();
 
 const path = Astro.url.pathname;
 const links = [
@@ -77,6 +81,25 @@ const links = [
     }
   </nav>
   <div class="search"><Search /></div>
+  <a class="github" href={repository} data-github>
+    <svg class="mark" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+      ></path>
+    </svg>
+    <span class="name">GitHub</span>
+    {
+      stars !== undefined && (
+        <span class="stars" data-stars>
+          <svg class="star" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 .9l2.15 4.36 4.81.7-3.48 3.39.82 4.79L8 11.88l-4.3 2.26.82-4.79L1.04 5.96l4.81-.7z" />
+          </svg>
+          {shortCount(stars)}
+          <span class="sr-only">{stars === 1 ? 'star' : 'stars'}</span>
+        </span>
+      )
+    }
+  </a>
   <div class="tools"><ThemeSelect /></div>
   <dotquilt-skeleton-block class="seam" motion="paused" aria-hidden="true"
   ></dotquilt-skeleton-block>
@@ -160,6 +183,63 @@ const links = [
     display: flex;
     align-items: center;
   }
+  /* The repository: GitHub's mark and name, then the star count, in one
+     quiet pill like the nav links. */
+  .github {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+    height: 2.25rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--dq-muted);
+    text-decoration: none;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      color var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .github:hover {
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+  }
+  .github:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+  }
+  .github svg {
+    flex: none;
+    fill: currentColor;
+  }
+  .github .mark {
+    width: 1rem;
+    height: 1rem;
+  }
+  .stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--dq-line);
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-ink);
+  }
+  .stars .star {
+    width: 0.8125rem;
+    height: 0.8125rem;
+    color: var(--dq-muted);
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
   /* A single row of marks along the header's lower edge. */
   .seam {
     position: absolute;
@@ -176,6 +256,19 @@ const links = [
     .site-nav,
     .tools {
       display: none;
+    }
+    /* Phones: the mark and the count; the name is read, not shown. */
+    .github {
+      height: 2.5rem;
+      padding: 0 0.625rem;
+    }
+    .github .name {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
     .site-header {
       gap: 0.75rem;

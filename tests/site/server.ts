@@ -12,6 +12,14 @@ Bun.serve({
   port,
   fetch(request) {
     const path = normalize(decodeURIComponent(new URL(request.url).pathname));
+    // Vercel serves Web Analytics under /_vercel/insights; here it is a
+    // script that does nothing and an endpoint that accepts the page views.
+    if (path === '/_vercel/insights/script.js')
+      return new Response('', {
+        headers: { 'content-type': 'text/javascript' },
+      });
+    if (path.startsWith('/_vercel/insights/'))
+      return new Response(null, { status: 204 });
     let file = join(root, path);
     if (!file.startsWith(root))
       return new Response('not found', { status: 404 });

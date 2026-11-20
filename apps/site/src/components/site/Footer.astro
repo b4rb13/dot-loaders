@@ -1,9 +1,13 @@
 ---
 /**
  * The page footer (Starlight's Footer, overridden): Starlight's own page
- * footer, then the site footer with the brand, links and the license.
+ * footer, then the site footer with the brand, links and the license. It is
+ * on every page, so it also carries Vercel Web Analytics (cookieless, served
+ * from the site's own origin).
  */
 import Default from '@astrojs/starlight/components/Footer.astro';
+import Analytics from '@vercel/analytics/astro';
+import { repository } from '../../lib/github';
 import Glyph from './Glyph.astro';
 
 const columns = [
@@ -30,6 +34,7 @@ const columns = [
   {
     title: 'Project',
     links: [
+      ['GitHub', repository],
       ['Pricing', '/pricing/'],
       ['Theming', '/docs/theming/'],
       ['Content Security Policy', '/docs/guides/csp/'],
@@ -65,6 +70,7 @@ const columns = [
   </div>
   <p class="bottom">© 2026 Dotquilt. Free and open source under the MIT license.</p>
 </footer>
+<Analytics />
 
 <script>
   import { registerSkeletonBlock } from 'dotquilt/skeleton';
