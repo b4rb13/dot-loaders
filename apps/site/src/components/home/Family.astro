@@ -413,11 +413,6 @@ const tiles = [
   .wide .meta p {
     max-width: 44ch;
   }
-  /* The region fades its placeholder layer across the handoff, which halves
-     the chart's marks in flight; they leave where the front passes anyway. */
-  .wide dotquilt-region::part(placeholder) {
-    opacity: 1 !important;
-  }
   .stage {
     display: grid;
     align-items: center;
