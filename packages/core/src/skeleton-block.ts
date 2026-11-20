@@ -12,17 +12,12 @@ import {
   remaining,
 } from './internal/element.js';
 import { handoff } from './internal/marks.js';
-import {
-  morphMarks,
-  type Part,
-  skeletonParts,
-} from './internal/morph-marks.js';
 import type { Preset } from './internal/preset.js';
 import { skeletonPreset } from './internal/preset.js';
 import { capturePresetData } from './internal/preset-data.js';
 import { createPulse } from './internal/pulse.js';
 import {
-  dissolveSkeleton,
+  type SkeletonExit,
   skeletonHandoff,
 } from './internal/skeleton-handoff.js';
 import { skeletonStyles } from './styles.js';
@@ -117,38 +112,28 @@ export class SkeletonBlock extends ManagedElement {
   protected override presetChanged(): void {
     this.#runner?.reset?.();
   }
-  /** Its marks where the stylesheet draws them, for the region's morph handoff. */
-  [morphMarks](origin: DOMRect): readonly Part[] {
-    return skeletonParts(this, origin);
-  }
   #handoffCheck: (() => void) | undefined;
-  [skeletonHandoff](): import('./internal/skeleton-handoff.js').SkeletonDeparture {
+  /** How its marks leave when a region hands it over (skeleton-handoff.ts). */
+  [skeletonHandoff](): SkeletonExit {
     const binding = this.#bindings.handoff ?? this.preset?.animations?.handoff;
-    const builtin = !binding || definitionOf(binding).dissolve;
-    // The default exit follows the spec; an explicit dissolve() keeps its fall.
-    const departure = binding
-      ? {
-          driftPx:
-            (binding.options as { fallPx?: number } | undefined)?.fallPx ?? 5,
-          shrink: 0,
-        }
-      : { driftPx: -handoff.markDriftPx, shrink: handoff.markShrink };
-    return (duration, easing, own, invalidate) => {
-      if (!builtin || !this.canAnimate()) return () => {};
-      const effect = dissolveSkeleton(
-        this,
-        duration,
-        easing,
-        departure,
-        own,
-        invalidate,
-        (code) => this.report(code, 'animations'),
-      );
-      this.#handoffCheck = effect.check;
-      return () => {
-        if (this.#handoffCheck === effect.check) this.#handoffCheck = undefined;
-        effect.dispose();
-      };
+    return {
+      dissolves: !binding || !!definitionOf(binding).dissolve,
+      // The default exit follows the spec; an explicit dissolve() keeps its fall.
+      departure: binding
+        ? {
+            driftPx:
+              (binding.options as { fallPx?: number } | undefined)?.fallPx ?? 5,
+            shrink: 0,
+          }
+        : { driftPx: -handoff.markDriftPx, shrink: handoff.markShrink },
+      canAnimate: () => this.canAnimate(),
+      report: (code) => this.report(code, 'animations'),
+      watch: (check) => {
+        this.#handoffCheck = check;
+        return () => {
+          if (this.#handoffCheck === check) this.#handoffCheck = undefined;
+        };
+      },
     };
   }
   get owner(): Owner | undefined {

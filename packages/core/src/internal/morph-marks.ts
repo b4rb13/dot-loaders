@@ -1,4 +1,5 @@
 import type { Dot } from '../animations.js';
+import { measureSurface } from './dissolve.js';
 import {
   dotRadius,
   glowColor,
@@ -8,12 +9,14 @@ import {
   markOf,
 } from './marks.js';
 import { clamp } from './math.js';
-import { measureSurface } from './skeleton-handoff.js';
 
 /**
  * What a placeholder hands the region's morph (morph.ts): its marks as last
- * drawn, grouped into parts, in the region's coordinates. Each placeholder
- * reads its own, so the region carries none of their code.
+ * drawn, grouped into parts, in the region's coordinates. Skeletons and
+ * TypingDots draw theirs with CSS, so the morph reads them from the page
+ * (`skeletonParts`, `typingPart`) and they carry none of this code. Chart and
+ * table paint theirs on a canvas, so they hand them over through
+ * `[morphMarks]`.
  */
 export const morphMarks: unique symbol = Symbol('dotquilt.morph-marks');
 export interface MarkSource {

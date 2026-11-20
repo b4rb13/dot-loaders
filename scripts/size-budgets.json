@@ -1,23 +1,23 @@
 {
   "SkeletonBlock": {
-    "native": 10800,
-    "react": 12400
+    "native": 8100,
+    "react": 9700
   },
   "SkeletonLine": {
-    "native": 11300,
-    "react": 13500
+    "native": 8600,
+    "react": 11000
   },
   "SkeletonCircle": {
-    "native": 11300,
-    "react": 13500
+    "native": 8600,
+    "react": 11000
   },
   "SkeletonText": {
-    "native": 12000,
-    "react": 14200
+    "native": 9300,
+    "react": 11700
   },
   "TypingDots": {
-    "native": 6500,
-    "react": 9900
+    "native": 6000,
+    "react": 9600
   },
   "TextLoader": {
     "native": 16200,

@@ -15,6 +15,8 @@ import {
   relative,
   round,
   type Seed,
+  skeletonParts,
+  typingPart,
 } from './morph-marks.js';
 
 /**
@@ -247,15 +249,28 @@ export interface MorphPlan {
     | undefined;
 }
 
+/**
+ * A placeholder's marks: chart and table hand over what they painted;
+ * skeletons and TypingDots are read from where their CSS draws them.
+ */
+function partsOf(participant: HTMLElement, origin: DOMRect): readonly Part[] {
+  if (morphMarks in participant)
+    return (participant as HTMLElement & MarkSource)[morphMarks](origin);
+  if (participant.localName === 'dotquilt-typing-dots')
+    return typingPart(participant, origin);
+  if (participant.localName.startsWith('dotquilt-skeleton-'))
+    return skeletonParts(participant, origin);
+  return [];
+}
+
 /** Reads the placeholder and the content and decides where every mark goes. */
 export function planMorph(
   region: HTMLElement,
   participants: readonly HTMLElement[],
 ): MorphPlan {
   const origin = region.getBoundingClientRect();
-  const parts = participants.flatMap(
-    (participant) =>
-      (participant as Partial<MarkSource>)[morphMarks]?.(origin) ?? [],
+  const parts = participants.flatMap((participant) =>
+    partsOf(participant, origin),
   );
   const nodes = contentNodes(region);
   const area = Math.max(1, origin.width * origin.height);
