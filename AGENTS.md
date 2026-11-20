@@ -31,6 +31,7 @@ Use Bun (pinned in `.bun-version`) and Node 24+.
   - `tests/e2e/` covers every component's pending/ready behaviour, layout containment and screenshots. Screenshot baselines live in `tests/e2e/__screenshots__/`; CI skips pixel comparisons.
   - `tests/browser/` holds the detailed native runtime tests.
   - `tests/<suite>/`: coordination, presets, table, shared-wrapper, api, layout, react and m4. Each has its own fixture server, listed in `playwright.config.ts`.
+  - `tests/next/` runs against `examples/next`, a Next.js App Router project that `bun run build` builds (server rendering, hydration and a client-side navigation).
   - `bun run test:e2e:all` adds Firefox and WebKit.
 - **Legacy suites:** `bun run test:legacy` (under a minute). Only two checks need packed tarballs: the React suite rerun on React 19.0, the oldest supported version, and catalog SSR under Node and Bun. Run them before a release or when touching the React adapter's hydration or nonce handling.
 - **Release dry run:** `bun run release:check` (after `bun run build`) shows the planned versions, the tarball contents and what still blocks publishing. Nothing is published.

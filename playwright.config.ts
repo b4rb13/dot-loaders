@@ -30,6 +30,8 @@ const suites: {
   // The built docs site (apps/site).
   { name: 'site', port: 4331 },
 ];
+// The Next.js example (examples/next), built by `bun run build`.
+const next = { name: 'next', port: 4360 };
 const browsers = (
   process.env.ALL_BROWSERS ? ['chromium', 'firefox', 'webkit'] : ['chromium']
 ) as ('chromium' | 'firefox' | 'webkit')[];
@@ -73,6 +75,12 @@ export default defineConfig({
         ...(suite.viewport ? { viewport: suite.viewport } : {}),
       },
     })),
+    {
+      name: `${next.name}-${browserName}`,
+      testDir: './tests/next',
+      fullyParallel: true,
+      use: { browserName, baseURL: `http://127.0.0.1:${next.port}` },
+    },
   ]),
   webServer: [
     {
@@ -91,5 +99,10 @@ export default defineConfig({
       port: suite.port,
       reuseExistingServer: false,
     })),
+    {
+      command: 'bun run --cwd examples/next start',
+      port: next.port,
+      reuseExistingServer: false,
+    },
   ],
 });

@@ -13,7 +13,9 @@
       "*.json",
       "playwright*.config.ts",
       ".changeset/*.json",
-      "!**/.next"
+      "!**/.next",
+      "!**/next-env.d.ts",
+      "!examples/next/tsconfig.json"
     ]
   },
   "formatter": {
