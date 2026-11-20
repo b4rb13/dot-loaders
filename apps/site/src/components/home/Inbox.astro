@@ -171,6 +171,9 @@ import { conversations, quickReplies, thread } from './screens';
 
   .va-conversation {
     display: grid;
+    /* One column as wide as the frame allows: the reply field's own width
+       never pushes Send past the frame's edge on a narrow phone. */
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) auto auto;
     min-width: 0;
   }
