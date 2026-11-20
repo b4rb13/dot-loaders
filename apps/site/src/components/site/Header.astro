@@ -4,13 +4,19 @@
  * wordmark that, on a first visit, shimmers in square marks and locks into the
  * name; the main links; search, the repository on GitHub with its star count,
  * and theme. A row of marks forms its lower edge.
+ *
+ * On phones the main links and theme move into a menu. Pages with a sidebar
+ * use Starlight's own menu button; pages without one (the splash pages) get a
+ * matching button, in the same place, that opens a panel under the header.
  */
 import Search from 'virtual:starlight/components/Search';
 import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+import { Icon } from '@astrojs/starlight/components';
 import { repository, shortCount, starCount } from '../../lib/github';
 import Glyph from './Glyph.astro';
 
 const stars = await starCount();
+const { hasSidebar } = Astro.locals.starlightRoute;
 
 const path = Astro.url.pathname;
 const links = [
@@ -101,6 +107,39 @@ const links = [
     }
   </a>
   <div class="tools"><ThemeSelect /></div>
+  {
+    !hasSidebar && (
+      <>
+        <button
+          class="menu-button"
+          type="button"
+          popovertarget="site-menu"
+          aria-controls="site-menu"
+          data-menu-button
+        >
+          <Icon name="bars" class="open" />
+          <Icon name="close" class="close" />
+          <span class="sr-only">{Astro.locals.t('menuButton.accessibleLabel')}</span>
+        </button>
+        <div id="site-menu" class="site-menu" popover data-menu>
+          <nav aria-label="Main">
+            {links.map((link) => (
+              <a
+                href={link.href}
+                aria-current={link.current ? 'page' : undefined}
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+          <div class="menu-theme">
+            <span aria-hidden="true">Theme</span>
+            <ThemeSelect />
+          </div>
+        </div>
+      </>
+    )
+  }
   <dotquilt-skeleton-block class="seam" motion="paused" aria-hidden="true"
   ></dotquilt-skeleton-block>
 </div>
@@ -123,6 +162,38 @@ const links = [
         sessionStorage.setItem('dotquilt-arrived', '1');
       } catch {}
     }, 1200);
+  }
+
+  // The phone menu on pages without a sidebar. The popover opens and closes
+  // it, with Escape and a tap outside, even before this script runs.
+  const menu = document.querySelector<HTMLElement>('[data-menu]');
+  const menuButton = document.querySelector<HTMLElement>('[data-menu-button]');
+  if (menu && menuButton) {
+    const close = () => {
+      if (menu.matches(':popover-open')) menu.hidePopover();
+    };
+    menuButton.setAttribute('aria-expanded', 'false');
+    menu.addEventListener('toggle', (event) => {
+      const open = (event as ToggleEvent).newState === 'open';
+      menuButton.setAttribute('aria-expanded', String(open));
+    });
+    // Escape returns focus to the button, wherever it was in the menu.
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || !menu.matches(':popover-open')) return;
+      close();
+      menuButton.focus();
+    });
+    // It closes when focus moves on past it, when a link is followed (so the
+    // back button doesn't restore it open), and when the page widens.
+    menu.addEventListener('focusout', (event) => {
+      const next = event.relatedTarget;
+      if (next instanceof Node && next !== menuButton && !menu.contains(next))
+        close();
+    });
+    menu.addEventListener('click', (event) => {
+      if (event.target instanceof Element && event.target.closest('a')) close();
+    });
+    matchMedia('(width > 50rem)').addEventListener('change', close);
   }
 </script>
 
@@ -252,10 +323,147 @@ const links = [
     border-radius: 0;
     pointer-events: none;
   }
+  /* The phone menu (pages without a sidebar). Its button matches Starlight's
+     on docs pages: the same size, place and quiet fill. */
+  .menu-button {
+    display: none;
+  }
+  .menu-button:has(+ :popover-open) {
+    box-shadow: none;
+  }
+  .menu-button:has(+ :popover-open) :global(.open),
+  .menu-button:not(:has(+ :popover-open)) :global(.close) {
+    display: none;
+  }
+  /* A panel under the header: the main links, then the theme. It settles in
+     with the site's UI timing; a light scrim covers the page below. */
+  .site-menu {
+    --rise: -0.25rem;
+    position: fixed;
+    inset: var(--sl-nav-height) 0 auto;
+    width: auto;
+    height: auto;
+    max-height: calc(100dvh - var(--sl-nav-height));
+    margin: 0;
+    padding: 0.5rem var(--sl-nav-pad-x) 1rem;
+    overflow-y: auto;
+    border: 0;
+    border-bottom: 1px solid var(--dq-line);
+    background: var(--dq-surface);
+    color: var(--dq-ink);
+    box-shadow: var(--dq-shadow-lg);
+    opacity: 0;
+    translate: 0 var(--rise);
+    transition:
+      opacity var(--dq-duration-ui) var(--dq-ease-fade),
+      translate var(--dq-duration-ui) var(--dq-ease-settle),
+      overlay var(--dq-duration-ui) allow-discrete,
+      display var(--dq-duration-ui) allow-discrete;
+  }
+  .site-menu:popover-open {
+    opacity: 1;
+    translate: 0;
+  }
+  @starting-style {
+    .site-menu:popover-open {
+      opacity: 0;
+      translate: 0 var(--rise);
+    }
+  }
+  .site-menu::backdrop {
+    /* Below the header, which stays as it is. */
+    inset: 3.5rem 0 0;
+    background: rgb(27 34 48 / 0.18);
+    opacity: 0;
+    transition:
+      opacity var(--dq-duration-ui) var(--dq-ease-fade),
+      overlay var(--dq-duration-ui) allow-discrete,
+      display var(--dq-duration-ui) allow-discrete;
+  }
+  :global([data-theme='dark']) .site-menu::backdrop {
+    background: rgb(6 9 15 / 0.45);
+  }
+  .site-menu:popover-open::backdrop {
+    opacity: 1;
+  }
+  @starting-style {
+    .site-menu:popover-open::backdrop {
+      opacity: 0;
+    }
+  }
+  .site-menu nav {
+    display: grid;
+    gap: 0.125rem;
+  }
+  .site-menu a {
+    padding: 0.75rem;
+    border-radius: var(--dq-radius-sm);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--dq-muted);
+    text-decoration: none;
+    transition: background var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .site-menu a:hover,
+  .site-menu a[aria-current='page'] {
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+  }
+  .menu-theme {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    padding: 0.75rem 0.75rem 0;
+    border-top: 1px solid var(--dq-line);
+    font-size: 0.875rem;
+    color: var(--dq-muted);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .site-menu {
+      --rise: 0px;
+    }
+  }
+  @media (forced-colors: active) {
+    .menu-button {
+      border: 1px solid ButtonText;
+    }
+    .site-menu {
+      border: 1px solid CanvasText;
+    }
+    .site-menu a[aria-current='page'] {
+      outline: 1px solid CanvasText;
+    }
+  }
+  /* Wider than the phone layout below, the header shows the links itself. */
+  @media (width > 50rem) {
+    .site-menu {
+      display: none;
+    }
+  }
   @media (max-width: 50rem) {
     .site-nav,
     .tools {
       display: none;
+    }
+    .menu-button {
+      display: grid;
+      flex: none;
+      place-items: center;
+      width: var(--sl-menu-button-size);
+      height: var(--sl-menu-button-size);
+      /* With the header's gap, the same space Starlight leaves before its
+         button. */
+      margin-inline-start: calc(var(--sl-nav-gap) - 0.75rem);
+      padding: 0.5rem;
+      border: 0;
+      border-radius: 50%;
+      background: var(--dq-bg);
+      color: var(--dq-ink);
+      box-shadow: var(--sl-shadow-md);
+      font-size: 1rem;
+      cursor: pointer;
     }
     /* Phones: the mark and the count; the name is read, not shown. */
     .github {
@@ -272,6 +480,11 @@ const links = [
     }
     .site-header {
       gap: 0.75rem;
+    }
+  }
+  @media print {
+    .menu-button {
+      display: none;
     }
   }
 </style>
