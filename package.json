@@ -9,7 +9,8 @@
   },
   "workspaces": [
     "packages/*",
-    "apps/site"
+    "apps/site",
+    "examples/next"
   ],
   "scripts": {
     "build": "turbo run build",

@@ -1,0 +1,24 @@
+{
+  "name": "dotquilt-example-next",
+  "private": true,
+  "type": "module",
+  "description": "Dotquilt in a Next.js App Router project: server-rendered placeholders that hydrate and hand over.",
+  "scripts": {
+    "dev": "next dev --port 4360",
+    "build": "next build",
+    "start": "next start --port 4360"
+  },
+  "dependencies": {
+    "@dotquilt/react": "workspace:*",
+    "dotquilt": "workspace:*",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "7.0.2"
+  }
+}
