@@ -128,8 +128,7 @@
 }
 
 /* Selection and the caret carry the palette too. */
-.vc ::selection,
-.vc-hero ::selection {
+.vc ::selection {
   background: var(--dq-accent-soft);
   color: var(--dq-ink);
 }
