@@ -1,0 +1,134 @@
+/* The hold-to-load pieces the home page's demos share. Everything is scoped
+   under .vc, the class on those sections. Tokens only (design/tokens.css). */
+
+.vc .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Timings: DM Mono, tabular, quiet. */
+.vc .vc-readout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font: 400 0.75rem / 1.2 var(--dq-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--dq-muted);
+  white-space: nowrap;
+}
+
+/* "Loaders rest after four seconds." appears only when it happens. */
+.vc .vc-rest {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--dq-muted);
+  opacity: 0;
+  translate: 0 -3px;
+  transition:
+    opacity var(--dq-duration-fade) var(--dq-ease-fade),
+    translate var(--dq-duration-rise) var(--dq-ease-settle);
+}
+.vc .vc-rest[data-shown] {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* A surface that can be held (a tile's stage, a proof): it says so with the
+   same ring-and-core key the hold buttons carry, and sinks while held. */
+.vc [data-surface] {
+  position: relative;
+  cursor: pointer;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background var(--dq-duration-ui) var(--dq-ease-settle),
+    box-shadow var(--dq-duration-ui) var(--dq-ease-settle),
+    scale var(--dq-duration-ui) var(--dq-ease-settle);
+}
+.vc [data-surface]:focus-visible {
+  outline: 2px solid var(--dq-focus);
+  outline-offset: 3px;
+}
+.vc [data-surface][data-held] {
+  scale: 0.99;
+}
+.vc .vc-key {
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  overflow: visible;
+}
+.vc .vc-key .ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  opacity: 0.4;
+}
+.vc .vc-key .core {
+  fill: currentColor;
+  transform-box: fill-box;
+  transform-origin: center;
+  scale: 0.55;
+  transition: scale var(--dq-duration-ui) var(--dq-ease-settle);
+}
+.vc [data-held] .vc-key .core,
+.vc .vc-key[data-held] .core {
+  scale: 1;
+}
+
+/* Until the elements upgrade, pending content stays hidden, not flashed. */
+.vc
+  :is(dotquilt-region, dotquilt-text-loader):not(:defined)[state="pending"]
+  > :not([slot]) {
+  visibility: hidden;
+}
+
+/* The dark code panel's quiet chrome, from the code tokens. */
+.vc .vc-code {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border-radius: var(--dq-radius-sm);
+  background: var(--dq-code-bg);
+  color: var(--dq-code-fg);
+  font: 400 0.75rem / 1.6 var(--dq-font-mono);
+  overflow-x: auto;
+  white-space: pre;
+}
+.vc .vc-code .k {
+  color: var(--dq-code-keyword);
+}
+.vc .vc-code .s {
+  color: var(--dq-code-string);
+}
+.vc .vc-code .p {
+  color: var(--dq-code-punct);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vc [data-surface],
+  .vc .vc-key .core,
+  .vc .vc-rest {
+    transition: none;
+  }
+  .vc [data-surface][data-held] {
+    scale: none;
+  }
+}
+
+/* Selection and the caret carry the palette too. */
+.vc ::selection {
+  background: var(--dq-accent-soft);
+  color: var(--dq-ink);
+}

@@ -116,7 +116,7 @@ Every text colour meets WCAG AA (4.5:1) on `bg`, `surface` and `subtle`. `faint`
 
 ## Website and docs
 
-- **Homepage (owner's pick, 2026-11-19: "The field becomes the page"):** beside the headline and actions, a field of marks rises into a solid teal chart line, and three metric cards below it hand over from square marks. Teal appears only on the arrived line and the primary action. The live dashboard moved to the examples page.
+- **Homepage (owner's pick, 2026-11-20: "a combination of variants A and C"):** beside the headline and actions, a live revenue screen loads (figures, a chart line, table rows), rests a few seconds and loads again, in a loop the visitor can pause. Below it, each example section puts its copy and controls on the left and the result on the right, and every demo answers the same control: press and hold keeps it loading, letting go delivers. Teal appears only on what has arrived and the primary action. (Earlier pick, 2026-11-19: "The field becomes the page".)
 - **Docs:** left navigation, a reading column of about 68ch, an on-page table of contents and a live preview with Start loading / Reveal. Code tabs cover React and native. API tables list type, default and description per prop.
 - **Copy:** plain user-facing language only. No milestones, freezes or "provisional" wording.
 - **Themes:** light and dark at parity, following the system setting, with a manual switch.

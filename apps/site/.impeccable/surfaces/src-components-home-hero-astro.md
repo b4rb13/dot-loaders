@@ -1,53 +1,51 @@
 ---
-version: 1
+version: 2
 slug: "src-components-home-hero-astro"
 primary_target: "src/components/home/Hero.astro"
-related_targets: ["src/content/docs/index.mdx"]
+related_targets: ["src/content/docs/index.mdx", "src/components/home/Screen.astro", "src/components/home/screen.ts", "src/components/home/Page.astro", "src/components/home/app.css", "src/components/home/hold.css", "src/components/home/HoldButton.astro", "src/components/site/Header.astro"]
 ---
 
-# Homepage: the field becomes the page
+# Homepage: one real screen, loading
 
-Mode: Persuade. Structure locked on the decision page: "The field becomes the page" (seed ee7c71ed, round 92f2a327). Build path: comp-led.
+Mode: Persuade. Structure: the owner's pick, a "combination of variants A and C" from the preview pages. A ("One real screen, loading") gives the first screen and the example screens; C ("You are the network") gives the hold-to-load controls and the last sections. It replaces the earlier comp-led field hero ("The field becomes the page"), which is gone. SPEC.md's homepage line records the new pick.
 
-Approved comp: `.impeccable/mocks/decision/field.png` (1536×1024 = a 1440×960 viewport at 1.0667×; sidecar marked approved). Reference anchor: `.impeccable/mocks/ref/docs-chart.png`.
+The page: `src/content/docs/index.mdx` → Starlight's Hero (overridden by `Hero.astro`, which renders `Screen.astro` on `/` only) → `Page.astro` for every section below. The site footer is unchanged.
 
-## The comp as a design system
+## First screen
 
-- Ground: one cool off-white plane (#f7f7f9 sampled ≈ --dq-bg). No section bands, no gradients, no glass.
-- Type: Manrope. Display 72px/1.0, weight 500, -0.03em, ink #161e2c (≈ --dq-ink). Lead 18–19px muted. Card labels 19–20px muted weight 500; card values ~62px weight 500, tabular.
-- Corners: buttons ~6–9px, cards ~12px (--dq-radius-md). Line weight: 1px hairlines (--dq-line) only on cards and the outline button.
-- Elevation: cards are white with a hairline and a very soft, low, offset shadow (--dq-shadow). Nothing else floats.
-- Accent: one muted teal (--dq-accent, sampled #1f6e6f–#317277) on the primary button and the arrived chart line only.
-- Marks: the field is slate marks (--dq-mark) on a ~22px grid, ~2.8px dots, opacity falling from ~0.45 at the top to ~0.1 at the bottom; a dissolving left edge of jittered, thinning marks; a few marks at peak near the top-left of the field.
+| Ingredient | Built as |
+| --- | --- |
+| Headline "Loading states / that hand over." | h1, Manrope 500, clamp(44px, 5.4vw, 72px), line-height 1; clamp(40px, 9vw, 60px) below 960px. The copy column is `calc(--h1 * 6.62)` wide. |
+| Lead | p, 18.75px / 1.5 `muted`, max 26rem |
+| Actions "Get started" / "See the components" | `home-button primary` and `home-button`, 52px tall, 24px padding, 1rem, 14px apart |
+| Meta line | "Nine native web components and a React adapter. Free and MIT licensed." 0.8125rem `faint` |
+| Field | a real `dotquilt-skeleton-block` at `motion="paused"`, 2.8px / 19.6px in `--dq-ink`, filling the stage behind the frame under a radial mask strongest at the top right |
+| App frame "Revenue" | `.va-frame`: 16px radius, `line` hairline, `--dq-shadow-lg`, at most 1040px wide, bleeding 24px past the window's right edge. Bar: workspace initial, title, Range track (7 / 30 / 90 days). |
+| KPI strip ×3 | real `dotquilt-text-loader mark="square"`, value 1.75rem tabular; delta in `positive` / `negative` on the label's line |
+| Chart | `dotquilt-region` with a `dotquilt-chart-loader variant="line"` placeholder handing over to a 2.4px `accent` line and a ringed end node |
+| Table "Largest invoices" | column heads in a separate `aria-hidden` header table outside the region (same colgroup); inside, one `dotquilt-table-loader` row per data row and the real table with a zero-height thead for screen readers. Only rows load. |
+| Foot | "Example data" tag and live status; Network track (Fast / Slow / Offline); a 30px pause / play key (`aria-pressed`) at the end |
 
-## Inventory
+Signature: the frame is a real screen that loads, beside the headline, over the product's own field of marks. Teal appears only on the arrived chart line and the primary action.
 
-| Ingredient | Comp (CSS px at 1440) | Medium |
-| --- | --- | --- |
-| Header, nav, search, theme, seam | existing site header | existing component, unchanged (owner-approved header B); the comp draws it ~27px taller, accepted |
-| Headline "Loading states / that hand over." | left 82, cap top 197, 2 lines, 72px | semantic h1, Manrope 500 |
-| Lead "Placeholders that hold the shape of your content, then become it." | baseline ~373, ~18.5px, one line | p |
-| Primary action "Get started" | 148×58, teal fill, white text | a.home-button.primary, hero size |
-| Secondary "See the components" | 217×58, white, hairline | a.home-button, hero size |
-| Field grid | x 776→right edge, y 38→598; ~30×26 marks at 1440 (≈780 marks), denser/darker at top, fading down | real `dotquilt-skeleton-block` with --dotquilt-dot-size 2.8px / gap 19.2px, vertical mask; CSS grid fallback before upgrade |
-| Dissolving left edge | x 590→776, ~60 jittered marks thinning leftward | authored SVG, deterministic PRNG |
-| Lit marks | ~5 darker marks near the field's top-left | SVG, mark colour at peak |
-| Rising trail | 16 marks, ~6.5px, from (663,562) to (956,432), spacing tightening toward the line | SVG circles |
-| Arrived chart line | 2.5px teal polyline (973,421)→(1403,252), 7 points, junction node ~9px | SVG path; draws in on arrival |
-| KPI cards ×3 | top 657, 178 tall, x 82→1358, gap ~20, white, radius 12 | `.home-card` grammar |
-| KPI label | 19–20px muted | p |
-| KPI value | "$48,210" ready; "1,284", "0.8%" shown pending in square marks | real `dotquilt-text-loader mark="square"` |
+## Motion
 
-Signature: the chart line is the handoff itself — marks rise out of the field and become a solid line. It must stay the largest graphic in the first viewport.
+Before paint, with motion allowed, the frame's loaders start pending. The frame fades in and rises 14px; the field fades in. First load: figures lock at 560 / 700 / 840ms, the chart hands over at 1060ms, rows at 1300ms. It rests about 4.2 s, then loads the next range from its placeholders (30 → 90 → 7 days), in a loop. The loop waits while the pointer is over the frame, keyboard focus is inside, it is off screen, the tab is hidden, the network is Offline, or it is paused. Range and network stay live; there is no "Load again" button. Reduced motion shows the frame loaded with no loop and no pause key. The header's wordmark arrival rests on this page (the first screen is the one focal motion) and the visit counts as arrived.
 
-## Motion (phase two)
+## Below the first screen
 
-One authored moment under 4 s on each homepage load, only when motion is allowed: the field's own idle glow drifts; the trail marks rise from rest to full strength in sequence toward the line (slate, never teal); the teal line draws in from the junction (1100 ms, ease-settle) as a 2px blur clears; the KPI values hand over at ~1.4 s, 2.0 s, 2.6 s through the real TextLoader. At rest and under reduced motion or without JavaScript: line drawn, values shown.
+In order: Inbox, Invoices, Activity (app frames from A), Family, Handoff, Playground (C), Details (A's ruled rows with C-style hold proofs), Get started, Closing (C).
+
+- Every example section: copy and controls LEFT, live result RIGHT (`.va-split`), never alternating; stacked with controls first below 56rem.
+- Hold to load: press and hold (pointer, Space or Enter) keeps a demo loading, letting go delivers (`HoldButton.astro`, `hold.ts`, `hold.css`); DM Mono readout "Arrived after 1.4 s" and "Loaders rest after four seconds.". App-like controls (filters, pages, chips) load with a natural delay a hold can take over.
+- Inbox: hold sends the next quick reply and keeps the customer typing. Invoices: Show filter and hold on the left, pager in the frame foot, five rows' height kept. Activity: hold to refresh (state "refreshing"); the feed has a fixed height and scrolls inside, keeping 12 items.
+- Handoff: speed 1× / ½× / ⅓× (1.1 / 2.2 / 3.3 s) plus hold, with a three-phase timeline.
+- Details: first three proofs live and held (Calm, Out of reach, Reduced motion), last three code.
 
 ## Responsive
 
-≥1180px: the comp. 900–1180: field and drawing scale down with the art column (container units), headline clamps. <900: copy, then the drawing as its own band, then the cards stacked.
+≥960px: two columns, the stage bleeding right. <960px: copy, then the frame full width below. Frame container queries hide the network label (<720px), drop the Invoice and Project columns (<560px), stack the KPI strip (<460px) and widen the status column (<340px). Below 40rem every control is at least 44px.
 
 ## Not to literalize
 
-The comp's oversized header, the slightly uneven card widths, and JPEG softness of the marks.
+The preview pages' alternating section sides, the page-wide tempo dial and the "Load again" button: none of them ship.

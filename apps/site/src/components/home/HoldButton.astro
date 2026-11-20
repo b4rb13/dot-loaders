@@ -1,0 +1,206 @@
+---
+/**
+ * The hold control: press and hold (pointer, or Space or Enter held) keeps a
+ * placeholder loading; letting go delivers. `Connection` in network.ts drives
+ * its words and its fill, which grows over the idle's four seconds.
+ *
+ * Every size is the same key: an ink disc whose core grows while held, and
+ * the label. The large size is the hero's, with the request's DM Mono
+ * readout on a second line (kept out of the accessible name, since it
+ * changes ten times a second; the live status says it instead).
+ */
+interface Props {
+  label?: string;
+  size?: 'large' | 'default' | 'small';
+  /** The id of the loader it drives. */
+  controls?: string;
+  /** The id of a hint that says how it works. */
+  describedby?: string;
+  /** Words on the readout line before the first press (large only). */
+  readout?: string;
+}
+const {
+  label = 'Hold to load',
+  size = 'default',
+  controls,
+  describedby,
+  readout,
+} = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['vc-hold', size]}
+  data-hold
+  aria-controls={controls}
+  aria-describedby={describedby}
+>
+  <span class="fill" data-hold-fill aria-hidden="true"></span>
+  <span class="disc" aria-hidden="true">
+    <span class="dot"></span>
+  </span>
+  <span class="text">
+    <span class="label" data-hold-label>{label}</span>
+    {
+      readout !== undefined && (
+        <span class="sub" data-readout aria-hidden="true">
+          {readout}
+        </span>
+      )
+    }
+  </span>
+</button>
+
+<style>
+  .vc-hold {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    height: 44px;
+    /* Wide enough for every label it shows, so a press never shifts it. */
+    min-width: 13.25rem;
+    padding: 0 1.125rem 0 0.5rem;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid color-mix(in srgb, var(--dq-ink) 28%, var(--dq-line-2));
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+    box-shadow: var(--dq-shadow);
+    color: var(--dq-ink);
+    font: 500 0.875rem / 1 var(--dq-font);
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    /* A long press on a phone: no callout, no selection, no scrolling. */
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      border-color var(--dq-duration-ui) var(--dq-ease-settle),
+      box-shadow var(--dq-duration-ui) var(--dq-ease-settle),
+      translate var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  /* The hero's key: the page's main interaction, so it carries weight at
+     rest without taking the teal of the primary action. */
+  .vc-hold.large {
+    height: 64px;
+    min-width: 15.5rem;
+    gap: 0.875rem;
+    padding: 0 1.5rem 0 0.875rem;
+    border-radius: var(--dq-radius-md);
+    font-size: 1rem;
+  }
+  .vc-hold.small {
+    height: 34px;
+    min-width: 10.5rem;
+    gap: 0.5rem;
+    padding: 0 0.75rem 0 0.4375rem;
+    font-size: 0.8125rem;
+    box-shadow: none;
+  }
+  .vc-hold:hover {
+    border-color: color-mix(in srgb, var(--dq-ink) 45%, var(--dq-line-2));
+  }
+  .vc-hold:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+  }
+  /* Held: the key sinks, the card shadow lifts away, and the fill grows
+     across over the idle's four seconds. */
+  .vc-hold[data-held] {
+    translate: 0 1px;
+    border-color: var(--dq-ink);
+    background: var(--dq-subtle);
+    box-shadow: none;
+  }
+  .fill {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--dq-ink) 8%, transparent);
+    transform: scaleX(0);
+    transform-origin: left;
+    pointer-events: none;
+  }
+  .text {
+    display: grid;
+    gap: 0.3125rem;
+  }
+  .label {
+    position: relative;
+  }
+  .sub {
+    font: 400 0.75rem / 1 var(--dq-font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-muted);
+  }
+  [data-held] .sub {
+    color: var(--dq-ink);
+  }
+
+  /* The key: an ink disc whose core grows while held, sized to the control. */
+  .disc {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(--dq-ink);
+  }
+  .large .disc {
+    width: 2.375rem;
+    height: 2.375rem;
+  }
+  .small .disc {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+  .dot {
+    width: 0.5625rem;
+    height: 0.5625rem;
+    border-radius: 50%;
+    background: var(--dq-surface);
+    scale: 0.6;
+    transition: scale var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .large .dot {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  .small .dot {
+    width: 0.4375rem;
+    height: 0.4375rem;
+  }
+  [data-held] .dot {
+    scale: 1.25;
+  }
+  /* On phones every hold control is a full 44 px target. */
+  @media (max-width: 40rem) {
+    .vc-hold.small,
+    .vc-hold {
+      min-height: 44px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vc-hold,
+    .dot {
+      transition: none;
+    }
+    .vc-hold[data-held] {
+      translate: none;
+    }
+  }
+  @media (forced-colors: active) {
+    .vc-hold[data-held] {
+      outline: 2px solid Highlight;
+    }
+    .disc {
+      border: 1px solid CanvasText;
+    }
+  }
+</style>

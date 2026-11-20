@@ -1,0 +1,329 @@
+---
+/**
+ * What Dotquilt takes care of, each with its proof beside it: three live
+ * demonstrations the visitor presses and holds (holding keeps each one
+ * loading, letting go delivers), and three short code samples.
+ */
+import HoldButton from './HoldButton.astro';
+import Key from './Key.astro';
+---
+
+<section class="va vc va-section home-section not-content" aria-labelledby="va-details-title" data-va-details>
+  <div class="va-head va-head-wide">
+    <h2 id="va-details-title">The details are already handled.</h2>
+    <p>
+      Each claim below comes with its proof. Press and hold the first three;
+      the rest are the lines of code they take.
+    </p>
+  </div>
+
+  <ul class="va-details" role="list">
+    <li data-proof-row="calm">
+      <div class="claim">
+        <h3>Calm by design.</h3>
+        <p>
+          The glow drifts for four seconds, then rests. A handoff takes about a
+          second on long eased curves, and never snaps at the end. Hold past
+          four seconds to see it rest.
+        </p>
+      </div>
+      <div class="proof" data-proof="calm">
+        <div
+          class="proof-stage"
+          role="button"
+          tabindex="0"
+          aria-label="Example note: hold to load"
+          aria-describedby="va-calm-how"
+          data-hold
+          data-surface
+        >
+          <dotquilt-region aria-label="Example note" data-region data-vc-pending>
+            <div slot="placeholder" class="proof-lines">
+              <dotquilt-skeleton-line></dotquilt-skeleton-line>
+              <dotquilt-skeleton-line style="width: 70%"></dotquilt-skeleton-line>
+            </div>
+            <p class="proof-note">The quarterly report is ready to review.</p>
+          </dotquilt-region>
+        </div>
+        <div class="proof-bar">
+          <span class="vc-readout" aria-hidden="true"><Key /><span data-readout>Hold past four seconds</span></span>
+          <span class="vc-rest" data-rest aria-hidden="true">Resting</span>
+        </div>
+        <p class="va-sr" id="va-calm-how">
+          Press and hold to keep the note loading. Its glow drifts for four
+          seconds, then rests. Let go to deliver it.
+        </p>
+        <p class="va-sr" role="status" data-status></p>
+      </div>
+    </li>
+
+    <li data-proof-row="inert">
+      <div class="claim">
+        <h3>Loading content is out of reach.</h3>
+        <p>
+          While a region loads, its content is inert and hidden from screen
+          readers. Hold it loading: the button inside drops out of reach, so
+          a click does nothing and Tab skips it.
+        </p>
+      </div>
+      <div class="proof" data-proof="inert">
+        <dotquilt-region id="va-inert-invoice" aria-label="Invoice" data-region>
+          <div slot="placeholder" class="proof-invoice">
+            <dotquilt-skeleton-line style="width: 60%"></dotquilt-skeleton-line>
+            <dotquilt-skeleton-block class="proof-button"></dotquilt-skeleton-block>
+          </div>
+          <div class="proof-invoice">
+            <span>INV-2091 · $1,240.00</span>
+            <button type="button" class="home-button small" data-open>Open invoice</button>
+          </div>
+        </dotquilt-region>
+        <div class="proof-bar">
+          <HoldButton size="small" controls="va-inert-invoice" describedby="va-inert-how" />
+          <span class="proof-note-small" role="status" data-inert-note>Ready: the button takes focus.</span>
+        </div>
+        <p class="va-sr" id="va-inert-how">
+          Press and hold to keep the invoice loading. Let go to deliver it.
+        </p>
+      </div>
+    </li>
+
+    <li data-proof-row="motion">
+      <div class="claim">
+        <h3>Reduced motion is respected.</h3>
+        <p>
+          With reduced motion set, or a pause on the page, the marks hold
+          still and the content swaps in at once. Pause it here, then hold
+          and let go.
+        </p>
+      </div>
+      <div class="proof" data-proof="motion">
+        <div
+          class="proof-stage"
+          role="button"
+          tabindex="0"
+          aria-label="Revenue figure: hold to load"
+          aria-describedby="va-motion-how"
+          data-hold
+          data-surface
+        >
+          <p class="proof-figure va-figure">
+            <dotquilt-text-loader mark="square" mask="$00,000" aria-label="Revenue" data-figure data-vc-pending>$48,210</dotquilt-text-loader>
+          </p>
+        </div>
+        <div class="proof-bar">
+          <span class="vc-readout" aria-hidden="true"><Key /><span data-readout>Hold to load</span></span>
+          <button type="button" class="va-switch" role="switch" aria-checked="false" data-pause>
+            <span class="track" aria-hidden="true"></span>Pause motion
+          </button>
+        </div>
+        <p class="va-sr" id="va-motion-how">
+          Press and hold to keep the figure loading. Let go to deliver it.
+        </p>
+        <p class="va-sr" role="status" data-status></p>
+      </div>
+    </li>
+
+    <li class="">
+      <div class="claim">
+        <h3>Rendered on the server.</h3>
+        <p>
+          Placeholders are in the first HTML, at the size of your content, so
+          nothing jumps when JavaScript arrives.
+        </p>
+      </div>
+      <pre class="proof-code"><code><span class="k">import</span> {'{'} renderStatic {'}'} <span class="k">from</span> <span class="s">'dotquilt/server'</span>;
+
+renderStatic({'{'}
+  kind: <span class="s">'region'</span>,
+  state: <span class="s">'pending'</span>,
+  label: <span class="s">'Revenue'</span>,
+  placeholder: {'{'} kind: <span class="s">'skeleton-text'</span>, lines: <span class="t">2</span> {'}'},
+{'}'});</code></pre>
+    </li>
+
+    <li class="">
+      <div class="claim">
+        <h3>Strict CSP.</h3>
+        <p>
+          No inline style attributes. Allow the stylesheets with a nonce, with
+          hashes, or serve them as files.
+        </p>
+      </div>
+      <pre class="proof-code"><code><span class="c">// Inline, with your nonce:</span>
+stylePolicy: {'{'} mode: <span class="s">'inline'</span>, nonce {'}'}
+<span class="c">// Or as a file:</span>
+stylePolicy: {'{'} mode: <span class="s">'external'</span>, href: <span class="s">'/dotquilt.css'</span> {'}'}</code></pre>
+    </li>
+
+    <li class="">
+      <div class="claim">
+        <h3>Only what you use.</h3>
+        <p>
+          Each component has its own entry point, so a page ships just the
+          loaders it shows. Plain HTML, Vue, Svelte and React all work.
+        </p>
+      </div>
+      <pre class="proof-code"><code><span class="k">import</span> {'{'} registerChartLoader {'}'} <span class="k">from</span> <span class="s">'dotquilt/chart'</span>;
+<span class="k">import</span> {'{'} registerLoadingRegion {'}'} <span class="k">from</span> <span class="s">'dotquilt/region'</span>;
+
+registerChartLoader();
+registerLoadingRegion();</code></pre>
+    </li>
+  </ul>
+</section>
+
+<script>
+  import { startDetails } from './details';
+
+  startDetails();
+</script>
+
+<style is:global>
+  .va-details {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--dq-line);
+  }
+  .va-details > li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+    align-items: center;
+    gap: 1rem clamp(2rem, 5vw, 4.5rem);
+    max-width: none;
+    margin: 0;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--dq-line);
+  }
+  .va-details .claim {
+    display: grid;
+    grid-template-columns: minmax(10rem, 15rem) minmax(0, 1fr);
+    gap: 0.5rem 2rem;
+  }
+  .va-details h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--dq-ink);
+  }
+  .va-details .claim p {
+    margin: 0;
+    max-width: 52ch;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--dq-muted);
+  }
+  .va-details .proof {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1rem 1.125rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-md);
+    background: var(--dq-surface);
+    box-shadow: var(--dq-shadow);
+  }
+  .va-details .proof-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    min-height: 34px;
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+  }
+  /* A proof that can be held: the card's stage takes the press. */
+  .va-details .proof-stage {
+    margin: -0.5rem -0.625rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: var(--dq-radius-sm);
+  }
+  .va-details .proof-stage:hover,
+  .va-details .proof-stage[data-held] {
+    background: var(--dq-subtle);
+  }
+  .va-details .proof-note {
+    margin: 0;
+    min-height: 3.25rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--dq-ink);
+  }
+  .va-details .proof-note-small {
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+  }
+  .va-details .proof-lines {
+    display: grid;
+    gap: 0.5rem;
+    min-height: 3.25rem;
+    align-content: start;
+    padding-block: 0.25rem;
+  }
+  .va-details .proof-invoice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 2.5rem;
+    font-size: 0.875rem;
+    color: var(--dq-ink);
+  }
+  .va-details .proof-invoice dotquilt-skeleton-line {
+    flex: 1;
+  }
+  .va-details .proof-button {
+    flex: none;
+    width: 7.5rem;
+    height: 34px;
+    border-radius: var(--dq-radius-sm);
+  }
+  .va-details .proof-figure {
+    margin: 0;
+    font-size: clamp(1.75rem, 3.2vw, 2.375rem);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    color: var(--dq-ink);
+  }
+  .va-details .proof-code {
+    margin: 0;
+    padding: 1rem 1.125rem;
+    overflow-x: auto;
+    border: 0;
+    border-radius: var(--dq-radius-md);
+    background: var(--dq-code-bg);
+    color: var(--dq-code-fg);
+    font: 0.75rem / 1.7 var(--dq-font-mono);
+    white-space: pre;
+  }
+  .va-details .proof-code code {
+    padding: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+  }
+  .va-details .proof-code .k {
+    color: var(--dq-code-keyword);
+  }
+  .va-details .proof-code .s {
+    color: var(--dq-code-string);
+  }
+  .va-details .proof-code .t {
+    color: var(--dq-code-type);
+  }
+  .va-details .proof-code .c {
+    color: var(--dq-code-punct);
+  }
+  @media (max-width: 64rem) {
+    .va-details .claim {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 48rem) {
+    .va-details > li {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
