@@ -44,6 +44,14 @@ bun run --cwd apps/site dev
 - **Changesets.** A change to a published package needs a changeset: run `bunx changeset` and describe it for users.
 - **Visuals** follow [design/SPEC.md](design/SPEC.md) and the tokens in [design/tokens.css](design/tokens.css).
 
+## Releasing
+
+1. Changes that reach users carry changesets (`bunx changeset`).
+2. A release PR runs `bunx changeset version`: it sets the new versions and writes the changelogs. `bun run release:check` shows what would be published.
+3. Merging it to `main` runs the [Release workflow](.github/workflows/release.yml). It builds, runs the unit tests, and publishes every package version npm doesn't have yet, then tags it (`dotquilt@x.y.z`, `@dotquilt/react@x.y.z`).
+
+Publishing uses npm trusted publishing: no npm token is stored anywhere, and each release carries a provenance statement. `main` is protected: changes land through pull requests once **All checks** passes.
+
 ## License
 
 By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE).

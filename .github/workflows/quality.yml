@@ -150,3 +150,25 @@ jobs:
           path: |
             playwright-report/
             test-results/
+
+  # The one check that branch protection requires. Which jobs run depends on
+  # what changed, and a skipped matrix job never reports its shards, so the
+  # rule can't name them: this job passes when every job that ran passed.
+  all:
+    name: All checks
+    needs: [changes, checks, browser, site]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Every job that ran passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Results: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success | skipped) ;;
+              *) exit 1 ;;
+            esac
+          done
