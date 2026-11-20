@@ -27,7 +27,15 @@ Dotquilt's marks use a slate close to your text colour and a soft teal glow, so 
 
 ## Light and dark
 
-The default colours follow the page's `color-scheme`. If your dark theme is a class rather than the system setting, set `color-scheme: dark` along with it:
+The default colours follow the page's `color-scheme` (they use `light-dark()`). If your page never sets one, they stay light, even when your own styles turn dark with a `prefers-color-scheme` media query. Declare both:
+
+```css
+:root {
+  color-scheme: light dark;
+}
+```
+
+If your dark theme is a class rather than the system setting, set `color-scheme: dark` along with it:
 
 ```css
 .theme-dark {

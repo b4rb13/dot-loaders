@@ -1,9 +1,11 @@
 ---
 /**
  * Three steps from install to a page that settles into place. As the section
- * arrives, the steps hand over from skeleton rows of their own shape.
+ * arrives, the steps hand over from skeleton rows of their own shape. Below
+ * them, the setup prompt for a coding assistant, one click to copy.
  */
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+import CopyPrompt from '../site/CopyPrompt.astro';
 
 const react = `import { LoadingRegion, SkeletonText } from '@dotquilt/react';
 
@@ -71,6 +73,17 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
       </ol>
     </dotquilt-region>
     <a class="home-button" href="/docs/installation/">Read the installation guide</a>
+    <div class="assistant">
+      <p>
+        <strong>Or let your coding assistant do it.</strong> One prompt reads
+        your project, asks a few questions, then adds Dotquilt one place at a
+        time and checks its work.
+      </p>
+      <div class="assistant-actions">
+        <CopyPrompt />
+        <a href="/docs/ai-setup/">What it does</a>
+      </div>
+    </div>
   </div>
   <div class="code">
     <Tabs syncKey="framework">
@@ -169,6 +182,37 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
   .code {
     min-width: 0;
   }
+  /* The setup prompt: a quiet second way in, under the guide link. */
+  .assistant {
+    display: grid;
+    gap: 0.875rem;
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--dq-line);
+  }
+  .assistant p {
+    margin: 0;
+    max-width: 30rem;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--dq-muted);
+  }
+  .assistant strong {
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .assistant-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+  }
+  .assistant-actions a {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--dq-accent);
+    text-underline-offset: 3px;
+  }
   @media (max-width: 56rem) {
     .vc-start {
       grid-template-columns: minmax(0, 1fr);
@@ -177,7 +221,8 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
   /* Phones: the guide link, the code tabs and the copy button are full
      44 px targets. */
   @media (max-width: 40rem) {
-    .steps .home-button {
+    .steps .home-button,
+    .assistant :global(.home-button) {
       height: 44px;
     }
     .code :global([role='tab']) {

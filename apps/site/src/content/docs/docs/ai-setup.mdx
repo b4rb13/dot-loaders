@@ -1,0 +1,52 @@
+---
+title: Set up with an AI assistant
+description: One prompt for your coding assistant that reads your project, asks a few questions, and adds Dotquilt one place at a time.
+---
+
+import { Code, Steps } from '@astrojs/starlight/components';
+import CopyPrompt from '../../../components/site/CopyPrompt.astro';
+import prompt from '../../../prompts/setup.md?raw';
+
+<style>{`
+  .prompt-actions { margin: 1.5rem 0 0.5rem; }
+  .prompt-code .expressive-code pre { max-height: 34rem; overflow: auto; }
+`}</style>
+
+Paste one prompt into your coding assistant, such as Claude Code, Codex, Cursor or GitHub Copilot. It reads your project, shows you every place that waits for content and asks a few questions, then adds Dotquilt one place at a time and checks its work.
+
+<div class="not-content prompt-actions">
+  <CopyPrompt variant="primary" />
+</div>
+
+## What it does
+
+<Steps>
+
+1. **Learns Dotquilt** from these docs, as Markdown ([llms-full.txt](/llms-full.txt)), rather than from memory.
+
+2. **Reads your project:** the framework and how it renders, how data loads, your styles and dark mode, any Content Security Policy, and every place that waits for content (spinners, hand-made skeletons, "Loading…" text, Suspense fallbacks). It leaves button spinners and upload progress alone.
+
+3. **Shows you what it found and asks** only what the code can't tell it: which places to convert first, whether to replace an existing skeleton library, marks and colours, timing for fast responses. It waits for your answers before changing any file.
+
+4. **Adds Dotquilt in order:** install, one-time setup (theme, CSP), then the most-seen place end to end, then the rest one at a time. Each placeholder gets the content's shape and size, and your data loading stays as it is: it only reads whether the data is pending, refreshing or ready.
+
+5. **Checks its work:** types, lint, tests and build, then each place in the browser, in light and dark, on a narrow window and with reduced motion. It ends with a report of what changed and how to undo it.
+
+</Steps>
+
+## Use it
+
+- **Paste it** into a new chat in your assistant's agent mode, at the root of your project. Review the plan it proposes before you answer its questions.
+- **Or point to it.** If your assistant can read web pages, one line is enough:
+
+  ```text
+  Read https://dotquilt.dev/setup-prompt.md and follow it to add Dotquilt to this project.
+  ```
+
+It works with any framework: React 19 gets the React components, and everything else (Vue, Svelte, Angular, plain HTML, or an older React) gets the native elements.
+
+## The prompt
+
+<div class="prompt-code">
+  <Code code={prompt} lang="md" title="setup-prompt.md" />
+</div>

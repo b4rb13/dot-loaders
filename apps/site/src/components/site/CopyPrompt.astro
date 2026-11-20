@@ -1,0 +1,102 @@
+---
+/**
+ * Copies the setup prompt (src/prompts/setup.md) for a coding assistant.
+ * The prompt travels with the page, so the copy happens inside the click and
+ * works in every browser; the same text is at /setup-prompt.md.
+ */
+import prompt from '../../prompts/setup.md?raw';
+
+interface Props {
+  /** The button's words. */
+  label?: string;
+  /** `primary` gives it the accent fill. */
+  variant?: 'primary' | 'default';
+}
+const { label = 'Copy setup prompt', variant = 'default' } = Astro.props;
+---
+
+<span class="copy-prompt" data-copy-prompt>
+  <button
+    type="button"
+    class:list={['home-button', variant === 'primary' && 'primary']}
+    data-copy
+  >
+    <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="5.25" y="5.25" width="8" height="8.5" rx="1.75"></rect>
+      <path d="M10.75 3.25v-.5a1.5 1.5 0 0 0-1.5-1.5h-5a1.5 1.5 0 0 0-1.5 1.5v6.5a1.5 1.5 0 0 0 1.5 1.5h.5"
+      ></path>
+    </svg>
+    <svg class="icon done" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="m3.5 8.5 3 3 6-7"></path>
+    </svg>
+    <span data-label>{label}</span>
+  </button>
+  <template data-prompt>{prompt}</template>
+  <span class="sr-only" role="status" data-status></span>
+</span>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>(
+    '[data-copy-prompt]',
+  )) {
+    const button = root.querySelector<HTMLButtonElement>('[data-copy]');
+    const label = root.querySelector<HTMLElement>('[data-label]');
+    const status = root.querySelector<HTMLElement>('[data-status]');
+    const text =
+      root.querySelector('template')?.content.textContent?.trim() ?? '';
+    const words = label?.textContent ?? '';
+    let timer = 0;
+    button?.addEventListener('click', async () => {
+      clearTimeout(timer);
+      try {
+        await navigator.clipboard.writeText(`${text}\n`);
+        root.setAttribute('data-copied', '');
+        if (label) label.textContent = 'Copied';
+        if (status)
+          status.textContent =
+            'Setup prompt copied. Paste it into your coding assistant.';
+      } catch {
+        if (status)
+          status.textContent =
+            'Copying failed. Open dotquilt.dev/setup-prompt.md and copy it from there.';
+        window.open('/setup-prompt.md', '_blank', 'noopener');
+        return;
+      }
+      timer = window.setTimeout(() => {
+        root.removeAttribute('data-copied');
+        if (label) label.textContent = words;
+      }, 2400);
+    });
+  }
+</script>
+
+<style>
+  .copy-prompt {
+    display: inline-flex;
+  }
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .icon.done,
+  [data-copied] .icon:not(.done) {
+    display: none;
+  }
+  [data-copied] .icon.done {
+    display: block;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>

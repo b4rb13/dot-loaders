@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 // Docs for AI assistants and agents: /llms.txt, each docs page as Markdown,
-// /llms-full.txt, and a "Copy page" button on every docs page.
+// /llms-full.txt, a "Copy page" button on every docs page, and the setup
+// prompt for coding assistants.
 
 /** Lines outside code fences. */
 function prose(markdown: string): string[] {
@@ -23,8 +24,9 @@ test('llms.txt links every docs page as clean Markdown', async ({
   const links = [
     ...index.matchAll(/\]\((https:\/\/dotquilt\.dev(\/[^)]+\.md))\)/g),
   ].map((match) => match[2] as string);
-  // Introduction, installation and theming; six components; five guides.
-  expect(links.length).toBe(14);
+  // Introduction, installation, AI assistant setup and theming; six
+  // components; five guides.
+  expect(links.length).toBe(15);
   for (const path of links) {
     const response = await request.get(path);
     expect(response.ok(), path).toBe(true);
@@ -33,7 +35,9 @@ test('llms.txt links every docs page as clean Markdown', async ({
     // Fences are balanced, and no MDX is left in the prose.
     expect((markdown.match(/^\s*```/gm)?.length ?? 0) % 2, path).toBe(0);
     const leftovers = prose(markdown).filter((line) =>
-      /^\s*(import |export |<\/?(Preview|Tabs|TabItem|Code)\b)/.test(line),
+      /^\s*(import |export |<\/?(Preview|Tabs|TabItem|Code|style|div)\b)/.test(
+        line,
+      ),
     );
     expect(leftovers, path).toEqual([]);
   }
@@ -55,7 +59,7 @@ test('llms-full.txt holds every docs page', async ({ request }) => {
     '# Server rendering',
   ])
     expect(full).toContain(`${title}\n`);
-  expect(full.split('\n---\n').length).toBe(14);
+  expect(full.split('\n---\n').length).toBe(15);
 });
 
 test('Copy page copies the page as Markdown', async ({
@@ -80,4 +84,53 @@ test('Copy page copies the page as Markdown', async ({
   // Pages outside the docs have no button.
   await page.goto('/examples/');
   await expect(page.locator('[data-copy-page]')).toHaveCount(0);
+});
+
+test('the setup prompt is served as Markdown, linked for agents, and copied in one click', async ({
+  page,
+  context,
+  request,
+  baseURL,
+}) => {
+  const response = await request.get('/setup-prompt.md');
+  expect(response.ok()).toBe(true);
+  const prompt = (await response.text()).trim();
+  // It analyses first and waits for answers before changing anything.
+  expect(
+    prompt.startsWith('# Add Dotquilt loading states to this project'),
+  ).toBe(true);
+  for (const phase of [
+    '## Phase 1: Learn Dotquilt',
+    '## Phase 2: Analyse the project, then ask',
+    '## Phase 3: Implement, in this order',
+    '## Phase 4: Verify, then report',
+  ])
+    expect(prompt).toContain(phase);
+  expect(prompt).toContain('Stop here and wait for the answers.');
+  // The index points agents to it, and says how to install.
+  const index = await (await request.get('/llms.txt')).text();
+  expect(index).toContain('https://dotquilt.dev/setup-prompt.md');
+  expect(index).toContain('npm install dotquilt');
+  expect(index).not.toContain('not yet on npm');
+
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
+    origin: new URL(baseURL ?? 'http://127.0.0.1:4331').origin,
+  });
+  for (const path of ['/docs/ai-setup/', '/']) {
+    await page.goto(path);
+    // By attribute: its name changes to "Copied" once clicked.
+    const button = page.locator('[data-copy-prompt] [data-copy]');
+    await expect(button).toHaveAccessibleName('Copy setup prompt');
+    await button.click();
+    await expect(button).toHaveText('Copied');
+    await expect(
+      page.getByRole('status').filter({ hasText: 'copied' }),
+    ).toHaveText('Setup prompt copied. Paste it into your coding assistant.');
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied.trim(), path).toBe(prompt);
+  }
+  // The home page also links to what it does.
+  await expect(
+    page.getByRole('link', { name: 'What it does' }),
+  ).toHaveAttribute('href', '/docs/ai-setup/');
 });
