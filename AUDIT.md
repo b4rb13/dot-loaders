@@ -456,7 +456,7 @@ This is a rebuild, not a polish pass. The current site, docs and default visuals
 
 ### Phase 5 — ship an alpha
 - ~~pick the npm name~~ `dotquilt` and `@dotquilt/react` (decision 16)
-- ~~publish `0.x`~~ **Done 2026-11-20:** `dotquilt@0.1.0` and `@dotquilt/react@0.1.0` are on npm, published by the owner from this repository (tags `dotquilt@0.1.0`, `@dotquilt/react@0.1.0`). Next releases: trusted publishing from GitHub Actions (OIDC, with provenance), set up per package on npmjs.com now that both exist.
+- ~~publish `0.x`~~ **Done 2026-11-20:** `dotquilt@0.1.0` and `@dotquilt/react@0.1.0` are on npm, published by the owner from this repository (tags `dotquilt@0.1.0`, `@dotquilt/react@0.1.0`). Later releases are staged from GitHub Actions with npm trusted publishing (`.github/workflows/release.yml`: OIDC, provenance, no token) on merging a release PR, and go public when the owner approves them with 2FA (owner's choice, 2026-11-20: staged over direct publishing); see CONTRIBUTING.md. `main` is protected by a ruleset: no force pushes or deletion, and **All checks** must pass.
 - ~~deploy the site~~ live at dotquilt.dev; the repository is public
 - get feedback
 

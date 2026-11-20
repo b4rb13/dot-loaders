@@ -1,0 +1,80 @@
+name: Release
+# Stages dotquilt and @dotquilt/react on npm when main holds a version that
+# npm doesn't have yet. A release PR sets the versions with
+# `bunx changeset version`; merging it runs this workflow. A staged version
+# goes public only when a maintainer approves it with 2FA on npmjs.com
+# (the package's Staged Packages tab) or with `npm stage approve`.
+#
+# Authentication is npm trusted publishing (OIDC): no npm token is stored
+# anywhere, and npm adds a provenance statement to each release. Each
+# package's trusted publisher on npmjs.com names this repository and this
+# workflow file (release.yml), and may only stage; renaming the file breaks
+# releasing.
+on:
+  push:
+    branches: [main]
+    paths:
+      - packages/core/package.json
+      - packages/react/package.json
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release
+  cancel-in-progress: false
+env:
+  TURBO_TELEMETRY_DISABLED: '1'
+  NEXT_TELEMETRY_DISABLED: '1'
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write # push the release tags
+      id-token: write # npm trusted publishing and provenance
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false # never cache in a release build
+      # Staged publishing needs npm 11.15.0 or later; Node 24's own npm may be
+      # older, so the release uses a pinned one.
+      - name: npm with staged publishing
+        run: |
+          npm install --global npm@11.21.3
+          npm --version
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: Build
+        run: bun run build
+      - name: Unit tests
+        run: bun run test
+      - name: Stage what npm doesn't have yet, then tag it
+        run: |
+          set -euo pipefail
+          # The core first: @dotquilt/react depends on it. A version that is
+          # already staged can't be staged again, so a rerun before approval
+          # fails here; approve or reject the staged one instead.
+          for dir in packages/core packages/react; do
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "$name@$version is already on npm."
+            else
+              (cd "$dir" && npm stage publish)
+              echo "Staged $name@$version: approve it on npmjs.com to publish."
+            fi
+            tag="$name@$version"
+            if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+              echo "Tag $tag exists."
+            else
+              git tag "$tag"
+              git push origin "refs/tags/$tag"
+            fi
+          done
