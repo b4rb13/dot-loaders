@@ -1,0 +1,28 @@
+// Every page of the site, for checks that run on all of them.
+export const components = [
+  'skeleton',
+  'text-loader',
+  'chart-loader',
+  'table-loader',
+  'typing-dots',
+  'loading-region',
+];
+const guides = [
+  'react',
+  'server-rendering',
+  'csp',
+  'custom-animations',
+  'motion',
+];
+export const pages = [
+  '/',
+  '/docs/',
+  '/docs/installation/',
+  '/docs/theming/',
+  '/license/',
+  '/pricing/',
+  '/examples/',
+  '/playground/',
+  ...components.map((name) => `/docs/components/${name}/`),
+  ...guides.map((name) => `/docs/guides/${name}/`),
+];

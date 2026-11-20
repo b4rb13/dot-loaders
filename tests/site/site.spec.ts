@@ -1,32 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-
-const components = [
-  'skeleton',
-  'text-loader',
-  'chart-loader',
-  'table-loader',
-  'typing-dots',
-  'loading-region',
-];
-const guides = [
-  'react',
-  'server-rendering',
-  'csp',
-  'custom-animations',
-  'motion',
-];
-const pages = [
-  '/',
-  '/docs/',
-  '/docs/installation/',
-  '/docs/theming/',
-  '/license/',
-  '/pricing/',
-  '/examples/',
-  '/playground/',
-  ...components.map((name) => `/docs/components/${name}/`),
-  ...guides.map((name) => `/docs/guides/${name}/`),
-];
+import { components, pages } from './pages';
 
 /** Records how each handoff on the page ends. */
 async function recordHandoffs(page: Page) {
@@ -52,10 +25,12 @@ function watchErrors(page: Page) {
   return errors;
 }
 
+// 320 px is WCAG's reflow width (a 1280 px window at 400% zoom, or a small
+// phone): nothing may scroll sideways, and no text may be cut off.
 for (const path of pages)
-  test(`${path} loads without errors and fits a phone`, async ({ page }) => {
+  test(`${path} loads without errors and fits 320 px`, async ({ page }) => {
     const errors = watchErrors(page);
-    await page.setViewportSize({ width: 375, height: 812 });
+    await page.setViewportSize({ width: 320, height: 640 });
     // Google Fonts are the one external request; tests stay offline.
     await page.route('https://fonts.googleapis.com/**', (route) =>
       route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
@@ -67,6 +42,43 @@ for (const path of pages)
       () => document.documentElement.scrollWidth - window.innerWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
+    // Text is cut off when it runs past the window or past a box that clips
+    // it, unless that box scrolls (code blocks, wide tables).
+    const cut = await page.evaluate(() => {
+      /** The right edge text may reach, or undefined inside a scroller. */
+      const limit = (element: Element) => {
+        let right = innerWidth;
+        for (let n: Element | null = element; n; n = n.parentElement) {
+          const overflow = getComputedStyle(n).overflowX;
+          if (/auto|scroll/.test(overflow)) return undefined;
+          if (/hidden|clip/.test(overflow))
+            right = Math.min(right, n.getBoundingClientRect().right);
+        }
+        return right;
+      };
+      const walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT,
+      );
+      const range = document.createRange();
+      const found: string[] = [];
+      for (let text = walker.nextNode(); text; text = walker.nextNode()) {
+        const parent = text.parentElement;
+        if (!parent || !/\S/.test(text.textContent ?? '')) continue;
+        // Screen-reader-only text lives in a 1 px box on purpose.
+        const own = parent.getBoundingClientRect();
+        if (own.width <= 1 || own.height <= 1) continue;
+        // Content still hidden while it loads counts too: it lays out the same.
+        const right = limit(parent);
+        if (right === undefined) continue;
+        range.selectNodeContents(text);
+        const box = range.getBoundingClientRect();
+        if (box.width && box.right > right + 1)
+          found.push(`${parent.localName}: ${text.textContent?.trim()}`);
+      }
+      return found;
+    });
+    expect(cut).toEqual([]);
     expect(errors).toEqual([]);
   });
 

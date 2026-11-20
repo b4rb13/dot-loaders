@@ -37,7 +37,7 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
 - **Locked:** the refined System is locked as [design/SPEC.md](design/SPEC.md), with [design/tokens.css](design/tokens.css). Mockups are in `design/directions*/`.
 - **Marks:** dot by default; dash and square are offered as a component option.
 
-**Phase 4b — in progress (2026-11-19).** The components' default look, built to [design/SPEC.md](design/SPEC.md). Phase 3 is done; its last item, one renderer per element, is settled by decision 2. Slices go by family, so each PR leaves its family consistent:
+**Phase 4b — done (2026-11-19), except the open items under B (reduced motion) and G (marks).** The components' default look, built to [design/SPEC.md](design/SPEC.md). Phase 3 is done; its last item, one renderer per element, is settled by decision 2. Slices go by family, so each PR leaves its family consistent:
 - **A. Marks and the skeleton family — done on `design/4b-skeleton`.**
   - **One marks module:** `internal/marks.ts` holds the default mark size (4.4 px), gap (4.6 px), colours, resting opacity (37%), glow peak (90%) and the CSS dot grid.
   - **Static look:** skeleton blocks, lines, circles and text use it, both before upgrade and after.
@@ -98,7 +98,19 @@ Mapping the spec's marks onto the runtime (an open detail in the spec):
 - **Colours:** the base colour comes from `light-dark()`, so it follows the page's `color-scheme`.
 - **One resting opacity:** CSS can't switch a number between light and dark, so both themes use 37%. The dark mark is #A3AFC2, which at 37% on the dark surface matches the spec's #8E99AB at 44%. The glow peaks at 90% in both themes.
 
-**Phase 2 — in progress on `fix/phase-2-runtime-bugs` (2026-11-18).**
+**Phases 4c and 4d — done (2026-11-19).** The Astro + Starlight site is live on dotquilt.dev: homepage, docs, examples and playground (see the plan below).
+
+**Phase 4e — in progress (2026-11-20).** Visual QA and an accessibility pass over every page, at 1440 px and 390 px, light and dark:
+- **Fixed:**
+  - `faint` text was 2.8–3.4:1. The token is now #687080 / #8A94A2, so every text colour meets AA on `bg`, `surface` and `subtle` (design/SPEC.md).
+  - The homepage and playground sliders, and the playground's option menus, had no accessible name: each label named its `<output>`, the first form control inside it.
+  - At 320 px (WCAG reflow), "Copy page" pushed the LoadingRegion page sideways, and the TableLoader preview cut off its Due column; the preview table now scrolls sideways in its card when it can't fit.
+  - Phones: the dark-mode menu button was an inverted bright disc; code in table cells broke mid-name; the license kept its 80-column line breaks.
+- **Checked and fine:** visible focus on every tab stop, headings and landmarks, page language, unique ids, named regions, nothing looping under reduced motion, and tap targets (the small ones pass WCAG 2.5.8 by spacing).
+- **Kept as tests** (`tests/site/accessibility.spec.ts`, and the 320 px check in `site.spec.ts`): AA text contrast on every page in both themes, a name on every form control, visible focus, and no sideways scroll or cut-off text at 320 px.
+- **Left:** your sign-off against the spec, and a screen-reader run on a real device. Pixel baselines for pages wait until the site's look settles, since you deferred site polish.
+
+**Phase 2 — done (2026-11-18).**
 
 Fixed, each with a regression test that fails on the old code:
 - **Layout under app `display` rules:** regions and TextLoader overlay their layers inside their own grid; TableLoader and TypingDots no longer rely on the host's display.
@@ -127,7 +139,7 @@ Not done yet:
 - React style de-duplication (one stylesheet per instance). Done in Phase 3, see below.
 - Hiding pending SSR content before upgrade. Tried and reverted: the legacy React suite requires pending server content to stay visible and usable without JavaScript. Now decision 11.
 
-**Phase 3 — in progress on `refactor/phase-3-degolf` (2026-11-18).**
+**Phase 3 — done (2026-11-18).**
 
 Done, with no behaviour change; the e2e, unit and legacy suites are the safety net:
 - **Shared Chart/Table base.** `internal/dense-loader.ts` holds the shared behaviour. `chart.ts` and `table.ts` keep only their family-specific hooks: defaults, projection, surface and extra attributes.

@@ -24,7 +24,7 @@ Composed and unhurried; data settles into place instead of snapping.
 | `subtle` | #F7F8FA | #252C38 | quiet fills, chips |
 | `ink` | #1B2230 | #E3E7ED | primary text |
 | `muted` | #5E6777 | #9CA5B3 | secondary text |
-| `faint` | #8C94A2 | #747E8D | tertiary text, axis labels |
+| `faint` | #687080 | #8A94A2 | tertiary text, axis labels |
 | `line` | #E7EAEF | #2B323E | hairlines |
 | `line-2` | #D8DDE4 | #3A4351 | stronger dividers, table heads |
 | `accent` | #2F6F74 | #84BABB | primary buttons, current nav, chart line, focus |
@@ -34,6 +34,8 @@ Composed and unhurried; data settles into place instead of snapping.
 | `negative` | #A84A3A | #E8998A | negative deltas, errors |
 | `warning` / soft | #85601E / #F8F1E3 | #DDB572 / #382F1F | warnings |
 | `info` / soft | #3C5F99 / #EDF2F9 | #9DB8E8 / #243042 | informational status |
+
+Every text colour meets WCAG AA (4.5:1) on `bg`, `surface` and `subtle`. `faint` was #8C94A2 / #747E8D until the accessibility pass (2026-11-20), which measured 2.8:1 and 3.4:1.
 
 **Code blocks:**
 - light-mode background #1E2430, dark-mode background #141920; foreground #E2E7EE

@@ -1,7 +1,14 @@
 ---
-// The MIT license, read from the package so the page always matches it.
+// The MIT license, read from the package so the page always matches it. Its
+// lines are hard-wrapped at 80 columns; each paragraph is joined so the text
+// reflows on any width instead of breaking twice on a phone.
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import license from '../../../../packages/core/LICENSE?raw';
+
+const paragraphs = license
+  .trim()
+  .split(/\n\s*\n/)
+  .map((paragraph) => paragraph.replace(/\s*\n\s*/g, ' '));
 ---
 
 <StarlightPage frontmatter={{ title: 'MIT License', description: "Dotquilt's license." }}>
@@ -9,16 +16,23 @@ import license from '../../../../packages/core/LICENSE?raw';
     Dotquilt, its React adapter, the docs and the examples are free and open
     source under the MIT license.
   </p>
-  <pre class="license">{license}</pre>
+  <div class="license">
+    {paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+  </div>
 </StarlightPage>
 
 <style>
   .license {
-    white-space: pre-wrap;
     font: 0.875rem/1.7 var(--dq-font-mono);
     padding: 1.25rem;
     border: 1px solid var(--dq-line);
     border-radius: var(--dq-radius-md);
     background: var(--dq-surface);
+  }
+  .license p {
+    margin: 0;
+  }
+  .license p + p {
+    margin-top: 1em;
   }
 </style>
