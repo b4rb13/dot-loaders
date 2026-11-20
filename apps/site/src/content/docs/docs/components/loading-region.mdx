@@ -1,6 +1,9 @@
 ---
 title: LoadingRegion
-description: The area that switches from placeholder to content, and owns the handoff between them.
+description: The area that switches from placeholder to content, with pending, refreshing and ready states, and owns the handoff between them.
+head:
+  - tag: title
+    content: 'LoadingRegion: loading states and handoff | Dotquilt'
 ---
 
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
@@ -10,7 +13,7 @@ import feedTsx from '../../../../../../../examples/site/react/activity-feed.tsx?
 import feedHtml from '../../../../../../../examples/site/native/activity-feed.html?raw';
 import feedTs from '../../../../../../../examples/site/native/activity-feed.ts?raw';
 
-A loading region decides when to switch. It shows its placeholder while your data is pending, keeps your content visible while it refreshes, and hands over when it's ready. Every loader except TextLoader lives inside one.
+A loading region decides when to switch from Dotquilt's placeholder to your content. It shows its placeholder while your data is pending, keeps your content visible while it refreshes, and hands over when it's ready. Every loader except TextLoader lives inside one.
 
 <Preview label="A feed loading and refreshing" mode="refresh" values={['Northwind paid $4,200', 'Acme Labs opened an invoice']}>
   <dotquilt-region state="pending" aria-label="Recent activity">

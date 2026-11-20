@@ -1,6 +1,9 @@
 ---
 title: TextLoader
-description: A number or short label that scrambles while it loads, then takes the real value's shape and hands over to it.
+description: 'A loading placeholder for numbers, KPIs and short labels that scrambles while it loads, then takes the real value''s shape and hands over to it.'
+head:
+  - tag: title
+    content: 'TextLoader: loading placeholder for numbers | Dotquilt'
 ---
 
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
@@ -10,7 +13,7 @@ import totalTsx from '../../../../../../../examples/site/react/revenue-total.tsx
 import totalHtml from '../../../../../../../examples/site/native/revenue-total.html?raw';
 import totalTs from '../../../../../../../examples/site/native/revenue-total.ts?raw';
 
-TextLoader holds the place of a number or a short label. While it loads, its characters cross-fade through look-alikes in the shape of the answer. When the value arrives, the marks slide into the shapes of its real characters, then the value wipes in from left to right as they leave.
+TextLoader is Dotquilt's loading placeholder for a number or a short label, such as a KPI. While it loads, its characters cross-fade through look-alikes in the shape of the answer. When the value arrives, the marks slide into the shapes of its real characters, then the value wipes in from left to right as they leave.
 
 <Preview label="A total loading" values={['$48,120', '$51,904', '$46,385']}>
   <p class="kpi">

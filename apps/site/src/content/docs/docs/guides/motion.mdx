@@ -1,6 +1,9 @@
 ---
 title: Motion and accessibility
-description: Reduced motion, pausing, the four-second limit, focus and announcements.
+description: 'What screen readers hear, keyboard focus, reduced motion, pausing and the four-second limit in Dotquilt''s loaders.'
+head:
+  - tag: title
+    content: Accessible skeleton loaders and reduced motion | Dotquilt
 ---
 
 Dotquilt's motion is slow and short by design, and every part of it can be stilled.
@@ -29,6 +32,13 @@ Automatic motion never runs longer than four seconds. A loader's idle stops four
 - **Pending content is out of reach:** while a region is pending, its content is inert and hidden from assistive technology.
 - **Focus is kept:** if focus is inside content that becomes pending, it moves to the region. When the content is ready, focus is not moved back; your page decides.
 - **A focused handoff swaps at once,** so nothing moves under the keyboard.
+
+## What screen readers hear
+
+- **The marks are silent.** Every loader is hidden from assistive technology with `aria-hidden`, and so is the placeholder layer.
+- **Pending content is skipped.** While a region is `pending`, its content is `inert`, hidden with `aria-hidden`, and marked `aria-busy="true"`, so screen readers don't read half-loaded content.
+- **Refreshing content stays readable.** While a region is `refreshing`, its content stays visible and usable, and is marked `aria-busy="true"` until it's ready.
+- **Ready content reads as usual.** When the region is `ready`, `aria-busy` becomes `false`. Nothing is announced on its own: see below.
 
 ## Announcements
 

@@ -1,6 +1,9 @@
 ---
 title: ChartLoader
-description: A field of marks with a soft ridge that glides onto your real line when the data arrives.
+description: 'A chart loading skeleton for line, bar and scatter charts: a field of marks that glides onto your real data when it arrives.'
+head:
+  - tag: title
+    content: 'ChartLoader: line, bar and scatter chart skeleton | Dotquilt'
 ---
 
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
@@ -12,7 +15,7 @@ import chartHtml from '../../../../../../../examples/site/native/revenue-chart.h
 import chartTs from '../../../../../../../examples/site/native/revenue-chart.ts?raw';
 import dataTs from '../../../../../../../examples/site/data.ts?raw';
 
-ChartLoader holds the place of a chart. A faint field of marks carries a slow ridge and a drifting glow. When the data arrives, the marks glide onto your real line, turning teal, and then your chart draws in.
+ChartLoader is Dotquilt's chart loading skeleton: it holds the place of a line, bar or scatter chart. A faint field of marks carries a slow ridge and a drifting glow. When the data arrives, the marks glide onto your real line, turning teal, and then your chart draws in.
 
 <Preview label="A chart loading">
   <ChartDemo />

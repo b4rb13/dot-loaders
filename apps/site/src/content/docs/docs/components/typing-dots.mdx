@@ -1,6 +1,9 @@
 ---
 title: TypingDots
-description: Three calm dots for a reply that is being written.
+description: 'A typing indicator for chat and AI assistant replies: calm dots that hand over to the message when it arrives, as a Web Component or in React.'
+head:
+  - tag: title
+    content: 'TypingDots: typing indicator for chat replies | Dotquilt'
 ---
 
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
@@ -10,7 +13,7 @@ import replyTsx from '../../../../../../../examples/site/react/assistant-reply.t
 import replyHtml from '../../../../../../../examples/site/native/assistant-reply.html?raw';
 import replyTs from '../../../../../../../examples/site/native/assistant-reply.ts?raw';
 
-TypingDots show that a reply is on its way. A slow wave passes through the dots; when the message arrives, it takes their place.
+TypingDots, Dotquilt's typing indicator, show that a reply is on its way. A slow wave passes through the dots; when the message arrives, it takes their place.
 
 <Preview label="A reply arriving" values={['The Globex invoice was due on October 28.', 'Northwind paid on November 2.']}>
   <dotquilt-region state="pending" aria-label="Assistant reply">
@@ -36,6 +39,12 @@ Use TypingDots as a region's placeholder, inside the same bubble your message wi
 </Tabs>
 
 TypingDots are decorative: they have no state of their own. On their own, outside a region, they keep their wave for four seconds and then rest.
+
+## Accessibility
+
+- **The dots are decoration.** They are hidden from assistive technology, so screen readers don't read them.
+- **Label the region,** for example `aria-label="Assistant reply"`, so people know what is on its way. While it is pending, the message inside is skipped.
+- **Announce the reply in your own words** if people need to hear it arrive, for example with a `role="log"` or `role="status"` element for the conversation. See [What screen readers hear](/docs/guides/motion/#what-screen-readers-hear).
 
 ## Options
 

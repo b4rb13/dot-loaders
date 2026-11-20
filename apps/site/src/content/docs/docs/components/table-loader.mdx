@@ -1,6 +1,9 @@
 ---
 title: TableLoader
-description: Rows of marks shaped like your columns that gather into each cell's real text when the data arrives.
+description: 'A table skeleton loader: rows of marks shaped like your columns that gather into each cell''s real text when the data arrives.'
+head:
+  - tag: title
+    content: 'TableLoader: table skeleton loader | Dotquilt'
 ---
 
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
@@ -12,7 +15,7 @@ import tableHtml from '../../../../../../../examples/site/native/invoice-table.h
 import tableTs from '../../../../../../../examples/site/native/invoice-table.ts?raw';
 import dataTs from '../../../../../../../examples/site/data.ts?raw';
 
-TableLoader holds the place of a table. Each cell shows a short bar of marks shaped like what the column holds, with a glow drifting across. When the data arrives, each cell's marks gather into the text in its place, then the rows wipe in as the marks leave.
+TableLoader is Dotquilt's table skeleton loader: it holds the place of a table. Each cell shows a short bar of marks shaped like what the column holds, with a glow drifting across. When the data arrives, each cell's marks gather into the text in its place, then the rows wipe in as the marks leave.
 
 <Preview label="A table loading">
   <TableDemo />

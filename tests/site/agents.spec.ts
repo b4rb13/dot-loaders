@@ -24,9 +24,9 @@ test('llms.txt links every docs page as clean Markdown', async ({
   const links = [
     ...index.matchAll(/\]\((https:\/\/dotquilt\.dev(\/[^)]+\.md))\)/g),
   ].map((match) => match[2] as string);
-  // Introduction, installation, AI assistant setup and theming; six
-  // components; five guides; about, contact and privacy.
-  expect(links.length).toBe(18);
+  // The setup prompt; introduction, installation, AI assistant setup and
+  // theming; six components; six guides; about, contact and privacy.
+  expect(links.length).toBe(20);
   for (const path of links) {
     const response = await request.get(path);
     expect(response.ok(), path).toBe(true);
@@ -59,7 +59,8 @@ test('llms-full.txt holds every docs page', async ({ request }) => {
     '# Server rendering',
   ])
     expect(full).toContain(`${title}\n`);
-  expect(full.split('\n---\n').length).toBe(15);
+  // Four getting-started pages, six components and six guides.
+  expect(full.split('\n---\n').length).toBe(16);
 });
 
 test('Copy page copies the page as Markdown', async ({

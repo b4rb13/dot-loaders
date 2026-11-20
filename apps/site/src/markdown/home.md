@@ -1,6 +1,6 @@
 # Dotquilt
 
-> Loading placeholders for the web that hold the shape of your content while it loads, then hand over to it. Native Web Components with no runtime dependencies, and React 19 components with server rendering. Free and open source under the MIT license.
+> Skeleton loaders (loading placeholders) for the web, made of dots. They hold the shape of your content while it loads, then hand over to it. Native Web Components with no runtime dependencies, and React 19 components with server rendering. Free and open source under the MIT license.
 
 When your data arrives, the placeholder's marks travel to the content's real shape: each skeleton line grows or shrinks to the length of its text, a number's marks take the shape of its digits, and a chart's marks glide onto the line. Then the content wipes in as they leave, in about a second.
 

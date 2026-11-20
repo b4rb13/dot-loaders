@@ -1,11 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-test.beforeEach(async ({ page }) => {
-  await page.route('https://fonts.googleapis.com/**', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
-  );
-});
-
 const wordmark = '[data-wordmark]';
 
 test('a first visit plays the wordmark arrival once; later pages are at rest', async ({
