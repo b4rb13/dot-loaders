@@ -244,8 +244,8 @@ const slider = (key: keyof typeof ranges) => ranges[key];
 </div>
 
 <script>
-  import { refreshStyles } from '@dotquilt-internal/core';
-  import { registerAll } from '@dotquilt-internal/core/register-all';
+  import { refreshStyles } from 'dotquilt';
+  import { registerAll } from 'dotquilt/register-all';
   import { animate, load, loaderSelector, wire } from '../examples/live';
   import { htmlCode, reactCode, textMask } from '../examples/recipes';
   import { animationOptions, changed } from './animation-options';

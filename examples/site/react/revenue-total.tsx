@@ -1,5 +1,5 @@
 'use client';
-import { TextLoader } from '@dotquilt-internal/react';
+import { TextLoader } from '@dotquilt/react';
 import { useEffect, useState } from 'react';
 
 async function fetchTotal(month: string, signal: AbortSignal): Promise<number> {

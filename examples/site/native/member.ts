@@ -1,11 +1,8 @@
-import {
-  type LoadingRegion,
-  registerLoadingRegion,
-} from '@dotquilt-internal/core/region';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
 import {
   registerSkeletonCircle,
   registerSkeletonLine,
-} from '@dotquilt-internal/core/skeleton';
+} from 'dotquilt/skeleton';
 
 registerLoadingRegion();
 registerSkeletonCircle();

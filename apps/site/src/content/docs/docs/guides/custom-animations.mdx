@@ -9,7 +9,7 @@ import customTs from '../../../../../../../examples/site/custom-animation.ts?raw
 Every loader has two animations: an **idle** that plays while it waits, and a **handoff** that plays when the content arrives. You can swap either for a built-in alternative, or write your own with `defineAnimation`.
 
 ```ts
-import { labelPulse } from '@dotquilt-internal/core/animations/text';
+import { labelPulse } from 'dotquilt/animations/text';
 
 totalLoader.animations = { idle: labelPulse() };
 ```

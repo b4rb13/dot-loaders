@@ -62,6 +62,7 @@ afterAll(() => rm(work, { recursive: true, force: true }));
 for (const name of ['core', 'react'] as const) {
   const directory = resolve(root, 'packages', name);
   const manifest = require(resolve(directory, 'package.json')) as {
+    name: string;
     private?: boolean;
     exports: Record<string, unknown>;
     dependencies?: Record<string, string>;
@@ -71,7 +72,7 @@ for (const name of ['core', 'react'] as const) {
   test(`${name}: the manifest stays private with only the expected dependencies`, () => {
     expect(manifest.private).toBe(true);
     expect(Object.keys(manifest.dependencies ?? {})).toEqual(
-      name === 'core' ? [] : ['@dotquilt-internal/core'],
+      name === 'core' ? [] : ['dotquilt'],
     );
     expect(Object.keys(manifest.peerDependencies ?? {}).sort()).toEqual(
       name === 'core' ? [] : ['react', 'react-dom'],
@@ -121,11 +122,8 @@ for (const name of ['core', 'react'] as const) {
             !(await Bun.file(target).exists())
           )
             problems.push(`${file}: ${specifier} escapes dist or is missing`);
-        } else if (
-          name === 'react' &&
-          specifier.startsWith('@dotquilt-internal/core')
-        ) {
-          const entry = specifier.slice('@dotquilt-internal/core'.length);
+        } else if (name === 'react' && specifier.startsWith('dotquilt')) {
+          const entry = specifier.slice('dotquilt'.length);
           if (!Object.hasOwn(core.exports, entry ? `.${entry}` : '.'))
             problems.push(`${file}: ${specifier} is not a core export`);
         } else if (
@@ -151,7 +149,7 @@ for (const name of ['core', 'react'] as const) {
     const script = resolve(work, `import-${name}.mjs`);
     await writeFile(
       script,
-      `const name = '@dotquilt-internal/${name}';
+      `const name = '${manifest.name}';
 for (const path of ${JSON.stringify(subpaths)}) await import(name + path);
 for (const path of ['/internal/table-model', '/dist/index.js']) {
   let rejected = false;
@@ -208,19 +206,19 @@ test('selective skeleton and region bundles leave the dense renderer out', async
   for (const [name, source] of [
     [
       'skeleton',
-      "import {registerSkeletonBlock} from '@dotquilt-internal/core/skeleton';registerSkeletonBlock();",
+      "import {registerSkeletonBlock} from 'dotquilt/skeleton';registerSkeletonBlock();",
     ],
     [
       'region',
-      "import {registerLoadingRegion} from '@dotquilt-internal/core/region';registerLoadingRegion();",
+      "import {registerLoadingRegion} from 'dotquilt/region';registerLoadingRegion();",
     ],
     [
       'skeleton-root',
-      "import {registerSkeletonBlock} from '@dotquilt-internal/core';registerSkeletonBlock();",
+      "import {registerSkeletonBlock} from 'dotquilt';registerSkeletonBlock();",
     ],
     [
       'region-root',
-      "import {registerLoadingRegion} from '@dotquilt-internal/core';registerLoadingRegion();",
+      "import {registerLoadingRegion} from 'dotquilt';registerLoadingRegion();",
     ],
   ] as const) {
     const entry = resolve(work, `${name}-entry.ts`);
@@ -247,17 +245,17 @@ test('typing, text and region bundles leave the skeleton stylesheets out', async
   for (const [name, source, absent] of [
     [
       'typing',
-      "import {registerTypingDots} from '@dotquilt-internal/core/typing';registerTypingDots();",
+      "import {registerTypingDots} from 'dotquilt/typing';registerTypingDots();",
       [':host .pulse{', '--dotquilt-refresh-gap'],
     ],
     [
       'text',
-      "import {registerTextLoader} from '@dotquilt-internal/core/text';registerTextLoader();",
+      "import {registerTextLoader} from 'dotquilt/text';registerTextLoader();",
       [':host .pulse{', '--dotquilt-refresh-gap'],
     ],
     [
       'region-only',
-      "import {registerLoadingRegion} from '@dotquilt-internal/core/region';registerLoadingRegion();",
+      "import {registerLoadingRegion} from 'dotquilt/region';registerLoadingRegion();",
       [':host .pulse{'],
     ],
   ] as const) {
@@ -282,15 +280,15 @@ test('skeleton and typing bundles leave the region handoff out', async () => {
   for (const [name, source] of [
     [
       'block',
-      "import {registerSkeletonBlock} from '@dotquilt-internal/core/skeleton';registerSkeletonBlock();",
+      "import {registerSkeletonBlock} from 'dotquilt/skeleton';registerSkeletonBlock();",
     ],
     [
       'text-skeleton',
-      "import {registerSkeletonText} from '@dotquilt-internal/core/skeleton';registerSkeletonText();",
+      "import {registerSkeletonText} from 'dotquilt/skeleton';registerSkeletonText();",
     ],
     [
       'typing',
-      "import {registerTypingDots} from '@dotquilt-internal/core/typing';registerTypingDots();",
+      "import {registerTypingDots} from 'dotquilt/typing';registerTypingDots();",
     ],
   ] as const) {
     const entry = resolve(work, `${name}-handoff-entry.ts`);

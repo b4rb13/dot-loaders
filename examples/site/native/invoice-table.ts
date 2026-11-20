@@ -1,11 +1,5 @@
-import {
-  type LoadingRegion,
-  registerLoadingRegion,
-} from '@dotquilt-internal/core/region';
-import {
-  registerTableLoader,
-  type TableLoader,
-} from '@dotquilt-internal/core/table';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+import { registerTableLoader, type TableLoader } from 'dotquilt/table';
 import { type Invoice, invoiceColumns } from '../data';
 
 registerLoadingRegion();

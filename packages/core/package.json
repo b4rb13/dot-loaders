@@ -1,5 +1,5 @@
 {
-  "name": "@dotquilt-internal/core",
+  "name": "dotquilt",
   "version": "0.0.0",
   "description": "Loading placeholders that hold the shape of your content, then hand over to it. Native Web Components.",
   "private": true,
@@ -99,6 +99,6 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
-    "access": "restricted"
+    "access": "public"
   }
 }

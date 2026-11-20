@@ -38,7 +38,7 @@
     "react-dom": "19.3.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "@dotquilt-internal/core": "workspace:*",
-    "@dotquilt-internal/react": "workspace:*"
+    "dotquilt": "workspace:*",
+    "@dotquilt/react": "workspace:*"
   }
 }

@@ -1,5 +1,5 @@
-import type { TextLoader } from '@dotquilt-internal/core/text';
 import { expect, test } from '@playwright/test';
+import type { TextLoader } from 'dotquilt/text';
 import { capture } from '../capture';
 
 declare global {
@@ -23,7 +23,7 @@ declare global {
         options?: object,
       ): void;
       preset(): void;
-      surface(): import('@dotquilt-internal/core').AnimationSurface<'text'>;
+      surface(): import('dotquilt').AnimationSurface<'text'>;
       custom(): void;
       broken(): void;
       targeted(reentrant?: boolean): void;

@@ -1,5 +1,5 @@
 'use client';
-import type { Animations } from '@dotquilt-internal/core';
+import type { Animations } from 'dotquilt';
 import {
   type SkeletonCircle as NativeSkeletonCircle,
   type SkeletonLine as NativeSkeletonLine,
@@ -8,7 +8,7 @@ import {
   registerSkeletonLine,
   registerSkeletonText,
   type SkeletonPreset,
-} from '@dotquilt-internal/core/skeleton';
+} from 'dotquilt/skeleton';
 import {
   type ForwardRefExoticComponent,
   forwardRef,

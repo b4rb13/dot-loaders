@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@astrojs/starlight": "0.43.1",
-    "@dotquilt-internal/core": "workspace:*",
+    "dotquilt": "workspace:*",
     "astro": "7.4.12",
     "satteri": "0.10.5"
   }

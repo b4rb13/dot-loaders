@@ -4,10 +4,10 @@
 //   &hostDisplay=block  simulate app CSS that sets `display:block` on the hosts
 //   &motion=paused      pause motion on the page so screenshots are stable
 //   &mark=dash|square   draw the decoration with another mark
-import { defineAnimation } from '@dotquilt-internal/core/animations';
-import { bars, ridge } from '@dotquilt-internal/core/animations/chart';
-import { tableShimmer, typeOn } from '@dotquilt-internal/core/animations/table';
-import { registerAll } from '@dotquilt-internal/core/register-all';
+import { defineAnimation } from 'dotquilt/animations';
+import { bars, ridge } from 'dotquilt/animations/chart';
+import { tableShimmer, typeOn } from 'dotquilt/animations/table';
+import { registerAll } from 'dotquilt/register-all';
 import { type Fixture, type Kind, kinds, type Owner } from './kinds';
 
 const params = new URLSearchParams(location.search);

@@ -1,6 +1,6 @@
 ---
-"@dotquilt-internal/core": minor
-"@dotquilt-internal/react": minor
+"dotquilt": minor
+"@dotquilt/react": minor
 ---
 
 First alpha: dot-based loading placeholders that hold the shape of your content, then hand over to it.

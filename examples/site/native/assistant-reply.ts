@@ -1,8 +1,5 @@
-import {
-  type LoadingRegion,
-  registerLoadingRegion,
-} from '@dotquilt-internal/core/region';
-import { registerTypingDots } from '@dotquilt-internal/core/typing';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+import { registerTypingDots } from 'dotquilt/typing';
 
 registerLoadingRegion();
 registerTypingDots();

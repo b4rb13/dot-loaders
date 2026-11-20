@@ -1,9 +1,5 @@
 'use client';
-import {
-  LoadingRegion,
-  SkeletonCircle,
-  SkeletonLine,
-} from '@dotquilt-internal/react';
+import { LoadingRegion, SkeletonCircle, SkeletonLine } from '@dotquilt/react';
 import { useEffect, useState } from 'react';
 
 interface Member {

@@ -112,7 +112,7 @@ test('a recipe opens its code beside it, generated from the same settings', asyn
   await expect(react).toContainText('variant="bar"');
   await expect(react).toContainText('mark="square"');
   await expect(react).toContainText(
-    "import { bars } from '@dotquilt-internal/core/animations/chart'",
+    "import { bars } from 'dotquilt/animations/chart'",
   );
   await expect(
     card.getByRole('link', { name: 'Open in playground' }),

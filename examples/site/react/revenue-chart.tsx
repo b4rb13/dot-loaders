@@ -1,6 +1,6 @@
 'use client';
-import type { TargetProvider } from '@dotquilt-internal/core/chart';
-import { ChartLoader, LoadingRegion } from '@dotquilt-internal/react';
+import { ChartLoader, LoadingRegion } from '@dotquilt/react';
+import type { TargetProvider } from 'dotquilt/chart';
 import { useEffect, useState } from 'react';
 import { linePath, linePoints } from '../data';
 

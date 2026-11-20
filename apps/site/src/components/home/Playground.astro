@@ -97,9 +97,9 @@ import { palettes } from '../playground/settings';
 </section>
 
 <script>
-  import { refreshStyles } from '@dotquilt-internal/core';
-  import type { LoadingRegion } from '@dotquilt-internal/core/region';
-  import { registerAll } from '@dotquilt-internal/core/register-all';
+  import { refreshStyles } from 'dotquilt';
+  import type { LoadingRegion } from 'dotquilt/region';
+  import { registerAll } from 'dotquilt/register-all';
 
   registerAll();
   const root = document.querySelector<HTMLElement>('[data-yours]');

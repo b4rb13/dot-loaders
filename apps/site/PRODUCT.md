@@ -28,7 +28,7 @@ The handoff. Placeholders turn into the real content: marks glide onto the chart
 ## Capabilities and Constraints
 
 - The whole library is free and MIT licensed. Dotquilt Pro (application screens, motion packs, playground export tools; one-time purchase) is coming later with no price, checkout or sign-up shown until the commercial gates pass.
-- Packages are not yet published to npm; the package names (`@dotquilt-internal/...`) are provisional.
+- The packages are `dotquilt` (the native elements) and `@dotquilt/react` (owner decision, 2026-11-20). They are not published to npm yet.
 - Idle motion stops after four seconds; the handoff (about 1.1 s) always plays unless reduced motion, a pause or focus prevents it.
 - Undecided: the npm name, size budgets, ASCII-only TextLoader, how often errors repeat, pending server content before JavaScript.
 

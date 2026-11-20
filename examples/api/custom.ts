@@ -1,5 +1,5 @@
-import { LoaderConfigurationError } from '@dotquilt-internal/core';
-import { defineAnimation } from '@dotquilt-internal/core/animations';
+import { LoaderConfigurationError } from 'dotquilt';
+import { defineAnimation } from 'dotquilt/animations';
 
 // Typed options and prepared state stay outside DOM ownership and readiness.
 export const rise = defineAnimation({

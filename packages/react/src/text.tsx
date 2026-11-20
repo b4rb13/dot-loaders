@@ -1,10 +1,10 @@
 'use client';
-import type { Animations, LoadingState, Timing } from '@dotquilt-internal/core';
+import type { Animations, LoadingState, Timing } from 'dotquilt';
 import {
   type TextLoader as NativeTextLoader,
   registerTextLoader,
   type TextPreset,
-} from '@dotquilt-internal/core/text';
+} from 'dotquilt/text';
 import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
 import { reactTextMarkStyles, reactTextStyles } from './server.js';

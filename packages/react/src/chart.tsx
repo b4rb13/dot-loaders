@@ -1,12 +1,12 @@
 'use client';
-import type { Animations } from '@dotquilt-internal/core';
+import type { Animations } from 'dotquilt';
 import {
   type ChartPreset,
   type ChartVariant,
   type ChartLoader as NativeChartLoader,
   registerChartLoader,
   type TargetProvider,
-} from '@dotquilt-internal/core/chart';
+} from 'dotquilt/chart';
 import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
 import { reactChartMarkStyles, reactChartStyles } from './server.js';

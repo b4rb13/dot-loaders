@@ -1,7 +1,7 @@
 // Serves the TableLoader fixture against the workspace build (packages/*/dist).
 import { resolve } from 'node:path';
-import * as server from '@dotquilt-internal/core/server';
-import * as reactServer from '@dotquilt-internal/react/server';
+import * as reactServer from '@dotquilt/react/server';
+import * as server from 'dotquilt/server';
 import { createElement as h } from 'react';
 import { renderToString } from 'react-dom/server';
 import { TableFixture } from './react.js';

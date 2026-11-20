@@ -1,7 +1,4 @@
-import {
-  staticSkeletonStyles,
-  staticTextLoaderStyles,
-} from '@dotquilt-internal/core/server';
+import { staticSkeletonStyles, staticTextLoaderStyles } from 'dotquilt/server';
 export const reactTextStyles = staticTextLoaderStyles;
 
 /**
@@ -25,7 +22,7 @@ import {
   staticLineStyles,
   staticTextStyles,
   staticTypingStyles,
-} from '@dotquilt-internal/core/server';
+} from 'dotquilt/server';
 
 function beforeDefinition(
   css: readonly string[],
@@ -64,7 +61,7 @@ export const reactTypingStyles = /* @__PURE__ */ beforeDefinition(
 export {
   staticChartStyles as reactChartStyles,
   staticTableStyles as reactTableStyles,
-} from '@dotquilt-internal/core/server';
+} from 'dotquilt/server';
 
 import {
   staticChartMarkStyles,
@@ -74,7 +71,7 @@ import {
   staticTextLoaderMarkStyles,
   staticTextMarkStyles,
   staticTypingMarkStyles,
-} from '@dotquilt-internal/core/server';
+} from 'dotquilt/server';
 
 /**
  * Static rules for squares and dashes. A component adds them only when it

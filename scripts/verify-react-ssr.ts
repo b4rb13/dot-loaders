@@ -30,8 +30,8 @@ for (const runtime of ['node', 'bun']) {
   const result = JSON.parse(stdout);
   const coldImports: Record<string, unknown> = {};
   for (const entry of [
-    '@dotquilt-internal/react/server',
-    '@dotquilt-internal/react',
+    '@dotquilt/react/server',
+    '@dotquilt/react',
     'react-dom/server',
   ]) {
     await writeFile(

@@ -99,7 +99,11 @@ const server = Bun.serve({
     if (url.pathname.startsWith('/pkg/')) {
       const [kind, ...segments] = url.pathname.slice(5).split('/');
       const directory = floor
-          ? resolve(floor, `node_modules/@dotquilt-internal/${kind}`)
+          ? resolve(
+              floor,
+              'node_modules',
+              kind === 'react' ? '@dotquilt/react' : 'dotquilt',
+            )
           : resolve(root, 'packages', kind ?? ''),
         file = resolve(directory, ...segments);
       if (!file.startsWith(directory + sep))

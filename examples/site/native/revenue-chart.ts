@@ -1,11 +1,5 @@
-import {
-  type ChartLoader,
-  registerChartLoader,
-} from '@dotquilt-internal/core/chart';
-import {
-  type LoadingRegion,
-  registerLoadingRegion,
-} from '@dotquilt-internal/core/region';
+import { type ChartLoader, registerChartLoader } from 'dotquilt/chart';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
 import { linePath, linePoints } from '../data';
 
 registerLoadingRegion();

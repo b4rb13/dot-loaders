@@ -1,15 +1,10 @@
 'use client';
-import type {
-  Animations,
-  LoadingState,
-  RevealTarget,
-  Timing,
-} from '@dotquilt-internal/core';
+import type { Animations, LoadingState, RevealTarget, Timing } from 'dotquilt';
 import {
   type LoadingRegion as NativeLoadingRegion,
   type RegionPreset,
   registerLoadingRegion,
-} from '@dotquilt-internal/core/region';
+} from 'dotquilt/region';
 import { Children, forwardRef, type ReactNode, useState } from 'react';
 import { useHost } from './host.js';
 import { reactRegionStyles } from './region-styles.js';

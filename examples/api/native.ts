@@ -1,5 +1,5 @@
-import { registerLoadingRegion } from '@dotquilt-internal/core/region';
-import { registerSkeletonText } from '@dotquilt-internal/core/skeleton';
+import { registerLoadingRegion } from 'dotquilt/region';
+import { registerSkeletonText } from 'dotquilt/skeleton';
 
 /** Enhance server-rendered markup; the application retains its content and request identity. */
 export function summary(root: ParentNode) {

@@ -1,5 +1,5 @@
-import type { LoadingRegion } from '@dotquilt-internal/core/region';
 import { expect, test } from '@playwright/test';
+import type { LoadingRegion } from 'dotquilt/region';
 
 test('a region without skeleton participants retains captured-target and cleanup semantics', async ({
   page,

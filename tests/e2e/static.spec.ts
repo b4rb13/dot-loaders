@@ -1,5 +1,5 @@
-import { renderStatic } from '@dotquilt-internal/core/server';
 import { expect, test } from '@playwright/test';
+import { renderStatic } from 'dotquilt/server';
 
 // Server-rendered regions without JavaScript. A pending region shows its
 // static placeholder, and its server content stays visible and usable: if

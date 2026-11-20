@@ -1,4 +1,4 @@
-import type { LoadingState } from '@dotquilt-internal/core';
+import type { LoadingState } from 'dotquilt';
 import { createElement as h } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Summary } from '../../examples/api/react';

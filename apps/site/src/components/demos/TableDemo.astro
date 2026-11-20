@@ -34,8 +34,8 @@ import { invoices } from '../../../../../examples/site/data';
 </dotquilt-region>
 
 <script>
-  import type { LoadingRegion } from '@dotquilt-internal/core/region';
-  import type { TableLoader } from '@dotquilt-internal/core/table';
+  import type { LoadingRegion } from 'dotquilt/region';
+  import type { TableLoader } from 'dotquilt/table';
   import { invoiceColumns } from '../../../../../examples/site/data';
 
   for (const region of document.querySelectorAll<LoadingRegion>(

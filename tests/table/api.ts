@@ -1,11 +1,7 @@
-import { defineAnimation } from '@dotquilt-internal/core/animations';
-import {
-  rows,
-  tableShimmer,
-  typeOn,
-} from '@dotquilt-internal/core/animations/table';
-import type { LoadingRegion } from '@dotquilt-internal/core/region';
-import type { TableInput, TableLoader } from '@dotquilt-internal/core/table';
+import { defineAnimation } from 'dotquilt/animations';
+import { rows, tableShimmer, typeOn } from 'dotquilt/animations/table';
+import type { LoadingRegion } from 'dotquilt/region';
+import type { TableInput, TableLoader } from 'dotquilt/table';
 export function install(table: TableLoader, region: LoadingRegion) {
   const errors: string[] = [],
     events: { type: string; reason?: string; animation?: string }[] = [],

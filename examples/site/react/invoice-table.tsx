@@ -1,5 +1,5 @@
 'use client';
-import { LoadingRegion, TableLoader } from '@dotquilt-internal/react';
+import { LoadingRegion, TableLoader } from '@dotquilt/react';
 import { useEffect, useState } from 'react';
 import { type Invoice, invoiceColumns } from '../data';
 

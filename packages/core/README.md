@@ -2,14 +2,14 @@
 
 Loading placeholders that hold the shape of your content, then hand over to it. Marks wait where your content will be. When the data arrives they travel to its real shape (each line's length, the image, the avatar), then the content wipes in as they leave, in about a second.
 
-Native Web Components with no runtime dependencies, for any framework or none. For React, see `@dotquilt-internal/react`.
+Native Web Components with no runtime dependencies, for any framework or none. For React, see `@dotquilt/react`.
 
 > **Status:** pre-alpha and not yet published to npm. The package name is provisional.
 
 ## Install
 
 ```bash
-npm install @dotquilt-internal/core
+npm install dotquilt
 ```
 
 ## Quick start
@@ -21,7 +21,7 @@ npm install @dotquilt-internal/core
 </dotquilt-region>
 
 <script type="module">
-  import { registerAll } from '@dotquilt-internal/core/register-all';
+  import { registerAll } from 'dotquilt/register-all';
 
   registerAll();
   const region = document.querySelector('dotquilt-region');
@@ -31,7 +31,7 @@ npm install @dotquilt-internal/core
 </script>
 ```
 
-Register only what a page uses to keep it small. Each component has its own entry, for example `@dotquilt-internal/core/skeleton` with `registerSkeletonBlock()`.
+Register only what a page uses to keep it small. Each component has its own entry, for example `dotquilt/skeleton` with `registerSkeletonBlock()`.
 
 ## Components
 

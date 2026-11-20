@@ -1,7 +1,4 @@
-import {
-  registerTextLoader,
-  type TextLoader,
-} from '@dotquilt-internal/core/text';
+import { registerTextLoader, type TextLoader } from 'dotquilt/text';
 
 registerTextLoader();
 

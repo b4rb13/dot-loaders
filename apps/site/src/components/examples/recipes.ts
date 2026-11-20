@@ -370,7 +370,7 @@ function animationImport(recipe: Recipe): string {
   const names = [recipe.idle, recipe.handoff].filter(Boolean);
   const entry = animationEntry[recipe.family];
   if (!names.length || !entry) return '';
-  return `import { ${names.join(', ')} } from '@dotquilt-internal/core/animations/${entry}';\n`;
+  return `import { ${names.join(', ')} } from 'dotquilt/animations/${entry}';\n`;
 }
 
 function animationScript(recipe: Recipe, selector: string): string {
@@ -573,7 +573,7 @@ export function reactCode(recipe: Recipe): string {
         : recipe.demo === 'order'
           ? 'OrderNumber'
           : 'ShippingStatus';
-    return `import { TextLoader } from '@dotquilt-internal/react';
+    return `import { TextLoader } from '@dotquilt/react';
 ${animationImport(recipe)}
 export function ${name}({ value }: { value: string | null }) {
   return (
@@ -596,9 +596,9 @@ export function ${name}({ value }: { value: string | null }) {
   const columns = !table
     ? ''
     : recipe.demo === 'invoices'
-      ? `import type { TableColumn } from '@dotquilt-internal/core/table';\n\nconst invoiceColumns: TableColumn[] = [\n  { kind: 'text', width: 1.6 },\n  { kind: 'number' },\n  { kind: 'badge' },\n];\n`
-      : `import type { TableColumn } from '@dotquilt-internal/core/table';\n\nconst teamColumns: TableColumn[] = [\n  { kind: 'text', width: 1.4 },\n  { kind: 'text' },\n  { kind: 'date' },\n];\n`;
-  return `import { LoadingRegion, ${s.imports.join(', ')} } from '@dotquilt-internal/react';
+      ? `import type { TableColumn } from 'dotquilt/table';\n\nconst invoiceColumns: TableColumn[] = [\n  { kind: 'text', width: 1.6 },\n  { kind: 'number' },\n  { kind: 'badge' },\n];\n`
+      : `import type { TableColumn } from 'dotquilt/table';\n\nconst teamColumns: TableColumn[] = [\n  { kind: 'text', width: 1.4 },\n  { kind: 'text' },\n  { kind: 'date' },\n];\n`;
+  return `import { LoadingRegion, ${s.imports.join(', ')} } from '@dotquilt/react';
 ${animationImport(recipe)}${columns}
 export function ${s.signature} {
   return (
@@ -622,7 +622,7 @@ export function htmlCode(recipe: Recipe): string {
     return `<dotquilt-text-loader state="pending" mask="${mask}"${htmlProps(recipe)} aria-label="${recipe.title}"></dotquilt-text-loader>
 
 <script type="module">
-  import { registerTextLoader } from '@dotquilt-internal/core/text';
+  import { registerTextLoader } from 'dotquilt/text';
   ${animationImport(recipe).trim()}
   registerTextLoader();
   const loader = document.querySelector('dotquilt-text-loader');${animationScript(recipe, 'dotquilt-text-loader').replaceAll('\n', '\n  ')}${recipe.duration === undefined ? '' : `\n  loader.timing = { duration: ${recipe.duration} };`}
@@ -638,7 +638,7 @@ export function htmlCode(recipe: Recipe): string {
 </dotquilt-region>
 
 <script type="module">
-  import { registerAll } from '@dotquilt-internal/core/register-all';
+  import { registerAll } from 'dotquilt/register-all';
   ${animationImport(recipe).trim()}
   registerAll();
   const region = document.querySelector('dotquilt-region');${animationScript(recipe, s.selector).replaceAll('\n', '\n  ')}${recipe.duration === undefined ? '' : `\n  region.timing = { duration: ${recipe.duration} };`}

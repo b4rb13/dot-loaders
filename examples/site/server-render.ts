@@ -1,4 +1,4 @@
-import { renderStatic } from '@dotquilt-internal/core/server';
+import { renderStatic } from 'dotquilt/server';
 
 const escapeHtml = (text: string) =>
   text.replace(

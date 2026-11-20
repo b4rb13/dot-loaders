@@ -41,7 +41,7 @@ const manifest = await read(resolve(root, 'packages/react/package.json'));
 if (
   !manifest.private ||
   manifest.version !== native.version ||
-  manifest.dependencies['@dotquilt-internal/core'] !== native.version ||
+  manifest.dependencies.dotquilt !== native.version ||
   !manifest.scripts.prepublishOnly
 )
   throw new Error('Private/coordinated artifact policy failed');
@@ -72,10 +72,10 @@ for (const [line, versionsForLine] of Object.entries(versions)) {
       {
         private: true,
         type: 'module',
-        overrides: { '@dotquilt-internal/core': `file:${native.artifact}` },
+        overrides: { dotquilt: `file:${native.artifact}` },
         dependencies: {
-          '@dotquilt-internal/core': `file:${native.artifact}`,
-          '@dotquilt-internal/react': `file:${artifact}`,
+          dotquilt: `file:${native.artifact}`,
+          '@dotquilt/react': `file:${artifact}`,
           react: versionsForLine.react,
           'react-dom': versionsForLine.react,
           '@types/react': versionsForLine.typesReact,
@@ -135,17 +135,17 @@ import { existsSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
-import { ChartLoader, LoadingRegion, SkeletonBlock } from '@dotquilt-internal/react';
-import { SkeletonBlock as S } from '@dotquilt-internal/react/skeleton';
-import { LoadingRegion as R } from '@dotquilt-internal/react/region';
-const {TableLoader:Table}=await import('@dotquilt-internal/react/table');let tableCalls=0;const tableHTML=renderToString(React.createElement(Table,{rows:5,rowHeight:32,targetProvider:()=>{tableCalls++;return null;}}));assert.equal(tableCalls,0);assert.ok(tableHTML.includes('dotquilt-table-loader')&&!tableHTML.includes('targetProvider'));const {ChartLoader:C}=await import('@dotquilt-internal/react/chart');assert.equal(ChartLoader,C);let chartCalls=0;const chartHTML=renderToString(React.createElement(ChartLoader,{variant:'scatter',targetProvider:()=>{chartCalls++;return null;}}));assert.equal(chartCalls,0);assert.ok(chartHTML.includes('variant="scatter"')&&!chartHTML.includes('targetProvider'));
+import { ChartLoader, LoadingRegion, SkeletonBlock } from '@dotquilt/react';
+import { SkeletonBlock as S } from '@dotquilt/react/skeleton';
+import { LoadingRegion as R } from '@dotquilt/react/region';
+const {TableLoader:Table}=await import('@dotquilt/react/table');let tableCalls=0;const tableHTML=renderToString(React.createElement(Table,{rows:5,rowHeight:32,targetProvider:()=>{tableCalls++;return null;}}));assert.equal(tableCalls,0);assert.ok(tableHTML.includes('dotquilt-table-loader')&&!tableHTML.includes('targetProvider'));const {ChartLoader:C}=await import('@dotquilt/react/chart');assert.equal(ChartLoader,C);let chartCalls=0;const chartHTML=renderToString(React.createElement(ChartLoader,{variant:'scatter',targetProvider:()=>{chartCalls++;return null;}}));assert.equal(chartCalls,0);assert.ok(chartHTML.includes('variant="scatter"')&&!chartHTML.includes('targetProvider'));
 assert.equal(SkeletonBlock,S); assert.equal(LoadingRegion,R);
 assert.equal(typeof window,'undefined');assert.equal(typeof document,'undefined');
 const require = createRequire(import.meta.url);
-const fromAdapter = createRequire(import.meta.resolve('@dotquilt-internal/react'));
-const nativeManifest = resolver => realpathSync(resolver.resolve.paths('@dotquilt-internal/core').map(path=>resolve(path,'@dotquilt-internal/core/package.json')).find(existsSync));
+const fromAdapter = createRequire(import.meta.resolve('@dotquilt/react'));
+const nativeManifest = resolver => realpathSync(resolver.resolve.paths('dotquilt').map(path=>resolve(path,'dotquilt/package.json')).find(existsSync));
 assert.equal(nativeManifest(require),nativeManifest(fromAdapter));
-const {reactRegionStyles}=await import('@dotquilt-internal/react/server');assert.ok(reactRegionStyles.length);
+const {reactRegionStyles}=await import('@dotquilt/react/server');assert.ok(reactRegionStyles.length);
 const [a,b]=await Promise.all(['one','two'].map(async nonce=>renderToString(React.createElement(LoadingRegion,{state:'pending',stylePolicy:{mode:'inline',nonce},placeholder:React.createElement(SkeletonBlock)},React.createElement('input',{defaultValue:nonce})))));
 assert.ok(a.includes('nonce="one"')&&!a.includes('nonce="two"'));
 assert.ok(b.includes('value="two"')&&!b.includes('value="one"'));
@@ -159,28 +159,28 @@ console.log('pass: DOM-free imports, root/family identity and isolated SSR');
   for (const [name, nativeSource, reactSource] of [
     [
       'skeleton',
-      "import {registerSkeletonBlock} from '@dotquilt-internal/core/skeleton';registerSkeletonBlock();document.body.append(document.createElement('dotquilt-skeleton-block'));",
-      "import {SkeletonBlock} from '@dotquilt-internal/react/skeleton';import {createElement} from 'react';import {createRoot} from 'react-dom/client';createRoot(document.body).render(createElement(SkeletonBlock));",
+      "import {registerSkeletonBlock} from 'dotquilt/skeleton';registerSkeletonBlock();document.body.append(document.createElement('dotquilt-skeleton-block'));",
+      "import {SkeletonBlock} from '@dotquilt/react/skeleton';import {createElement} from 'react';import {createRoot} from 'react-dom/client';createRoot(document.body).render(createElement(SkeletonBlock));",
     ],
     [
       'region',
-      "import {registerLoadingRegion} from '@dotquilt-internal/core/region';registerLoadingRegion();document.body.append(document.createElement('dotquilt-region'));",
-      "import {LoadingRegion} from '@dotquilt-internal/react/region';import {createElement} from 'react';import {createRoot} from 'react-dom/client';createRoot(document.body).render(createElement(LoadingRegion,null,'Outcome'));",
+      "import {registerLoadingRegion} from 'dotquilt/region';registerLoadingRegion();document.body.append(document.createElement('dotquilt-region'));",
+      "import {LoadingRegion} from '@dotquilt/react/region';import {createElement} from 'react';import {createRoot} from 'react-dom/client';createRoot(document.body).render(createElement(LoadingRegion,null,'Outcome'));",
     ],
     [
       'availableSlice',
-      "import {registerLoadingRegion,registerSkeletonBlock} from '@dotquilt-internal/core';registerLoadingRegion();registerSkeletonBlock();document.body.append(document.createElement('dotquilt-region'),document.createElement('dotquilt-skeleton-block'));",
-      "import {LoadingRegion,SkeletonBlock} from '@dotquilt-internal/react';import {createElement} from 'react';import {createRoot} from 'react-dom/client';createRoot(document.body).render(createElement(LoadingRegion,{placeholder:createElement(SkeletonBlock)},'Outcome'));",
+      "import {registerLoadingRegion,registerSkeletonBlock} from 'dotquilt';registerLoadingRegion();registerSkeletonBlock();document.body.append(document.createElement('dotquilt-region'),document.createElement('dotquilt-skeleton-block'));",
+      "import {LoadingRegion,SkeletonBlock} from '@dotquilt/react';import {createElement} from 'react';import {createRoot} from 'react-dom/client';createRoot(document.body).render(createElement(LoadingRegion,{placeholder:createElement(SkeletonBlock)},'Outcome'));",
     ],
     [
       'skeletonRoot',
-      "import {registerSkeletonBlock} from '@dotquilt-internal/core';registerSkeletonBlock();document.body.append(document.createElement('dotquilt-skeleton-block'));",
-      "import {SkeletonBlock} from '@dotquilt-internal/react';import {createElement} from 'react';import {createRoot} from 'react-dom/client';createRoot(document.body).render(createElement(SkeletonBlock));",
+      "import {registerSkeletonBlock} from 'dotquilt';registerSkeletonBlock();document.body.append(document.createElement('dotquilt-skeleton-block'));",
+      "import {SkeletonBlock} from '@dotquilt/react';import {createElement} from 'react';import {createRoot} from 'react-dom/client';createRoot(document.body).render(createElement(SkeletonBlock));",
     ],
     [
       'regionRoot',
-      "import {registerLoadingRegion} from '@dotquilt-internal/core';registerLoadingRegion();document.body.append(document.createElement('dotquilt-region'));",
-      "import {LoadingRegion} from '@dotquilt-internal/react';import {createElement} from 'react';import {createRoot} from 'react-dom/client';createRoot(document.body).render(createElement(LoadingRegion,null,'Outcome'));",
+      "import {registerLoadingRegion} from 'dotquilt';registerLoadingRegion();document.body.append(document.createElement('dotquilt-region'));",
+      "import {LoadingRegion} from '@dotquilt/react';import {createElement} from 'react';import {createRoot} from 'react-dom/client';createRoot(document.body).render(createElement(LoadingRegion,null,'Outcome'));",
     ],
   ]) {
     const bytes: Record<string, number> = {};
@@ -222,15 +222,12 @@ console.log('pass: DOM-free imports, root/family identity and isolated SSR');
       { family: string; bytes: number; gzip: number }[]
     > = { native: [], react: [] };
     for (const [kind, pkg] of [
-      ['native', 'core'],
-      ['react', 'react'],
+      ['native', 'dotquilt'],
+      ['react', '@dotquilt/react'],
     ] as const)
       for (const family of families) {
         const css = await readFile(
-          resolve(
-            consumer,
-            `node_modules/@dotquilt-internal/${pkg}/dist/${family}.css`,
-          ),
+          resolve(consumer, `node_modules/${pkg}/dist/${family}.css`),
         );
         assets[kind]?.push({
           family: family ?? '',

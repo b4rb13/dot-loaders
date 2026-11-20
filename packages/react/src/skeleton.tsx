@@ -1,10 +1,10 @@
 'use client';
-import type { Animations } from '@dotquilt-internal/core';
+import type { Animations } from 'dotquilt';
 import {
   type SkeletonBlock as NativeSkeletonBlock,
   registerSkeletonBlock,
   type SkeletonPreset,
-} from '@dotquilt-internal/core/skeleton';
+} from 'dotquilt/skeleton';
 import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
 import { reactSkeletonMarkStyles, reactSkeletonStyles } from './server.js';
