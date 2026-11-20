@@ -69,8 +69,8 @@ for (const name of ['core', 'react'] as const) {
     peerDependencies?: Record<string, string>;
   };
 
-  test(`${name}: the manifest stays private with only the expected dependencies`, () => {
-    expect(manifest.private).toBe(true);
+  test(`${name}: the manifest is public, with only the expected dependencies`, () => {
+    expect(manifest.private).toBeUndefined();
     expect(Object.keys(manifest.dependencies ?? {})).toEqual(
       name === 'core' ? [] : ['dotquilt'],
     );

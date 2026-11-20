@@ -1,7 +1,7 @@
 // A release dry run: what `changeset version` and `npm publish` would do,
 // without changing or publishing anything. Run after `bun run build`.
 //   bun run release:check
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dir, '..');
@@ -22,14 +22,24 @@ async function run(command: string[], cwd = root) {
 const kb = (bytes: number) => `${(bytes / 1024).toFixed(1)} KB`;
 const blockers: string[] = [];
 
-console.log('Planned versions (changeset status):');
-console.log(
-  (await run(['bunx', '--no-install', 'changeset', 'status', '--verbose']))
-    .split('\n')
-    .filter((line) => line.trim())
-    .map((line) => `  ${line}`)
-    .join('\n'),
+// Pending changesets, if any. Right after `changeset version` there are none:
+// the versions in the manifests are the ones to publish.
+const pending = (await readdir(resolve(root, '.changeset'))).filter(
+  (file) => file.endsWith('.md') && file !== 'README.md',
 );
+if (pending.length) {
+  console.log('Planned versions (changeset status):');
+  console.log(
+    (await run(['bunx', '--no-install', 'changeset', 'status', '--verbose']))
+      .split('\n')
+      .filter((line) => line.trim())
+      .map((line) => `  ${line}`)
+      .join('\n'),
+  );
+} else
+  console.log(
+    'No pending changesets: the manifests hold the versions to publish.',
+  );
 
 for (const directory of packages) {
   const manifest = JSON.parse(

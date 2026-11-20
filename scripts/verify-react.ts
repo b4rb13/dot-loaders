@@ -39,12 +39,10 @@ async function run(args: string[], cwd: string) {
 }
 const manifest = await read(resolve(root, 'packages/react/package.json'));
 if (
-  !manifest.private ||
   manifest.version !== native.version ||
-  manifest.dependencies.dotquilt !== native.version ||
-  !manifest.scripts.prepublishOnly
+  manifest.dependencies.dotquilt !== native.version
 )
-  throw new Error('Private/coordinated artifact policy failed');
+  throw new Error('Coordinated artifact policy failed');
 const packed = JSON.parse(
   await run(
     ['npm', 'pack', '--json', '--ignore-scripts', '--pack-destination', output],

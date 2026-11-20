@@ -1,8 +1,7 @@
 {
   "name": "@dotquilt/react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "React components for Dotquilt: loading placeholders that hold the shape of your content, then hand over to it.",
-  "private": true,
   "type": "module",
   "license": "MIT",
   "homepage": "https://dotquilt.dev",
@@ -59,7 +58,7 @@
     "./styles/*.css": "./dist/*.css"
   },
   "dependencies": {
-    "dotquilt": "0.0.0"
+    "dotquilt": "0.1.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",
@@ -68,8 +67,7 @@
   "scripts": {
     "build": "bun run ../../scripts/build-react.ts",
     "check": "tsc --noEmit -p tsconfig.json",
-    "test": "bun test test",
-    "prepublishOnly": "node -e \"throw new Error('npm publishing is disabled during private validation')\""
+    "test": "bun test test"
   },
   "author": "Derenik Khachatryan",
   "repository": {
