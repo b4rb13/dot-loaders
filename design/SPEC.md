@@ -110,7 +110,7 @@ Every text colour meets WCAG AA (4.5:1) on `bg`, `surface` and `subtle`. `faint`
 
 **Reduced motion / pause:**
 - No idle glow or breathing.
-- The handoff becomes a 240 ms fade with no rise or blur.
+- The handoff swaps at once, with no fade, rise or blur (owner decision, 2026-11-20; an earlier draft asked for a 240 ms fade).
 - The visitor's pause setting has the same effect.
 - The runtime's existing reduced-motion and pause behaviour stays.
 
