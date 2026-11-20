@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="56" height="56" role="img" aria-label="Dotquilt">
+  <rect width="28" height="28" rx="7.5" fill="#1b2230"/>
+  <circle cx="10" cy="10" r="2.9" fill="#ffffff"/>
+  <circle cx="18" cy="10" r="2.9" fill="#ffffff"/>
+  <circle cx="10" cy="18" r="2.9" fill="#ffffff"/>
+  <circle cx="18" cy="18" r="2.9" fill="#4f8f93"/>
+</svg>

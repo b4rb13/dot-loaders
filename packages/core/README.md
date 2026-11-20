@@ -2,9 +2,11 @@
 
 Loading placeholders that hold the shape of your content, then hand over to it. Marks wait where your content will be. When the data arrives they travel to its real shape (each line's length, the image, the avatar), then the content wipes in as they leave, in about a second.
 
+<a href="https://dotquilt.dev"><img src="https://raw.githubusercontent.com/b4rb13/dot-loaders/main/.github/assets/hero-light.gif" alt="A revenue screen loading: its figures take shape in square marks, a chart line draws from a field of dots, and the table rows settle, then everything hands over to the real content." width="100%"></a>
+
 Native Web Components with no runtime dependencies, for any framework or none. For React, see `@dotquilt/react`.
 
-> **Status:** pre-alpha and not yet published to npm. The package name is provisional.
+> **Status:** alpha (0.x). The API may still change before 1.0.
 
 ## Install
 
