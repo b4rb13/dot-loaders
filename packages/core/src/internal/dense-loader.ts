@@ -273,6 +273,7 @@ export abstract class DenseLoader<
           pitch: Math.max(2, Math.min(64, pitch)),
           rows: Math.max(2, Math.min(64, rows)),
           scale: Math.max(0.1, Math.min(8, size / 2)),
+          mark: markOf(this),
         }),
       }) as AnimationSurface<F>;
     }

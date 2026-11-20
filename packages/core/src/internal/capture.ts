@@ -12,6 +12,7 @@ export function capturePoints(
         size: point[2] ?? 0,
         opacity: point[3] ?? 0,
         tone: point[4] ? ('accent' as const) : ('base' as const),
+        ...(point[5] ? { angle: point[5] } : {}),
       }),
     ),
   );

@@ -147,6 +147,9 @@ export function chartIdle<O extends object>(
           }
           return base;
         };
+        // Bars and scatter have no line for dashes to follow.
+        const line = (kind: Silhouette | undefined) =>
+          kind === 'bars' || kind === 'scatter' ? 0 : 1;
         return [
           (x) =>
             mix(
@@ -164,6 +167,7 @@ export function chartIdle<O extends object>(
               first[i] = mix(first[i] as number, second[i] as number, blend);
             return first;
           },
+          mix(line(a), line(b), blend),
         ];
       }),
     }),

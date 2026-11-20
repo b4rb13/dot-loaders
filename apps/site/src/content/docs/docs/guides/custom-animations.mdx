@@ -18,6 +18,8 @@ totalLoader.animations = { idle: labelPulse() };
 
 An animation draws with commands, not with the DOM: an idle places marks with `dot()`, and a handoff can also move your content with `reveal()`. Dotquilt owns the timing, the restrictions and the cleanup, so a custom animation still pauses, respects reduced motion and stops after four seconds.
 
+Each `dot()` takes a centre (`x`, `y`), a radius (`size`), an `opacity` and a `tone` (`base`, or `accent` for the glow colour). The loader's `mark` decides the shape. An optional `angle`, in radians clockwise, turns squares and dashes about their centre; dots ignore it.
+
 <Code code={customTs} lang="ts" title="animations.ts" />
 
 | Part | Idle | Handoff |

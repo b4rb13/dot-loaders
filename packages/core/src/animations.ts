@@ -28,6 +28,11 @@ export interface Dot {
   readonly size: number;
   readonly opacity: number;
   readonly tone: 'base' | 'accent';
+  /**
+   * Turns a square or dash about its centre, in radians, clockwise from
+   * level. Dots ignore it. A chart's dashes use it to follow the line.
+   */
+  readonly angle?: number | undefined;
 }
 export interface AnimationSurface<F extends AnimationFamily> {
   readonly width: number;
