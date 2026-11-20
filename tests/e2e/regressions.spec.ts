@@ -619,3 +619,39 @@ for (const kind of ['skeleton-block', 'skeleton-text'] as const)
     await page.waitForTimeout(400);
     expect((await glow())?.opacity).toBe(0);
   });
+
+test('a chart placeholder keeps its marks at full strength while they land on the line', async ({
+  page,
+}) => {
+  // The chart's own handoff glides the marks onto the line and removes them
+  // where the line wipes in. The region used to fade its whole placeholder
+  // layer from 1 to 0 over the same time, so the marks landed at half
+  // strength or less.
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await open(page, 'component=chart-loader');
+  const opacity = await page.evaluate(async () => {
+    const region = window.e2e.owner as HTMLElement & {
+      update(patch: object): void;
+    };
+    const layer = region.shadowRoot?.querySelector<HTMLElement>(
+      '[part~="placeholder"]',
+    );
+    if (!layer) throw new Error('no placeholder layer');
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    const started = new Promise((resolve) =>
+      region.addEventListener('dotquilt-handoff-start', resolve, {
+        once: true,
+      }),
+    );
+    region.update({ state: 'ready', timing: { duration: 3000 } });
+    await started;
+    const read = () => Number(getComputedStyle(layer).opacity);
+    // The marks have landed by about 55% of the handoff (morphEnd).
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const landing = read();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return { landing, late: read() };
+  });
+  expect(opacity.landing).toBeGreaterThan(0.95);
+  expect(opacity.late).toBeGreaterThan(0.95);
+});

@@ -650,10 +650,14 @@ export abstract class LoadingController<
           ? this.#specHandoff(placeholder, content, duration, source.animation)
           : {
               // Custom and dense sources keep one shared clock: they draw in
-              // step with the content's progress.
+              // step with the content's progress. They draw their own marks,
+              // and the chart's leave where its line wipes in, so the layer
+              // holds at full strength and only lets go at the very end
+              // (fading it all the way, marks landed at half strength). The
+              // hold is in time, so the easing only shapes the last step.
               outgoing: placeholder.animate(
-                { opacity: [1, 0] },
-                { duration, easing, fill: 'both' },
+                { opacity: [1, 1, 0], offset: [0, 0.9, 1], easing },
+                { duration, fill: 'both' },
               ),
               incoming: content.animate(
                 { opacity: [0, 1] },
