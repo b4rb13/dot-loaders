@@ -471,7 +471,7 @@ Before the alpha, from the product research (2026-11-19, [docs/planning/product-
   - Stopped (owner, 2026-11-20). TextLoader, ChartLoader and TableLoader stay near their sizes before step 1: TextLoader is a full loading controller (about 11 KB of its 43 KB minified), and chart and table are mostly the canvas renderer. Loading TextLoader's default reveal lazily would save about 1.2 KB (−8%) and was not taken. Moving the server-only stylesheets out of the browser bundles saved 50–130 B and grew the React bundles, so it was dropped.
 - **ViewTransition compatibility.** React 19.3 made `<ViewTransition>` stable; document and test the handoff alongside it.
 - **README, changelog and a publish dry run**, a Next.js example project, and React fast tests (already in `test:e2e`). The Next.js example is `examples/next` (2026-11-20): Next 16.4 with the React adapter, built by `bun run build` and checked by `tests/next` (placeholders in the server HTML, hydration without errors, a handoff after a client-side navigation).
-- **Agent-ready docs:** `/llms.txt`, per-page Markdown and "Copy page".
+- **Agent-ready docs:** `/llms.txt`, per-page Markdown and "Copy page". Since 2026-11-21 also a setup prompt for coding assistants (`/setup-prompt.md`, the docs page `/docs/ai-setup/`, and a "Copy setup prompt" button on the home page): it analyses the project, asks, then converts one place at a time and verifies. It was tested on a mock Next.js app with seven loading places, React Query and a route `loading.tsx`; the library findings from that test are follow-ups.
 
 Performance qualification on real devices comes after there are users, against budgets you choose, not before.
 
