@@ -21,7 +21,7 @@
       },
     },
     "apps/site": {
-      "name": "dotquilt-site",
+      "name": "@dotquilt-internal/site",
       "dependencies": {
         "@astrojs/starlight": "0.43.1",
         "dotquilt": "workspace:*",
@@ -178,7 +178,7 @@
 
     "@dotquilt/react": ["@dotquilt/react@workspace:packages/react"],
 
-    "dotquilt-site": ["dotquilt-site@workspace:apps/site"],
+    "@dotquilt-internal/site": ["@dotquilt-internal/site@workspace:apps/site"],
 
     "@emnapi/core": ["@emnapi/core@1.11.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.2", "tslib": "^2.4.0" } }, "sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ=="],
 

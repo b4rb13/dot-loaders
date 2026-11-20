@@ -1,5 +1,5 @@
 {
-  "name": "dotquilt-site",
+  "name": "@dotquilt-internal/site",
   "private": true,
   "type": "module",
   "scripts": {
