@@ -31,6 +31,8 @@ A loading region decides when to switch. It shows its placeholder while your dat
 | `refreshing` | a row of marks just above the top edge, or your `refresh-indicator` | visible and usable |
 | `ready` | gone, after the handoff | visible |
 
+While pending, the region is as tall as the taller of the two: your content is laid out, hidden, so the handoff can read its shape. Once the handoff ends, and while refreshing, the placeholder takes no space and the region is as tall as your content. Give the placeholder your content's size, so nothing moves when the handoff ends.
+
 While it refreshes, a row of marks sits just above the region's top edge and the glow drifts along it once, so your content never moves. With reduced motion or a pause the row stays still. Move it with `--dotquilt-refresh-gap` (6 px above the edge by default), style it through `::part(refresh-thread)`, or pass your own `refresh-indicator` instead.
 
 For fast responses, `delay` and `min-display` keep the placeholder from flickering: a load shorter than `delay` never shows it, and a placeholder that did show stays for at least `min-display`. Values around 150 ms and 500 ms suit most screens.

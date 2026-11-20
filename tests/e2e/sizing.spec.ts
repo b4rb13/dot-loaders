@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 
 // Loaders take their content's size: a pending TextLoader keeps its line's
-// height.
+// height, and a region is as tall as its content once it has handed over.
 
 async function open(page: Page) {
   await page.goto('/?component=region');
@@ -48,4 +48,67 @@ for (const lineHeight of ['1.5', '1'])
     });
     expect(heights.pending).toBe(heights.plain);
     expect(heights.ready).toBe(heights.plain);
+  });
+
+const region = (placeholder = '') =>
+  `<dotquilt-region id="region" aria-label="Summary"${placeholder}><dotquilt-skeleton-text slot="placeholder" lines="8" style="height:auto"></dotquilt-skeleton-text><p id="content" style="margin:0">One short line.</p></dotquilt-region>`;
+
+for (const [name, timing] of [
+  ['after the handoff', undefined],
+  ['at once with no handoff (an error)', { duration: 0 }],
+] as const)
+  test(`a region is as tall as its content once ready, ${name}`, async ({
+    page,
+  }) => {
+    await open(page);
+    await build(page, region(' state="pending"'));
+    const heights = await page.evaluate(async (timing) => {
+      const owner = document.getElementById('region') as HTMLElement & {
+        update(patch: object): void;
+      };
+      const height = (id: string) =>
+        document.getElementById(id)?.getBoundingClientRect().height;
+      const pending = height('region');
+      let handoff: number | undefined;
+      owner.addEventListener(
+        'dotquilt-handoff-start',
+        () => {
+          handoff = height('region');
+        },
+        { once: true },
+      );
+      const ended = new Promise((resolve) =>
+        owner.addEventListener('dotquilt-handoff-end', resolve, {
+          once: true,
+        }),
+      );
+      owner.update({ state: 'ready', ...(timing ? { timing } : {}) });
+      await ended;
+      await new Promise(requestAnimationFrame);
+      return {
+        pending,
+        handoff,
+        ready: height('region'),
+        content: height('content'),
+      };
+    }, timing);
+    // The placeholder is the taller one, and keeps its place while the
+    // handoff reads it.
+    expect(heights.pending).toBeGreaterThan((heights.content ?? 0) + 50);
+    expect(heights.handoff).toBe(heights.pending);
+    expect(heights.ready).toBe(heights.content);
+  });
+
+for (const state of ['ready', 'refreshing'] as const)
+  test(`a region that starts ${state} is as tall as its content`, async ({
+    page,
+  }) => {
+    await open(page);
+    await build(page, region(` state="${state}"`));
+    const heights = await page.evaluate(() => ({
+      region: document.getElementById('region')?.getBoundingClientRect().height,
+      content: document.getElementById('content')?.getBoundingClientRect()
+        .height,
+    }));
+    expect(heights.region).toBe(heights.content);
   });
