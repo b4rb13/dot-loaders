@@ -1,0 +1,32 @@
+---
+title: About Dotquilt
+description: What Dotquilt is, why it exists, and how it is made and released.
+---
+
+Dotquilt is an open-source library of loading placeholders for the web. Its placeholders are made of small marks that hold the shape of your content while it loads (lines of text, avatars, numbers, charts, tables and chat replies) and hand over to the real content when it arrives: the marks travel to the content's shape, then the content wipes in as they leave.
+
+## Why it exists
+
+Most loading states are a spinner, which says nothing about what is coming, or grey bars that vanish all at once. Both make a page jump and flash as its data arrives. Dotquilt's placeholders reserve the content's space from the first HTML, keep the wait calm, and turn the arrival into one short handover.
+
+## What it is made of
+
+- **`dotquilt`:** native Web Components with no runtime dependencies, for any framework or none.
+- **`@dotquilt/react`:** React 19 components with server rendering.
+- **This website:** the documentation, examples, a playground, and Markdown copies of every page for AI assistants ([llms.txt](/llms.txt)).
+
+## How it is made
+
+- **Principles:** accessibility (pending content is out of reach, reduced motion and forced colours are respected), server rendering, a strict Content Security Policy, cleanup of everything a loader starts, and importing only what you use. The [design spec](https://github.com/b4rb13/dot-loaders/blob/main/design/SPEC.md) sets the look.
+- **In the open:** the code, the plans and the issues are on [GitHub](https://github.com/b4rb13/dot-loaders). Every change runs type checks, unit tests and browser tests before it lands.
+- **Releases:** versions are built and staged on npm by GitHub Actions, with a provenance statement that links each package to the commit it came from, and go public only after a maintainer approves them.
+
+## License and status
+
+Dotquilt is free under the [MIT license](/license/), and the core stays free. A paid bundle of ready-made screens and tools may come later; see [Pricing](/pricing/).
+
+It is in alpha (0.x): it works and is tested, and its API may still change before 1.0. The [changelog](https://github.com/b4rb13/dot-loaders/blob/main/packages/core/CHANGELOG.md) lists each release.
+
+## Get in touch
+
+Questions, bugs and ideas are welcome: see [Contact](/contact/).

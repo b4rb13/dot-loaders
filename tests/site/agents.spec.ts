@@ -25,8 +25,8 @@ test('llms.txt links every docs page as clean Markdown', async ({
     ...index.matchAll(/\]\((https:\/\/dotquilt\.dev(\/[^)]+\.md))\)/g),
   ].map((match) => match[2] as string);
   // Introduction, installation, AI assistant setup and theming; six
-  // components; five guides.
-  expect(links.length).toBe(15);
+  // components; five guides; about, contact and privacy.
+  expect(links.length).toBe(18);
   for (const path of links) {
     const response = await request.get(path);
     expect(response.ok(), path).toBe(true);
