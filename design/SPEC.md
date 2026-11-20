@@ -59,7 +59,7 @@ Every text colour meets WCAG AA (4.5:1) on `bg`, `surface` and `subtle`. `faint`
 ## Typography
 
 - **Faces:**
-  - Manrope (Google Fonts, 400–700) for display and body.
+  - Manrope (400–700, served from the site) for display and body.
   - DM Mono (400/500) for code, component names and keyboard hints.
 - **Display headings:** weight 500, letter-spacing −0.03em, line-height 1.1. Hero is clamp(2.2rem, 4.6vw, 3.4rem); docs H1 is 34 px. The homepage's first screen is larger: 72 px at line-height 1 on wide screens (owner's pick, 2026-11-19).
 - **Section headings and titles:** weight 600.
@@ -120,7 +120,7 @@ Every text colour meets WCAG AA (4.5:1) on `bg`, `surface` and `subtle`. `faint`
 - **Docs:** left navigation, a reading column of about 68ch, an on-page table of contents and a live preview with Start loading / Reveal. Code tabs cover React and native. API tables list type, default and description per prop.
 - **Copy:** plain user-facing language only. No milestones, freezes or "provisional" wording.
 - **Themes:** light and dark at parity, following the system setting, with a manual switch.
-- **Dependencies:** Google Fonts are the only external request a visitor's browser makes. Vercel Web Analytics (cookieless, owner's request, 2026-11-20) is served from the site's own origin, and the GitHub star count in the header is read once at build time.
+- **Dependencies:** a visitor's browser makes no request to another origin: the fonts (Manrope and DM Mono, from Fontsource) are served from the site itself, since 2026-11-21. Vercel Web Analytics (cookieless, owner's request, 2026-11-20) is served from the site's own origin, and the GitHub star count in the header is read once at build time.
 
 ## How marks map onto the runtime (decided in 4b, 2026-11-19)
 

@@ -6,8 +6,9 @@
  */
 import Screen from './Screen.astro';
 
-const { title = '', tagline } =
-  Astro.locals.starlightRoute.entry.data.hero ?? {};
+// Like Starlight's own Hero, a hero without a title uses the page's.
+const { data } = Astro.locals.starlightRoute.entry;
+const { title = data.title, tagline } = data.hero ?? {};
 const home = Astro.url.pathname === '/';
 ---
 

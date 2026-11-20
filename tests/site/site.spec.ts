@@ -31,10 +31,6 @@ for (const path of pages)
   test(`${path} loads without errors and fits 320 px`, async ({ page }) => {
     const errors = watchErrors(page);
     await page.setViewportSize({ width: 320, height: 640 });
-    // Google Fonts are the one external request; tests stay offline.
-    await page.route('https://fonts.googleapis.com/**', (route) =>
-      route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
-    );
     const response = await page.goto(path);
     expect(response?.status()).toBe(200);
     await expect(page.locator('h1').first()).toBeVisible();

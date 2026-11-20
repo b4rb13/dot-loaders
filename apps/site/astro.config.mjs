@@ -3,10 +3,6 @@ import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import { codeTheme } from './src/code-theme.mjs';
 
-// Google Fonts are the site's only external dependency (design/SPEC.md).
-const fonts =
-  'https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400..700&display=swap';
-
 export default defineConfig({
   // The production address: canonical links and the sitemap use it.
   site: 'https://dotquilt.dev',
@@ -14,14 +10,26 @@ export default defineConfig({
     // Starlight's Tabs load satteri's native binary at render time. Bundled,
     // it can't find the binary under Bun's isolated installs, so keep it
     // external; the site depends on the same version Starlight resolves.
-    ssr: { external: ['satteri'] },
+    // The same goes for resvg, which renders the social cards (src/lib/og.ts).
+    ssr: { external: ['satteri', '@resvg/resvg-js'] },
   },
   integrations: [
     starlight({
       title: 'Dotquilt',
       description:
-        'Dot-based loading placeholders that hand off gently to your real content.',
+        'Skeleton loaders made of dots, for Web Components and React: they hold the shape of your content, then hand over to it.',
+      // Head tags Starlight doesn't add: each page's social card, a link to
+      // its Markdown copy, and JSON-LD.
+      routeMiddleware: './src/routeData.ts',
       customCss: [
+        // The fonts are served from the site itself (design/SPEC.md), so a
+        // page makes no request to another origin and doesn't wait for one.
+        '@fontsource/manrope/400.css',
+        '@fontsource/manrope/500.css',
+        '@fontsource/manrope/600.css',
+        '@fontsource/manrope/700.css',
+        '@fontsource/dm-mono/400.css',
+        '@fontsource/dm-mono/500.css',
         './src/styles/theme.css',
         './src/styles/demos.css',
         './src/styles/home.css',
@@ -35,21 +43,6 @@ export default defineConfig({
         // On docs pages, a "Copy page" button beside the title (Markdown).
         PageTitle: './src/components/site/PageTitle.astro',
       },
-      head: [
-        {
-          tag: 'link',
-          attrs: { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        },
-        {
-          tag: 'link',
-          attrs: {
-            rel: 'preconnect',
-            href: 'https://fonts.gstatic.com',
-            crossorigin: true,
-          },
-        },
-        { tag: 'link', attrs: { rel: 'stylesheet', href: fonts } },
-      ],
       expressiveCode: {
         themes: [codeTheme],
         styleOverrides: {
@@ -100,6 +93,10 @@ export default defineConfig({
               slug: 'docs/guides/custom-animations',
             },
             { label: 'Motion and accessibility', slug: 'docs/guides/motion' },
+            {
+              label: 'Skeleton loader or spinner?',
+              slug: 'docs/guides/skeleton-or-spinner',
+            },
           ],
         },
       ],

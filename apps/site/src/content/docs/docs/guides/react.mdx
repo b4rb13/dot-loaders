@@ -1,11 +1,16 @@
 ---
 title: React and Next.js
-description: Typed components with server rendering, for React 19 and the Next.js App Router.
+description: Typed React skeleton loader components with server rendering, for React 19 and the Next.js App Router.
+head:
+  - tag: title
+    content: React and Next.js skeleton loaders | Dotquilt
 ---
 
 import { Code } from '@astrojs/starlight/components';
 import chartTsx from '../../../../../../../examples/site/react/revenue-chart.tsx?raw';
 import pageTsx from '../../../../../../../examples/site/react/next-page.tsx?raw';
+
+To show a skeleton loader in React, wrap the part of the page that loads in Dotquilt's `<LoadingRegion>`, give it a `placeholder` such as `<SkeletonText lines={3} />`, and set its `state` from your data: `pending`, `refreshing` or `ready`.
 
 The React adapter wraps the same native components in typed React components. They register themselves, render their placeholder on the server, and take their state from your props.
 

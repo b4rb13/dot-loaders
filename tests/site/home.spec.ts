@@ -38,12 +38,6 @@ async function reveal(page: Page, selector: string) {
   );
 }
 
-test.beforeEach(async ({ page }) => {
-  await page.route('https://fonts.googleapis.com/**', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
-  );
-});
-
 test('the first screen arrives: the figures lock, the line draws and the rows settle', async ({
   page,
 }) => {
@@ -312,4 +306,76 @@ test('the details: a held note rests after four seconds, then arrives', async ({
   await letGo();
   await expect(calm).toHaveAttribute('data-phase', 'arrived');
   await expect(calm.locator('[data-readout]')).toContainText('Arrived after');
+});
+
+test('a change inside one section restyles that section, not the whole page', async ({
+  browser,
+  browserName,
+  page,
+}) => {
+  // Every loader update inserts or removes nodes. A `:has()` rule anchored
+  // on the root made Chromium restyle every element of the page for each
+  // one, which kept the main thread busy on phones.
+  test.skip(browserName !== 'chromium', 'Counts restyled elements in a trace');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await browser.startTracing(page, {
+    categories: ['devtools.timeline', 'blink.user_timing'],
+  });
+  const elements = await page.evaluate(() => {
+    const thread = document.querySelector('[data-va-inbox] [data-later]');
+    void document.body.offsetHeight;
+    performance.mark('dq-change');
+    thread?.append(document.createElement('div'));
+    void document.body.offsetHeight;
+    performance.mark('dq-restyled');
+    return document.querySelectorAll('*').length;
+  });
+  const { traceEvents } = JSON.parse((await browser.stopTracing()).toString());
+  type TraceEvent = {
+    name: string;
+    ts: number;
+    args?: { elementCount?: number };
+  };
+  const events = traceEvents as TraceEvent[];
+  const at = (name: string) => events.find((e) => e.name === name)?.ts ?? 0;
+  const [from, to] = [at('dq-change'), at('dq-restyled')];
+  const restyled = events
+    .filter((e) => e.name === 'UpdateLayoutTree' && e.ts >= from && e.ts <= to)
+    .reduce((sum, e) => sum + (e.args?.elementCount ?? 0), 0);
+  expect(restyled).toBeGreaterThan(0);
+  expect(restyled).toBeLessThan(elements / 10);
+});
+
+test('the closing field meets the footer on the home page only', async ({
+  page,
+}) => {
+  const gap = () =>
+    page.locator('.site-footer').evaluate((f) => getComputedStyle(f).marginTop);
+  await page.goto('/');
+  expect(await gap()).toBe('0px');
+  await page.goto('/docs/');
+  expect(await gap()).toBe('64px');
+});
+
+test('sections further down set up as they near the view, not at load', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const steps = page.locator('[data-steps]');
+  const defined = () =>
+    steps
+      .locator('dotquilt-skeleton-line')
+      .first()
+      .evaluate((line) => line.matches(':defined'));
+  // The first screen has loaded; the last steps, far below, wait.
+  await expect(
+    page.locator('[data-va-hero] [data-table-region]'),
+  ).toHaveJSProperty('state', 'ready', { timeout: 8000 });
+  expect(await defined()).toBe(false);
+  // Brought into view, they set up and their arrival still plays.
+  const handoffs = await recordHandoffs(page, '[data-steps]');
+  await reveal(page, '[data-steps]');
+  await expect.poll(defined).toBe(true);
+  await expect.poll(handoffs, { timeout: 6000 }).toEqual(['complete']);
 });

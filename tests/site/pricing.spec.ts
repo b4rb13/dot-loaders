@@ -1,11 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-test.beforeEach(async ({ page }) => {
-  await page.route('https://fonts.googleapis.com/**', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
-  );
-});
-
 test('pricing shows the free library and Pro as coming later, with no price', async ({
   page,
 }) => {

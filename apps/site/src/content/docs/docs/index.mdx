@@ -1,11 +1,14 @@
 ---
 title: Introduction
-description: What Dotquilt is and how a loading region hands over to your content.
+description: What Dotquilt is, how its skeleton loaders work, and how a loading region hands over from placeholder to your content.
+head:
+  - tag: title
+    content: 'Introduction: how Dotquilt’s skeleton loaders work | Dotquilt'
 ---
 
 import Preview from '../../../components/Preview.astro';
 
-Dotquilt is a set of loading placeholders drawn from small marks. While your data loads, the marks hold the shape of what is coming. When it arrives, they fade out as your content rises into place.
+Dotquilt is a set of skeleton loaders (loading placeholders) drawn from small marks. While your data loads, the marks hold the shape of what is coming. When it arrives, they fade out as your content rises into place.
 
 <Preview label="A card loading">
   <dotquilt-region state="pending" aria-label="Quarterly revenue">
@@ -16,6 +19,12 @@ Dotquilt is a set of loading placeholders drawn from small marks. While your dat
     </div>
   </dotquilt-region>
 </Preview>
+
+## What is a skeleton loader?
+
+A skeleton loader, or skeleton screen, is a placeholder in the shape of the content that is on its way: lines where text will be, a block for an image, a circle for an avatar. It shows that something is loading and where it will appear, and it keeps that space, so the page doesn't jump when the content arrives. A spinner only says that something is happening.
+
+Dotquilt's skeleton loaders are made of small marks. When your data arrives, the marks move to your content's real shape, then hand over to it. For when to use a skeleton and when a spinner or a progress bar is better, see [Skeleton loader or spinner?](/docs/guides/skeleton-or-spinner/).
 
 ## How it works
 

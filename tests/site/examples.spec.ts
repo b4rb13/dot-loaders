@@ -19,12 +19,6 @@ async function recordHandoffs(page: Page, scope: string) {
   return () => page.evaluate(() => Reflect.get(window, 'handoffs'));
 }
 
-test.beforeEach(async ({ page }) => {
-  await page.route('https://fonts.googleapis.com/**', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
-  );
-});
-
 test('the dashboard resolves card by card, each with the full handoff', async ({
   page,
 }) => {

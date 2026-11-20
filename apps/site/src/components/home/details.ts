@@ -3,18 +3,24 @@
  * the idle that rests after four seconds, content that is out of reach
  * while it loads, and motion that can be paused.
  */
-import type { LoadingRegion } from 'dotquilt/region';
-import { registerAll } from 'dotquilt/register-all';
-import type { TextLoader } from 'dotquilt/text';
-import { Connection, onFirstView, reducedMotion } from './hold';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+import { registerSkeletonBlock, registerSkeletonLine } from 'dotquilt/skeleton';
+import { registerTextLoader, type TextLoader } from 'dotquilt/text';
+import { Connection, onFirstView, reducedMotion, whenNear } from './hold';
 
 /** The figures the motion proof brings in, one per load. */
 const values = ['$48,210', '$51,904', '$46,385', '$49,770'];
 
 export function startDetails() {
-  registerAll();
   const section = document.querySelector<HTMLElement>('[data-va-details]');
-  if (!section) return;
+  if (section) whenNear(section, () => setUp(section));
+}
+
+function setUp(section: HTMLElement) {
+  registerSkeletonBlock();
+  registerSkeletonLine();
+  registerTextLoader();
+  registerLoadingRegion();
   const proof = (name: string) =>
     section.querySelector<HTMLElement>(`[data-proof="${name}"]`);
 

@@ -10,7 +10,7 @@
 # Dotquilt
 
 **Loading states that hand over.**<br>
-Placeholders that hold the shape of your content, then become it.
+Skeleton loaders that hold the shape of your content, then become it.
 
 [Website](https://dotquilt.dev) · [Docs](https://dotquilt.dev/docs/) · [Components](https://dotquilt.dev/docs/components/skeleton/) · [Examples](https://dotquilt.dev/examples/) · [Playground](https://dotquilt.dev/playground/)
 
