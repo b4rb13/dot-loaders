@@ -128,19 +128,29 @@ const line = chartPath(series[2] ?? [], 320, 112);
 
 <script>
   import { refreshStyles } from 'dotquilt';
-  import type { ChartLoader } from 'dotquilt/chart';
-  import type { LoadingRegion } from 'dotquilt/region';
-  import { registerAll } from 'dotquilt/register-all';
+  import { type ChartLoader, registerChartLoader } from 'dotquilt/chart';
+  import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+  import {
+    registerSkeletonCircle,
+    registerSkeletonLine,
+    registerSkeletonText,
+  } from 'dotquilt/skeleton';
+  import { registerTypingDots } from 'dotquilt/typing';
   import { chartPoints, series } from './demos';
-  import { Connection, followTheme, onFirstView, reducedMotion } from './hold';
+  import { Connection, followTheme, onFirstView, reducedMotion, whenNear } from './hold';
 
-  registerAll();
   const root = document.querySelector<HTMLElement>('[data-yours]');
   const preview = root?.querySelector<HTMLElement>('[data-preview]');
   const region = preview?.querySelector<LoadingRegion>('[data-region]');
   const output = root?.querySelector<HTMLElement>('[data-css]');
   const bar = preview?.querySelector<HTMLElement>('[data-controls]');
-  if (root && preview && region && output && bar) {
+  if (root && preview && region && output && bar) whenNear(root, () => {
+    registerSkeletonLine();
+    registerSkeletonCircle();
+    registerSkeletonText();
+    registerTypingDots();
+    registerChartLoader();
+    registerLoadingRegion();
     followTheme(preview);
     const chart = preview.querySelector<ChartLoader>('[data-chart]');
     if (chart)
@@ -263,7 +273,7 @@ const line = chartPath(series[2] ?? [], 320, 112);
     apply(false);
 
     if (!reducedMotion()) onFirstView(preview, () => connection.auto(1600), 0.4);
-  }
+  });
 </script>
 
 <style>

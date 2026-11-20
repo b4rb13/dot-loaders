@@ -37,13 +37,14 @@
     handoffMs,
     onFirstView,
     reducedMotion,
+    whenNear,
   } from './hold';
 
-  registerSkeletonBlock();
-  registerTextLoader();
   const closing = document.querySelector<HTMLElement>('[data-closing]');
   const slot = closing?.querySelector<HTMLElement>('[data-field-slot]');
-  if (closing && slot) {
+  if (closing && slot) whenNear(closing, () => {
+    registerSkeletonBlock();
+    registerTextLoader();
     followTheme(closing);
     // The field joins the page as it comes into view, so its one drift of
     // glow plays where it can be seen, then it rests.
@@ -75,7 +76,7 @@
     };
     if (reducedMotion()) place();
     else onFirstView(closing, arrive, 0.4);
-  }
+  });
 </script>
 
 <style>

@@ -98,24 +98,34 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
 </section>
 
 <script>
-  import type { LoadingRegion } from 'dotquilt/region';
-  import { registerAll } from 'dotquilt/register-all';
-  import { handoffMs, onFirstView, reducedMotion } from './hold';
+  import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+  import {
+    registerSkeletonCircle,
+    registerSkeletonLine,
+    registerSkeletonText,
+  } from 'dotquilt/skeleton';
+  import { handoffMs, onFirstView, reducedMotion, whenNear } from './hold';
 
-  registerAll();
   const steps = document.querySelector<LoadingRegion>('[data-steps]');
-  if (steps && !reducedMotion())
-    onFirstView(
-      steps,
-      () => {
-        steps.update({ state: 'pending', cycle: 'steps' });
-        window.setTimeout(() => {
-          if (steps.cycle === 'steps')
-            steps.update({ state: 'ready', timing: { duration: handoffMs() } });
-        }, 1100);
-      },
-      0.5,
-    );
+  if (steps)
+    whenNear(steps, () => {
+      registerSkeletonLine();
+      registerSkeletonCircle();
+      registerSkeletonText();
+      registerLoadingRegion();
+      if (reducedMotion()) return;
+      onFirstView(
+        steps,
+        () => {
+          steps.update({ state: 'pending', cycle: 'steps' });
+          window.setTimeout(() => {
+            if (steps.cycle === 'steps')
+              steps.update({ state: 'ready', timing: { duration: handoffMs() } });
+          }, 1100);
+        },
+        0.5,
+      );
+    });
 </script>
 
 <style>

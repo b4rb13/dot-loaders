@@ -7,10 +7,11 @@
  * new example data; the network control slows every answer down or makes
  * them fail.
  */
-import type { ChartLoader } from 'dotquilt/chart';
-import type { LoadingRegion } from 'dotquilt/region';
-import { registerAll } from 'dotquilt/register-all';
-import type { TextLoader } from 'dotquilt/text';
+import { type ChartLoader, registerChartLoader } from 'dotquilt/chart';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+import { registerSkeletonBlock } from 'dotquilt/skeleton';
+import { registerTableLoader } from 'dotquilt/table';
+import { registerTextLoader, type TextLoader } from 'dotquilt/text';
 import {
   chartPoints,
   jitter,
@@ -47,7 +48,13 @@ const settleBack = 1200;
 const cycleOrder: readonly RangeKey[] = ['7d', '30d', '90d'];
 
 export function startHero() {
-  registerAll();
+  // Only the first screen's own elements: each section further down
+  // registers what it needs as it nears the view.
+  registerSkeletonBlock();
+  registerTextLoader();
+  registerChartLoader();
+  registerTableLoader();
+  registerLoadingRegion();
   const hero = document.querySelector<HTMLElement>('[data-va-hero]');
   const found = hero?.querySelector<HTMLElement>('[data-screen]');
   if (!hero || !found) return;

@@ -106,17 +106,19 @@ const speeds = [
 </section>
 
 <script>
-  import type { LoadingRegion } from 'dotquilt/region';
-  import { registerAll } from 'dotquilt/register-all';
-  import { Connection, handoffBase, onFirstView, reducedMotion } from './hold';
+  import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+  import { registerSkeletonCircle, registerSkeletonText } from 'dotquilt/skeleton';
+  import { Connection, handoffBase, onFirstView, reducedMotion, whenNear } from './hold';
 
-  registerAll();
   const section = document.querySelector<HTMLElement>('[data-handoff]');
   const region = section?.querySelector<LoadingRegion>('[data-region]');
   const controls = section?.querySelector<HTMLElement>('[data-controls]');
   const timeline = section?.querySelector<HTMLElement>('[data-timeline]');
   const playhead = section?.querySelector<HTMLElement>('[data-playhead]');
-  if (section && region && controls && timeline && playhead) {
+  if (section && region && controls && timeline && playhead) whenNear(section, () => {
+    registerSkeletonCircle();
+    registerSkeletonText();
+    registerLoadingRegion();
     // The speed: a radio group with one tab stop. The ticks follow it, at
     // half of the handoff and all of it.
     let duration = handoffBase;
@@ -184,7 +186,7 @@ const speeds = [
     region.addEventListener('dotquilt-handoff-cancel', clear);
 
     if (!reducedMotion()) onFirstView(region, () => connection.auto(1300), 0.5);
-  }
+  });
 </script>
 
 <style>

@@ -6,9 +6,13 @@
  * quick reply (or takes over a reply already being typed), and Inês keeps
  * typing for as long as it is held. Letting go delivers her answer.
  */
-import type { LoadingRegion } from 'dotquilt/region';
-import { registerAll } from 'dotquilt/register-all';
-import { Connection } from './hold';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+import {
+  registerSkeletonCircle,
+  registerSkeletonText,
+} from 'dotquilt/skeleton';
+import { registerTypingDots } from 'dotquilt/typing';
+import { Connection, whenNear } from './hold';
 import { arriveOnce, jitter, reducedMotion, wait } from './lib';
 import { fallbackReplies, quickReplies } from './screens';
 
@@ -21,9 +25,15 @@ interface Typing {
 }
 
 export function startInbox() {
-  registerAll();
   const section = document.querySelector<HTMLElement>('[data-va-inbox]');
-  if (!section) return;
+  if (section) whenNear(section, () => setUp(section));
+}
+
+function setUp(section: HTMLElement) {
+  registerSkeletonCircle();
+  registerSkeletonText();
+  registerTypingDots();
+  registerLoadingRegion();
   const region = section.querySelector<LoadingRegion>('[data-thread-region]');
   const scroller = section.querySelector<HTMLElement>('[data-thread]');
   const later = section.querySelector<HTMLElement>('[data-later]');

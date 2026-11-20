@@ -3,7 +3,8 @@
  *
  * - Holding a control keeps a placeholder loading; letting go delivers the
  *   data (`holdable`, `Connection`).
- * - Each section's first load starts as it scrolls into view (`onFirstView`).
+ * - Each section sets up as it nears the view (`whenNear`), and its first
+ *   load starts as it scrolls into view (`onFirstView`).
  */
 import { refreshStyles } from 'dotquilt';
 
@@ -367,6 +368,23 @@ export class Connection {
   #announce(text: string): void {
     if (this.#status) this.#status.textContent = text;
   }
+}
+
+/**
+ * Sets a section up once it comes within a window's height of the view:
+ * its loaders upgrade and its demo wires up shortly before it can be seen,
+ * not all at once while the page loads. Each section's setup runs in a task
+ * of its own, so none of them keeps the page busy for long.
+ */
+export function whenNear(element: Element, setup: () => void): void {
+  new IntersectionObserver(
+    (entries, observer) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      setTimeout(setup);
+    },
+    { rootMargin: '100% 0px' },
+  ).observe(element);
 }
 
 /** Runs `start` once, the first time `element` is well into view. */

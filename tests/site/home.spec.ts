@@ -363,3 +363,25 @@ test('the closing field meets the footer on the home page only', async ({
   await page.goto('/docs/');
   expect(await gap()).toBe('64px');
 });
+
+test('sections further down set up as they near the view, not at load', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const steps = page.locator('[data-steps]');
+  const defined = () =>
+    steps
+      .locator('dotquilt-skeleton-line')
+      .first()
+      .evaluate((line) => line.matches(':defined'));
+  // The first screen has loaded; the last steps, far below, wait.
+  await expect(
+    page.locator('[data-va-hero] [data-table-region]'),
+  ).toHaveJSProperty('state', 'ready', { timeout: 8000 });
+  expect(await defined()).toBe(false);
+  // Brought into view, they set up and their arrival still plays.
+  const handoffs = await recordHandoffs(page, '[data-steps]');
+  await reveal(page, '[data-steps]');
+  await expect.poll(defined).toBe(true);
+  await expect.poll(handoffs, { timeout: 6000 }).toEqual(['complete']);
+});
