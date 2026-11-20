@@ -193,6 +193,8 @@ export function shapeRows(
   table: HTMLTableElement,
   rowHeight: number,
 ) {
+  // Every measurement comes before the first write, so the page lays out
+  // once rather than again for each row.
   const heads = [...(table.tHead?.rows[0]?.cells ?? [])].filter(shown);
   const widths = heads.map((head) => head.getBoundingClientRect().width);
   if (!widths.some(Boolean)) return;
@@ -200,6 +202,8 @@ export function shapeRows(
     (head) => (head.dataset.kind ?? 'text') as TableCellKind,
   );
   const rows = [...(table.tBodies[0]?.rows ?? [])];
+  // Each body row's visible cells, and how wide each one's content is.
+  const grid = rows.map((row) => [...row.cells].filter(shown).map(extent));
   const loaders = [
     ...host.querySelectorAll<TableLoader>('dotquilt-table-loader'),
   ];
@@ -211,8 +215,6 @@ export function shapeRows(
     loaders.push(loader);
   }
   while (loaders.length > Math.max(1, rows.length)) loaders.pop()?.remove();
-  // Each body row's visible cells, and how wide each one's content is.
-  const grid = rows.map((row) => [...row.cells].filter(shown).map(extent));
   // Per column: the longer or shorter bar for each row. The runtime draws a
   // `text` bar at 72% of the cell and a `badge` bar at 45%.
   const picks = widths.map((width, c) => {

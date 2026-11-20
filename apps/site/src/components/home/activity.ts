@@ -5,9 +5,12 @@
  * top while the older ones glide down. The feed scrolls inside its own
  * height, so the page never moves.
  */
-import type { LoadingRegion } from 'dotquilt/region';
-import { registerAll } from 'dotquilt/register-all';
-import { Connection } from './hold';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+import {
+  registerSkeletonCircle,
+  registerSkeletonLine,
+} from 'dotquilt/skeleton';
+import { Connection, whenNear } from './hold';
 import { arriveOnce, jitter, reducedMotion } from './lib';
 import { incoming } from './screens';
 
@@ -15,9 +18,14 @@ import { incoming } from './screens';
 const kept = 12;
 
 export function startActivity() {
-  registerAll();
   const section = document.querySelector<HTMLElement>('[data-va-activity]');
-  if (!section) return;
+  if (section) whenNear(section, () => setUp(section));
+}
+
+function setUp(section: HTMLElement) {
+  registerSkeletonLine();
+  registerSkeletonCircle();
+  registerLoadingRegion();
   const region = section.querySelector<LoadingRegion>('[data-feed-region]');
   const list = section.querySelector<HTMLElement>('[data-feed]');
   const scroller = section.querySelector<HTMLElement>('[data-feed-scroll]');
@@ -78,15 +86,20 @@ export function startActivity() {
         li.setAttribute('data-new', '');
         li.style.setProperty('--i', String(i));
       });
-      for (const [child, top] of before) {
-        if (!child.isConnected) continue;
-        const element = child as HTMLElement;
-        const shift = top - element.getBoundingClientRect().top;
+      // Every new position is read before any write, and one reflow
+      // restarts every glide, so the feed lays out once, not per item.
+      const shifts = [...before]
+        .filter(([child]) => child.isConnected)
+        .map(([child, top]) => ({
+          element: child as HTMLElement,
+          shift: top - child.getBoundingClientRect().top,
+        }));
+      for (const { element, shift } of shifts) {
         element.style.setProperty('--shift', `${shift}px`);
         element.removeAttribute('data-shift');
-        void element.offsetWidth;
-        element.setAttribute('data-shift', '');
       }
+      void list.offsetWidth;
+      for (const { element } of shifts) element.setAttribute('data-shift', '');
     }
     return fresh.length;
   }

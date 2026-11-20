@@ -4,9 +4,9 @@
  * network: holding keeps the rows loading, letting go delivers them, and a
  * filter or page answered by itself can be held the same way.
  */
-import type { LoadingRegion } from 'dotquilt/region';
-import { registerAll } from 'dotquilt/register-all';
-import { Connection } from './hold';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+import { registerTableLoader } from 'dotquilt/table';
+import { Connection, whenNear } from './hold';
 import {
   arriveOnce,
   jitter,
@@ -20,9 +20,13 @@ const pageSize = 5;
 const rowHeight = 44;
 
 export function startInvoices() {
-  registerAll();
   const section = document.querySelector<HTMLElement>('[data-va-invoices]');
-  if (!section) return;
+  if (section) whenNear(section, () => setUp(section));
+}
+
+function setUp(section: HTMLElement) {
+  registerTableLoader();
+  registerLoadingRegion();
   const region = section.querySelector<LoadingRegion>('[data-ledger-region]');
   const loaders = section.querySelector<HTMLElement>('[data-row-loaders]');
   const table = section.querySelector<HTMLTableElement>('[data-table]');

@@ -205,11 +205,12 @@ const tiles = [
   import type { TableLoader } from 'dotquilt/table';
   import type { TextLoader } from 'dotquilt/text';
   import { activity, fitPoints, revenues, series } from './demos';
-  import { Connection, followTheme, onFirstView, reducedMotion } from './hold';
+  import { Connection, followTheme, onFirstView, reducedMotion, whenNear } from './hold';
 
-  registerAll();
   const family = document.querySelector<HTMLElement>('[data-family]');
-  if (family) {
+  // The family shows every element, so it registers them all.
+  if (family) whenNear(family, () => {
+    registerAll();
     followTheme(family);
     const chart = family.querySelector<ChartLoader>('[data-spark]');
     const line = family.querySelector<SVGPathElement>('[data-spark-line]');
@@ -298,7 +299,7 @@ const tiles = [
       onFirstView(family, () =>
         connections.forEach((connection, i) => connection.auto(1300 + i * 220)),
       0.3);
-  }
+  });
 </script>
 
 <style>

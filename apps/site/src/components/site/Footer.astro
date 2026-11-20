@@ -45,10 +45,14 @@ const columns = [
     ],
   },
 ];
+// On the home page the closing field hands straight to the footer's seam.
+// Marked here rather than with `:root:has(...)` in CSS: a `:has()` anchored
+// on the root makes Chromium restyle the whole page on every DOM change.
+const home = Astro.url.pathname === '/';
 ---
 
 <Default {...Astro.props}><slot /></Default>
-<footer class="site-footer not-content">
+<footer class:list={['site-footer', 'not-content', { home }]}>
   <dotquilt-skeleton-block class="seam" motion="paused" aria-hidden="true"
   ></dotquilt-skeleton-block>
   <div class="grid">
@@ -92,6 +96,9 @@ const columns = [
     position: relative;
     margin-top: 4rem;
     padding-top: 2.75rem;
+  }
+  .site-footer.home {
+    margin-top: 0;
   }
   .seam {
     position: absolute;
