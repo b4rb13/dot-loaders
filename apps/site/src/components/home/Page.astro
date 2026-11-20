@@ -1,0 +1,43 @@
+---
+/**
+ * The home page below its first screen. Real screens loading (an inbox,
+ * invoices, an activity feed), the component family, the handoff slowed
+ * down, the playground, the details with live proof, the first steps and a
+ * closing call to action.
+ *
+ * Every demo answers the same control: press and hold keeps it loading,
+ * letting go delivers. The controls sit on the left, the result on the
+ * right. Each demo's first load starts as it scrolls into view.
+ */
+import './app.css';
+import './hold.css';
+import Activity from './Activity.astro';
+import Closing from './Closing.astro';
+import Details from './Details.astro';
+import Family from './Family.astro';
+import GetStarted from './GetStarted.astro';
+import Handoff from './Handoff.astro';
+import Inbox from './Inbox.astro';
+import Invoices from './Invoices.astro';
+import Playground from './Playground.astro';
+---
+
+<Inbox />
+<Invoices />
+<Activity />
+<Family />
+<Handoff />
+<Playground />
+<Details />
+<GetStarted />
+<Closing />
+<script is:inline>
+  // Before anything paints: with motion allowed, the hold-to-load demos
+  // start out waiting for their data and load as they come into view.
+  // Otherwise (and without JavaScript) every demo shows its content at rest.
+  try {
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches)
+      for (const loader of document.querySelectorAll('.vc [data-vc-pending]'))
+        loader.setAttribute('state', 'pending');
+  } catch {}
+</script>

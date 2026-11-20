@@ -1,7 +1,7 @@
 /* Shared pieces of the wide pages (home, examples, playground, pricing).
    Starlight marks a page with a hero with data-has-hero on <html>; their
-   content lines up with the edges of the homepage's first screen
-   (FieldHero): 82 px in at 1440, 1276 px at most. */
+   content lines up with the edges of the home page's first screen
+   (home/Screen.astro): 82 px in at 1440, 1276 px at most. */
 :root[data-has-hero] .content-panel {
   border-top: 0;
   padding-inline: clamp(1.25rem, 5.7vw, 82px);
@@ -10,7 +10,7 @@
   max-width: 1276px;
 }
 /* The closing field hands straight to the footer's seam. */
-:root:has(.field-hero) .site-footer {
+:root:has([data-va-hero]) .site-footer {
   margin-top: 0;
 }
 

@@ -1,5 +1,8 @@
 ---
-/** Three steps from install to a page that settles into place. */
+/**
+ * Three steps from install to a page that settles into place. As the section
+ * arrives, the steps hand over from skeleton rows of their own shape.
+ */
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 
 const react = `import { LoadingRegion, SkeletonText } from '@dotquilt/react';
@@ -33,14 +36,40 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
 </script>`;
 ---
 
-<section class="home-section not-content start" aria-labelledby="start-title">
+<section class="vc home-section not-content vc-start" aria-labelledby="vc-start-title">
   <div class="steps">
-    <h2 id="start-title">A calmer page in three steps.</h2>
-    <ol>
-      <li><span><strong>Install</strong> the React adapter, or the core package on its own.</span></li>
-      <li><span><strong>Wrap your content</strong> in a loading region, with a placeholder in its shape.</span></li>
-      <li><span><strong>Set the state</strong> when your data arrives. The region does the rest.</span></li>
-    </ol>
+    <h2 id="vc-start-title">A calmer page in three steps.</h2>
+    <dotquilt-region
+      class="steps-region"
+      state="ready"
+      aria-label="Three steps"
+      data-vc-pending
+      data-steps
+    >
+      <div slot="placeholder" class="ph">
+        {
+          [70, 82, 76].map((width) => (
+            <div class="ph-step">
+              <dotquilt-skeleton-circle />
+              <div class="ph-lines">
+                <dotquilt-skeleton-line />
+                <dotquilt-skeleton-line style={`width: ${width}%`} />
+              </div>
+            </div>
+          ))
+        }
+      </div>
+      <ol>
+        <li><span><strong>Install</strong> the React adapter, or the core package on its own.</span></li>
+        <li><span><strong>Wrap your content</strong> in a loading region, with a placeholder in its shape.</span></li>
+        <li>
+          <span>
+            <strong>Set the state</strong> when your data arrives. The region does
+            the rest, the way it did each time you let go above.
+          </span>
+        </li>
+      </ol>
+    </dotquilt-region>
     <a class="home-button" href="/docs/installation/">Read the installation guide</a>
   </div>
   <div class="code">
@@ -55,17 +84,59 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
   </div>
 </section>
 
+<script>
+  import type { LoadingRegion } from 'dotquilt/region';
+  import { registerAll } from 'dotquilt/register-all';
+  import { handoffMs, onFirstView, reducedMotion } from './hold';
+
+  registerAll();
+  const steps = document.querySelector<LoadingRegion>('[data-steps]');
+  if (steps && !reducedMotion())
+    onFirstView(
+      steps,
+      () => {
+        steps.update({ state: 'pending', cycle: 'steps' });
+        window.setTimeout(() => {
+          if (steps.cycle === 'steps')
+            steps.update({ state: 'ready', timing: { duration: handoffMs() } });
+        }, 1100);
+      },
+      0.5,
+    );
+</script>
+
 <style>
-  .start {
+  .vc-start {
     display: grid;
     grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     gap: clamp(2rem, 5vw, 4.5rem);
     align-items: start;
   }
+  .steps-region {
+    margin: 1.75rem 0 2rem;
+  }
+  .ph {
+    display: grid;
+    gap: 1rem;
+  }
+  .ph-step {
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: start;
+  }
+  .ph-step dotquilt-skeleton-circle {
+    width: 1.75rem;
+  }
+  .ph-lines {
+    display: grid;
+    gap: 0.5rem;
+    padding-top: 0.125rem;
+  }
   ol {
     display: grid;
     gap: 1rem;
-    margin: 1.75rem 0 2rem;
+    margin: 0;
     padding: 0;
     list-style: none;
     counter-reset: step;
@@ -75,6 +146,7 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
     display: grid;
     grid-template-columns: 1.75rem minmax(0, 1fr);
     gap: 0.75rem;
+    margin: 0;
     color: var(--dq-muted);
     line-height: 1.6;
   }
@@ -86,7 +158,7 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
     height: 1.75rem;
     border: 1px solid var(--dq-line-2);
     border-radius: 50%;
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     color: var(--dq-ink);
   }
@@ -98,8 +170,24 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
     min-width: 0;
   }
   @media (max-width: 56rem) {
-    .start {
+    .vc-start {
       grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  /* Phones: the guide link, the code tabs and the copy button are full
+     44 px targets. */
+  @media (max-width: 40rem) {
+    .steps .home-button {
+      height: 44px;
+    }
+    .code :global([role='tab']) {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .code :global(.copy button) {
+      width: 44px;
+      height: 44px;
     }
   }
 </style>

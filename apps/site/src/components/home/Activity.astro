@@ -1,0 +1,187 @@
+---
+/**
+ * An activity feed. It loads once from its placeholder; after that, holding
+ * the control on the left refreshes it: every item stays readable under the
+ * region's thread of marks, and letting go brings the new items in at the
+ * top. The feed keeps its height and scrolls inside, so nothing below moves.
+ */
+import HoldButton from './HoldButton.astro';
+import { activity } from './screens';
+---
+
+<section class="va vc va-section home-section not-content va-split" aria-labelledby="va-activity-title" data-va-activity>
+  <div class="va-head">
+    <h2 id="va-activity-title">Refreshing never moves the page.</h2>
+    <p>
+      While an update loads, one row of marks rests just above the feed and
+      the glow passes along it once. Nothing below it moves or hides, so the
+      feed stays readable the whole time. Hold to keep it refreshing, and let
+      go to bring the new items in.
+    </p>
+    <div class="va-controls" data-controls>
+      <div class="va-hold-row">
+        <HoldButton
+          label="Hold to refresh"
+          controls="va-activity-feed"
+          describedby="va-activity-how"
+        />
+        <p class="vc-readout" data-readout aria-hidden="true"></p>
+      </div>
+      <p class="vc-rest" data-rest aria-hidden="true">Loaders rest after four seconds.</p>
+      <p class="va-sr" id="va-activity-how">
+        Press and hold to keep the feed refreshing. Let go to bring in the new
+        items.
+      </p>
+      <p class="va-sr" role="status" data-status></p>
+    </div>
+    <p class="va-uses">
+      dotquilt-region state="refreshing"
+    </p>
+  </div>
+
+  <div class="va-frame va-feed" role="group" aria-label="Example activity feed">
+    <div class="va-frame-bar">
+      <p class="va-frame-title"><span class="va-workspace" aria-hidden="true">F</span>Activity</p>
+      <span class="va-caption">Example data</span>
+    </div>
+    <div class="va-feed-body">
+      <dotquilt-region id="va-activity-feed" aria-label="Activity" data-feed-region>
+        <div slot="placeholder" class="va-feed-list">
+          {
+            activity.map((item) => (
+              <div class="va-feed-item">
+                <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+                <span class="text">
+                  <dotquilt-skeleton-line style={`width: ${item.text.length * 0.9}ch`}></dotquilt-skeleton-line>
+                  <dotquilt-skeleton-line style={`width: ${item.time.length * 0.85}ch`}></dotquilt-skeleton-line>
+                </span>
+              </div>
+            ))
+          }
+        </div>
+        <div class="va-feed-scroll" tabindex="0" role="group" aria-label="Activity items" data-feed-scroll>
+          <ul class="va-feed-list" data-feed>
+            {
+              activity.map((item) => (
+                <li class="va-feed-item">
+                  <span class="va-avatar">{item.initials}</span>
+                  <span class="text">
+                    <span class="what">{item.text}</span>
+                    <time>{item.time}</time>
+                  </span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </dotquilt-region>
+    </div>
+    <div class="va-frame-foot">
+      <span><span class="va-caption">Example data.</span> <span role="status" data-note>Up to date.</span></span>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { startActivity } from './activity';
+
+  startActivity();
+</script>
+
+<style is:global>
+  /* The feed keeps one height and scrolls inside it: four items show, and
+     the fifth peeks in under a soft fade. */
+  .va-feed-body {
+    --va-feed-h: 15.25rem;
+    padding: 1rem 1.25rem 0.75rem;
+  }
+  .va-feed-body dotquilt-region {
+    height: var(--va-feed-h);
+  }
+  .va-feed-scroll {
+    height: var(--va-feed-h);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    mask-image: linear-gradient(to bottom, #000 82%, transparent);
+  }
+  .va-feed-scroll:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+    border-radius: var(--dq-radius-sm);
+  }
+  .va-feed-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .va-feed-item {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.25rem;
+    margin: 0;
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--dq-radius-sm);
+    font-size: 0.875rem;
+  }
+  .va-feed-item dotquilt-skeleton-circle {
+    width: 2rem;
+  }
+  .va-feed-item .text {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    min-width: 0;
+  }
+  .va-feed-item dotquilt-skeleton-line {
+    max-width: 100%;
+  }
+  .va-feed-item time {
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+  }
+  .va-feed-item .what {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--dq-ink);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  /* New items settle in at the top and keep a quiet fill for a moment. */
+  .va-feed-item[data-new] {
+    animation:
+      va-row-fade var(--dq-duration-fade) var(--dq-ease-fade) both,
+      va-row-rise var(--dq-duration-rise) var(--dq-ease-settle) both,
+      va-feed-glow 2.8s var(--dq-ease-fade) both;
+    animation-delay: calc(var(--i, 0) * var(--dq-stagger-row));
+  }
+  @keyframes va-feed-glow {
+    from,
+    30% {
+      background: var(--dq-subtle);
+    }
+    to {
+      background: transparent;
+    }
+  }
+  /* The list grows from the top without a jump: older items glide down. */
+  .va-feed-item[data-shift] {
+    animation: va-feed-shift var(--dq-duration-rise) var(--dq-ease-settle) both;
+  }
+  @keyframes va-feed-shift {
+    from {
+      translate: 0 var(--shift, 0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .va-feed-item[data-new],
+    .va-feed-item[data-shift] {
+      animation: none;
+    }
+  }
+</style>

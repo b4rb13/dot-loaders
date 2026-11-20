@@ -1,0 +1,888 @@
+---
+/**
+ * The home page's first screen: the headline and actions on the left, and on
+ * the right, over the sparse field, a real revenue screen that loads. Its
+ * figures lock, its line draws from the chart's own marks and its rows
+ * settle, all within about 2.5 s. It rests for a few seconds, then loads the
+ * next range, and so on. The visitor can pick a range, slow the network or
+ * take it offline, or pause the loop.
+ */
+import './app.css';
+import { chartPoints, maskOf, pathOf } from './lib';
+import { ranges } from './screens';
+
+interface Props {
+  title: string;
+  tagline?: string;
+}
+const { title, tagline } = Astro.props;
+
+const range = ranges['30d'];
+// The line as first served, in a 600 × 160 box; the script redraws it at
+// the chart's real size.
+const line = pathOf(chartPoints(range.series, 600, 160));
+const choices = [
+  ['7d', '7 days'],
+  ['30d', '30 days'],
+  ['90d', '90 days'],
+] as const;
+const networks = [
+  ['fast', 'Fast'],
+  ['slow', 'Slow'],
+  ['offline', 'Offline'],
+] as const;
+---
+
+<section class="va va-hero not-content" aria-labelledby="_top" data-va-hero>
+  <div class="va-hero-grid" data-va-grid>
+    <div class="va-hero-copy">
+      <h1 id="_top" data-page-title>{title}</h1>
+      {tagline && <p class="lead">{tagline}</p>}
+      <div class="actions">
+        <a class="home-button primary" href="/docs/">Get started</a>
+        <a class="home-button" href="/docs/components/skeleton/">See the components</a>
+      </div>
+      <p class="meta">
+        Nine native web components and a React adapter. Free and MIT licensed.
+      </p>
+    </div>
+
+    <div class="va-stage">
+      <dotquilt-skeleton-block class="va-field" motion="paused" aria-hidden="true"
+      ></dotquilt-skeleton-block>
+
+      <div class="va-frame va-screen" role="group" aria-label="Example revenue screen" data-screen>
+        <div class="va-frame-bar">
+          <p class="va-frame-title"><span class="va-workspace" aria-hidden="true">F</span>Revenue</p>
+          <div class="va-seg" role="radiogroup" aria-label="Range" data-range>
+            <span data-indicator aria-hidden="true"></span>
+            {
+              choices.map(([value, label]) => (
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={value === '30d' ? 'true' : 'false'}
+                  data-value={value}
+                >
+                  {label}
+                </button>
+              ))
+            }
+          </div>
+        </div>
+
+        <dl class="va-kpis">
+          {
+            range.kpis.map((kpi, i) => (
+              <div class="va-kpi" data-kpi data-ready>
+                <dt>{kpi.label}</dt>
+                <dd class="va-figure">
+                  <dotquilt-text-loader
+                    mark="square"
+                    mask={maskOf(kpi.value)}
+                    aria-label={kpi.label}
+                    data-va-owner
+                    data-figure={i}
+                  >{kpi.value}</dotquilt-text-loader>
+                </dd>
+                <dd class="va-delta-row">
+                  <span class:list={['va-delta', kpi.tone]} data-delta>
+                    {kpi.delta}
+                  </span>
+                  <span class="va-sr" data-compare>{range.compare}</span>
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        <div class="va-block va-chart-block">
+          <div class="va-block-head">
+            <p class="title" data-chart-title>{range.chartTitle}</p>
+            <span class="note">USD, example data</span>
+          </div>
+          <dotquilt-region aria-label="Revenue chart" data-va-owner data-chart-region>
+            <dotquilt-chart-loader slot="placeholder" variant="line"></dotquilt-chart-loader>
+            <div class="va-chart">
+              <svg
+                class="va-chart-svg"
+                viewBox="0 0 600 160"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Revenue rising over the last 30 days"
+                data-chart
+              >
+                <g class="grid" data-grid>
+                  <line x1="0" x2="600" y1="40" y2="40" vector-effect="non-scaling-stroke"></line>
+                  <line x1="0" x2="600" y1="80" y2="80" vector-effect="non-scaling-stroke"></line>
+                  <line x1="0" x2="600" y1="120" y2="120" vector-effect="non-scaling-stroke"></line>
+                </g>
+                <path class="line" d={line} vector-effect="non-scaling-stroke" data-line></path>
+                <circle class="end" r="0" data-end></circle>
+              </svg>
+              <div class="axis" aria-hidden="true" data-axis>
+                {range.axis.map((label) => <span>{label}</span>)}
+              </div>
+              <div class="va-error">
+                <p><strong>Couldn’t load revenue.</strong> Check the connection and try again.</p>
+                <button type="button" class="home-button small" data-retry>Retry</button>
+              </div>
+            </div>
+          </dotquilt-region>
+        </div>
+
+        <div class="va-block va-table-block">
+          <div class="va-block-head">
+            <p class="title">Largest invoices</p>
+            <span class="note" data-count>Top 4 of {range.count}</span>
+          </div>
+          <div class="va-table">
+            <table class="va-table-head" aria-hidden="true">
+              <colgroup>
+                <col class="id" /><col class="customer" /><col class="project" /><col
+                  class="num"
+                /><col class="status" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="id">Invoice</th>
+                  <th>Customer</th>
+                  <th class="project">Project</th>
+                  <th class="num">Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+            </table>
+            <dotquilt-region aria-label="Largest invoices" data-va-owner data-table-region>
+              <div slot="placeholder" class="va-row-loaders" data-row-loaders>
+                {
+                  range.invoices.map(() => (
+                    <dotquilt-table-loader rows="1" row-height="36" mark="dash" />
+                  ))
+                }
+              </div>
+              <div class="va-table-body">
+                <table data-table>
+                  <colgroup>
+                    <col class="id" /><col class="customer" /><col class="project" /><col
+                      class="num"
+                    /><col class="status" />
+                  </colgroup>
+                  <thead class="va-sr-head">
+                    <tr>
+                      <th class="id" scope="col" data-kind="text">Invoice</th>
+                      <th scope="col" data-kind="text">Customer</th>
+                      <th class="project" scope="col" data-kind="text">Project</th>
+                      <th class="num" scope="col" data-kind="number">Amount</th>
+                      <th scope="col" data-kind="badge">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody data-rows>
+                    {
+                      range.invoices.map((invoice) => (
+                        <tr>
+                          <td class="id">{invoice.id}</td>
+                          <td>{invoice.customer}</td>
+                          <td class="project">{invoice.project}</td>
+                          <td class="num">{invoice.amount}</td>
+                          <td>
+                            <span class:list={['va-chip', invoice.status.toLowerCase()]}>
+                              {invoice.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    }
+                  </tbody>
+                </table>
+                <p class="va-empty">Invoices will show here once the connection is back.</p>
+              </div>
+            </dotquilt-region>
+          </div>
+        </div>
+
+        <div class="va-screen-foot">
+          <p class="va-status">
+            <span class="tag">Example data</span>
+            <span role="status" data-status>Showing the last 30 days.</span>
+          </p>
+          <div class="va-net">
+            <span class="label" id="va-network-label">Network</span>
+            <div class="va-seg" role="radiogroup" aria-labelledby="va-network-label" data-network>
+              <span data-indicator aria-hidden="true"></span>
+              {
+                networks.map(([value, label]) => (
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={value === 'fast' ? 'true' : 'false'}
+                    data-value={value}
+                  >
+                    {label}
+                  </button>
+                ))
+              }
+            </div>
+            <button
+              type="button"
+              class="va-loop"
+              aria-pressed="false"
+              aria-label="Pause the example"
+              data-loop
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path class="pause" d="M5 3.5v9M11 3.5v9"></path>
+                <path class="play" d="M5.5 3.5 12 8l-6.5 4.5z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script is:inline>
+  // Before anything paints: reach the window's right edge exactly (so the
+  // frame can bleed without a horizontal scrollbar), and, when motion is
+  // allowed, start the screen pending. Reduced motion shows it loaded.
+  (() => {
+    try {
+      const hero = document.currentScript.previousElementSibling;
+      const grid = hero.querySelector('[data-va-grid]');
+      const reach = () =>
+        hero.style.setProperty(
+          '--va-bleed',
+          `${Math.max(0, Math.floor(document.documentElement.clientWidth - grid.getBoundingClientRect().right))}px`,
+        );
+      reach();
+      addEventListener('resize', reach);
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      hero.setAttribute('data-arrive', '');
+      const owners = hero.querySelectorAll('[data-va-owner]');
+      for (const owner of owners) owner.setAttribute('state', 'pending');
+      for (const kpi of hero.querySelectorAll('[data-kpi]'))
+        kpi.removeAttribute('data-ready');
+      hero.querySelector('[data-status]').textContent =
+        'Loading the last 30 days…';
+      // If the components never load, show the data rather than marks.
+      setTimeout(() => {
+        if (customElements.get('dotquilt-region')) return;
+        for (const owner of owners) owner.removeAttribute('state');
+        for (const kpi of hero.querySelectorAll('[data-kpi]'))
+          kpi.setAttribute('data-ready', '');
+        hero.removeAttribute('data-arrive');
+      }, 6000);
+    } catch {}
+  })();
+</script>
+
+<script>
+  import { startHero } from './screen';
+
+  startHero();
+</script>
+
+<style is:global>
+  .va-hero {
+    /* How far the window's right edge is from the content edge; measured
+       before paint, with the gutter as a first guess. */
+    --va-bleed: var(--va-gutter);
+    position: relative;
+    padding-block: 0 clamp(2rem, 6vh, 4rem);
+  }
+  .va-hero-grid {
+    --h1: clamp(44px, 5.4vw, 72px);
+    display: grid;
+    /* The copy column is as wide as "that hand over." at the headline size. */
+    grid-template-columns: calc(var(--h1) * 6.62) minmax(0, 1fr);
+    column-gap: clamp(2rem, 4vw, 3.5rem);
+    align-items: center;
+  }
+  .va-hero-copy {
+    position: relative;
+    z-index: 1;
+    padding-bottom: 1.5rem;
+  }
+  .va-hero h1#_top {
+    margin: 0;
+    font-size: var(--h1);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--dq-ink);
+    text-wrap: balance;
+  }
+  .va-hero .lead {
+    margin: 1.375rem 0 0;
+    max-width: 26rem;
+    font-size: 18.75px;
+    line-height: 1.5;
+    color: var(--dq-muted);
+    text-wrap: balance;
+  }
+  .va-hero .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 2.25rem;
+  }
+  .va-hero .actions .home-button {
+    height: 52px;
+    padding: 0 24px;
+    font-size: 1rem;
+  }
+  .va-hero .meta {
+    margin: 1.5rem 0 0;
+    max-width: 25rem;
+    text-wrap: balance;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--dq-faint);
+  }
+
+  /* The stage runs from the copy to the window's right edge and clips there,
+     so the frame can bleed off it with no horizontal scroll. Its left padding
+     leaves room for the frame's shadow. */
+  .va-stage {
+    /* The field shows as ground above the frame and in a band to its left. */
+    --va-inset: 40px;
+    position: relative;
+    margin-left: -40px;
+    margin-right: calc(-1 * var(--va-bleed));
+    padding: clamp(36px, 6vh, 64px) 0 clamp(32px, 6vh, 64px) 40px;
+    overflow-x: clip;
+  }
+  /* Quiet ground: the first screen's sparse field, at rest, strongest at the
+     top right and gone before it reaches the words. */
+  .va-field {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    --dotquilt-dot-size: 2.8px;
+    --dotquilt-dot-gap: 19.6px;
+    --dotquilt-color: var(--dq-ink);
+    mask-image: radial-gradient(
+      150% 115% at 72% 0%,
+      rgb(0 0 0 / var(--va-field-top, 0.85)) 0%,
+      rgb(0 0 0 / var(--va-field-mid, 0.52)) 40%,
+      rgb(0 0 0 / var(--va-field-low, 0.22)) 72%,
+      transparent 100%
+    );
+  }
+  :root[data-theme='dark'] .va-field {
+    --va-field-top: 1;
+    --va-field-mid: 0.7;
+    --va-field-low: 0.32;
+  }
+
+  /* The screen: a white app frame. It runs 24 px past the window edge so
+     its right border never shows; at very wide windows it stops at 1040 px. */
+  .va-screen {
+    --va-pad-l: clamp(16px, 1.8vw, 24px);
+    --va-hidden: clamp(0px, 1040px - 100%, 24px);
+    --va-pad-r: calc(var(--va-hidden) + clamp(16px, 2.2vw, 32px));
+    --va-chart-h: clamp(104px, 100svh - 650px, 184px);
+    container: va-screen / inline-size;
+    position: relative;
+    width: min(100% + 24px - var(--va-inset), 1040px);
+    margin-left: var(--va-inset);
+    overflow: hidden;
+  }
+  .va-screen > .va-frame-bar,
+  .va-screen > .va-kpis,
+  .va-screen > .va-block,
+  .va-screen > .va-screen-foot {
+    padding-left: var(--va-pad-l);
+    padding-right: var(--va-pad-r);
+  }
+  .va-screen .va-frame-bar {
+    min-height: 3.25rem;
+    padding-block: 0.5rem;
+  }
+
+  .va-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    padding-block: 0.875rem;
+    border-bottom: 1px solid var(--dq-line);
+  }
+  .va-kpi {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.125rem 0.5rem;
+    min-width: 0;
+    padding-inline: 1.125rem;
+    border-left: 1px solid var(--dq-line);
+  }
+  .va-kpi:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .va-kpi dt {
+    grid-area: 1 / 1;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--dq-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .va-kpi dd {
+    margin: 0;
+  }
+  .va-kpi .va-figure {
+    grid-area: 2 / 1 / 3 / -1;
+    font-size: 1.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    color: var(--dq-ink);
+  }
+  .va-kpi .va-figure dotquilt-text-loader {
+    min-width: 4ch;
+  }
+  /* The change sits on the label's line and settles in after the figure
+     has locked. */
+  .va-delta-row {
+    grid-area: 1 / 2;
+    font-size: 0.75rem;
+    opacity: 0;
+    translate: 0 4px;
+  }
+  .va-kpi[data-ready] .va-delta-row {
+    opacity: 1;
+    translate: 0 0;
+    transition:
+      opacity var(--dq-duration-fade) var(--dq-ease-fade) 520ms,
+      translate var(--dq-duration-rise) var(--dq-ease-settle) 520ms;
+  }
+  .va-delta {
+    font-weight: 600;
+    color: var(--dq-positive);
+  }
+  .va-delta.bad {
+    color: var(--dq-negative);
+  }
+
+  .va-block {
+    padding-block: 0.875rem 0.875rem;
+  }
+  .va-block + .va-block {
+    border-top: 1px solid var(--dq-line);
+  }
+  .va-block-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.625rem;
+  }
+  .va-block-head .title {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: var(--dq-ink);
+  }
+  .va-block-head .note {
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+  }
+
+  .va-chart-block dotquilt-chart-loader,
+  .va-chart-svg {
+    display: block;
+    width: 100%;
+    height: var(--va-chart-h);
+  }
+  .va-chart {
+    display: grid;
+    gap: 0.375rem;
+  }
+  .va-chart-svg {
+    overflow: visible;
+  }
+  .va-chart-svg .grid line {
+    stroke: var(--dq-line);
+    stroke-width: 1;
+  }
+  .va-chart-svg .line {
+    fill: none;
+    stroke: var(--dq-accent);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .va-chart-svg .end {
+    fill: var(--dq-surface);
+    stroke: var(--dq-accent);
+    stroke-width: 2;
+  }
+  .va-chart .axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Offline: a calm message in the chart's place, with the same height. */
+  .va-error {
+    display: none;
+    align-content: center;
+    justify-items: start;
+    gap: 0.75rem;
+    min-height: calc(var(--va-chart-h) + 1.4rem);
+    padding: 0 0.25rem;
+  }
+  .va-error p {
+    margin: 0;
+    max-width: 30rem;
+    font-size: 0.875rem;
+    color: var(--dq-muted);
+  }
+  .va-error strong {
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .va-screen[data-error] .va-error {
+    display: grid;
+  }
+  .va-screen[data-error] :is(.va-chart-svg, .va-chart .axis, .va-table table) {
+    display: none;
+  }
+
+  .va-table table,
+  .va-row-loaders {
+    width: 100%;
+  }
+  .va-table table {
+    display: table;
+    margin: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.8125rem;
+  }
+  /* Columns sized so each one's text fills most of it: the placeholder's
+     bars then hold the same shape as the rows that arrive. */
+  .va-table col.id {
+    width: 15%;
+  }
+  .va-table col.customer {
+    width: 22%;
+  }
+  .va-table col.project {
+    width: 30%;
+  }
+  .va-table col.num {
+    width: 16%;
+  }
+  .va-table col.status {
+    width: 17%;
+  }
+  .va-table :is(th, td) {
+    height: 36px;
+    padding: 0 0.5rem;
+    border: 0;
+    border-bottom: 1px solid var(--dq-line);
+    text-align: start;
+    color: var(--dq-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .va-table :is(th, td):first-child {
+    padding-left: 0;
+  }
+  .va-table th {
+    height: 28px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--dq-faint);
+  }
+  .va-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .va-table .num {
+    text-align: end;
+  }
+  .va-table td.id {
+    color: var(--dq-muted);
+  }
+  /* The column heads sit outside the loading region, so they stay still
+     while the rows load and hand over. The table inside keeps its own
+     heads for screen readers, at no height. */
+  .va-table .va-sr-head th {
+    height: 0;
+    padding-block: 0;
+    border: 0;
+    font-size: 0;
+    line-height: 0;
+  }
+  .va-row-loaders dotquilt-table-loader {
+    display: block;
+  }
+  .va-empty {
+    display: none;
+    margin: 0;
+    padding: 1.25rem 0;
+    font-size: 0.875rem;
+    color: var(--dq-muted);
+  }
+  .va-screen[data-error] .va-empty {
+    display: block;
+  }
+  /* Rows that arrive on a refresh settle in one after another. */
+  .va-table tr[data-fresh] {
+    animation:
+      va-row-fade var(--dq-duration-fade) var(--dq-ease-fade) both,
+      va-row-rise var(--dq-duration-rise) var(--dq-ease-settle) both;
+    animation-delay: calc(var(--i, 0) * var(--dq-stagger-row));
+  }
+  @keyframes va-row-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes va-row-rise {
+    from {
+      translate: 0 var(--dq-rise-distance);
+    }
+  }
+
+  .va-screen-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding-block: 0.625rem;
+    border-top: 1px solid var(--dq-line);
+    background: var(--dq-subtle);
+  }
+  .va-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.625rem;
+    margin: 0;
+    min-width: 0;
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+  }
+  .va-status .tag {
+    padding: 0.0625rem 0.5rem;
+    border: 1px solid var(--dq-line-2);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--dq-muted);
+    white-space: nowrap;
+  }
+  .va-net {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .va-net .label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--dq-faint);
+  }
+  .va-net .va-seg {
+    background: var(--dq-surface);
+  }
+  .va-net .va-seg [data-indicator] {
+    background: var(--dq-subtle);
+  }
+  /* The loop's pause: a quiet key at the end of the foot. */
+  .va-loop {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--dq-line-2);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+    color: var(--dq-muted);
+    cursor: pointer;
+    transition:
+      color var(--dq-duration-ui) var(--dq-ease-settle),
+      border-color var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .va-loop:hover {
+    border-color: color-mix(in srgb, var(--dq-ink) 35%, var(--dq-line-2));
+    color: var(--dq-ink);
+  }
+  .va-loop:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+  }
+  .va-loop svg {
+    width: 14px;
+    height: 14px;
+  }
+  .va-loop .pause {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .va-loop .play {
+    display: none;
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-width: 1;
+    stroke-linejoin: round;
+  }
+  .va-loop[aria-pressed='true'] .pause {
+    display: none;
+  }
+  .va-loop[aria-pressed='true'] .play {
+    display: inline;
+  }
+  /* With reduced motion the screen rests, loaded, so there is nothing to pause. */
+  @media (prefers-reduced-motion: reduce) {
+    .va-loop {
+      display: none;
+    }
+  }
+
+  /* The frame settles once on arrival: it rises a few pixels while its
+     shadow opens, then the loaders inside take over. */
+  @media (prefers-reduced-motion: no-preference) {
+    .va-hero[data-arrive] .va-screen {
+      animation:
+        va-row-fade var(--dq-duration-fade) var(--dq-ease-fade) both,
+        va-frame-rise var(--dq-duration-rise) var(--dq-ease-settle) both;
+    }
+    .va-hero[data-arrive] .va-field {
+      animation: va-row-fade 1600ms var(--dq-ease-fade) both;
+    }
+  }
+  @keyframes va-frame-rise {
+    from {
+      translate: 0 14px;
+    }
+  }
+
+  /* Narrow frames: drop the invoice number and date, and stack the foot. */
+  /* Narrower frames keep the foot on one line: the network control keeps
+     its name for screen readers only. */
+  @container va-screen (max-width: 720px) {
+    .va-net .label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+  @container va-screen (max-width: 560px) {
+    .va-table :is(.id, .project) {
+      display: none;
+    }
+    .va-table col.customer {
+      width: 44%;
+    }
+    .va-table col.num {
+      width: 30%;
+    }
+    .va-table col.status {
+      width: 26%;
+    }
+    .va-table td:nth-child(2),
+    .va-table th:nth-child(2) {
+      padding-left: 0;
+    }
+    .va-kpi {
+      padding-inline: 0.75rem;
+    }
+    .va-kpi dt {
+      font-size: 0.75rem;
+    }
+  }
+  /* The narrowest phones: the status column keeps room for "Overdue". */
+  @container va-screen (max-width: 340px) {
+    .va-table col.customer {
+      width: 40%;
+    }
+    .va-table col.num {
+      width: 29%;
+    }
+    .va-table col.status {
+      width: 31%;
+    }
+  }
+  @container va-screen (max-width: 460px) {
+    /* Labels may wrap; the figures stay on one line across the strip. */
+    .va-kpi {
+      grid-template-columns: minmax(0, 1fr);
+      align-content: end;
+      padding-inline: 0.625rem;
+    }
+    .va-kpi dt {
+      line-height: 1.3;
+      white-space: normal;
+    }
+    .va-kpi .va-figure {
+      grid-area: 2 / 1;
+      font-size: 18.75px;
+    }
+    .va-delta-row {
+      grid-area: 3 / 1;
+    }
+  }
+
+  @media (max-width: 960px) {
+    .va-hero-grid {
+      --h1: clamp(40px, 9vw, 60px);
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .va-hero-copy {
+      padding: 0;
+    }
+    .va-hero .lead {
+      max-width: 30rem;
+      font-size: 1.09375rem;
+    }
+    .va-hero .actions {
+      margin-top: 1.75rem;
+    }
+    .va-stage {
+      --va-inset: 0px;
+      margin-top: 0.5rem;
+      padding-top: 28px;
+    }
+    .va-stage .va-screen {
+      --va-chart-h: clamp(120px, 26vw, 176px);
+    }
+  }
+  @media (max-width: 40rem) {
+    .va-hero .actions {
+      gap: 10px;
+    }
+    .va-hero .actions .home-button {
+      flex: 1 1 auto;
+      height: 50px;
+      padding: 0 16px;
+      white-space: nowrap;
+    }
+    .va-hero .meta {
+      font-size: 0.75rem;
+    }
+    .va-stage {
+      margin-left: -20px;
+      padding-left: 20px;
+    }
+  }
+</style>

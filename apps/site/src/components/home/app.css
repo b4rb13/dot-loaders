@@ -1,0 +1,419 @@
+/* The home page's app screens: the pieces its first screen and its example
+   sections share (frames, tables, chips, segmented controls). Everything
+   here is scoped under `.va`, the class on those sections' root elements.
+   Values are design/tokens.css tokens. */
+
+.va {
+  --va-gutter: clamp(1.25rem, 5.7vw, 82px);
+}
+/* Read by screen readers, not shown. */
+.va .va-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* List items in these screens are rows and tiles, not prose: they span
+   their box rather than the docs' 68ch reading measure. */
+.va ul > li,
+.va ol > li {
+  max-width: none;
+}
+.va ::selection {
+  background: var(--dq-accent-soft);
+  color: var(--dq-ink);
+}
+
+/* Section rhythm and headings (home.css gives .home-section its margins). */
+.va-head {
+  max-width: 40rem;
+}
+.va-head h2 {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.2vw, 2.375rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--dq-ink);
+  text-wrap: balance;
+}
+.va-head p {
+  margin: 1rem 0 0;
+  max-width: 36rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--dq-muted);
+  text-wrap: pretty;
+}
+/* "Uses" lines: the elements a screen is built from. */
+.va-head .va-uses {
+  margin: 1.25rem 0 0;
+  font: 400 0.75rem / 1.6 var(--dq-font-mono);
+  color: var(--dq-faint);
+}
+/* The copy and its controls on the left, the live screen on the right, in
+   every section; it stacks on narrow windows, controls above the screen. */
+.va-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: center;
+}
+@media (max-width: 56rem) {
+  .va-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* A section's controls: its choices, then the hold control and its timing. */
+.va-controls {
+  display: grid;
+  justify-items: start;
+  gap: 0.875rem;
+  margin-top: 1.75rem;
+}
+.va-control {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+}
+.va-control-name {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--dq-muted);
+}
+.va-hold-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+.va-controls .vc-readout {
+  min-height: 1.2em;
+}
+.va-controls .vc-rest {
+  margin-top: -0.375rem;
+}
+.va-caption {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--dq-faint);
+}
+
+/* An app frame: one white surface with a hairline and the raised shadow. */
+.va-frame {
+  border: 1px solid var(--dq-line);
+  border-radius: var(--dq-radius-lg);
+  background: var(--dq-surface);
+  box-shadow: var(--dq-shadow-lg);
+  color: var(--dq-ink);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.va-frame-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem 1rem;
+  min-height: 3.5rem;
+  padding: 0.625rem 1.25rem;
+  border-bottom: 1px solid var(--dq-line);
+}
+.va-frame-title {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--dq-ink);
+}
+/* The example workspace's initial: a neutral app glyph, not the
+   Dotquilt logo. */
+.va-workspace {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--dq-line-2);
+  border-radius: var(--dq-radius-sm);
+  background: var(--dq-subtle);
+  color: var(--dq-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* A frame's foot: the screen's status and its own controls. */
+.va-frame-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 1.25rem;
+  border-top: 1px solid var(--dq-line);
+  background: var(--dq-subtle);
+  font-size: 0.8125rem;
+  color: var(--dq-muted);
+}
+
+/* Buttons: considered hover and press feedback, 44 px on phones. */
+.va .home-button {
+  transition:
+    background var(--dq-duration-ui) var(--dq-ease-settle),
+    border-color var(--dq-duration-ui) var(--dq-ease-settle),
+    scale var(--dq-duration-ui) var(--dq-ease-settle);
+}
+.va .home-button:active {
+  scale: 0.97;
+}
+.va .home-button[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: default;
+}
+.va .home-button[aria-disabled="true"]:active {
+  scale: 1;
+}
+
+/* A segmented choice (role="radiogroup"): a quiet track, and a white pill
+   that glides to the checked option. */
+.va-seg {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--dq-line);
+  border-radius: var(--dq-radius-sm);
+  background: var(--dq-subtle);
+  isolation: isolate;
+}
+.va-seg [role="radio"] {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4375rem;
+  min-width: 2.75rem;
+  height: 28px;
+  padding: 0 0.625rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dq-muted);
+  font: 500 0.8125rem / 1 var(--dq-font);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--dq-duration-ui) var(--dq-ease-settle),
+    scale var(--dq-duration-ui) var(--dq-ease-settle);
+}
+.va-seg [role="radio"]:hover,
+.va-seg [role="radio"][aria-checked="true"] {
+  color: var(--dq-ink);
+}
+.va-seg [role="radio"]:active {
+  scale: 0.95;
+}
+.va-seg [role="radio"]:focus-visible,
+.va-switch:focus-visible,
+.va-link:focus-visible {
+  outline: 2px solid var(--dq-focus);
+  outline-offset: 2px;
+}
+/* Before the script places the pill, the checked option draws its own. */
+.va-seg [role="radio"][aria-checked="true"] {
+  background: var(--dq-surface);
+  box-shadow: inset 0 0 0 1px var(--dq-line);
+}
+.va-seg:has([data-indicator][data-ready]) [role="radio"] {
+  background: transparent;
+  box-shadow: none;
+}
+.va-seg [data-indicator] {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: var(--w, 0);
+  height: var(--h, 0);
+  translate: var(--x, 0) var(--y, 0);
+  border-radius: 6px;
+  background: var(--dq-surface);
+  box-shadow:
+    inset 0 0 0 1px var(--dq-line),
+    var(--dq-shadow);
+  opacity: 0;
+  pointer-events: none;
+}
+.va-seg [data-indicator][data-ready] {
+  opacity: 1;
+  transition:
+    translate var(--dq-duration-ui) var(--dq-ease-settle),
+    width var(--dq-duration-ui) var(--dq-ease-settle);
+}
+.va-seg .va-glyph {
+  display: inline-block;
+  background: currentColor;
+}
+.va-glyph.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+}
+.va-glyph.square {
+  width: 5px;
+  height: 5px;
+  border-radius: 1.4px;
+}
+.va-glyph.dash {
+  width: 11px;
+  height: 4px;
+  border-radius: 999px;
+}
+
+/* An on/off switch (role="switch"). */
+.va-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dq-ink);
+  font: 500 0.8125rem / 1.2 var(--dq-font);
+  cursor: pointer;
+}
+.va-switch .track {
+  position: relative;
+  flex: none;
+  width: 2.125rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: var(--dq-line-2);
+  transition: background var(--dq-duration-ui) var(--dq-ease-settle);
+}
+.va-switch .track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--dq-surface);
+  box-shadow: var(--dq-shadow);
+  transition: translate var(--dq-duration-ui) var(--dq-ease-settle);
+}
+.va-switch[aria-checked="true"] .track {
+  background: var(--dq-ink);
+}
+.va-switch[aria-checked="true"] .track::after {
+  translate: 0.875rem 0;
+}
+
+/* Status chips in tables and lists. */
+.va-chip {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: var(--dq-subtle);
+  color: var(--dq-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.va-chip.paid {
+  background: var(--dq-positive-soft);
+  color: var(--dq-positive);
+}
+.va-chip.sent,
+.va-chip.open {
+  background: var(--dq-info-soft);
+  color: var(--dq-info);
+}
+.va-chip.overdue {
+  background: var(--dq-warning-soft);
+  color: var(--dq-warning);
+}
+
+/* Avatars: initials in a quiet disc. */
+.va-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--dq-subtle);
+  color: var(--dq-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* A text link inside a card. */
+.va-link {
+  color: var(--dq-accent);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.va-link:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Before the components register, show only what the state calls for:
+   the content when ready (and without JavaScript), nothing while pending. */
+.va
+  :is(dotquilt-region, dotquilt-text-loader)[state="pending"]:not(:defined)
+  > :not([slot]) {
+  visibility: hidden;
+}
+.va dotquilt-text-loader[state="pending"]:not(:defined) {
+  color: transparent;
+}
+.va dotquilt-region:not(:defined):not([state="pending"]) > [slot] {
+  display: none;
+}
+
+/* Tabular figures wherever data is shown. */
+.va :is(td, .va-figure, output, time) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Phones: every control is at least 44 px tall. */
+@media (max-width: 40rem) {
+  .va-seg [role="radio"] {
+    height: 44px;
+    min-width: 44px;
+  }
+  .va .home-button,
+  .va .home-button.small {
+    min-height: 44px;
+  }
+  .va-switch {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .va-seg [data-indicator][data-ready],
+  .va .home-button,
+  .va-seg [role="radio"],
+  .va-switch .track,
+  .va-switch .track::after {
+    transition: none;
+  }
+}

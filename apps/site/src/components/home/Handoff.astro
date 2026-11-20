@@ -1,34 +1,70 @@
 ---
 /**
- * The handoff, slowed down: a live card and a timeline of its phases
- * (design/SPEC.md, "Handoff"), with a playhead that follows the real one.
+ * The handoff, at the visitor's speed: a live message card and a timeline of
+ * its phases (design/SPEC.md, "Handoff") that plays along with the real one.
+ * Hold to keep the message loading, let go to watch it hand over; the speed
+ * slows the handoff to a half or a third.
  */
-const total = 1100;
+import HoldButton from './HoldButton.astro';
+
+/** Each phase's share of the handoff, from SPEC: take shape, then hand over. */
 const tracks = [
-  { label: 'Marks travel to the real lines and avatar', from: 0, to: 600 },
-  { label: 'Content wipes in along a soft front', from: 505, to: 1100 },
-  { label: 'Marks leave where the front passes', from: 505, to: 1100 },
+  { label: 'Marks travel to the real lines and avatar', from: 0, to: 0.55 },
+  { label: 'Content wipes in along a soft front', from: 0.46, to: 1 },
+  { label: 'Marks leave where the front passes', from: 0.46, to: 1 },
+];
+/** The runtime skips any handoff longer than four seconds, so ⅓× is the slowest. */
+const speeds = [
+  { label: '1×', ms: 1100, name: 'Full speed' },
+  { label: '½×', ms: 2200, name: 'Half speed' },
+  { label: '⅓×', ms: 3300, name: 'A third of the speed' },
 ];
 ---
 
-<section class="home-section not-content handoff" aria-labelledby="handoff-title">
-  <div class="copy">
-    <h2 id="handoff-title">The marks become your content.</h2>
+<section class="vc home-section not-content vc-anatomy" aria-labelledby="vc-anatomy-title" data-handoff>
+  <div class="copy" data-controls>
+    <h2 id="vc-anatomy-title">The marks become your content.</h2>
     <p>
       When your data lands, the marks don't vanish. They travel to its real
       shape: each line grows or shrinks to the length of your text, and the
-      circle becomes the avatar. Then your content wipes in as they leave, in
-      a little over a second, on long eased curves. Nothing flickers and
-      nothing jumps at the end.
+      circle becomes the avatar. Then your content wipes in as they leave.
     </p>
-    <div class="play">
-      <button type="button" class="home-button" data-play="1100">Play</button>
-      <button type="button" class="home-button" data-play="3800">Play slowly</button>
+    <p>Slow it down, then hold and let go to follow each part.</p>
+    <div class="controls">
+      <div class="speeds" role="radiogroup" aria-label="Speed" data-speeds>
+        {
+          speeds.map((speed, i) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked={i === 0 ? 'true' : 'false'}
+              aria-label={speed.name}
+              tabindex={i === 0 ? 0 : -1}
+              data-speed={speed.ms}
+            >
+              {speed.label}
+            </button>
+          ))
+        }
+      </div>
+      <HoldButton controls="vc-anatomy-message" describedby="vc-anatomy-how" />
     </div>
+    <p class="vc-readout reading" data-readout aria-hidden="true"></p>
+    <p class="vc-rest" data-rest aria-hidden="true">Loaders rest after four seconds.</p>
+    <p class="sr-only" id="vc-anatomy-how">
+      Press and hold to keep the message loading. Let go to watch it hand over.
+    </p>
+    <p class="sr-only" role="status" data-status></p>
   </div>
 
   <div class="stage home-card">
-    <dotquilt-region state="pending" aria-label="A message" data-handoff>
+    <dotquilt-region
+      id="vc-anatomy-message"
+      state="ready"
+      aria-label="Example message"
+      data-region
+      data-vc-pending
+    >
       <div slot="placeholder" class="message">
         <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
         <dotquilt-skeleton-text lines="3"></dotquilt-skeleton-text>
@@ -45,22 +81,24 @@ const tracks = [
       </article>
     </dotquilt-region>
 
-    <div class="timeline" aria-hidden="true">
+    <div class="timeline" aria-hidden="true" data-timeline>
       {
         tracks.map((track) => (
-          <div class="track">
+          <div class="track" data-from={track.from} data-to={track.to}>
             <span class="track-label">{track.label}</span>
             <span class="track-bar">
               <span
-                class="track-fill"
-                style={`left:${(track.from / total) * 100}%;width:${((track.to - track.from) / total) * 100}%`}
-              />
+                class="track-span"
+                style={`left:${track.from * 100}%;width:${(track.to - track.from) * 100}%`}
+              >
+                <span class="track-live" data-live />
+              </span>
             </span>
           </div>
         ))
       }
       <div class="ticks">
-        <span>0</span><span data-mid>0.55 s</span><span data-end>1.1 s</span>
+        <span>0 s</span><span data-tick="0.5">0.55 s</span><span data-tick="1">1.1 s</span>
       </div>
       <span class="playhead" data-playhead></span>
     </div>
@@ -70,63 +108,87 @@ const tracks = [
 <script>
   import type { LoadingRegion } from 'dotquilt/region';
   import { registerAll } from 'dotquilt/register-all';
+  import { Connection, handoffBase, onFirstView, reducedMotion } from './hold';
 
   registerAll();
-  const section = document.querySelector<HTMLElement>('.handoff');
-  const region = section?.querySelector<LoadingRegion>('[data-handoff]');
+  const section = document.querySelector<HTMLElement>('[data-handoff]');
+  const region = section?.querySelector<LoadingRegion>('[data-region]');
+  const controls = section?.querySelector<HTMLElement>('[data-controls]');
+  const timeline = section?.querySelector<HTMLElement>('[data-timeline]');
   const playhead = section?.querySelector<HTMLElement>('[data-playhead]');
-  if (section && region && playhead) {
-    let duration = 1100;
-    let count = 0;
-    let timer: number | undefined;
-    const label = (selector: string, seconds: number) => {
-      const tick = section.querySelector(selector);
-      if (tick) tick.textContent = `${Number(seconds.toFixed(2))} s`;
+  if (section && region && controls && timeline && playhead) {
+    // The speed: a radio group with one tab stop. The ticks follow it, at
+    // half of the handoff and all of it.
+    let duration = handoffBase;
+    const speeds = [...section.querySelectorAll<HTMLButtonElement>('[data-speed]')];
+    const pick = (button: HTMLButtonElement, focus = false) => {
+      for (const other of speeds) {
+        other.setAttribute('aria-checked', String(other === button));
+        other.tabIndex = other === button ? 0 : -1;
+      }
+      if (focus) button.focus();
+      duration = Number(button.dataset.speed) || handoffBase;
+      for (const tick of timeline.querySelectorAll<HTMLElement>('[data-tick]'))
+        tick.textContent = `${Number(((duration * Number(tick.dataset.tick)) / 1000).toFixed(2))} s`;
     };
+    speeds.forEach((button, i) => {
+      button.addEventListener('click', () => pick(button));
+      button.addEventListener('keydown', (event) => {
+        const step =
+          event.key === 'ArrowRight' || event.key === 'ArrowDown'
+            ? 1
+            : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+              ? -1
+              : 0;
+        const next = speeds[(i + step + speeds.length) % speeds.length];
+        if (!step || !next) return;
+        event.preventDefault();
+        pick(next, true);
+      });
+    });
 
-    /** Load the card, then hand over after a short wait, at `ms` long. */
-    function play(ms: number) {
-      clearTimeout(timer);
-      duration = ms;
-      label('[data-mid]', ms / 2000);
-      label('[data-end]', ms / 1000);
-      const cycle = `handoff-${++count}`;
-      region?.update({ state: 'pending', cycle });
-      timer = window.setTimeout(() => {
-        if (region?.cycle !== cycle) return;
-        // timing.duration scales every part of the handoff together.
-        region.update({ state: 'ready', timing: { duration } });
-      }, 1200);
-    }
+    const connection = new Connection({
+      name: 'handoff',
+      subject: 'The message',
+      root: controls,
+      begin: (cycle) => region.update({ state: 'pending', cycle }),
+      deliver: () => region.update({ state: 'ready', timing: { duration } }),
+    });
 
+    const clear = () => {
+      for (const element of [playhead, ...timeline.querySelectorAll('[data-live]')])
+        for (const animation of element.getAnimations()) animation.cancel();
+    };
     region.addEventListener('dotquilt-handoff-start', () => {
-      playhead.getAnimations().forEach((animation) => animation.cancel());
+      clear();
+      if (reducedMotion()) return;
+      // The playhead is a clock, so it moves at an even pace.
       playhead.animate(
         [
-          { left: '0%', opacity: 1 },
+          { left: '0%', opacity: 0 },
+          { left: '0%', opacity: 1, offset: 0.02 },
           { left: '100%', opacity: 1, offset: 0.98 },
           { left: '100%', opacity: 0 },
         ],
         { duration, easing: 'linear', fill: 'forwards' },
       );
+      for (const track of timeline.querySelectorAll<HTMLElement>('[data-from]')) {
+        const from = Number(track.dataset.from);
+        const to = Number(track.dataset.to);
+        track.querySelector('[data-live]')?.animate(
+          [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }],
+          { delay: from * duration, duration: (to - from) * duration, easing: 'linear', fill: 'both' },
+        );
+      }
     });
+    region.addEventListener('dotquilt-handoff-cancel', clear);
 
-    for (const button of section.querySelectorAll<HTMLButtonElement>('[data-play]'))
-      button.addEventListener('click', () => play(Number(button.dataset.play)));
-
-    new IntersectionObserver(
-      (entries, observer) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        observer.disconnect();
-        play(1100);
-      },
-      { threshold: 0.5 },
-    ).observe(region);
+    if (!reducedMotion()) onFirstView(region, () => connection.auto(1300), 0.5);
   }
 </script>
 
 <style>
-  .handoff {
+  .vc-anatomy {
     display: grid;
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
     gap: clamp(2rem, 5vw, 4.5rem);
@@ -137,10 +199,61 @@ const tracks = [
     line-height: 1.65;
     color: var(--dq-muted);
   }
-  .play {
+  .controls {
     display: flex;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
     margin-top: 1.75rem;
+  }
+  /* B's speed control: three plain choices, the current one in ink. */
+  .speeds {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+  }
+  .speeds button {
+    min-width: 44px;
+    height: 36px;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dq-muted);
+    font: 500 0.875rem / 1 var(--dq-font);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      color var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .speeds button:hover {
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+  }
+  .speeds button[aria-checked='true'] {
+    background: var(--dq-ink);
+    color: var(--dq-surface);
+  }
+  .speeds button:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+  }
+  @media (forced-colors: active) {
+    .speeds button[aria-checked='true'] {
+      outline: 2px solid Highlight;
+    }
+  }
+  .copy .reading {
+    display: block;
+    min-height: 1.2em;
+    margin-top: 1rem;
+  }
+  .copy .vc-rest {
+    margin-top: 0.375rem;
   }
   .stage {
     display: grid;
@@ -178,7 +291,7 @@ const tracks = [
     height: 2.5rem;
     border-radius: 50%;
     background: var(--dq-subtle);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     color: var(--dq-muted);
   }
@@ -194,7 +307,7 @@ const tracks = [
     gap: 0.375rem;
   }
   .track-label {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     color: var(--dq-muted);
   }
   .track-bar {
@@ -203,18 +316,31 @@ const tracks = [
     border-radius: 999px;
     background: var(--dq-subtle);
   }
-  .track-fill {
+  .track-span {
     position: absolute;
     top: 0;
     bottom: 0;
+    overflow: hidden;
     border-radius: 999px;
     background: var(--dq-line-2);
+  }
+  /* Each phase fills in ink as the real handoff plays through it. */
+  .track-live {
+    position: absolute;
+    inset: 0;
+    background: var(--dq-ink);
+    transform: scaleX(0);
+    transform-origin: left;
   }
   .ticks {
     display: flex;
     justify-content: space-between;
-    font: 0.6875rem/1 var(--dq-font-mono);
+    font: 0.75rem / 1 var(--dq-font-mono);
+    font-variant-numeric: tabular-nums;
     color: var(--dq-faint);
+  }
+  .ticks [data-tick='0.5'] {
+    translate: 25% 0;
   }
   .playhead {
     position: absolute;
@@ -223,13 +349,13 @@ const tracks = [
     left: 0;
     width: 2px;
     margin-left: -1px;
-    border-radius: 2px;
+    border-radius: 999px;
     background: var(--dq-ink);
     opacity: 0;
     pointer-events: none;
   }
   @media (max-width: 56rem) {
-    .handoff {
+    .vc-anatomy {
       grid-template-columns: minmax(0, 1fr);
     }
   }

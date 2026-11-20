@@ -11,7 +11,7 @@ const wordmark = '[data-wordmark]';
 test('a first visit plays the wordmark arrival once; later pages are at rest', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/docs/');
   const mark = page.locator(wordmark);
   // It shimmers in marks, then takes the shape of the name and hands over.
   await expect(mark).toHaveAttribute('state', 'pending');
@@ -24,7 +24,7 @@ test('a first visit plays the wordmark arrival once; later pages are at rest', a
     'dotquilt',
   );
 
-  await page.goto('/docs/');
+  await page.goto('/docs/components/skeleton/');
   await expect(page.locator(wordmark)).not.toHaveAttribute('state', 'pending');
   await expect(page.locator('.site-header .seam')).toHaveAttribute(
     'motion',
@@ -32,9 +32,23 @@ test('a first visit plays the wordmark arrival once; later pages are at rest', a
   );
 });
 
+test('on the home page the header rests, and the visit counts as arrived', async ({
+  page,
+}) => {
+  // The first screen is the home page's one focal motion.
+  await page.goto('/');
+  await expect(page.locator(wordmark)).not.toHaveAttribute('state', 'pending');
+  await expect(page.locator('.site-header .seam')).toHaveAttribute(
+    'motion',
+    'paused',
+  );
+  await page.goto('/docs/');
+  await expect(page.locator(wordmark)).not.toHaveAttribute('state', 'pending');
+});
+
 test('with reduced motion the header arrives at rest', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/');
+  await page.goto('/docs/');
   await expect(page.locator(wordmark)).not.toHaveAttribute('state', 'pending');
   await expect(page.locator('.site-header .seam')).toHaveAttribute(
     'motion',
