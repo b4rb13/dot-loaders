@@ -12,6 +12,8 @@ export interface DotquiltStyle extends CSSProperties {
   '--dotquilt-dot-size'?: string | undefined;
   '--dotquilt-dot-gap'?: string | undefined;
   '--dotquilt-radius'?: string | undefined;
+  /** LoadingRegion: how far above its top edge the refresh cue sits. */
+  '--dotquilt-refresh-gap'?: string | undefined;
 }
 export interface LoaderEvents {
   onHandoffStart?: ((event: CustomEvent<HandoffDetail>) => void) | undefined;

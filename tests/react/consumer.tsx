@@ -18,6 +18,8 @@ const skeleton = createRef<NativeSkeleton>();
 const style: DotquiltStyle = {
   '--dotquilt-color': '#123456',
   '--dotquilt-dot-gap': '4px',
+  // The region's refresh cue: how far above the top edge its row of marks sits.
+  '--dotquilt-refresh-gap': '10px',
   borderRadius: 4,
 };
 const example = (
