@@ -1,0 +1,122 @@
+---
+/** Three steps from install to a page that settles into place, with code. */
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+
+const react = `import { LoadingRegion, SkeletonText } from '@dotquilt/react';
+
+export function Summary({ data }: { data: Revenue | null }) {
+  return (
+    <LoadingRegion
+      aria-label="Revenue"
+      state={data ? 'ready' : 'pending'}
+      placeholder={<SkeletonText lines={3} />}
+    >
+      {data && <RevenueCard data={data} />}
+    </LoadingRegion>
+  );
+}`;
+const native = `<dotquilt-region state="pending" aria-label="Revenue">
+  <dotquilt-skeleton-text slot="placeholder" lines="3"></dotquilt-skeleton-text>
+  <article>…</article>
+</dotquilt-region>
+
+<script type="module">
+  import { registerLoadingRegion } from 'dotquilt/region';
+  import { registerSkeletonText } from 'dotquilt/skeleton';
+  registerLoadingRegion();
+  registerSkeletonText();
+
+  const region = document.querySelector('dotquilt-region');
+  const data = await fetch('/api/revenue').then((r) => r.json());
+  // …fill in your content, then:
+  region.update({ state: 'ready' });
+</script>`;
+---
+
+<section class="va va-section home-section not-content va-start" aria-labelledby="va-start-title" data-va-start>
+  <div class="va-start-steps">
+    <h2 id="va-start-title">A calmer page in three steps.</h2>
+    <ol>
+      <li>
+        <span><strong>Install</strong> the React adapter, or the core package on its own.</span>
+      </li>
+      <li>
+        <span><strong>Wrap your content</strong> in a loading region, with a placeholder in its shape.</span>
+      </li>
+      <li>
+        <span><strong>Set the state</strong> when your data arrives. The region does the rest.</span>
+      </li>
+    </ol>
+    <a class="home-button" href="/docs/installation/">Read the installation guide</a>
+  </div>
+  <div class="va-start-code">
+    <Tabs syncKey="framework">
+      <TabItem label="React">
+        <Code code={react} lang="tsx" title="Summary.tsx" />
+      </TabItem>
+      <TabItem label="Native">
+        <Code code={native} lang="html" title="index.html" />
+      </TabItem>
+    </Tabs>
+  </div>
+</section>
+
+
+<style is:global>
+  .va-start {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    align-items: start;
+    gap: clamp(2rem, 5vw, 4.5rem);
+  }
+  .va-start h2 {
+    margin: 0;
+    font-size: clamp(1.75rem, 3.2vw, 2.375rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--dq-ink);
+    text-wrap: balance;
+  }
+  .va-start ol {
+    display: grid;
+    gap: 1rem;
+    margin: 1.75rem 0 2rem;
+    padding: 0;
+    list-style: none;
+    counter-reset: va-step;
+  }
+  .va-start li {
+    counter-increment: va-step;
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: 0.75rem;
+    margin: 0;
+    line-height: 1.6;
+    color: var(--dq-muted);
+  }
+  .va-start li::before {
+    content: counter(va-step);
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--dq-line-2);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .va-start li strong {
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .va-start-code {
+    min-width: 0;
+  }
+  @media (max-width: 56rem) {
+    .va-start {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

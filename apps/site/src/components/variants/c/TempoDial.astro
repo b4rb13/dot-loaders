@@ -1,0 +1,110 @@
+---
+/**
+ * The tempo dial: slows every handoff on the page (1×, 0.5×, 0.25×). Every
+ * copy of it stays in step; network.ts remembers the choice.
+ */
+interface Props {
+  /** A unique id prefix, for the label. */
+  id: string;
+  /** Leave the "Handoff 1.1 s" hint out; the caller places its own. */
+  hint?: boolean;
+}
+const { id, hint = true } = Astro.props;
+const options = [
+  { value: '1', text: '1×', name: 'Normal speed' },
+  { value: '0.5', text: '0.5×', name: 'Half speed' },
+  { value: '0.25', text: '0.25×', name: 'Quarter speed' },
+];
+---
+
+<div class="vc-tempo">
+  <span class="name" id={`${id}-label`}>Tempo</span>
+  <div
+    class="dial"
+    role="radiogroup"
+    aria-labelledby={`${id}-label`}
+    aria-describedby={`${id}-hint`}
+    data-tempo-dial
+  >
+    {
+      options.map((option, i) => (
+        <button
+          type="button"
+          role="radio"
+          aria-checked={i === 0 ? 'true' : 'false'}
+          aria-label={option.name}
+          tabindex={i === 0 ? 0 : -1}
+          data-tempo={option.value}
+        >
+          {option.text}
+        </button>
+      ))
+    }
+  </div>
+  {hint && <span class="hint" id={`${id}-hint`} data-tempo-hint>Handoff 1.1 s</span>}
+</div>
+
+<style>
+  .vc-tempo {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.625rem;
+    min-width: 0;
+  }
+  .name {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--dq-muted);
+  }
+  .dial {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--dq-line);
+    /* Nested radii: 9 px segments inside the 12 px control. */
+    border-radius: var(--dq-radius-md);
+    background: var(--dq-surface);
+  }
+  button {
+    display: inline-grid;
+    place-items: center;
+    min-width: 3rem;
+    height: 32px;
+    padding: 0 0.625rem;
+    border: 0;
+    border-radius: var(--dq-radius-sm);
+    background: transparent;
+    color: var(--dq-muted);
+    font: 500 0.8125rem / 1 var(--dq-font-mono);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      color var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  button:hover {
+    color: var(--dq-ink);
+  }
+  /* Selection is ink, not teal (DESIGN.md, The Ink Selection Rule). */
+  button[aria-checked='true'] {
+    background: var(--dq-ink);
+    color: var(--dq-surface);
+  }
+  button:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+  }
+  .hint {
+    font: 400 0.75rem / 1 var(--dq-font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-faint);
+    white-space: nowrap;
+  }
+  @media (pointer: coarse), (max-width: 40rem) {
+    button {
+      height: 44px;
+      min-width: 3.5rem;
+    }
+  }
+</style>

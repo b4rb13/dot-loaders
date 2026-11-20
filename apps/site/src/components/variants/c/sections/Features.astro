@@ -1,0 +1,370 @@
+---
+/**
+ * What Dotquilt takes care of, each with its proof beside it: two live ones
+ * the visitor can hold, and the line of code for the rest.
+ */
+import Key from '../Key.astro';
+
+const code = {
+  server: `renderStatic({ kind: 'skeleton-text', lines: 2 })`,
+  csp: `stylePolicy: { mode: 'inline', nonce }`,
+  any: `<dotquilt-region state="pending">`,
+  only: `import { registerChartLoader } from 'dotquilt/chart'`,
+};
+---
+
+<section class="vc home-section not-content vc-features" aria-labelledby="vc-features-title" data-features>
+  <header>
+    <h2 id="vc-features-title">The details are already handled.</h2>
+  </header>
+  <ul class="features">
+    <li>
+      <h3>Accessible by default</h3>
+      <p>
+        Reduced motion stills every loader and swaps content in at once.
+        Pending content is out of reach of the keyboard and screen readers,
+        focus is kept, and high-contrast mode shows a clear outline.
+      </p>
+      <div class="proof live" data-proof="motion">
+        <div
+          class="mini"
+          role="button"
+          tabindex="0"
+          aria-label="Example order: hold to load"
+          data-hold
+          data-surface
+        >
+          <dotquilt-region state="ready" aria-label="Example order" data-region>
+            <div slot="placeholder" class="mini-lines">
+              <dotquilt-skeleton-line></dotquilt-skeleton-line>
+              <dotquilt-skeleton-line style="width: 58%"></dotquilt-skeleton-line>
+            </div>
+            <div class="mini-lines text">
+              <strong>Order 2041</strong>
+              <span>Shipped today</span>
+            </div>
+          </dotquilt-region>
+        </div>
+        <div class="proof-bar">
+          <span class="vc-readout" aria-hidden="true"><Key /><span data-readout>Hold to load</span></span>
+          <button type="button" class="switch" role="switch" aria-checked="false" data-pause>
+            <span class="track" aria-hidden="true"><span class="thumb"></span></span>
+            Pause motion
+          </button>
+        </div>
+        <p class="sr-only" role="status" data-status></p>
+      </div>
+    </li>
+    <li>
+      <h3>Calm by design</h3>
+      <p>
+        The idle stops after four seconds and rests. Handoffs take about a
+        second, on long eased curves, and never snap.
+      </p>
+      <div class="proof live" data-proof="calm">
+        <div
+          class="mini"
+          role="button"
+          tabindex="0"
+          aria-label="Example note: hold to load"
+          data-hold
+          data-surface
+        >
+          <dotquilt-region state="ready" aria-label="Example note" data-region>
+            <dotquilt-skeleton-text slot="placeholder" lines="2"></dotquilt-skeleton-text>
+            <p class="mini-note">The quarterly report is ready to review.</p>
+          </dotquilt-region>
+        </div>
+        <div class="proof-bar">
+          <span class="vc-readout" aria-hidden="true"><Key /><span data-readout>Hold past four seconds</span></span>
+          <span class="vc-rest" data-rest aria-hidden="true">Resting</span>
+        </div>
+        <p class="sr-only" role="status" data-status></p>
+      </div>
+    </li>
+    <li>
+      <h3>Rendered on the server</h3>
+      <p>
+        Placeholders are in the first HTML, in the size of your content, so
+        nothing jumps when JavaScript arrives.
+      </p>
+      <code class="proof snippet">{code.server}</code>
+    </li>
+    <li>
+      <h3>Strict CSP</h3>
+      <p>
+        No inline style attributes. Allow the stylesheets with a nonce, with
+        hashes, or serve them as files.
+      </p>
+      <code class="proof snippet">{code.csp}</code>
+    </li>
+    <li>
+      <h3>Any framework</h3>
+      <p>
+        Native web components work in plain HTML, Vue, Svelte or anywhere
+        else. A typed React adapter adds server rendering.
+      </p>
+      <code class="proof snippet">{code.any}</code>
+    </li>
+    <li>
+      <h3>Only what you use</h3>
+      <p>
+        Each component has its own entry point and registers itself on
+        demand, so a page ships just the loaders it shows.
+      </p>
+      <code class="proof snippet">{code.only}</code>
+    </li>
+  </ul>
+</section>
+<script is:inline>
+  // Before paint, with motion allowed: the list's rules wait to be drawn.
+  try {
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches)
+      document.querySelector('[data-features]').setAttribute('data-arrive', '');
+  } catch {}
+</script>
+
+<script>
+  import type { LoadingRegion } from 'dotquilt/region';
+  import { registerAll } from 'dotquilt/register-all';
+  import { Connection, onFirstView, reducedMotion } from '../network';
+
+  registerAll();
+  const section = document.querySelector<HTMLElement>('[data-features]');
+  if (section) {
+    const motion = section.querySelector<HTMLElement>('[data-proof="motion"]');
+    const calm = section.querySelector<HTMLElement>('[data-proof="calm"]');
+    const connections: Connection[] = [];
+    for (const proof of [motion, calm]) {
+      const region = proof?.querySelector<LoadingRegion>('[data-region]');
+      if (!proof || !region) continue;
+      connections.push(
+        new Connection({
+          name: `proof-${proof.dataset.proof}`,
+          subject: proof === calm ? 'The note' : 'The order',
+          root: proof,
+          hold: { deferTouch: true },
+          words: proof === calm ? { waiting: 'Idle', arrived: 'Arrived after' } : undefined,
+          begin: (cycle) => region.update({ state: 'pending', cycle }),
+          deliver: (handoff) => region.update({ state: 'ready', timing: handoff }),
+        }),
+      );
+    }
+    // Pause motion: the same stillness reduced motion gives, for this proof.
+    const pause = motion?.querySelector<HTMLButtonElement>('[data-pause]');
+    const region = motion?.querySelector<LoadingRegion>('[data-region]');
+    pause?.addEventListener('click', () => {
+      const on = pause.getAttribute('aria-checked') !== 'true';
+      pause.setAttribute('aria-checked', String(on));
+      region?.update({ motion: on ? 'paused' : 'system' });
+    });
+
+    const arrive = () => {
+      section.setAttribute('data-drawn', '');
+      // The calm proof idles its full four seconds, rests, then delivers.
+      connections[0]?.auto(1400);
+      connections[1]?.auto(4800);
+    };
+    if (reducedMotion()) section.setAttribute('data-drawn', '');
+    else onFirstView(section.querySelector('.features') ?? section, arrive, 0.2);
+  }
+</script>
+
+<style>
+  .features {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--dq-line);
+  }
+  .features > li {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(10rem, 15rem) minmax(0, 1fr) minmax(16rem, 20rem);
+    gap: 0.75rem 2.5rem;
+    align-items: start;
+    max-width: none;
+    margin: 0;
+    padding: 1.5rem 0;
+  }
+  /* The rule above each row; on arrival they draw in from the left. */
+  .features > li::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: var(--dq-line);
+    transform-origin: left;
+  }
+  [data-arrive] .features > li::before {
+    scale: 0 1;
+  }
+  [data-arrive][data-drawn] .features > li::before {
+    scale: 1 1;
+    transition: scale var(--dq-duration-rise) var(--dq-ease-settle);
+  }
+  [data-drawn] .features > li:nth-child(2)::before {
+    transition-delay: 80ms;
+  }
+  [data-drawn] .features > li:nth-child(3)::before {
+    transition-delay: 160ms;
+  }
+  [data-drawn] .features > li:nth-child(4)::before {
+    transition-delay: 240ms;
+  }
+  [data-drawn] .features > li:nth-child(5)::before {
+    transition-delay: 320ms;
+  }
+  [data-drawn] .features > li:nth-child(6)::before {
+    transition-delay: 400ms;
+  }
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--dq-ink);
+  }
+  .features > li > p {
+    margin: 0;
+    max-width: 62ch;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--dq-muted);
+  }
+  .proof {
+    min-width: 0;
+  }
+  .snippet {
+    display: block;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-subtle);
+    font: 400 0.75rem / 1.5 var(--dq-font-mono);
+    color: var(--dq-ink);
+    overflow-wrap: anywhere;
+  }
+  .live {
+    display: grid;
+    gap: 0.625rem;
+  }
+  .mini {
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+  }
+  .mini:hover,
+  .mini[data-held] {
+    background: var(--dq-subtle);
+  }
+  .mini dotquilt-region {
+    min-height: 2.75rem;
+    align-content: center;
+  }
+  .mini-lines {
+    display: grid;
+    gap: 0.375rem;
+  }
+  .mini-lines.text {
+    gap: 0.125rem;
+    font-size: 0.875rem;
+    line-height: 1.35;
+    color: var(--dq-ink);
+  }
+  .mini-lines.text span {
+    color: var(--dq-muted);
+  }
+  .mini-note {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--dq-ink);
+  }
+  .proof-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    min-height: 2rem;
+  }
+  .proof-bar .vc-readout {
+    color: var(--dq-faint);
+  }
+  .proof-bar .vc-rest {
+    font-family: var(--dq-font-mono);
+    font-size: 0.75rem;
+  }
+  .live:has([data-held]) .vc-readout :global(.core) {
+    scale: 1;
+  }
+  .switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2rem;
+    padding: 0 0.25rem;
+    border: 0;
+    border-radius: var(--dq-radius-sm);
+    background: none;
+    color: var(--dq-ink);
+    font: 500 0.8125rem / 1 var(--dq-font);
+    cursor: pointer;
+  }
+  .switch:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+  }
+  .track {
+    position: relative;
+    width: 2rem;
+    height: 1.125rem;
+    border-radius: 999px;
+    background: var(--dq-line-2);
+    transition: background var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: calc(1.125rem - 4px);
+    height: calc(1.125rem - 4px);
+    border-radius: 50%;
+    background: var(--dq-surface);
+    box-shadow: var(--dq-shadow);
+    transition: translate var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .switch[aria-checked='true'] .track {
+    background: var(--dq-ink);
+  }
+  .switch[aria-checked='true'] .thumb {
+    translate: 0.875rem 0;
+  }
+  @media (max-width: 64rem) {
+    .features > li {
+      grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+    }
+    .proof {
+      grid-column: 2;
+    }
+  }
+  @media (max-width: 40rem) {
+    .features > li {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .proof {
+      grid-column: 1;
+    }
+    .switch {
+      min-height: 44px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .track,
+    .thumb {
+      transition: none;
+    }
+  }
+</style>

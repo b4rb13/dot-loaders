@@ -1,0 +1,729 @@
+---
+/**
+ * Variant B's first screen, "The field becomes the line": today's hero image
+ * made true. The field is a real ChartLoader, the placeholder of a loading
+ * region whose content is the real line. About 0.6 s after the page shows,
+ * the data arrives: the marks glide onto the line and the line draws in.
+ * At rest the site's field stays on the plane around the line, a trail of
+ * marks runs up into it, and quiet controls under the art switch the
+ * series, reshape the line point by point and load it again.
+ */
+import {
+  describe,
+  monthNames,
+  months,
+  normalized,
+  pathOf,
+  series,
+  trailOf,
+} from './series';
+
+interface Props {
+  title: string;
+  tagline?: string;
+}
+const { title, tagline } = Astro.props;
+// "Loading states that hand over." breaks after its second word. A real
+// space stays between the two rows, so the heading reads as one sentence.
+const words = title.split(' ');
+const rows = [words.slice(0, 2).join(' '), words.slice(2).join(' ')];
+
+const first = series[0];
+const points = normalized(first.values, first);
+const trail = points[0] ? trailOf(points[0]) : [];
+---
+
+<section class="vb-hero not-content" aria-labelledby="_top" data-vb-hero>
+  <div class="copy">
+    <h1 id="_top" data-page-title>
+      <span class="row">{rows[0]}</span>
+      <span class="row">{rows[1]}</span>
+    </h1>
+    {tagline && <p class="lead">{tagline}</p>}
+    <div class="actions">
+      <a class="home-button primary" href="/docs/">Get started</a>
+      <a class="home-button" href="/docs/components/skeleton/">See the components</a>
+    </div>
+  </div>
+
+  <div class="art">
+    <div class="stage" data-stage>
+      <!-- At rest, the site's field stays on the plane around the line: a
+           still SkeletonBlock. While the data loads, the live ChartLoader
+           field takes its place. -->
+      <dotquilt-skeleton-block class="ground" motion="paused" aria-hidden="true"
+      ></dotquilt-skeleton-block>
+      <dotquilt-region
+        class="region"
+        state="ready"
+        aria-label={`${first.name} by month`}
+        data-region
+      >
+        <dotquilt-chart-loader
+          slot="placeholder"
+          class="field"
+          variant="line"
+          pointer-response="lift"
+          data-field></dotquilt-chart-loader>
+        <div class="plot">
+          <ol class="trail" aria-hidden="true" data-trail>
+            {
+              trail.map((mark) => (
+                <li style={`--x:${mark.x};--y:${mark.y};--o:${mark.o}`} />
+              ))
+            }
+          </ol>
+          <svg
+            class="chart"
+            viewBox="0 0 1000 1000"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label={describe(first, first.values)}
+            data-chart
+          >
+            <path class="trace" d={pathOf(points)} vector-effect="non-scaling-stroke" data-line
+            ></path>
+          </svg>
+          <ol class="months" aria-hidden="true">
+            {months.map((month, i) => <li style={`--x:${points[i]?.x}`}>{month}</li>)}
+          </ol>
+        </div>
+      </dotquilt-region>
+
+      <div class="handles" role="group" aria-label="Points on the line" data-handles>
+        {
+          points.map((point, i) => (
+            <span
+              class="handle"
+              role="slider"
+              tabindex={i === points.length - 1 ? 0 : -1}
+              aria-label={monthNames[i]}
+              aria-describedby="vb-hero-hint"
+              aria-orientation="vertical"
+              aria-valuemin={first.min}
+              aria-valuemax={first.max}
+              aria-valuenow={first.values[i]}
+              aria-valuetext={first.unit(first.values[i] ?? 0)}
+              style={`--x:${point.x};--y:${point.y};--i:${i}`}
+              data-handle={i}
+            >
+              <span class="knob" />
+              <span class="tip" aria-hidden="true">
+                {months[i]} <b>{first.unit(first.values[i] ?? 0)}</b>
+              </span>
+            </span>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="switch" role="radiogroup" aria-label="Series">
+        {
+          series.map((item, i) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked={i === 0 ? 'true' : 'false'}
+              tabindex={i === 0 ? 0 : -1}
+              data-series={item.id}
+            >
+              {item.name}
+            </button>
+          ))
+        }
+      </div>
+      <div class="buttons">
+        <button type="button" class="home-button small again" data-again>Load again</button>
+        <button type="button" class="reset" data-reset hidden>Reset line</button>
+      </div>
+      <p class="note">
+        <span class="status" role="status" data-status>{first.name} by month.</span>{' '}
+        <span id="vb-hero-hint" class="hint">
+          <span class="by-pointer">Example data. Drag a point to reshape the line.</span>
+          <span class="by-keys">Left and right pick a point. Up and down move it.</span>
+        </span>
+      </p>
+    </div>
+
+    <!-- The live field draws its quietest marks very faint; this lifts them
+         (alpha to the power 0.6), so the field and the marks landing on the
+         line read on both themes at 1× too. -->
+    <svg class="defs" aria-hidden="true" focusable="false">
+      <filter id="vb-lift" color-interpolation-filters="sRGB">
+        <feComponentTransfer>
+          <feFuncA type="gamma" amplitude="1" exponent="0.6" offset="0"></feFuncA>
+        </feComponentTransfer>
+      </filter>
+    </svg>
+  </div>
+</section>
+<script is:inline>
+  // Before anything paints: when motion is allowed, the data has not arrived
+  // yet, so the region starts pending and the field shows. Otherwise the
+  // line is already in place, at rest.
+  try {
+    const hero = document.currentScript.previousElementSibling;
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      hero.dataset.arrive = '';
+      hero.querySelector('[data-region]').setAttribute('state', 'pending');
+    }
+  } catch {}
+</script>
+
+<script>
+  import './hero';
+</script>
+
+<style>
+  @property --vb-open {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
+  .vb-hero {
+    /* How far the art runs past the content edge to the window's edge.
+       hero.ts measures it without the scrollbar, so nothing scrolls
+       sideways; without JavaScript it stops at the page's gutter. */
+    --bleed: var(--vb-bleed, clamp(1.25rem, 5.7vw, 82px));
+    display: grid;
+    grid-template-columns: minmax(0, 508px) minmax(0, 1fr);
+    align-items: start;
+  }
+  .copy {
+    position: relative;
+    z-index: 1;
+    padding-top: clamp(1.5rem, 7vh, 4rem);
+  }
+  h1#_top {
+    margin: 0;
+    font-size: 72px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--dq-ink);
+  }
+  h1 .row {
+    display: block;
+  }
+  .lead {
+    margin: 22px 0 0;
+    max-width: 24rem;
+    font-size: 18.75px;
+    line-height: 1.5;
+    color: var(--dq-muted);
+    text-wrap: balance;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-top: 40px;
+  }
+  @media (max-width: 900px) {
+    .actions {
+      gap: 12px;
+    }
+  }
+  .actions .home-button {
+    height: 58px;
+    padding: 0 28px;
+    font-size: 17px;
+    font-weight: 500;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      border-color var(--dq-duration-ui) var(--dq-ease-settle),
+      scale var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .actions .home-button:active {
+    scale: 0.98;
+  }
+
+  /* The art: a real loading region, on to the window's edge. */
+  .art {
+    position: relative;
+    min-width: 0;
+    margin-right: calc(-1 * var(--bleed));
+    /* The art ends at the window's edge: a handle's touch area never makes
+       the page scroll sideways. */
+    overflow-x: clip;
+  }
+  .stage {
+    /* Tall enough to read, short enough that the whole arrival and its
+       controls show on a 1280 × 790 laptop. */
+    --h: clamp(280px, min(100svh - 330px, 40vw), 480px);
+    position: relative;
+    height: var(--h);
+  }
+
+  /* The site's field at rest: small ink marks on a 22.4 px pitch, strongest
+     at the top, fading downwards and dissolving leftwards. */
+  .ground {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    --dotquilt-dot-size: 2.8px;
+    --dotquilt-dot-gap: 19.6px;
+    --dotquilt-color: var(--dq-ink);
+    /* Lifted like the live field, so the two read alike on both themes. */
+    filter: url(#vb-lift);
+    mask:
+      linear-gradient(to right, #0000 2%, rgb(0 0 0 / 0.3) 18%, #000 44%),
+      linear-gradient(
+        rgb(0 0 0 / 0.9),
+        rgb(0 0 0 / 0.55) 30%,
+        rgb(0 0 0 / 0.24) 62%,
+        #0000 94%
+      ),
+      /* Cleared along the trail, so it reads as one row (trail-cut.ts). */
+      var(--trail-cut, linear-gradient(#0000, #0000));
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    mask-composite: intersect, subtract;
+    pointer-events: none;
+    transition: opacity var(--dq-duration-fade) var(--dq-ease-fade);
+  }
+  /* While the data loads, the live field has the plane to itself. */
+  .vb-hero[data-arrive]:not([data-arrived]) .ground,
+  .vb-hero[data-pending] .ground,
+  .vb-hero[data-landing] .ground {
+    opacity: 0;
+    transition-duration: 240ms;
+  }
+
+  .region {
+    position: relative;
+    display: grid;
+  }
+  /* The marks leave where the wipe's front passes them (design/SPEC.md),
+     so the field's layer stays at full strength through the handoff; the
+     runtime's own fade of that layer would leave pale specks on the line. */
+  .region::part(placeholder) {
+    opacity: 1 !important;
+  }
+  /* Before the elements upgrade, show only what the state says. */
+  .region:not(:defined) > * {
+    grid-area: 1 / 1;
+  }
+  .region:not(:defined)[state='pending'] > :not([slot]),
+  .region:not(:defined)[state='ready'] > [slot] {
+    visibility: hidden;
+  }
+  .field {
+    display: block;
+    height: var(--h);
+    /* The live field: the same pitch, with marks large enough that the
+       ones landing on the line read as a line. */
+    --dotquilt-dot-size: var(--dq-mark-size);
+    --dotquilt-dot-gap: calc(22.4px - var(--dq-mark-size));
+    --dotquilt-color: var(--dq-ink);
+    /* Marks lit on their way take the line's own teal, so they arrive as
+       the line rather than as pale specks. */
+    --dotquilt-accent-color: var(--dq-accent);
+    filter: url(#vb-lift);
+    /* Strongest at the top, dissolving leftwards. While the marks land, the
+       mask opens across the whole width, so the line they form reads whole. */
+    mask:
+      linear-gradient(
+        to right,
+        rgb(0 0 0 / calc(0.1 + var(--vb-open) * 0.6)),
+        rgb(0 0 0 / calc(0.55 + var(--vb-open) * 0.45)) 14%,
+        #000 32%
+      ),
+      linear-gradient(
+        #000 40%,
+        rgb(0 0 0 / calc(0.5 + var(--vb-open) * 0.5)) 72%,
+        rgb(0 0 0 / calc(0.1 + var(--vb-open) * 0.8))
+      );
+    mask-composite: intersect;
+  }
+  .field:defined {
+    animation: vb-field-in var(--dq-duration-fade) var(--dq-ease-fade) both;
+  }
+  .vb-hero[data-landing] .field {
+    --vb-open: 1;
+    transition: --vb-open 620ms var(--dq-ease-sine);
+  }
+  @keyframes vb-field-in {
+    from {
+      opacity: 0;
+    }
+  }
+  .defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  .plot {
+    position: relative;
+    height: var(--h);
+  }
+  .chart {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .trace {
+    fill: none;
+    stroke: var(--dq-accent);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  /* The trail into the line: the field's marks on their way to it. */
+  .trail {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .trail li {
+    position: absolute;
+    left: calc(var(--x) * 100%);
+    top: calc(var(--y) * 100%);
+    /* A whole-pixel size: a fractional box is snapped to the pixel grid
+       unevenly, which turns some marks into ovals. */
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: var(--dq-mark);
+    opacity: var(--o);
+  }
+  .months {
+    position: absolute;
+    inset: auto 0 0;
+    height: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font: 400 0.6875rem / 1 var(--dq-font-mono);
+    color: var(--dq-faint);
+  }
+  .months li {
+    position: absolute;
+    left: calc(var(--x) * 100%);
+    translate: -50% 0;
+    margin: 0;
+  }
+
+  /* The line's points. At rest each is a mark-sized dot on the line, the
+     first a larger junction as in the field image; pointing at the chart,
+     focusing a point or touching shows the handle you can drag. They sit
+     outside the region, so they keep focus while it loads again. */
+  .handles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .handle {
+    position: absolute;
+    left: calc(var(--x) * 100%);
+    top: calc(var(--y) * 100%);
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin: -18px 0 0 -18px;
+    border-radius: 50%;
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: none;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .handles[data-glide] .handle {
+    transition:
+      left var(--dq-duration-rise) var(--dq-ease-settle),
+      top var(--dq-duration-rise) var(--dq-ease-settle);
+  }
+  .handle[data-dragging] {
+    cursor: grabbing;
+  }
+  .knob {
+    width: var(--dq-mark-size);
+    height: var(--dq-mark-size);
+    border-radius: 50%;
+    background: var(--dq-accent);
+    transition:
+      width var(--dq-duration-ui) var(--dq-ease-settle),
+      height var(--dq-duration-ui) var(--dq-ease-settle),
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      box-shadow var(--dq-duration-ui) var(--dq-ease-settle),
+      opacity var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .handle:first-child .knob {
+    width: calc(2 * var(--dq-mark-size));
+    height: calc(2 * var(--dq-mark-size));
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .stage:hover .knob {
+      width: 9px;
+      height: 9px;
+      background: var(--dq-bg);
+      box-shadow: inset 0 0 0 2px var(--dq-accent);
+    }
+  }
+  .handle:hover .knob,
+  .handle:focus-visible .knob,
+  .handle[data-dragging] .knob {
+    width: 13px;
+    height: 13px;
+    background: var(--dq-bg);
+    box-shadow: inset 0 0 0 2px var(--dq-accent);
+  }
+  .handle[data-dragging] .knob {
+    background: var(--dq-accent);
+  }
+  /* Touch: the handles stay findable, but quieter than the line. */
+  @media (pointer: coarse) {
+    .handle .knob,
+    .handle:first-child .knob {
+      width: 11px;
+      height: 11px;
+      background: var(--dq-bg);
+      box-shadow: inset 0 0 0 1.5px var(--dq-accent);
+    }
+  }
+  .handle:focus-visible::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--dq-accent);
+  }
+  /* While the region loads again, the points stay put and quiet: they mark
+     the places the field is about to find. */
+  .vb-hero[data-pending] .knob {
+    opacity: 0.55;
+  }
+  .tip {
+    position: absolute;
+    bottom: calc(100% - 4px);
+    padding: 4px 8px;
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-ink);
+    color: var(--dq-surface);
+    font: 500 0.8125rem / 1.2 var(--dq-font);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    opacity: 0;
+    translate: 0 4px;
+    transition:
+      opacity var(--dq-duration-ui) var(--dq-ease-settle),
+      translate var(--dq-duration-ui) var(--dq-ease-settle);
+    pointer-events: none;
+  }
+  .tip b {
+    margin-left: 0.25rem;
+    font-weight: 600;
+  }
+  .handle:last-child .tip {
+    right: 4px;
+  }
+  .handle:hover .tip,
+  .handle:focus-visible .tip,
+  .handle[data-dragging] .tip {
+    opacity: 1;
+    translate: 0 0;
+  }
+  /* The first arrival is the one focal motion: the points wait for it,
+     then settle onto the line. */
+  .vb-hero[data-arrive]:not([data-arrived]) .handles {
+    visibility: hidden;
+  }
+  .vb-hero[data-arrive][data-arrived] .handle {
+    animation: vb-handle-in var(--dq-duration-fade) var(--dq-ease-settle) both;
+    animation-delay: calc(var(--i) * var(--dq-stagger-row) / 2);
+  }
+  @keyframes vb-handle-in {
+    from {
+      opacity: 0;
+      scale: 0.4;
+    }
+  }
+
+  /* Quiet controls, on the chart's own left edge (where its trail starts). */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+    margin: 14px var(--bleed) 0 0;
+    padding-left: 1.5%;
+  }
+  .switch {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+  }
+  .switch button,
+  .reset {
+    display: inline-grid;
+    place-items: center;
+    height: 28px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dq-muted);
+    font: 500 0.8125rem / 1 var(--dq-font);
+    cursor: pointer;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      color var(--dq-duration-ui) var(--dq-ease-settle),
+      scale var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .switch button:hover {
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+  }
+  .switch button[aria-checked='true'] {
+    background: var(--dq-ink);
+    color: var(--dq-surface);
+  }
+  .buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .again {
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      scale var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .reset {
+    padding: 0 6px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .reset:hover {
+    color: var(--dq-ink);
+  }
+  .reset[hidden] {
+    display: none;
+  }
+  .switch button:active,
+  .again:active,
+  .reset:active {
+    scale: 0.97;
+  }
+  .switch button:focus-visible,
+  .reset:focus-visible {
+    outline: 2px solid var(--dq-accent);
+    outline-offset: 2px;
+  }
+  .note {
+    flex: 1 1 18rem;
+    margin: 0 0 0 4px;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--dq-muted);
+  }
+  .status {
+    color: var(--dq-ink);
+    font-weight: 500;
+  }
+  /* The hint follows the input: keys while a point has keyboard focus. */
+  .by-keys,
+  .vb-hero:has(.handle:focus-visible) .by-pointer {
+    display: none;
+  }
+  .vb-hero:has(.handle:focus-visible) .by-keys {
+    display: inline;
+  }
+
+  @media (max-width: 1180px) {
+    .vb-hero {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+    }
+    h1#_top {
+      font-size: clamp(52px, 6.1vw, 72px);
+    }
+    .lead {
+      font-size: 1.09375rem;
+    }
+    .actions .home-button {
+      height: 50px;
+      padding: 0 18px;
+      font-size: 16px;
+    }
+  }
+  @media (max-width: 900px) {
+    .vb-hero {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .copy {
+      padding: 2rem 0 0.5rem;
+    }
+    h1#_top {
+      font-size: clamp(40px, 11vw, 56px);
+    }
+    .lead {
+      font-size: 17px;
+    }
+    .actions {
+      margin-top: 28px;
+    }
+    .stage {
+      --h: clamp(260px, 72vw, 380px);
+    }
+  }
+  @media (pointer: coarse) {
+    .switch button,
+    .again {
+      height: 44px;
+    }
+    .handle {
+      width: 44px;
+      height: 44px;
+      margin: -22px 0 0 -22px;
+    }
+  }
+  /* Phones: the switch keeps its one grouped control, full width, with
+     Load again and the caption seated side by side under it. */
+  @media (max-width: 640px) {
+    .controls {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 10px 12px;
+      padding-left: 0;
+    }
+    .switch {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .switch button {
+      height: 38px;
+    }
+    .note {
+      margin: 0;
+    }
+  }
+  @media (max-width: 640px) and (pointer: coarse) {
+    .switch button {
+      height: 44px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .field:defined {
+      animation: none;
+    }
+    .ground,
+    .handles[data-glide] .handle,
+    .knob,
+    .tip {
+      transition: none;
+    }
+  }
+</style>

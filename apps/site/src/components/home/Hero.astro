@@ -1,19 +1,34 @@
 ---
 /**
  * Starlight's Hero, overridden. The homepage gets its first screen
- * (FieldHero); other pages with a hero, such as Pricing, get a centred
- * headline only.
+ * (FieldHero); the preview-only home variants (/variants/a/ … /c/) get
+ * their own first screen and a switcher between them; other pages with a
+ * hero, such as Pricing, get a centred headline only.
  */
+import VariantA from '../variants/a/Hero.astro';
+import VariantB from '../variants/b/Hero.astro';
+import VariantC from '../variants/c/Hero.astro';
+import Switcher from '../variants/Switcher.astro';
 import FieldHero from './FieldHero.astro';
 
 const { title = '', tagline } =
   Astro.locals.starlightRoute.entry.data.hero ?? {};
 const home = Astro.url.pathname === '/';
+const variants = { a: VariantA, b: VariantB, c: VariantC } as const;
+const key = /^\/variants\/([abc])\/?$/.exec(Astro.url.pathname)?.[1] as
+  | keyof typeof variants
+  | undefined;
+const Variant = key && variants[key];
 ---
 
 {
   home ? (
     <FieldHero title={title} tagline={tagline} />
+  ) : Variant && key ? (
+    <>
+      <Variant title={title} tagline={tagline} />
+      <Switcher current={key} />
+    </>
   ) : (
     <section class="page-hero not-content">
       <h1 id="_top" data-page-title>

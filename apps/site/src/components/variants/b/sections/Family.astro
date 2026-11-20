@@ -1,0 +1,344 @@
+---
+/**
+ * The component family: six live tiles, one per loader, each in the content
+ * it stands for. When the grid scrolls in, the tiles hand over in a wave,
+ * left to right and down. Hover or focus a tile to load it again.
+ */
+const weekly = [24, 28, 27, 31, 34, 33, 37, 40, 39, 43, 46, 49];
+const top = Math.max(...weekly) * 1.15;
+const spark = weekly
+  .map(
+    (v, i) =>
+      `${i ? 'L' : 'M'}${((i / (weekly.length - 1)) * 240).toFixed(1)} ${(80 - (v / top) * 80).toFixed(1)}`,
+  )
+  .join(' ');
+---
+
+<section class="home-section vb-family" aria-labelledby="vb-family-title" data-family>
+  <header>
+    <h2 id="vb-family-title">One quiet language for every wait.</h2>
+    <p>
+      A number, a chart, a table and a reply all take their own time. Each
+      loader holds the shape of what it stands for, so the page keeps its
+      structure while it fills in. Point at a tile, or focus it, to watch it
+      load again.
+    </p>
+  </header>
+
+  <ul class="family" role="list">
+    <li class="tile home-card" data-tile>
+      <div class="stage">
+        <dotquilt-region state="ready" aria-label="Profile" data-owner data-arrival>
+          <div slot="placeholder" class="profile">
+            <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+            <div class="lines">
+              <dotquilt-skeleton-line></dotquilt-skeleton-line>
+              <dotquilt-skeleton-line class="short"></dotquilt-skeleton-line>
+            </div>
+          </div>
+          <div class="profile">
+            <span class="initials" aria-hidden="true">AL</span>
+            <div>
+              <strong>Ada Lovelace</strong><br /><span class="muted">Analytical engines</span>
+            </div>
+          </div>
+        </dotquilt-region>
+      </div>
+      <h3><a href="/docs/components/skeleton/">Skeleton</a></h3>
+      <p>Images, text, avatars and paragraphs.</p>
+    </li>
+
+    <li class="tile home-card" data-tile>
+      <div class="stage">
+        <p class="figure">
+          <dotquilt-text-loader
+            state="ready"
+            mask="$00,000"
+            mark="square"
+            aria-label="Revenue"
+            data-owner
+            data-arrival>$48,210</dotquilt-text-loader
+          >
+        </p>
+      </div>
+      <h3><a href="/docs/components/text-loader/">TextLoader</a></h3>
+      <p>Numbers and short labels that take shape in marks, then hand over.</p>
+    </li>
+
+    <li class="tile home-card" data-tile>
+      <div class="stage">
+        <dotquilt-region state="ready" aria-label="Revenue chart" data-owner data-arrival>
+          <dotquilt-chart-loader slot="placeholder" data-spark></dotquilt-chart-loader>
+          <svg class="spark" viewBox="0 0 240 80" preserveAspectRatio="none" role="img" aria-label="Weekly revenue, rising. Example data.">
+            <path d={spark} fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+          </svg>
+        </dotquilt-region>
+      </div>
+      <h3><a href="/docs/components/chart-loader/">ChartLoader</a></h3>
+      <p>Marks that glide onto your real line.</p>
+    </li>
+
+    <li class="tile home-card" data-tile>
+      <div class="stage">
+        <dotquilt-region state="ready" aria-label="Invoices" data-owner data-arrival>
+          <dotquilt-table-loader slot="placeholder" rows="3" row-height="26"></dotquilt-table-loader>
+          <table class="mini-table">
+            <tbody>
+              <tr><td>Northwind</td><td>$4,200</td><td><span class="pill">Paid</span></td></tr>
+              <tr><td>Acme Labs</td><td>$1,870</td><td><span class="pill">Sent</span></td></tr>
+              <tr><td>Globex</td><td>$9,640</td><td><span class="pill">Due</span></td></tr>
+            </tbody>
+          </table>
+        </dotquilt-region>
+      </div>
+      <h3><a href="/docs/components/table-loader/">TableLoader</a></h3>
+      <p>Rows that settle in one after another.</p>
+    </li>
+
+    <li class="tile home-card" data-tile>
+      <div class="stage">
+        <dotquilt-region state="ready" aria-label="Reply" data-owner data-arrival>
+          <div slot="placeholder" class="bubble"><dotquilt-typing-dots></dotquilt-typing-dots></div>
+          <div class="bubble">Your invoice is on its way.</div>
+        </dotquilt-region>
+      </div>
+      <h3><a href="/docs/components/typing-dots/">TypingDots</a></h3>
+      <p>A reply that is being written.</p>
+    </li>
+
+    <li class="tile home-card" data-tile>
+      <div class="stage">
+        <dotquilt-region state="ready" aria-label="Activity" data-owner data-arrival data-refresh>
+          <dotquilt-skeleton-text slot="placeholder" lines="3"></dotquilt-skeleton-text>
+          <ul class="activity">
+            <li>Northwind paid $4,200</li>
+            <li>Globex invoice is overdue</li>
+            <li>Initech paid $3,115</li>
+          </ul>
+        </dotquilt-region>
+      </div>
+      <h3><a href="/docs/components/loading-region/">LoadingRegion</a></h3>
+      <p>Switches to your content, or keeps it usable while it refreshes.</p>
+    </li>
+  </ul>
+</section>
+
+<script>
+  import type { ChartLoader } from 'dotquilt/chart';
+  import type { TableLoader } from 'dotquilt/table';
+  import { arriving, load, type Owner, settled, whenSeen } from '../arrive';
+
+  const family = document.querySelector<HTMLElement>('[data-family]');
+  if (family) {
+    const weekly = [24, 28, 27, 31, 34, 33, 37, 40, 39, 43, 46, 49];
+    const top = Math.max(...weekly) * 1.15;
+    for (const chart of family.querySelectorAll<ChartLoader>('[data-spark]'))
+      chart.targetProvider = ({ width, height }) => ({
+        kind: 'line',
+        points: weekly.map((v, i) => ({
+          x: (i / (weekly.length - 1)) * width,
+          y: height - (v / top) * height,
+        })),
+        baseline: height,
+      });
+    for (const table of family.querySelectorAll<TableLoader>('dotquilt-table-loader'))
+      table.columns = [{ kind: 'text', width: 1.6 }, { kind: 'number' }, { kind: 'badge' }];
+
+    const tiles = [...family.querySelectorAll<HTMLElement>('[data-tile]')];
+    const owner = (tile: HTMLElement) => tile.querySelector<Owner>('[data-owner]');
+    /** One tile's load: a refreshing region keeps its content in view. */
+    const play = (tile: HTMLElement, ms: number) => {
+      const o = owner(tile);
+      if (!o) return;
+      load(o, ms, undefined, {
+        refresh: o.hasAttribute('data-refresh') && o.state === 'ready',
+      });
+    };
+
+    // The arrival: the tiles hand over in a wave, left to right and down.
+    if (arriving())
+      whenSeen(family.querySelector('.family') ?? family, () =>
+        tiles.forEach((tile, i) => {
+          const o = owner(tile);
+          if (o) load(o, 650 + i * 170);
+        }),
+      );
+
+    for (const tile of tiles) {
+      const again = () => {
+        const o = owner(tile);
+        // Only a finished tile loads again, so a replay never cuts a handoff.
+        if (o && settled(o)) play(tile, 1300);
+      };
+      tile.addEventListener('pointerenter', again);
+      tile.addEventListener('focusin', again);
+    }
+  }
+</script>
+
+<style>
+  .family {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tile {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: 0.25rem;
+    padding: 1.25rem 1.375rem 1.375rem;
+    transition:
+      box-shadow var(--dq-duration-ui) var(--dq-ease-settle),
+      translate var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .tile:hover {
+    box-shadow: var(--dq-shadow-lg);
+    translate: 0 -2px;
+  }
+  .tile:has(a:focus-visible) {
+    outline: 2px solid var(--dq-accent);
+    outline-offset: 2px;
+  }
+  .stage {
+    display: grid;
+    align-items: center;
+    height: 8.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--dq-line);
+    overflow: hidden;
+  }
+  .tile h3 {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+  .tile h3 a {
+    color: var(--dq-ink);
+    text-decoration: none;
+    outline: none;
+  }
+  /* The whole card is the link's target. */
+  .tile h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  .tile > p {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--dq-muted);
+  }
+  .profile {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.875rem;
+    font-size: 0.875rem;
+    color: var(--dq-ink);
+  }
+  .profile dotquilt-skeleton-circle {
+    width: 2.75rem;
+  }
+  .lines {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .short {
+    width: 60%;
+  }
+  .initials {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--dq-subtle);
+    font-weight: 600;
+    color: var(--dq-muted);
+  }
+  .muted {
+    color: var(--dq-muted);
+  }
+  .figure {
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-ink);
+  }
+  .stage dotquilt-chart-loader,
+  .spark {
+    display: block;
+    width: 100%;
+    height: 5.5rem;
+  }
+  .spark {
+    color: var(--dq-accent);
+  }
+  .mini-table {
+    display: table;
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+    color: var(--dq-ink);
+  }
+  .mini-table td {
+    height: 26px;
+    padding: 0 0.25rem;
+    border: 0;
+  }
+  .pill {
+    padding: 0.0625rem 0.4375rem;
+    border-radius: 999px;
+    background: var(--dq-subtle);
+    font-size: 0.6875rem;
+    color: var(--dq-muted);
+  }
+  .bubble {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-md) var(--dq-radius-md) var(--dq-radius-md) 4px;
+    background: var(--dq-subtle);
+    font-size: 0.875rem;
+    color: var(--dq-ink);
+  }
+  .activity {
+    display: grid;
+    gap: 0.375rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.8125rem;
+    color: var(--dq-ink);
+  }
+  @media (max-width: 64rem) {
+    .family {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 40rem) {
+    .family {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tile {
+      transition: none;
+    }
+    .tile:hover {
+      translate: none;
+    }
+  }
+</style>

@@ -1,0 +1,249 @@
+---
+/**
+ * An invoices table with a filter and pages. A new filter is a new set of
+ * rows, so the table goes back to its placeholder; turning a page keeps the
+ * current rows readable under the refresh thread until the next ones land.
+ */
+import { ledger } from './data';
+
+const pageSize = 5;
+const first = ledger.slice(0, pageSize);
+const filters = [
+  ['all', 'All'],
+  ['paid', 'Paid'],
+  ['open', 'Open'],
+  ['overdue', 'Overdue'],
+] as const;
+---
+
+<section class="va va-section home-section not-content va-split flip" aria-labelledby="va-invoices-title" data-va-invoices>
+  <div class="va-head">
+    <h2 id="va-invoices-title">Tables settle row by row.</h2>
+    <p>
+      Filter or page through the example invoices. A new filter is a new set
+      of rows, so the table returns to its placeholder, shaped like the rows
+      on their way, and each cell’s marks gather into its text. Turning a
+      page keeps the rows readable while the next ones load.
+    </p>
+    <p class="va-uses">dotquilt-region · dotquilt-table-loader</p>
+  </div>
+
+  <div class="va-frame va-ledger" role="group" aria-label="Example invoices">
+    <div class="va-frame-bar">
+      <p class="va-frame-title"><span class="va-workspace" aria-hidden="true">F</span>Invoices</p>
+      <div class="va-seg" role="radiogroup" aria-label="Show" data-filter>
+        <span data-indicator aria-hidden="true"></span>
+        {
+          filters.map(([value, label]) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked={value === 'all' ? 'true' : 'false'}
+              data-value={value}
+            >
+              {label}
+            </button>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="va-ledger-body">
+      <dotquilt-region aria-label="Invoices" data-ledger-region>
+        <div slot="placeholder" class="va-ledger-placeholder">
+          <div class="va-ledger-head" aria-hidden="true">
+            <span class="id">Invoice</span><span>Customer</span><span class="project">Project</span><span
+              class="date">Issued</span
+            ><span class="num">Amount</span><span>Status</span>
+          </div>
+          <div data-row-loaders>
+            {first.map(() => <dotquilt-table-loader rows="1" row-height="44" />)}
+          </div>
+        </div>
+        <table class="va-ledger-table" data-table>
+          <colgroup>
+            <col class="id" /><col class="customer" /><col class="project" /><col class="date" /><col
+              class="num"
+            /><col class="status" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="id" scope="col" data-kind="text">Invoice</th>
+              <th scope="col" data-kind="text">Customer</th>
+              <th class="project" scope="col" data-kind="text">Project</th>
+              <th class="date" scope="col" data-kind="date">Issued</th>
+              <th class="num" scope="col" data-kind="number">Amount</th>
+              <th scope="col" data-kind="badge">Status</th>
+            </tr>
+          </thead>
+          <tbody data-rows>
+            {
+              first.map((invoice) => (
+                <tr>
+                  <td class="id">{invoice.id}</td>
+                  <td>{invoice.customer}</td>
+                  <td class="project">{invoice.project}</td>
+                  <td class="date">{invoice.date}</td>
+                  <td class="num">{invoice.amount}</td>
+                  <td>
+                    <span class:list={['va-chip', invoice.status.toLowerCase()]}>{invoice.status}</span>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </dotquilt-region>
+    </div>
+
+    <div class="va-frame-foot">
+      <span><span class="va-caption">Example data.</span> <span role="status" data-status>Showing 1–5 of {ledger.length}.</span></span>
+      <nav class="va-pager" aria-label="Pages">
+        <button type="button" class="home-button small" data-prev aria-disabled="true">Previous</button>
+        <span class="page" data-page>Page 1 of {Math.ceil(ledger.length / pageSize)}</span>
+        <button type="button" class="home-button small" data-next>Next</button>
+      </nav>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { startInvoices } from './invoices';
+
+  startInvoices();
+</script>
+
+<style is:global>
+  .va-ledger {
+    container: va-ledger / inline-size;
+    overflow: hidden;
+  }
+  .va-ledger-body {
+    padding: 0.5rem 1.25rem 0.25rem;
+    min-height: calc(44px * 5 + 34px + 0.75rem);
+  }
+  .va-ledger-table,
+  .va-ledger-placeholder {
+    width: 100%;
+  }
+  .va-ledger-table {
+    display: table;
+    margin: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.8125rem;
+  }
+  /* Columns sized so each one's text fills most of it: the placeholder's
+     bars then hold the same shape as the rows that arrive. */
+  .va-ledger col.id {
+    width: 13%;
+  }
+  .va-ledger col.customer {
+    width: 20%;
+  }
+  .va-ledger col.project {
+    width: 24%;
+  }
+  .va-ledger col.date {
+    width: 13%;
+  }
+  .va-ledger col.num {
+    width: 15%;
+  }
+  .va-ledger col.status {
+    width: 15%;
+  }
+  .va-ledger-table :is(th, td) {
+    height: 44px;
+    padding: 0 0.5rem;
+    border: 0;
+    border-bottom: 1px solid var(--dq-line);
+    text-align: start;
+    color: var(--dq-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .va-ledger-table :is(th, td):first-child,
+  .va-ledger-head span:first-child {
+    padding-left: 0;
+  }
+  .va-ledger-table th,
+  .va-ledger-head {
+    height: 34px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--dq-faint);
+  }
+  .va-ledger-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .va-ledger-table .num,
+  .va-ledger-head .num {
+    text-align: end;
+  }
+  .va-ledger-table td.id {
+    color: var(--dq-muted);
+  }
+  .va-ledger-head {
+    display: grid;
+    grid-template-columns: 13% 20% 24% 13% 15% 15%;
+    align-items: center;
+    border-bottom: 1px solid var(--dq-line);
+  }
+  .va-ledger-head span {
+    padding: 0 0.5rem;
+  }
+  .va-ledger-placeholder dotquilt-table-loader {
+    display: block;
+  }
+  .va-ledger-table td.project {
+    color: var(--dq-muted);
+  }
+  .va-ledger-table tr[data-fresh] {
+    animation:
+      va-row-fade var(--dq-duration-fade) var(--dq-ease-fade) both,
+      va-row-rise var(--dq-duration-rise) var(--dq-ease-settle) both;
+    animation-delay: calc(var(--i, 0) * var(--dq-stagger-row));
+  }
+  .va-pager {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .va-pager .page {
+    min-width: 6.5rem;
+    font-size: 0.8125rem;
+    text-align: center;
+    color: var(--dq-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  @container va-ledger (max-width: 560px) {
+    .va-ledger :is(.id, .project, .date) {
+      display: none;
+    }
+    .va-ledger-head {
+      grid-template-columns: 44% 30% 26%;
+    }
+    .va-ledger col.customer {
+      width: 44%;
+    }
+    .va-ledger col.num {
+      width: 30%;
+    }
+    .va-ledger col.status {
+      width: 26%;
+    }
+    .va-ledger-table td:nth-child(2),
+    .va-ledger-table th:nth-child(2),
+    .va-ledger-head span:nth-child(2) {
+      padding-left: 0;
+    }
+    .va-ledger-body {
+      padding-inline: 1rem;
+    }
+    .va-ledger .va-frame-bar {
+      padding-inline: 1rem;
+    }
+  }
+</style>

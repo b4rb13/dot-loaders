@@ -1,0 +1,520 @@
+---
+/**
+ * Make it yours: the loaders respond live to a mark, a colour, a size and a
+ * pace, then hand over to the content in that look. The CSS for the same
+ * look updates beside them.
+ */
+import { palettes } from '../../../playground/settings';
+---
+
+<section class="home-section vb-yours" aria-labelledby="vb-yours-title" data-yours>
+  <header>
+    <h2 id="vb-yours-title">Quiet by default. Yours in a few lines.</h2>
+    <p>
+      The marks start in a slate that sits beside any text, with a soft glow
+      drifting through. Change the shape, the colour, the size or the pace;
+      each change loads the card again in the new look. Take the CSS with you.
+    </p>
+  </header>
+
+  <div class="yours">
+    <div class="controls home-card">
+      <fieldset>
+        <legend>Mark</legend>
+        <div class="choices" role="radiogroup" aria-label="Mark">
+          {
+            ['dot', 'dash', 'square'].map((mark) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={mark === 'dot' ? 'true' : 'false'}
+                tabindex={mark === 'dot' ? 0 : -1}
+                data-set-mark={mark}
+              >
+                <span class:list={['mark-glyph', mark]} aria-hidden="true" />
+                {mark[0]?.toUpperCase()}
+                {mark.slice(1)}
+              </button>
+            ))
+          }
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Colour</legend>
+        <div class="swatches" role="radiogroup" aria-label="Colour">
+          {
+            palettes.map((palette, i) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={i === 0 ? 'true' : 'false'}
+                tabindex={i === 0 ? 0 : -1}
+                aria-label={palette.name}
+                title={palette.name}
+                data-mark-color={palette.mark}
+                data-glow-color={palette.glow}
+                style={`--swatch:${palette.swatch}`}
+              />
+            ))
+          }
+        </div>
+      </fieldset>
+      <label class="range" for="vb-dot-size">
+        <span>Dot size <output data-size-out>4.4 px</output></span>
+        <input type="range" id="vb-dot-size" min="3.4" max="6" step="0.2" value="4.4" data-size />
+        <small class="hint" data-size-hint hidden>Squares and dashes have a fixed size.</small>
+      </label>
+      <label class="range" for="vb-pace">
+        <span>Pace <output data-speed-out>1×</output></span>
+        <input type="range" id="vb-pace" min="0.5" max="2" step="0.25" value="1" data-speed />
+      </label>
+      <button type="button" class="home-button small" data-again>Load again</button>
+    </div>
+
+    <div class="preview home-card" data-preview>
+      <dotquilt-region state="ready" aria-label="Example account card" data-owner data-arrival>
+        <div slot="placeholder" class="grid">
+          <div class="profile">
+            <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+            <div class="lines">
+              <dotquilt-skeleton-line></dotquilt-skeleton-line>
+              <dotquilt-skeleton-line class="short"></dotquilt-skeleton-line>
+            </div>
+          </div>
+          <dotquilt-skeleton-text lines="3"></dotquilt-skeleton-text>
+          <dotquilt-chart-loader data-chart></dotquilt-chart-loader>
+          <div class="bubble"><dotquilt-typing-dots></dotquilt-typing-dots></div>
+        </div>
+        <div class="grid">
+          <div class="profile">
+            <span class="initials" aria-hidden="true">TS</span>
+            <div><strong>Tomás Silva</strong><br /><span class="muted">Studio account</span></div>
+          </div>
+          <p class="text">
+            Three projects this quarter, two of them delivered early. The next
+            invoice goes out on the first.
+          </p>
+          <svg class="line" viewBox="0 0 300 112" preserveAspectRatio="none" role="img" aria-label="Hours by week, rising. Example data.">
+            <path d="M0 92 L50 80 L100 84 L150 60 L200 52 L250 34 L300 22" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+          </svg>
+          <div class="bubble">Sounds good, thank you.</div>
+        </div>
+      </dotquilt-region>
+      <p class="caption">Example data.</p>
+    </div>
+
+    <div class="css">
+      <div class="css-head">
+        <span>Your CSS</span>
+        <button type="button" class="copy" data-copy-css>Copy</button>
+      </div>
+      <pre><code data-css></code></pre>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { refreshStyles } from 'dotquilt';
+  import type { ChartLoader } from 'dotquilt/chart';
+  import { arriving, load, type Owner, whenSeen } from '../arrive';
+
+  const root = document.querySelector<HTMLElement>('[data-yours]');
+  const preview = root?.querySelector<HTMLElement>('[data-preview]');
+  const region = preview?.querySelector<Owner>('[data-owner]');
+  const output = root?.querySelector<HTMLElement>('[data-css]');
+  const chart = preview?.querySelector<ChartLoader>('[data-chart]');
+  if (root && preview && region && output && chart) {
+    const state = { mark: 'dot', color: '', glow: '', size: 4.4, speed: 1 };
+    const line = [92, 80, 84, 60, 52, 34, 22];
+    chart.targetProvider = ({ width, height }) => ({
+      kind: 'line',
+      points: line.map((y, i) => ({
+        x: (i / (line.length - 1)) * width,
+        y: (y / 112) * height,
+      })),
+      baseline: height,
+    });
+    const loaders = () =>
+      preview.querySelectorAll(
+        'dotquilt-skeleton-circle, dotquilt-skeleton-line, dotquilt-skeleton-text, dotquilt-chart-loader, dotquilt-typing-dots',
+      );
+    const size = root.querySelector<HTMLInputElement>('[data-size]');
+
+    /** A fresh load, so the idle and the handoff play in the new look. */
+    const again = () => load(region, 1500);
+
+    let first = true;
+    function apply() {
+      const style = preview?.style;
+      if (!style || !output) return;
+      if (state.color) style.setProperty('--dotquilt-color', state.color);
+      else style.removeProperty('--dotquilt-color');
+      if (state.glow) style.setProperty('--dotquilt-accent-color', state.glow);
+      else style.removeProperty('--dotquilt-accent-color');
+      style.setProperty('--dotquilt-dot-size', `${state.size}px`);
+      // Squares and dashes have a fixed size; only dots follow the slider.
+      if (size) size.disabled = state.mark !== 'dot';
+      root
+        ?.querySelector('[data-size-hint]')
+        ?.toggleAttribute('hidden', state.mark === 'dot');
+      for (const loader of loaders()) {
+        if (state.mark === 'dot') loader.removeAttribute('mark');
+        else loader.setAttribute('mark', state.mark);
+        loader.setAttribute('speed', String(state.speed));
+      }
+      // The chart draws on a canvas: it reads the new colours on request.
+      refreshStyles(preview);
+      const lines = [
+        state.color && `  --dotquilt-color: ${state.color};`,
+        state.glow && `  --dotquilt-accent-color: ${state.glow};`,
+        state.mark === 'dot' &&
+          state.size !== 4.4 &&
+          `  --dotquilt-dot-size: ${state.size}px;`,
+      ].filter(Boolean);
+      const attributes = [
+        state.mark !== 'dot' && `mark="${state.mark}"`,
+        state.speed !== 1 && `speed="${state.speed}"`,
+      ].filter(Boolean);
+      output.textContent = [
+        lines.length
+          ? `.your-app {\n${lines.join('\n')}\n}`
+          : '/* The defaults: nothing to add. */',
+        attributes.length
+          ? `\n<dotquilt-skeleton-text ${attributes.join(' ')}>`
+          : '',
+      ].join('\n');
+      if (!first) again();
+      first = false;
+    }
+
+    /** A radio group of buttons; arrow keys move between them. */
+    const group = (attribute: string, choose: (button: HTMLElement) => void) => {
+      const buttons = [...root.querySelectorAll<HTMLElement>(`[${attribute}]`)];
+      const pick = (button: HTMLElement) => {
+        for (const other of buttons) {
+          other.setAttribute('aria-checked', String(other === button));
+          other.tabIndex = other === button ? 0 : -1;
+        }
+        choose(button);
+        apply();
+      };
+      buttons.forEach((button, i) => {
+        button.addEventListener('click', () => pick(button));
+        button.addEventListener('keydown', (event) => {
+          const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[
+            event.key
+          ];
+          if (!step) return;
+          event.preventDefault();
+          const next = buttons[(i + step + buttons.length) % buttons.length];
+          if (!next) return;
+          next.focus();
+          pick(next);
+        });
+      });
+    };
+    group('data-set-mark', (button) => {
+      state.mark = button.dataset.setMark ?? 'dot';
+    });
+    group('data-mark-color', (button) => {
+      state.color = button.dataset.markColor ?? '';
+      state.glow = button.dataset.glowColor ?? '';
+    });
+    size?.addEventListener('input', () => {
+      const out = root.querySelector('[data-size-out]');
+      if (out) out.textContent = `${size.value} px`;
+    });
+    size?.addEventListener('change', () => {
+      state.size = Number(size.value);
+      apply();
+    });
+    const speed = root.querySelector<HTMLInputElement>('[data-speed]');
+    speed?.addEventListener('input', () => {
+      const out = root.querySelector('[data-speed-out]');
+      if (out) out.textContent = `${speed.value}×`;
+    });
+    speed?.addEventListener('change', () => {
+      state.speed = Number(speed.value);
+      apply();
+    });
+    root.querySelector('[data-again]')?.addEventListener('click', again);
+    root.querySelector('[data-copy-css]')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget as HTMLButtonElement;
+      try {
+        await navigator.clipboard.writeText(output.textContent ?? '');
+        button.textContent = 'Copied';
+      } catch {
+        button.textContent = 'Select and copy';
+      }
+      setTimeout(() => {
+        button.textContent = 'Copy';
+      }, 1600);
+    });
+    apply();
+
+    if (arriving()) whenSeen(preview, () => load(region, 1300), 0.4);
+  }
+</script>
+
+<style>
+  .yours {
+    display: grid;
+    grid-template-columns: 17rem minmax(0, 1fr);
+    grid-template-areas: 'controls preview' 'controls css';
+    gap: 1rem;
+  }
+  .controls {
+    grid-area: controls;
+    display: grid;
+    align-content: start;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  legend,
+  .range span {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  output {
+    font-weight: 400;
+    color: var(--dq-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .choices button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    height: 34px;
+    padding: 0 0.5625rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+    color: var(--dq-muted);
+    font: 500 0.8125rem / 1 var(--dq-font);
+    cursor: pointer;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      color var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .choices button:hover {
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+  }
+  .choices button[aria-checked='true'] {
+    border-color: var(--dq-ink);
+    background: var(--dq-ink);
+    color: var(--dq-surface);
+  }
+  .swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .swatches button {
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--swatch);
+    box-shadow:
+      inset 0 0 0 2px var(--dq-surface),
+      0 0 0 1px var(--dq-line-2);
+    cursor: pointer;
+    transition: box-shadow var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .swatches button[aria-checked='true'] {
+    box-shadow:
+      inset 0 0 0 2px var(--dq-surface),
+      0 0 0 2px var(--dq-ink);
+  }
+  .choices button:focus-visible,
+  .swatches button:focus-visible {
+    outline: 2px solid var(--dq-accent);
+    outline-offset: 3px;
+  }
+  .range {
+    display: block;
+  }
+  .range input {
+    width: 100%;
+    accent-color: var(--dq-ink);
+  }
+  .range input:focus-visible {
+    outline: 2px solid var(--dq-accent);
+    outline-offset: 2px;
+  }
+  .range input:disabled {
+    opacity: 0.4;
+  }
+  .hint[hidden] {
+    display: none;
+  }
+  .hint {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--dq-faint);
+  }
+  .controls .home-button {
+    justify-self: start;
+  }
+  .controls .home-button:active {
+    scale: 0.98;
+  }
+  .preview {
+    grid-area: preview;
+    padding: 1.5rem 1.5rem 1rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem 2rem;
+    align-items: center;
+  }
+  .profile {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 0.875rem;
+    align-items: center;
+    font-size: 0.9375rem;
+    color: var(--dq-ink);
+  }
+  .profile dotquilt-skeleton-circle {
+    width: 3rem;
+  }
+  .initials {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--dq-subtle);
+    font-weight: 600;
+    color: var(--dq-muted);
+  }
+  .muted {
+    color: var(--dq-muted);
+  }
+  .lines {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .short {
+    width: 55%;
+  }
+  .text {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--dq-ink);
+  }
+  .grid dotquilt-chart-loader,
+  .grid .line {
+    display: block;
+    width: 100%;
+    height: 7rem;
+  }
+  .line {
+    color: var(--dq-accent);
+  }
+  .bubble {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-md) var(--dq-radius-md) var(--dq-radius-md) 4px;
+    background: var(--dq-bg);
+    font-size: 0.875rem;
+    color: var(--dq-ink);
+  }
+  .caption {
+    margin: 1rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--dq-faint);
+  }
+  .css {
+    grid-area: css;
+    overflow: hidden;
+    border-radius: var(--dq-radius-md);
+    background: var(--dq-code-bg);
+  }
+  .css-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.375rem 0.375rem 0.375rem 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--dq-code-fg) 12%, transparent);
+    font-size: 0.75rem;
+    color: var(--dq-code-punct);
+  }
+  .copy {
+    min-width: 44px;
+    height: 30px;
+    padding: 0 0.625rem;
+    border: 0;
+    border-radius: var(--dq-radius-sm);
+    background: transparent;
+    color: var(--dq-code-fg);
+    font: 500 0.8125rem / 1 var(--dq-font);
+    cursor: pointer;
+    transition: background var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .copy:hover {
+    background: color-mix(in srgb, var(--dq-code-fg) 10%, transparent);
+  }
+  .copy:focus-visible {
+    outline: 2px solid var(--dq-accent);
+    outline-offset: 2px;
+  }
+  pre {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    background: none;
+    border: 0;
+  }
+  pre code {
+    padding: 0;
+    background: none;
+    color: var(--dq-code-fg);
+    font: 0.8125rem / 1.6 var(--dq-font-mono);
+    white-space: pre;
+  }
+  @media (max-width: 56rem) {
+    .yours {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'preview' 'controls' 'css';
+    }
+  }
+  @media (max-width: 40rem) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (pointer: coarse) {
+    .choices button {
+      height: 44px;
+    }
+    .swatches button {
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+  }
+</style>

@@ -5,6 +5,9 @@
  * direction contract; the surface brief lives in .impeccable/surfaces/).
  */
 import Default from '@astrojs/starlight/components/SkipLink.astro';
+import { contract as contractA } from '../variants/a/contract';
+import { contract as contractB } from '../variants/b/contract';
+import { contract as contractC } from '../variants/c/contract';
 
 const contract = `<!--
 THESIS: The page is a loading screen caught mid-handoff: a field of marks rises into a solid chart line, so the product proves itself before a word is read. It refuses the headline-over-screenshot SaaS hero.
@@ -15,7 +18,14 @@ FORM: The field becomes the page, option 1 of 3, seed ee7c71ed.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 -->`;
 const home = Astro.url.pathname === '/';
+// The preview-only home variants carry their own contracts.
+const variant = {
+  '/variants/a/': contractA,
+  '/variants/b/': contractB,
+  '/variants/c/': contractC,
+}[Astro.url.pathname];
 ---
 
 {home && <Fragment set:html={contract} />}
+{variant && <Fragment set:html={variant} />}
 <Default />

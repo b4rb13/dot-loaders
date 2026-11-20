@@ -1,0 +1,32 @@
+---
+/**
+ * Variant C's sections below the first screen. Every demo answers the same
+ * hold and release as the hero, and the tempo dial slows them all.
+ */
+import './variant-c.css';
+import Anatomy from './sections/Anatomy.astro';
+import Closing from './sections/Closing.astro';
+import Family from './sections/Family.astro';
+import Features from './sections/Features.astro';
+import GetStarted from './sections/GetStarted.astro';
+import Network from './sections/Network.astro';
+import Playground from './sections/Playground.astro';
+---
+
+<Family />
+<Anatomy />
+<Network />
+<Playground />
+<Features />
+<GetStarted />
+<Closing />
+<script is:inline>
+  // Before anything paints: with motion allowed, each demo below starts out
+  // waiting for its data and loads as it comes into view. Otherwise (and
+  // without JavaScript) every demo shows its content at rest.
+  try {
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches)
+      for (const loader of document.querySelectorAll('.vc [data-vc-pending]'))
+        loader.setAttribute('state', 'pending');
+  } catch {}
+</script>

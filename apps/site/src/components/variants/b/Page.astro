@@ -1,0 +1,51 @@
+---
+/**
+ * Variant B below the first screen. Every section's content arrives from
+ * marks as it scrolls in: one orchestrated arrival per section, each run by
+ * real loaders. The field from the first screen returns at the end.
+ */
+import Closing from './sections/Closing.astro';
+import Family from './sections/Family.astro';
+import Features from './sections/Features.astro';
+import Handoff from './sections/Handoff.astro';
+import Playground from './sections/Playground.astro';
+import Shape from './sections/Shape.astro';
+import Start from './sections/Start.astro';
+---
+
+<div class="vb-page not-content" data-vb-page>
+  <Family />
+  <Shape />
+  <Handoff />
+  <Playground />
+  <Features />
+  <Start />
+  <Closing />
+</div>
+<script is:inline>
+  // Before anything paints: when motion is allowed, each section's content
+  // waits for its arrival, so it starts pending. Otherwise it is in place.
+  try {
+    const page = document.currentScript.previousElementSibling;
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      page.dataset.arrive = '';
+      for (const owner of page.querySelectorAll('[data-arrival]'))
+        owner.setAttribute('state', 'pending');
+    }
+  } catch {}
+</script>
+
+<style>
+  /* Pending content stays hidden until its loaders upgrade; a ready
+     region's placeholder never shows. */
+  .vb-page
+    :global(
+      :is(dotquilt-region, dotquilt-text-loader):not(:defined)[state='pending']
+        > :not([slot])
+    ) {
+    visibility: hidden;
+  }
+  .vb-page :global(dotquilt-region:not(:defined)[state='ready'] > [slot='placeholder']) {
+    display: none;
+  }
+</style>

@@ -1,0 +1,313 @@
+---
+/**
+ * Make it yours: the loaders respond live to a mark, a colour, a size and a
+ * pace, and the CSS for the same look updates beside them.
+ */
+import { palettes } from '../../playground/settings';
+---
+
+<section class="va va-section home-section not-content" aria-labelledby="va-yours-title" data-va-yours>
+  <div class="va-head va-head-wide">
+    <h2 id="va-yours-title">Quiet by default. Yours in a few lines.</h2>
+    <p>
+      The marks start in a slate that sits beside any text, with a soft glow
+      drifting through. Change the shape, the colour, the size or the pace,
+      and take the CSS with you.
+    </p>
+  </div>
+
+  <div class="va-yours">
+    <div class="va-yours-preview home-card" data-preview>
+      <dotquilt-region aria-label="Example profile" state="pending" data-owner>
+        <div slot="placeholder" class="grid">
+          <div class="profile">
+            <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+            <div class="lines">
+              <dotquilt-skeleton-line></dotquilt-skeleton-line>
+              <dotquilt-skeleton-line style="width: 55%"></dotquilt-skeleton-line>
+            </div>
+          </div>
+          <dotquilt-skeleton-text lines="3"></dotquilt-skeleton-text>
+          <dotquilt-chart-loader></dotquilt-chart-loader>
+          <div class="va-bubble typing"><dotquilt-typing-dots></dotquilt-typing-dots></div>
+        </div>
+        <span aria-hidden="true"></span>
+      </dotquilt-region>
+    </div>
+
+    <div class="va-yours-controls home-card">
+      <fieldset>
+        <legend>Mark</legend>
+        <div class="va-seg" role="radiogroup" aria-label="Mark" data-mark>
+          <span data-indicator aria-hidden="true"></span>
+          {
+            ['dot', 'dash', 'square'].map((mark) => (
+              <button type="button" role="radio" aria-checked={mark === 'dot' ? 'true' : 'false'} data-value={mark}>
+                <span class:list={['va-glyph', mark]} aria-hidden="true" />
+                {mark[0]?.toUpperCase()}
+                {mark.slice(1)}
+              </button>
+            ))
+          }
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Colour</legend>
+        <div class="va-swatches" role="radiogroup" aria-label="Colour" data-colour>
+          {
+            palettes.map((palette, i) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={i === 0 ? 'true' : 'false'}
+                aria-label={palette.name}
+                title={palette.name}
+                data-value={palette.id}
+                data-mark-color={palette.mark}
+                data-glow-color={palette.glow}
+                style={`--swatch:${palette.swatch}`}
+              />
+            ))
+          }
+        </div>
+      </fieldset>
+      <label class="range" for="va-dot-size">
+        <span>Dot size <output data-size-out>4.4 px</output></span>
+        <input type="range" id="va-dot-size" min="3.4" max="6" step="0.2" value="4.4" data-size />
+        <small class="hint" data-size-hint hidden>Squares and dashes have a fixed size.</small>
+      </label>
+      <label class="range" for="va-pace">
+        <span>Pace <output data-speed-out>1×</output></span>
+        <input type="range" id="va-pace" min="0.5" max="2" step="0.25" value="1" data-speed />
+      </label>
+      <button type="button" class="home-button small" data-again>Play again</button>
+    </div>
+
+    <div class="va-yours-css">
+      <div class="head">
+        <span>Your CSS</span>
+        <button type="button" class="copy" data-copy>Copy</button>
+      </div>
+      <pre><code data-css></code></pre>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { startPlayground } from './playground';
+
+  startPlayground();
+</script>
+
+<style is:global>
+  .va-yours {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 18rem;
+    grid-template-areas: 'preview controls' 'css controls';
+    gap: 1rem;
+  }
+  .va-yours-preview {
+    grid-area: preview;
+    padding: 1.75rem;
+  }
+  .va-yours-preview .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 1.75rem 2.25rem;
+  }
+  .va-yours-preview .profile {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.875rem;
+  }
+  .va-yours-preview dotquilt-skeleton-circle {
+    width: 3rem;
+  }
+  .va-yours-preview .lines {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .va-yours-preview dotquilt-chart-loader {
+    height: 7rem;
+  }
+  .va-yours-preview .va-bubble {
+    justify-self: start;
+  }
+  .va-yours-controls {
+    grid-area: controls;
+    display: grid;
+    align-content: start;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  .va-yours-controls fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .va-yours-controls :is(legend, .range > span) {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .va-yours-controls output {
+    font-weight: 400;
+    color: var(--dq-muted);
+  }
+  .va-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .va-swatches button {
+    width: 1.875rem;
+    height: 1.875rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: var(--swatch);
+    box-shadow:
+      inset 0 0 0 2px var(--dq-surface),
+      0 0 0 1px var(--dq-line-2);
+    cursor: pointer;
+    transition:
+      box-shadow var(--dq-duration-ui) var(--dq-ease-settle),
+      scale var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .va-swatches button:hover {
+    scale: 1.08;
+  }
+  .va-swatches button:active {
+    scale: 0.94;
+  }
+  .va-swatches button[aria-checked='true'] {
+    box-shadow:
+      inset 0 0 0 2px var(--dq-surface),
+      0 0 0 2px var(--dq-ink);
+  }
+  .va-swatches button:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 3px;
+  }
+  .va-yours-controls .range {
+    display: block;
+  }
+  .va-yours-controls input[type='range'] {
+    width: 100%;
+    margin: 0;
+    accent-color: var(--dq-ink);
+  }
+  .va-yours-controls input[type='range']:disabled {
+    opacity: 0.4;
+  }
+  .va-yours-controls input[type='range']:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 3px;
+  }
+  .va-yours-controls .hint[hidden] {
+    display: none;
+  }
+  .va-yours-controls .hint {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+  }
+  .va-yours-controls .home-button {
+    justify-self: start;
+  }
+  .va-yours-css {
+    grid-area: css;
+    overflow: hidden;
+    border-radius: var(--dq-radius-md);
+    background: var(--dq-code-bg);
+  }
+  .va-yours-css .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.375rem 0.375rem 0.375rem 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--dq-code-fg) 12%, transparent);
+    font-size: 0.75rem;
+    color: var(--dq-code-punct);
+  }
+  .va-yours-css .copy {
+    min-height: 30px;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: var(--dq-radius-sm);
+    background: transparent;
+    color: var(--dq-code-fg);
+    font: 500 0.75rem / 1 var(--dq-font);
+    cursor: pointer;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      scale var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .va-yours-css .copy:hover {
+    background: color-mix(in srgb, var(--dq-code-fg) 10%, transparent);
+  }
+  .va-yours-css .copy:active {
+    scale: 0.96;
+  }
+  .va-yours-css .copy:focus-visible {
+    outline: 2px solid var(--dq-code-keyword);
+    outline-offset: 2px;
+  }
+  .va-yours-css pre {
+    margin: 0;
+    padding: 1rem 1.125rem 1.125rem;
+    overflow-x: auto;
+    border: 0;
+    background: none;
+  }
+  .va-yours-css code {
+    padding: 0;
+    background: none;
+    color: var(--dq-code-fg);
+    font: 0.8125rem / 1.65 var(--dq-font-mono);
+    white-space: pre;
+  }
+  @media (max-width: 56rem) {
+    .va-yours {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'preview' 'controls' 'css';
+    }
+    /* On a narrow window the preview stays in view while you change it. */
+    .va-yours-preview {
+      position: sticky;
+      top: calc(var(--sl-nav-height, 4rem) + 0.5rem);
+      z-index: 2;
+      padding: 1.125rem;
+    }
+  }
+  @media (max-width: 40rem) {
+    .va-yours-preview .grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1rem;
+    }
+    .va-yours-preview dotquilt-skeleton-text,
+    .va-yours-preview .va-bubble {
+      display: none;
+    }
+    .va-yours-preview dotquilt-chart-loader {
+      height: 4.5rem;
+    }
+    .va-swatches button {
+      width: 44px;
+      height: 44px;
+    }
+    .va-yours-controls input[type='range'] {
+      height: 44px;
+    }
+    .va-yours-css .copy {
+      min-height: 44px;
+    }
+  }
+</style>

@@ -1,0 +1,339 @@
+---
+/**
+ * A support inbox. The conversation loads with its own placeholders; the
+ * visitor writes back, and typing dots hold the reply's place until it
+ * arrives and unrolls into its lines.
+ */
+import { conversations, quickReplies, thread } from './data';
+---
+
+<section class="va va-section home-section not-content va-split" aria-labelledby="va-inbox-title" data-va-inbox>
+  <div class="va-head">
+    <h2 id="va-inbox-title">Replies arrive where they will be read.</h2>
+    <p>
+      Answer the example customer below. Three calm dots hold the reply’s
+      place in its bubble, then unroll into its lines when it arrives.
+    </p>
+    <p class="va-uses">
+      dotquilt-region · dotquilt-typing-dots · dotquilt-skeleton-text
+    </p>
+  </div>
+
+  <div class="va-frame va-inbox" role="group" aria-label="Example support inbox">
+    <div class="va-frame-bar">
+      <p class="va-frame-title"><span class="va-workspace" aria-hidden="true">F</span>Support</p>
+      <span class="va-caption">Example data</span>
+    </div>
+    <div class="va-inbox-body">
+      <ul class="va-convos" aria-label="Conversations">
+        {
+          conversations.map((c, i) => (
+            <li class:list={{ current: i === 0 }} aria-current={i === 0 ? 'true' : undefined}>
+              <span class="va-avatar">{c.initials}</span>
+              <span class="who">
+                <strong>{c.name}</strong>
+                <span class="preview" data-preview={i === 0 ? '' : undefined}>{c.preview}</span>
+              </span>
+              <time>{c.time}</time>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="va-conversation">
+        <div class="va-thread" data-thread tabindex="0" role="group" aria-label="Messages">
+          <dotquilt-region aria-label="Conversation with Inês Costa" data-thread-region>
+            <div slot="placeholder" class="va-msgs">
+              <div class="va-msg them">
+                <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+                <div class="va-bubble ghost"><dotquilt-skeleton-text lines="2"></dotquilt-skeleton-text></div>
+              </div>
+              <div class="va-msg you">
+                <div class="va-bubble ghost short"><dotquilt-skeleton-text lines="1"></dotquilt-skeleton-text></div>
+              </div>
+              <div class="va-msg them">
+                <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+                <div class="va-bubble ghost short"><dotquilt-skeleton-text lines="1"></dotquilt-skeleton-text></div>
+              </div>
+            </div>
+            <div class="va-msgs">
+              {
+                thread.map((m) => (
+                  <div class:list={['va-msg', m.from]}>
+                    {m.from === 'them' && <span class="va-avatar">IC</span>}
+                    <div class="va-bubble">
+                      <p>{m.text}</p>
+                      <time>{m.time}</time>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </dotquilt-region>
+          <div class="va-msgs" role="log" aria-label="New messages" data-later></div>
+        </div>
+
+        <div class="va-quick" role="group" aria-label="Quick replies">
+          {
+            quickReplies.map((q) => (
+              <button type="button" class="va-quick-chip" data-quick={q.send}>
+                {q.send}
+              </button>
+            ))
+          }
+        </div>
+        <form class="va-composer" data-composer>
+          <label class="va-sr" for="va-reply">Your reply</label>
+          <input id="va-reply" name="reply" type="text" autocomplete="off" maxlength="160" placeholder="Write a reply…" />
+          <button type="submit" class="home-button primary small">Send</button>
+        </form>
+      </div>
+    </div>
+    <div class="va-frame-foot">
+      <span role="status" data-status>Inês Costa is online.</span>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { startInbox } from './inbox';
+
+  startInbox();
+</script>
+
+<style is:global>
+  .va-inbox {
+    container: va-inbox / inline-size;
+    overflow: hidden;
+  }
+  .va-inbox-body {
+    display: grid;
+    grid-template-columns: 14rem minmax(0, 1fr);
+    min-height: 0;
+  }
+  .va-convos {
+    margin: 0;
+    padding: 0.5rem;
+    list-style: none;
+    border-right: 1px solid var(--dq-line);
+  }
+  .va-convos li {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.625rem;
+    margin: 0;
+    padding: 0.625rem 0.5rem;
+    border-radius: var(--dq-radius-sm);
+    font-size: 0.8125rem;
+  }
+  .va-convos li.current {
+    background: var(--dq-subtle);
+  }
+  .va-convos .who {
+    display: grid;
+    min-width: 0;
+  }
+  .va-convos strong {
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .va-convos .preview {
+    overflow: hidden;
+    color: var(--dq-muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .va-convos time {
+    align-self: start;
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+  }
+
+  .va-conversation {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    min-width: 0;
+  }
+  .va-thread {
+    height: 19.5rem;
+    padding: 1.25rem 1.25rem 0.5rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--dq-line-2) transparent;
+  }
+  .va-thread:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: -2px;
+  }
+  .va-msgs {
+    display: grid;
+    gap: 0.875rem;
+  }
+  .va-msgs[data-later]:not(:empty) {
+    margin-top: 0.875rem;
+  }
+  .va-msg {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.625rem;
+    max-width: 85%;
+  }
+  .va-msg.you {
+    justify-self: end;
+    flex-direction: row-reverse;
+  }
+  .va-msg dotquilt-skeleton-circle {
+    flex: none;
+    width: 2rem;
+  }
+  .va-msg dotquilt-region {
+    min-width: 0;
+  }
+  .va-bubble {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-md) var(--dq-radius-md) var(--dq-radius-md) 4px;
+    background: var(--dq-subtle);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--dq-ink);
+  }
+  .va-msg.you .va-bubble {
+    border-color: transparent;
+    border-radius: var(--dq-radius-md) var(--dq-radius-md) 4px var(--dq-radius-md);
+    background: var(--dq-accent-soft);
+  }
+  .va-bubble p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .va-bubble time {
+    justify-self: end;
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+  }
+  .va-bubble.ghost {
+    width: 16rem;
+    max-width: 100%;
+  }
+  .va-bubble.ghost.short {
+    width: 10rem;
+  }
+  /* The dots' bubble is only as wide as the dots; on handoff it grows
+     into the real message's bubble. */
+  .va-bubble.typing {
+    width: max-content;
+    padding-block: 0.875rem;
+  }
+  /* Your own message appears at once: it rises a few pixels into place. */
+  .va-msg[data-new] {
+    animation:
+      va-row-fade var(--dq-duration-fade) var(--dq-ease-fade) both,
+      va-row-rise var(--dq-duration-rise) var(--dq-ease-settle) both;
+  }
+
+  .va-quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    padding: 0.5rem 1.25rem 0;
+  }
+  .va-quick-chip {
+    min-height: 2rem;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--dq-line);
+    border-radius: 999px;
+    background: var(--dq-surface);
+    color: var(--dq-muted);
+    font: 500 0.75rem / 1.3 var(--dq-font);
+    text-align: start;
+    cursor: pointer;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      color var(--dq-duration-ui) var(--dq-ease-settle),
+      border-color var(--dq-duration-ui) var(--dq-ease-settle),
+      scale var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .va-quick-chip:hover {
+    border-color: var(--dq-line-2);
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+  }
+  .va-quick-chip:active {
+    scale: 0.97;
+  }
+  .va-quick-chip:focus-visible,
+  .va-composer input:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+  }
+  .va-composer {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem 1rem;
+  }
+  .va-composer input {
+    flex: 1;
+    min-width: 0;
+    height: 34px;
+    padding: 0 0.75rem;
+    border: 1px solid var(--dq-line-2);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+    color: var(--dq-ink);
+    font: 400 0.875rem / 1 var(--dq-font);
+    transition: border-color var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .va-composer input::placeholder {
+    color: var(--dq-faint);
+  }
+  .va-composer input:hover {
+    border-color: var(--dq-faint);
+  }
+
+  @container va-inbox (max-width: 540px) {
+    .va-inbox-body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .va-convos {
+      display: none;
+    }
+    .va-thread {
+      padding-inline: 1rem;
+    }
+    .va-quick,
+    .va-composer {
+      padding-inline: 1rem;
+    }
+  }
+  @media (max-width: 40rem) {
+    /* Quick replies run in one row that scrolls sideways inside the frame. */
+    .va-quick {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scroll-snap-type: x proximity;
+      scrollbar-width: none;
+      padding-bottom: 0.125rem;
+    }
+    .va-quick-chip {
+      flex: none;
+      scroll-snap-align: start;
+      white-space: nowrap;
+    }
+    .va-thread {
+      height: 17rem;
+    }
+    .va-composer input {
+      height: 44px;
+      font-size: 1rem;
+    }
+    .va-quick-chip {
+      min-height: 44px;
+    }
+  }
+</style>

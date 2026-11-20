@@ -1,0 +1,89 @@
+---
+/**
+ * Preview only: a quiet bar to move between the home page variants and the
+ * current home page. It is not part of any variant's design.
+ */
+interface Props {
+  current: 'a' | 'b' | 'c';
+}
+const { current } = Astro.props;
+const links = [
+  { href: '/', label: 'Current' },
+  {
+    href: '/variants/a/',
+    label: 'A',
+    name: 'a',
+    title: 'One real screen, loading',
+  },
+  {
+    href: '/variants/b/',
+    label: 'B',
+    name: 'b',
+    title: 'The field becomes the line',
+  },
+  { href: '/variants/c/', label: 'C', name: 'c', title: 'You are the network' },
+];
+---
+
+<nav class="variant-switcher not-content" aria-label="Home page variants">
+  <span class="label">Preview</span>
+  {
+    links.map((link) => (
+      <a
+        href={link.href}
+        title={link.title}
+        aria-current={link.name === current ? 'page' : undefined}
+      >
+        {link.label}
+      </a>
+    ))
+  }
+</nav>
+
+<style>
+  /* Bottom-left and compact, so it covers as little of each variant as it can. */
+  .variant-switcher {
+    position: fixed;
+    z-index: 50;
+    left: max(0.75rem, env(safe-area-inset-left));
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    border: 1px solid var(--dq-line);
+    border-radius: 999px;
+    background: var(--dq-surface);
+    box-shadow: var(--dq-shadow-lg);
+    font: 500 0.8125rem / 1 var(--dq-font);
+  }
+  .label {
+    padding: 0 0.625rem 0 0.75rem;
+    color: var(--dq-faint);
+    font-family: var(--dq-font-mono);
+    font-size: 0.6875rem;
+  }
+  a {
+    display: inline-grid;
+    place-items: center;
+    min-width: 44px;
+    height: 32px;
+    padding: 0 0.625rem;
+    border-radius: 999px;
+    color: var(--dq-muted);
+    text-decoration: none;
+  }
+  a:hover {
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+  }
+  a[aria-current='page'] {
+    background: var(--dq-ink);
+    color: var(--dq-surface);
+  }
+  @media print {
+    .variant-switcher {
+      display: none;
+    }
+  }
+</style>

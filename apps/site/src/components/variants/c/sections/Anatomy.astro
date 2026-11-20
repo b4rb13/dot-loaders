@@ -1,0 +1,287 @@
+---
+/**
+ * The handoff, at the visitor's tempo: a live message card and a timeline of
+ * its phases (design/SPEC.md, "Handoff") that plays along with the real one.
+ */
+import HoldButton from '../HoldButton.astro';
+import TempoDial from '../TempoDial.astro';
+
+/** Each phase's share of the handoff, from SPEC: take shape, then hand over. */
+const tracks = [
+  { label: 'Marks travel to the real lines and avatar', from: 0, to: 0.55 },
+  { label: 'Content wipes in along a soft front', from: 0.46, to: 1 },
+  { label: 'Marks leave where the front passes', from: 0.46, to: 1 },
+];
+---
+
+<section class="vc home-section not-content vc-anatomy" aria-labelledby="vc-anatomy-title" data-anatomy>
+  <div class="copy" data-controls>
+    <h2 id="vc-anatomy-title">The marks become your content.</h2>
+    <p>
+      When your data lands, the marks don't vanish. They travel to its real
+      shape: each line grows or shrinks to the length of your text, and the
+      circle becomes the avatar. Then your content wipes in as they leave.
+    </p>
+    <p>Slow the tempo, then hold and let go to follow each part.</p>
+    <div class="controls">
+      <HoldButton controls="vc-anatomy-message" describedby="vc-anatomy-how" />
+      <TempoDial id="vc-anatomy-tempo" />
+    </div>
+    <p class="vc-readout reading" data-readout aria-hidden="true"></p>
+    <p class="vc-rest" data-rest aria-hidden="true">Loaders rest after four seconds.</p>
+    <p class="sr-only" id="vc-anatomy-how">
+      Press and hold to keep the message loading. Let go to watch it hand over.
+    </p>
+    <p class="sr-only" role="status" data-status></p>
+  </div>
+
+  <div class="stage home-card">
+    <dotquilt-region
+      id="vc-anatomy-message"
+      state="ready"
+      aria-label="Example message"
+      data-region
+      data-vc-pending
+    >
+      <div slot="placeholder" class="message">
+        <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+        <dotquilt-skeleton-text lines="3"></dotquilt-skeleton-text>
+      </div>
+      <article class="message">
+        <span class="initials">IC</span>
+        <div>
+          <p class="who">Inês Costa <span>10:42</span></p>
+          <p>
+            The new layouts are approved. I've attached the final files and the
+            invoice for the second phase.
+          </p>
+        </div>
+      </article>
+    </dotquilt-region>
+
+    <div class="timeline" aria-hidden="true" data-timeline>
+      {
+        tracks.map((track) => (
+          <div class="track" data-from={track.from} data-to={track.to}>
+            <span class="track-label">{track.label}</span>
+            <span class="track-bar">
+              <span
+                class="track-span"
+                style={`left:${track.from * 100}%;width:${(track.to - track.from) * 100}%`}
+              >
+                <span class="track-live" data-live />
+              </span>
+            </span>
+          </div>
+        ))
+      }
+      <div class="ticks">
+        <span>0 s</span><span data-tick="0.5">0.55 s</span><span data-tick="1">1.1 s</span>
+      </div>
+      <span class="playhead" data-playhead></span>
+    </div>
+  </div>
+</section>
+
+<script>
+  import type { LoadingRegion } from 'dotquilt/region';
+  import { registerAll } from 'dotquilt/register-all';
+  import {
+    bindTempoDials,
+    Connection,
+    handoffMs,
+    onFirstView,
+    onTempo,
+    reducedMotion,
+  } from '../network';
+
+  registerAll();
+  bindTempoDials();
+  const section = document.querySelector<HTMLElement>('[data-anatomy]');
+  const region = section?.querySelector<LoadingRegion>('[data-region]');
+  const controls = section?.querySelector<HTMLElement>('[data-controls]');
+  const timeline = section?.querySelector<HTMLElement>('[data-timeline]');
+  const playhead = section?.querySelector<HTMLElement>('[data-playhead]');
+  if (section && region && controls && timeline && playhead) {
+    // The ticks follow the tempo: half of the handoff, and all of it.
+    onTempo((tempo) => {
+      for (const tick of timeline.querySelectorAll<HTMLElement>('[data-tick]'))
+        tick.textContent = `${Number(((handoffMs(tempo) * Number(tick.dataset.tick)) / 1000).toFixed(2))} s`;
+    });
+
+    let duration = handoffMs();
+    const connection = new Connection({
+      name: 'anatomy',
+      subject: 'The message',
+      root: controls,
+      begin: (cycle) => region.update({ state: 'pending', cycle }),
+      deliver: (handoff) => {
+        duration = handoff.duration;
+        region.update({ state: 'ready', timing: handoff });
+      },
+    });
+
+    const clear = () => {
+      for (const element of [playhead, ...timeline.querySelectorAll('[data-live]')])
+        for (const animation of element.getAnimations()) animation.cancel();
+    };
+    region.addEventListener('dotquilt-handoff-start', () => {
+      clear();
+      if (reducedMotion()) return;
+      // The playhead is a clock, so it moves at an even pace.
+      playhead.animate(
+        [
+          { left: '0%', opacity: 0 },
+          { left: '0%', opacity: 1, offset: 0.02 },
+          { left: '100%', opacity: 1, offset: 0.98 },
+          { left: '100%', opacity: 0 },
+        ],
+        { duration, easing: 'linear', fill: 'forwards' },
+      );
+      for (const track of timeline.querySelectorAll<HTMLElement>('[data-from]')) {
+        const from = Number(track.dataset.from);
+        const to = Number(track.dataset.to);
+        track.querySelector('[data-live]')?.animate(
+          [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }],
+          { delay: from * duration, duration: (to - from) * duration, easing: 'linear', fill: 'both' },
+        );
+      }
+    });
+    region.addEventListener('dotquilt-handoff-cancel', clear);
+
+    if (!reducedMotion()) onFirstView(region, () => connection.auto(1300), 0.5);
+  }
+</script>
+
+<style>
+  .vc-anatomy {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: center;
+  }
+  .copy p {
+    margin: 1rem 0 0;
+    line-height: 1.65;
+    color: var(--dq-muted);
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    margin-top: 1.75rem;
+  }
+  .copy .reading {
+    display: block;
+    min-height: 1.2em;
+    margin-top: 1rem;
+  }
+  .copy .vc-rest {
+    margin-top: 0.375rem;
+  }
+  .stage {
+    display: grid;
+    gap: 1.75rem;
+    padding: 1.5rem;
+  }
+  .message {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 0.875rem;
+    align-items: start;
+    min-height: 6rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--dq-ink);
+  }
+  .message dotquilt-skeleton-circle {
+    width: 2.5rem;
+  }
+  .message p {
+    margin: 0;
+  }
+  .who {
+    font-weight: 600;
+  }
+  .who span {
+    margin-left: 0.375rem;
+    font-weight: 400;
+    color: var(--dq-faint);
+  }
+  .initials {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--dq-subtle);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--dq-muted);
+  }
+  .timeline {
+    position: relative;
+    display: grid;
+    gap: 0.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--dq-line);
+  }
+  .track {
+    display: grid;
+    gap: 0.375rem;
+  }
+  .track-label {
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+  }
+  .track-bar {
+    position: relative;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--dq-subtle);
+  }
+  .track-span {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--dq-line-2);
+  }
+  /* Each phase fills in ink as the real handoff plays through it. */
+  .track-live {
+    position: absolute;
+    inset: 0;
+    background: var(--dq-ink);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .ticks {
+    display: flex;
+    justify-content: space-between;
+    font: 0.75rem / 1 var(--dq-font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-faint);
+  }
+  .ticks [data-tick='0.5'] {
+    translate: 25% 0;
+  }
+  .playhead {
+    position: absolute;
+    top: 1.25rem;
+    bottom: 1.25rem;
+    left: 0;
+    width: 2px;
+    margin-left: -1px;
+    border-radius: 999px;
+    background: var(--dq-ink);
+    opacity: 0;
+    pointer-events: none;
+  }
+  @media (max-width: 56rem) {
+    .vc-anatomy {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

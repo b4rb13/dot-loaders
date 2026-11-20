@@ -1,0 +1,356 @@
+---
+/**
+ * The handoff, slowed down: a live card beside a timeline of its phases
+ * (design/SPEC.md, "Handoff"), with a playhead that follows the real one.
+ * The visitor picks the speed and plays it.
+ */
+const tracks = [
+  { label: 'Marks take shape', from: 0, to: 0.55 },
+  { label: 'Content wipes in', from: 0.46, to: 1 },
+  { label: 'Marks leave', from: 0.46, to: 1 },
+];
+const speeds = [
+  { label: '1×', ms: 1100 },
+  { label: '½×', ms: 2200, name: 'Half speed' },
+  // The runtime skips any handoff longer than four seconds.
+  { label: '⅓×', ms: 3300, name: 'A third of the speed' },
+];
+---
+
+<section class="home-section vb-handoff" aria-labelledby="vb-handoff-title" data-handoff>
+  <div class="copy">
+    <h2 id="vb-handoff-title">The marks become your content.</h2>
+    <p>
+      When your data lands, the marks don't vanish. They travel to its real
+      shape: each line grows or shrinks to the length of your text, and the
+      circle becomes the avatar. Then your content wipes in as they leave, in
+      a little over a second. Slow it down to see each part.
+    </p>
+    <div class="play">
+      <div class="speeds" role="radiogroup" aria-label="Speed">
+        {
+          speeds.map((speed, i) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked={i === 0 ? 'true' : 'false'}
+              aria-label={speed.name}
+              tabindex={i === 0 ? 0 : -1}
+              data-speed={speed.ms}
+            >
+              {speed.label}
+            </button>
+          ))
+        }
+      </div>
+      <button type="button" class="home-button" data-play>Play the handoff</button>
+    </div>
+  </div>
+
+  <div class="stage home-card">
+    <dotquilt-region state="ready" aria-label="A message" data-region data-arrival>
+      <div slot="placeholder" class="message">
+        <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+        <dotquilt-skeleton-text lines="3"></dotquilt-skeleton-text>
+      </div>
+      <article class="message">
+        <span class="initials" aria-hidden="true">RA</span>
+        <div>
+          <p class="who">Rui Almeida <span>09:15</span></p>
+          <p>
+            Thanks for the quick turnaround. The September report is in, and the
+            numbers match the dashboard.
+          </p>
+        </div>
+      </article>
+    </dotquilt-region>
+
+    <!-- The phases beside their names; the playhead runs over the lanes
+         only, never through the names. -->
+    <div class="timeline" aria-hidden="true">
+      {tracks.map((track, i) => <span class="track-label" style={`--row:${i + 1}`}>{track.label}</span>)}
+      <div class="lanes">
+        {
+          tracks.map((track) => (
+            <span class="track-bar">
+              <span
+                class="track-fill"
+                style={`--from:${track.from};--to:${track.to}`}
+              />
+            </span>
+          ))
+        }
+        <span class="playhead" data-playhead></span>
+      </div>
+      <div class="ticks">
+        <span>0 s</span><span data-mid>0.55 s</span><span data-end>1.1 s</span>
+      </div>
+    </div>
+    <p class="status" role="status" data-status></p>
+  </div>
+</section>
+
+<script>
+  import { arriving, load, type Owner, settled, whenSeen } from '../arrive';
+
+  const root = document.querySelector<HTMLElement>('[data-handoff]');
+  const region = root?.querySelector<Owner>('[data-region]');
+  const playhead = root?.querySelector<HTMLElement>('[data-playhead]');
+  const status = root?.querySelector<HTMLElement>('[data-status]');
+  if (root && region && playhead && status) {
+    let duration = 1100;
+    const label = (selector: string, seconds: number) => {
+      const tick = root.querySelector(selector);
+      if (tick) tick.textContent = `${Number(seconds.toFixed(2))} s`;
+    };
+    const speeds = [...root.querySelectorAll<HTMLButtonElement>('[data-speed]')];
+    const pick = (button: HTMLButtonElement) => {
+      for (const other of speeds) {
+        other.setAttribute('aria-checked', String(other === button));
+        other.tabIndex = other === button ? 0 : -1;
+      }
+      duration = Number(button.dataset.speed) || 1100;
+      label('[data-mid]', duration / 2000);
+      label('[data-end]', duration / 1000);
+    };
+    speeds.forEach((button, i) => {
+      button.addEventListener('click', () => pick(button));
+      button.addEventListener('keydown', (event) => {
+        const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[
+          event.key
+        ];
+        if (!step) return;
+        event.preventDefault();
+        const next = speeds[(i + step + speeds.length) % speeds.length];
+        if (next) {
+          next.focus();
+          pick(next);
+        }
+      });
+    });
+
+    let playing = false;
+    /** Load the card, then hand over after a short wait, `duration` long. */
+    const play = () => {
+      playing = true;
+      status.textContent = 'Loading the message…';
+      load(region, 1000, undefined, { duration });
+    };
+
+    region.addEventListener('dotquilt-handoff-start', () => {
+      // Only the plays this section asks for move the playhead.
+      if (!playing) return;
+      status.textContent = `Handing over, ${duration / 1000} s.`;
+      playhead.getAnimations().forEach((animation) => animation.cancel());
+      playhead.animate(
+        [
+          { left: '0%', opacity: 1 },
+          { left: '100%', opacity: 1, offset: 0.97 },
+          { left: '100%', opacity: 0 },
+        ],
+        { duration, easing: 'linear', fill: 'forwards' },
+      );
+      root.dataset.playing = '';
+    });
+    region.addEventListener('dotquilt-handoff-end', () => {
+      if (!playing) return;
+      playing = false;
+      status.textContent = 'Handed over.';
+      delete root.dataset.playing;
+    });
+
+    root.querySelector('[data-play]')?.addEventListener('click', play);
+    region.addEventListener('click', () => {
+      if (settled(region)) play();
+    });
+
+    if (arriving()) whenSeen(region, play, 0.5);
+  }
+</script>
+
+<style>
+  .vb-handoff {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: center;
+  }
+  .copy p {
+    margin: 1rem 0 0;
+    line-height: 1.65;
+    color: var(--dq-muted);
+  }
+  .play {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+  }
+  @media (pointer: coarse) {
+    .play .home-button,
+    .speeds button {
+      height: 44px;
+    }
+  }
+  .play .home-button:active {
+    scale: 0.98;
+  }
+  .speeds {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+  }
+  .speeds button {
+    min-width: 44px;
+    height: 28px;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dq-muted);
+    font: 500 0.8125rem / 1 var(--dq-font);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition:
+      background var(--dq-duration-ui) var(--dq-ease-settle),
+      color var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .speeds button:hover {
+    background: var(--dq-subtle);
+    color: var(--dq-ink);
+  }
+  .speeds button[aria-checked='true'] {
+    background: var(--dq-ink);
+    color: var(--dq-surface);
+  }
+  .speeds button:focus-visible {
+    outline: 2px solid var(--dq-accent);
+    outline-offset: 2px;
+  }
+
+  .stage {
+    display: grid;
+    gap: 1.75rem;
+    padding: 1.5rem;
+  }
+  .stage dotquilt-region {
+    cursor: pointer;
+  }
+  .message {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 0.875rem;
+    align-items: start;
+    min-height: 6rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--dq-ink);
+  }
+  .message dotquilt-skeleton-circle {
+    width: 2.5rem;
+  }
+  .message p {
+    margin: 0;
+  }
+  .who {
+    font-weight: 600;
+  }
+  .who span {
+    margin-left: 0.375rem;
+    font-weight: 400;
+    color: var(--dq-faint);
+  }
+  .initials {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--dq-subtle);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--dq-muted);
+  }
+  .timeline {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    grid-template-rows: repeat(3, 1.5rem) auto;
+    gap: 0.25rem 1rem;
+    align-items: center;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--dq-line);
+  }
+  .track-label {
+    grid-area: var(--row) / 1;
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+  }
+  .lanes {
+    position: relative;
+    grid-area: 1 / 2 / 4 / 3;
+    display: grid;
+    grid-template-rows: repeat(3, 1.5rem);
+    row-gap: 0.25rem;
+    align-items: center;
+    align-self: stretch;
+  }
+  .track-bar {
+    position: relative;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--dq-subtle);
+  }
+  .track-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--from) * 100%);
+    width: calc((var(--to) - var(--from)) * 100%);
+    border-radius: 999px;
+    background: var(--dq-line-2);
+    transition: background var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .vb-handoff[data-playing] .track-fill {
+    background: var(--dq-muted);
+  }
+  .ticks {
+    grid-area: 4 / 2;
+    display: flex;
+    justify-content: space-between;
+    padding-top: 0.25rem;
+    font: 0.6875rem / 1 var(--dq-font-mono);
+    color: var(--dq-faint);
+  }
+  .playhead {
+    position: absolute;
+    top: -0.25rem;
+    bottom: -0.25rem;
+    left: 0;
+    width: 2px;
+    margin-left: -1px;
+    border-radius: 999px;
+    background: var(--dq-ink);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .status {
+    min-height: 1.25rem;
+    margin: -0.75rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+  }
+  @media (max-width: 56rem) {
+    .vb-handoff {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .playhead {
+      display: none;
+    }
+  }
+</style>

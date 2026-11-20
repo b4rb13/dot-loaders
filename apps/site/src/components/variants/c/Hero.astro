@@ -1,0 +1,630 @@
+---
+/**
+ * Variant C's first screen, "You are the network". Beside the headline, the
+ * field and line are a live ChartLoader waiting for data inside a
+ * LoadingRegion whose content is the real teal line, with three metric cards
+ * under it. Holding the key keeps it all loading; letting go delivers: the
+ * marks glide onto the line before it draws in, and the values lock in from
+ * square marks, at the tempo the dial sets.
+ */
+import { art, heroLine, heroMetrics } from './data';
+import HoldButton from './HoldButton.astro';
+import TempoDial from './TempoDial.astro';
+
+interface Props {
+  title: string;
+  tagline?: string;
+}
+const { title, tagline } = Astro.props;
+// "Loading states that hand over." breaks after its second word. The space
+// between the two lines is a real one, so the heading reads as one sentence.
+const [first, ...rest] = title.split(' ');
+const lines = [`${first} ${rest.shift() ?? ''}`.trim(), rest.join(' ')];
+
+const points = heroLine.map(([x, y]) => [x * art.width, y * art.height]);
+const path = points
+  .map(([x, y], i) => `${i ? 'L' : 'M'}${x?.toFixed(1)} ${y?.toFixed(1)}`)
+  .join(' ');
+const end = points[points.length - 1] ?? [0, 0];
+const start = points[0] ?? [0, 0];
+
+/**
+ * The field's dissolving left edge: an 8 × 8 tile of cells, one per mark,
+ * each kept at its own strength, so marks drop out one by one instead of
+ * fading as a sheet. A fixed seed keeps it the same on every render.
+ */
+let seed = 7;
+const random = () => {
+  seed = (seed * 16807) % 2147483647;
+  return seed / 2147483647;
+};
+const strengths = [0, 0, 0.14, 0.22, 0.3, 0.38, 0.9];
+const cells: string[] = [];
+for (let y = 0; y < 8; y++)
+  for (let x = 0; x < 8; x++) {
+    const strength = strengths[Math.floor(random() * strengths.length)] ?? 0;
+    if (strength)
+      cells.push(
+        `<rect x='${x}' y='${y}' width='1' height='1' fill-opacity='${strength}'/>`,
+      );
+  }
+const dither = `url("data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'>${cells.join('')}</svg>`,
+)}")`;
+---
+
+<section
+  class="vc-hero not-content"
+  aria-labelledby="_top"
+  data-vc-hero
+  style={`--dither:${dither}`}
+>
+  <div class="copy">
+    <h1 id="_top" data-page-title>
+      <span>{lines[0]}</span>{' '}<span>{lines[1]}</span>
+    </h1>
+    {tagline && <p class="lead">{tagline}</p>}
+    <div class="actions">
+      <a class="home-button primary" href="/docs/">Get started</a>
+      <a class="home-button" href="/docs/components/skeleton/">See the components</a>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="art" data-art>
+      <!-- At rest, the field stays behind the arrived line as a still
+           SkeletonBlock; while the chart loads it steps aside for the live
+           ChartLoader field. -->
+      <dotquilt-skeleton-block class="ghost" motion="paused" aria-hidden="true"
+      ></dotquilt-skeleton-block>
+      <dotquilt-region
+        id="vc-hero-chart"
+        state="ready"
+        aria-label="Example chart"
+        data-hero-region
+      >
+        <dotquilt-chart-loader
+          slot="placeholder"
+          class="field"
+          pointer-response="lift"
+          data-field></dotquilt-chart-loader>
+        <svg
+          class="chart"
+          viewBox={`0 0 ${art.width} ${art.height}`}
+          role="img"
+          aria-label="Example data: a line rising from left to right"
+        >
+          <defs>
+            <linearGradient
+              id="vc-hero-line"
+              gradientUnits="userSpaceOnUse"
+              x1={start[0]}
+              y1="0"
+              x2={(start[0] ?? 0) + 230}
+              y2="0"
+            >
+              <stop offset="0" class="from"></stop>
+              <stop offset="1" class="to"></stop>
+            </linearGradient>
+          </defs>
+          <path class="line" d={path}></path>
+          <circle class="halo" cx={end[0]} cy={end[1]} r="11"></circle>
+          <circle class="node" cx={end[0]} cy={end[1]} r="4.4"></circle>
+        </svg>
+      </dotquilt-region>
+    </div>
+
+    <!-- The deck shares the art's box; its contents line up with the field's
+         own edges (where the line starts and ends). -->
+    <div class="deck">
+      <div class="edges">
+        <div class="metrics" role="group" aria-label="Example metrics">
+          {
+            heroMetrics.map((metric) => (
+              <div class="metric home-card">
+                <p class="label">{metric.label}</p>
+                <p class="value">
+                  <dotquilt-text-loader
+                    state="ready"
+                    mark="square"
+                    mask={metric.mask}
+                    aria-label={metric.label}
+                    data-metric
+                  >
+                    {metric.values[0]}
+                  </dotquilt-text-loader>
+                </p>
+              </div>
+            ))
+          }
+        </div>
+        <!-- On one column the caption travels with the cards it labels. -->
+        <p class="caption cards-caption">Example data</p>
+
+        <div class="console" data-console data-tempo-scope>
+          <HoldButton
+            size="large"
+            controls="vc-hero-chart"
+            describedby="vc-hero-how"
+            readout="Press and hold"
+          />
+          <div class="tempo">
+            <p class="caption">Example data</p>
+            <TempoDial id="vc-hero-tempo" hint={false} />
+            <p class="hint" id="vc-hero-tempo-hint" data-tempo-hint>Handoff 1.1 s</p>
+          </div>
+          <p class="rest" data-rest aria-hidden="true">Loaders rest after four seconds.</p>
+          <p class="sr-only" id="vc-hero-how">
+            Press and hold to keep the example chart and metrics loading. Let go
+            to deliver their data. Space or Enter works too.
+          </p>
+          <p class="sr-only" role="status" data-status></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script is:inline>
+  // Before anything paints: with motion allowed, the chart and the metrics
+  // start out waiting for their data; otherwise they show at rest.
+  try {
+    const hero = document.querySelector('[data-vc-hero]');
+    hero.setAttribute('data-js', '');
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches)
+      for (const loader of hero.querySelectorAll('[data-hero-region], [data-metric]'))
+        loader.setAttribute('state', 'pending');
+  } catch {}
+</script>
+
+<script>
+  import type { ChartLoader } from 'dotquilt/chart';
+  import type { LoadingRegion } from 'dotquilt/region';
+  import { registerAll } from 'dotquilt/register-all';
+  import type { TextLoader } from 'dotquilt/text';
+  import { heroLine, heroMetrics } from './data';
+  import {
+    bindTempoDials,
+    Connection,
+    followTheme,
+    handoffBase,
+    holdable,
+  } from './network';
+
+  registerAll();
+  const hero = document.querySelector<HTMLElement>('[data-vc-hero]');
+  const region = hero?.querySelector<LoadingRegion>('[data-hero-region]');
+  const field = hero?.querySelector<ChartLoader>('[data-field]');
+  const console_ = hero?.querySelector<HTMLElement>('[data-console]');
+  const art = hero?.querySelector<HTMLElement>('[data-art]');
+  if (hero && region && field && console_ && art) {
+    const metrics = [...hero.querySelectorAll<TextLoader>('[data-metric]')];
+    // Where the real line is, in the loader's own size: the marks glide onto
+    // it before the line draws in.
+    field.targetProvider = ({ width, height }) => ({
+      kind: 'line',
+      points: heroLine.map(([x, y]) => ({ x: x * width, y: y * height })),
+      baseline: height,
+    });
+    bindTempoDials();
+    followTheme(hero);
+
+    let answer = 0;
+    const timers: number[] = [];
+    const connection = new Connection({
+      name: 'hero',
+      subject: 'The chart and its metrics',
+      root: console_,
+      begin: (cycle) => {
+        for (const timer of timers.splice(0)) clearTimeout(timer);
+        region.update({ state: 'pending', cycle });
+        for (const metric of metrics) metric.update({ state: 'pending', cycle });
+      },
+      deliver: (handoff) => {
+        region.update({ state: 'ready', timing: handoff });
+        // One release lands everywhere: each value locks in from its square
+        // marks, a row stagger apart (80 ms at 1×), all ending with the chart.
+        answer = (answer + 1) % 3;
+        const stagger = Math.round((80 * handoff.duration) / handoffBase);
+        metrics.forEach((metric, i) => {
+          const cycle = metric.cycle;
+          timers.push(
+            window.setTimeout(() => {
+              if (metric.cycle !== cycle) return;
+              metric.textContent = heroMetrics[i]?.values[answer] ?? '';
+              metric.update({
+                state: 'ready',
+                timing: { duration: handoff.duration && handoff.duration - i * stagger },
+              });
+            }, i * stagger),
+          );
+        });
+      },
+    });
+    // With a mouse or pen, the field itself can be held too, and its marks
+    // lift around the pointer while it waits. Touch scrolls past it; the key
+    // is the way to hold on a phone.
+    holdable(
+      art,
+      {
+        press: () => connection.press(),
+        release: () => connection.release(),
+      },
+      { pointers: ['mouse', 'pen'], capture: false },
+    );
+
+    // Never stuck: if nobody holds it, the data arrives by itself.
+    if (region.state === 'pending')
+      customElements
+        .whenDefined('dotquilt-chart-loader')
+        .then(() => requestAnimationFrame(() => connection.auto(1200)));
+  }
+</script>
+
+<style>
+  .vc-hero {
+    /* The site's content edges: 82 px in at 1440, 1276 px at most. */
+    --gutter: clamp(1.25rem, 5.7vw, 82px);
+    --pull: 40px;
+    display: grid;
+    grid-template-columns: minmax(0, 508px) minmax(0, 1fr);
+    align-items: center;
+    padding-block: clamp(1rem, 3vh, 2rem) 0;
+  }
+
+  .copy {
+    position: relative;
+    z-index: 1;
+    padding-bottom: 3rem;
+  }
+  h1#_top {
+    margin: 0;
+    font-size: 72px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--dq-ink);
+  }
+  h1#_top span {
+    display: block;
+  }
+  .lead {
+    margin: 22px 0 0;
+    max-width: 30rem;
+    font-size: 18.75px;
+    line-height: 1.5;
+    color: var(--dq-muted);
+    text-wrap: balance;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 36px;
+  }
+  .actions .home-button {
+    height: 52px;
+    padding: 0 24px;
+    font-size: 1rem;
+  }
+
+  /* The art runs from the copy to the panel's right edge (its gutter), so it
+     never needs 100vw and never scrolls sideways. The deck under it shares
+     the same box. */
+  .stage {
+    min-width: 0;
+  }
+  .art,
+  .deck {
+    margin-right: calc(-1 * var(--gutter));
+    margin-left: calc(-1 * var(--pull));
+  }
+  .art {
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* The field's own edges: where the line starts (8%) and ends (95.5%). */
+  .edges {
+    margin-inline: 8% 4.5%;
+  }
+  .art dotquilt-region {
+    position: relative;
+    display: grid;
+    aspect-ratio: 850 / 450;
+    width: 100%;
+  }
+  .field,
+  .chart {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  /* Today's sparse field: small marks on a wide grid, drawn in ink. Marks in
+     flight light in the accent (the morph tones a mark once it is about 30%
+     of the way along) and gather on the line as discrete teal marks. The
+     mask fades the field a little downward and dissolves its left edge mark
+     by mark (one dither cell per 22.4 px mark). */
+  .field,
+  .ghost {
+    --pitch: 22.4px;
+    --dotquilt-dot-size: 3.6px;
+    --dotquilt-dot-gap: 18.8px;
+    --dotquilt-color: var(--dq-ink);
+    --dotquilt-accent-color: var(--dq-accent);
+    mask-image:
+      linear-gradient(to left, transparent, #000 4%),
+      linear-gradient(#000 0%, rgb(0 0 0 / 0.92) 45%, rgb(0 0 0 / 0.72) 100%),
+      linear-gradient(to right, transparent 24%, #000 42%),
+      var(--dither),
+      linear-gradient(to right, transparent 1%, #000 42%);
+    mask-size:
+      100% 100%,
+      100% 100%,
+      100% 100%,
+      calc(8 * var(--pitch)) calc(8 * var(--pitch)),
+      100% 100%;
+    mask-repeat: no-repeat, no-repeat, no-repeat, repeat, no-repeat;
+    mask-position: 0 0;
+    mask-composite: intersect, intersect, add, intersect;
+  }
+  .ghost {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    opacity: 0;
+    transition: opacity var(--dq-duration-ui) var(--dq-ease-fade);
+    pointer-events: none;
+  }
+  .art:has(
+      dotquilt-region:is(
+          [data-presentation='ready'],
+          :not([data-presentation])[state='ready']
+        )
+    )
+    .ghost {
+    opacity: 0.6;
+    transition-duration: var(--dq-duration-fade);
+  }
+  /* The region fades its whole placeholder layer out across the handoff
+     (opacity 1 to 0, eased), which halves the chart's marks while they
+     travel. The morph already sends each mark away where the wipe front
+     passes, so the layer holds at full strength here. An important
+     declaration outranks the runtime's layer animation. */
+  .art dotquilt-region::part(placeholder) {
+    opacity: 1 !important;
+  }
+  .chart {
+    grid-area: 1 / 1;
+    overflow: visible;
+  }
+  .line {
+    fill: none;
+    stroke: url(#vc-hero-line);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .from {
+    stop-color: var(--dq-accent);
+    stop-opacity: 0;
+  }
+  .to {
+    stop-color: var(--dq-accent);
+  }
+  .node {
+    fill: var(--dq-accent);
+  }
+  .halo {
+    fill: var(--dq-accent);
+    opacity: 0.14;
+  }
+  /* Until the region upgrades, a pending chart shows nothing, not the line. */
+  :is(dotquilt-region, dotquilt-text-loader):not(:defined)[state='pending']
+    > :not([slot]) {
+    visibility: hidden;
+  }
+  .value dotquilt-text-loader:not(:defined)[state='pending'] {
+    color: transparent;
+  }
+
+  /* The product UI the release lands on: three small metric cards, modest
+     next to the headline. */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 0.5rem;
+  }
+  .metric {
+    display: grid;
+    gap: 0.375rem;
+    padding: 0.875rem 1rem;
+  }
+  .metric .label {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--dq-muted);
+  }
+  .metric .value {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-ink);
+  }
+
+  /* One row along the field's edges: the key on the left; the caption, the
+     tempo dial and its readout on the right, on one baseline. */
+  .console {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 0.875rem;
+    margin-top: 1rem;
+  }
+  .vc-hero:not([data-js]) .console {
+    visibility: hidden;
+  }
+  .caption,
+  .hint {
+    margin: 0;
+    font: 400 0.75rem / 1 var(--dq-font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-faint);
+    white-space: nowrap;
+  }
+  .cards-caption {
+    display: none;
+  }
+  /* The caption, the dial and its readout stay together on the right. */
+  .tempo {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-left: auto;
+  }
+  .rest {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+    opacity: 0;
+    translate: 0 -3px;
+    transition:
+      opacity var(--dq-duration-fade) var(--dq-ease-fade),
+      translate var(--dq-duration-rise) var(--dq-ease-settle);
+  }
+  .rest[data-shown] {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+  /* Narrower desktops keep the row by letting the dial's "Tempo" word go
+     (the dial keeps its name for assistive technology). */
+  @media (max-width: 1360px) {
+    .console :global(.vc-hold.large) {
+      min-width: 14.25rem;
+    }
+    .console :global(.vc-tempo .name) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+  }
+
+  @media (max-width: 1180px) {
+    .vc-hero {
+      --pull: 24px;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+    }
+    h1#_top {
+      font-size: clamp(52px, 6.1vw, 72px);
+    }
+    .lead {
+      max-width: 26rem;
+    }
+  }
+  @media (max-width: 900px) {
+    .vc-hero {
+      grid-template-columns: minmax(0, 1fr);
+      padding-top: 2.5rem;
+    }
+    .copy {
+      padding-bottom: 0;
+    }
+    h1#_top {
+      font-size: clamp(40px, 11vw, 56px);
+    }
+    .lead {
+      font-size: 17px;
+    }
+    .actions {
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .actions .home-button {
+      height: 50px;
+      padding: 0 18px;
+    }
+    .art {
+      margin-inline: calc(-1 * var(--gutter));
+      margin-top: 0.5rem;
+    }
+    /* On one column the deck keeps the page's own edges, in the desktop's
+       order: the cards straight after the chart, captioned, then the
+       controls. */
+    .deck {
+      margin-inline: 0;
+    }
+    .edges {
+      margin-inline: 0;
+    }
+    .metrics {
+      margin-top: 0.5rem;
+    }
+    .cards-caption {
+      display: block;
+      margin-top: 0.625rem;
+    }
+    .tempo .caption {
+      display: none;
+    }
+    .console {
+      margin-top: 1.25rem;
+    }
+  }
+  @media (max-width: 40rem) {
+    .console :global(.vc-hold) {
+      width: 100%;
+    }
+    /* Phones: the dial and its readout share a row under the key. */
+    .tempo {
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      width: 100%;
+      margin-left: 0;
+    }
+    .metrics {
+      gap: 8px;
+    }
+    .metric {
+      padding: 0.75rem;
+    }
+    .metric .value {
+      font-size: 1.125rem;
+    }
+  }
+  /* The narrowest phones: the two actions share the width equally. */
+  @media (max-width: 24rem) {
+    .actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .actions .home-button {
+      width: 100%;
+    }
+  }
+</style>

@@ -1,0 +1,583 @@
+---
+/**
+ * The family: each loader in a tile shaped like the content it stands for:
+ * a wide chart, a small figure, a profile card, a short exchange, a table
+ * and a tall feed. A mark switch reloads them all in dots, dashes or
+ * squares, and each tile can load again on its own.
+ */
+import { chartPoints, pathOf } from './lib';
+
+const weekly = [24, 28, 27, 31, 34, 33, 37, 40, 39, 43, 46, 49];
+const spark = pathOf(chartPoints(weekly, 600, 144));
+const people = [
+  {
+    id: 'INV-2041',
+    customer: 'Northwind',
+    due: 'Nov 2',
+    amount: '$4,200.00',
+    status: 'Paid',
+  },
+  {
+    id: 'INV-2042',
+    customer: 'Acme Labs',
+    due: 'Nov 14',
+    amount: '$1,870.00',
+    status: 'Open',
+  },
+  {
+    id: 'INV-2043',
+    customer: 'Globex',
+    due: 'Oct 28',
+    amount: '$9,640.00',
+    status: 'Overdue',
+  },
+  {
+    id: 'INV-2044',
+    customer: 'Initech',
+    due: 'Nov 20',
+    amount: '$3,115.00',
+    status: 'Paid',
+  },
+];
+const feed = [
+  ['NW', 'Northwind paid $4,200', '2 min ago'],
+  ['GX', 'Globex invoice is overdue', '1 h ago'],
+  ['IT', 'Initech paid $3,115', '3 h ago'],
+  ['AL', 'Acme Labs opened an invoice', 'Yesterday'],
+] as const;
+---
+
+<section class="va va-section home-section not-content" aria-labelledby="va-family-title" data-va-family>
+  <div class="va-family-head">
+    <div class="va-head">
+      <h2 id="va-family-title">One quiet language for every wait.</h2>
+      <p>
+        A number, a chart, a table and a reply each take their own time, and
+        each loader holds the shape of what it stands for. Pick a mark to load
+        them all again in it.
+      </p>
+    </div>
+    <div class="va-seg" role="radiogroup" aria-label="Mark" data-marks>
+      <span data-indicator aria-hidden="true"></span>
+      {
+        ['dot', 'dash', 'square'].map((mark) => (
+          <button type="button" role="radio" aria-checked={mark === 'dot' ? 'true' : 'false'} data-value={mark}>
+            <span class:list={['va-glyph', mark]} aria-hidden="true" />
+            {mark[0]?.toUpperCase()}
+            {mark.slice(1)}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+
+  <ul class="va-family" role="list">
+    <li class="va-tile home-card chart" data-tile>
+      <div class="stage">
+        <dotquilt-region aria-label="Revenue by week" data-owner>
+          <dotquilt-chart-loader slot="placeholder" pointer-response="lift" data-spark></dotquilt-chart-loader>
+          <div class="chart">
+            <svg class="spark" viewBox="0 0 600 144" preserveAspectRatio="none" aria-hidden="true">
+              <path d={spark} vector-effect="non-scaling-stroke"></path>
+            </svg>
+            <div class="axis" aria-hidden="true"><span>Aug 25</span><span>Oct 6</span><span>Nov 17</span></div>
+          </div>
+        </dotquilt-region>
+      </div>
+      <div class="tile-foot">
+        <div>
+          <h3><a href="/docs/components/chart-loader/">ChartLoader</a></h3>
+          <p>Marks that glide onto your real line, then the line draws in.</p>
+        </div>
+        <button type="button" class="home-button small" data-again aria-label="Load ChartLoader again">Load again</button>
+      </div>
+    </li>
+
+    <li class="va-tile home-card text" data-tile>
+      <div class="stage">
+        <p class="label">Revenue this month</p>
+        <p class="figure va-figure">
+          <dotquilt-text-loader mask="$00,000" aria-label="Revenue this month" pointer-response="lift" data-owner data-value="$48,210">$48,210</dotquilt-text-loader>
+        </p>
+      </div>
+      <div class="tile-foot">
+        <div>
+          <h3><a href="/docs/components/text-loader/">TextLoader</a></h3>
+          <p>Numbers that take shape in marks, then lock.</p>
+        </div>
+        <button type="button" class="home-button small" data-again aria-label="Load TextLoader again">Load again</button>
+      </div>
+    </li>
+
+    <li class="va-tile home-card skel" data-tile>
+      <div class="stage">
+        <dotquilt-region aria-label="Profile" data-owner>
+          <div slot="placeholder" class="profile">
+            <dotquilt-skeleton-circle pointer-response="lift"></dotquilt-skeleton-circle>
+            <div class="lines">
+              <dotquilt-skeleton-line pointer-response="lift" style="width: 6rem"></dotquilt-skeleton-line>
+              <dotquilt-skeleton-line pointer-response="lift" style="width: 8rem"></dotquilt-skeleton-line>
+            </div>
+            <dotquilt-skeleton-text class="bio" lines="2" pointer-response="lift"></dotquilt-skeleton-text>
+          </div>
+          <div class="profile">
+            <span class="va-avatar big">AL</span>
+            <div class="lines">
+              <strong>Ada Lovelace</strong>
+              <span class="muted">Analytical engines</span>
+            </div>
+            <p class="bio">
+              Wrote the first published algorithm meant for a machine, and saw
+              that it could do far more than arithmetic.
+            </p>
+          </div>
+        </dotquilt-region>
+      </div>
+      <div class="tile-foot">
+        <div>
+          <h3><a href="/docs/components/skeleton/">Skeleton</a></h3>
+          <p>Images, text, avatars and paragraphs.</p>
+        </div>
+        <button type="button" class="home-button small" data-again aria-label="Load Skeleton again">Load again</button>
+      </div>
+    </li>
+
+    <li class="va-tile home-card typing" data-tile>
+      <div class="stage">
+        <div class="exchange">
+          <div class="va-bubble mine">Is the invoice out?</div>
+          <dotquilt-region aria-label="Reply" data-owner>
+            <div slot="placeholder" class="va-bubble typing"><dotquilt-typing-dots></dotquilt-typing-dots></div>
+            <div class="va-bubble reply">Yes, it went out this morning.</div>
+          </dotquilt-region>
+        </div>
+      </div>
+      <div class="tile-foot">
+        <div>
+          <h3><a href="/docs/components/typing-dots/">TypingDots</a></h3>
+          <p>A reply that is being written.</p>
+        </div>
+        <button type="button" class="home-button small" data-again aria-label="Load TypingDots again">Load again</button>
+      </div>
+    </li>
+
+    <li class="va-tile home-card table" data-tile>
+      <div class="stage">
+        <dotquilt-region aria-label="Invoices" data-owner>
+          <div slot="placeholder">
+            <div class="thead" aria-hidden="true"><span>Invoice</span><span>Customer</span><span>Due</span><span class="num">Amount</span><span>Status</span></div>
+            <div data-row-loaders>{people.map(() => <dotquilt-table-loader rows="1" row-height="32" pointer-response="lift" />)}</div>
+          </div>
+          <table class="mini" data-table>
+            <colgroup><col class="id" /><col class="customer" /><col class="due" /><col class="num" /><col class="status" /></colgroup>
+            <thead>
+              <tr>
+                <th scope="col" data-kind="text">Invoice</th>
+                <th scope="col" data-kind="text">Customer</th>
+                <th scope="col" data-kind="date">Due</th>
+                <th class="num" scope="col" data-kind="number">Amount</th>
+                <th scope="col" data-kind="badge">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                people.map((p) => (
+                  <tr>
+                    <td class="id">{p.id}</td>
+                    <td>{p.customer}</td>
+                    <td>{p.due}</td>
+                    <td class="num">{p.amount}</td>
+                    <td><span class:list={['va-chip', p.status.toLowerCase()]}>{p.status}</span></td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </dotquilt-region>
+      </div>
+      <div class="tile-foot">
+        <div>
+          <h3><a href="/docs/components/table-loader/">TableLoader</a></h3>
+          <p>Cells that gather into their text, row by row.</p>
+        </div>
+        <button type="button" class="home-button small" data-again aria-label="Load TableLoader again">Load again</button>
+      </div>
+    </li>
+
+    <li class="va-tile home-card region" data-tile>
+      <div class="stage">
+        <dotquilt-region aria-label="Activity" data-owner data-refresh>
+          <div slot="placeholder" class="feed">
+            {
+              feed.map(([, text, time]) => (
+                <div class="feed-item">
+                  <dotquilt-skeleton-circle pointer-response="lift" />
+                  <span class="what">
+                    <dotquilt-skeleton-line pointer-response="lift" style={`width: ${text.length * 0.9}ch`} />
+                    <dotquilt-skeleton-line pointer-response="lift" style={`width: ${time.length * 0.85}ch`} />
+                  </span>
+                </div>
+              ))
+            }
+          </div>
+          <ul class="feed">
+            {
+              feed.map(([initials, text, time]) => (
+                <li class="feed-item">
+                  <span class="va-avatar">{initials}</span>
+                  <span class="what"><span>{text}</span><time>{time}</time></span>
+                </li>
+              ))
+            }
+          </ul>
+        </dotquilt-region>
+      </div>
+      <div class="tile-foot">
+        <div>
+          <h3><a href="/docs/components/loading-region/">LoadingRegion</a></h3>
+          <p>Hands over, or refreshes in place.</p>
+        </div>
+        <button type="button" class="home-button small" data-again aria-label="Load LoadingRegion again">Load again</button>
+      </div>
+    </li>
+  </ul>
+  <p class="va-caption va-family-note" role="status" data-status>
+    Example data. Move the pointer over a loading tile to light its marks.
+  </p>
+</section>
+
+<script>
+  import { startFamily } from './family';
+
+  startFamily();
+</script>
+
+<style is:global>
+  .va-family-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1.5rem 2rem;
+    margin-bottom: 2.5rem;
+  }
+  /* Tiles take the shape of what they hold: a wide chart beside a small
+     figure; a table beside a profile card; a short exchange beside a feed. */
+  .va-family {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-areas:
+      'chart chart chart chart text text'
+      'table table table skel skel skel'
+      'typing typing region region region region';
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .va-tile.chart {
+    grid-area: chart;
+  }
+  .va-tile.text {
+    grid-area: text;
+  }
+  .va-tile.skel {
+    grid-area: skel;
+  }
+  .va-tile.typing {
+    grid-area: typing;
+  }
+  .va-tile.table {
+    grid-area: table;
+  }
+  .va-tile.region {
+    grid-area: region;
+  }
+  .va-tile {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-width: 0;
+    margin: 0;
+    padding: 1.25rem 1.375rem 1.125rem;
+    transition: box-shadow var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .va-tile:hover,
+  .va-tile:focus-within {
+    box-shadow: var(--dq-shadow-lg);
+  }
+  .va-tile .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    min-width: 0;
+    margin-bottom: 1rem;
+    padding-bottom: 1.125rem;
+    border-bottom: 1px solid var(--dq-line);
+  }
+  .va-tile .tile-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+  }
+  .va-tile h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .va-tile h3 a {
+    color: var(--dq-ink);
+    text-decoration: none;
+  }
+  .va-tile h3 a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--dq-line-2);
+    text-underline-offset: 3px;
+  }
+  .va-tile h3 a:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+  }
+  .va-tile .tile-foot p {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--dq-muted);
+  }
+  .va-tile .tile-foot .home-button {
+    flex: none;
+  }
+
+  /* ChartLoader: a wide chart with its axis. */
+  .va-tile.chart dotquilt-chart-loader,
+  .va-tile.chart .spark {
+    display: block;
+    width: 100%;
+    height: 9rem;
+  }
+  .va-tile.chart .chart {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .va-tile .spark path {
+    fill: none;
+    stroke: var(--dq-accent);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .va-tile .axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+  }
+
+  /* TextLoader: one figure and its label. */
+  .va-tile.text .stage {
+    align-content: end;
+    gap: 0.375rem;
+  }
+  .va-tile .label {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--dq-muted);
+  }
+  .va-tile .figure {
+    margin: 0;
+    font-size: clamp(1.75rem, 3.2vw, 2.375rem);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    color: var(--dq-ink);
+  }
+
+  /* Skeleton: a profile card, avatar, name and a short bio. */
+  .va-tile .profile {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.875rem 1rem;
+    font-size: 0.875rem;
+    color: var(--dq-ink);
+  }
+  .va-tile .profile dotquilt-skeleton-circle {
+    width: 3rem;
+  }
+  .va-tile .profile .lines {
+    display: grid;
+    gap: 0.375rem;
+  }
+  .va-tile .profile .bio {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--dq-muted);
+    line-height: 1.6;
+  }
+  .va-avatar.big {
+    width: 3rem;
+    height: 3rem;
+    font-size: 0.875rem;
+  }
+  .va-tile .muted {
+    color: var(--dq-muted);
+  }
+
+  /* TypingDots: a question and the reply on its way. */
+  .va-tile .exchange {
+    display: grid;
+    gap: 0.625rem;
+  }
+  .va-tile .exchange .mine {
+    justify-self: end;
+    border-color: transparent;
+    border-radius: var(--dq-radius-md) var(--dq-radius-md) 4px var(--dq-radius-md);
+    background: var(--dq-accent-soft);
+  }
+  .va-tile .exchange dotquilt-region {
+    justify-self: start;
+    max-width: 100%;
+  }
+  .va-tile .exchange .va-bubble {
+    width: max-content;
+    max-width: 100%;
+  }
+
+  /* TableLoader: a small table with its column heads. */
+  .va-tile .thead,
+  .va-tile .mini th {
+    height: 28px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--dq-faint);
+    text-align: start;
+  }
+  .va-tile .thead {
+    display: grid;
+    grid-template-columns: 20% 26% 18% 18% 18%;
+    align-items: center;
+    border-bottom: 1px solid var(--dq-line);
+  }
+  .va-tile .thead span {
+    padding: 0 0.5rem;
+  }
+  .va-tile .thead span:first-child {
+    padding-left: 0;
+  }
+  .va-tile [data-row-loaders] dotquilt-table-loader {
+    display: block;
+  }
+  .va-tile .mini {
+    display: table;
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.8125rem;
+    color: var(--dq-ink);
+  }
+  .va-tile .mini col.id {
+    width: 20%;
+  }
+  .va-tile .mini col.customer {
+    width: 26%;
+  }
+  .va-tile .mini :is(col.due, col.num, col.status) {
+    width: 18%;
+  }
+  .va-tile .mini td.id {
+    color: var(--dq-muted);
+  }
+  .va-tile .mini :is(th, td) {
+    padding: 0 0.5rem;
+    border: 0;
+    border-bottom: 1px solid var(--dq-line);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .va-tile .mini td {
+    height: 32px;
+  }
+  .va-tile .mini :is(th, td):first-child {
+    padding-left: 0;
+  }
+  .va-tile .mini tr:last-child td {
+    border-bottom: 0;
+  }
+  .va-tile :is(.mini, .thead) .num {
+    text-align: end;
+  }
+
+  /* LoadingRegion: a feed that refreshes in place. */
+  .va-tile .feed {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .va-tile .feed-item {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--dq-ink);
+  }
+  .va-tile .feed-item dotquilt-skeleton-circle {
+    width: 2rem;
+  }
+  .va-tile .feed-item .what {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    min-width: 0;
+  }
+  .va-tile .feed-item .what > span {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .va-tile .feed-item dotquilt-skeleton-line {
+    max-width: 100%;
+  }
+  .va-tile .feed-item time {
+    font-size: 0.75rem;
+    color: var(--dq-faint);
+  }
+
+  .va-family-note {
+    margin-top: 1rem;
+  }
+  @media (max-width: 64rem) {
+    .va-family {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        'chart chart'
+        'text typing'
+        'table table'
+        'skel skel'
+        'region region';
+    }
+  }
+  @media (max-width: 44rem) {
+    .va-family {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'chart' 'text' 'typing' 'skel' 'table' 'region';
+    }
+    .va-tile .tile-foot {
+      flex-wrap: wrap;
+    }
+    .va-tile h3 a {
+      display: inline-block;
+      padding-block: 0.625rem;
+      margin-block: -0.625rem;
+    }
+  }
+</style>

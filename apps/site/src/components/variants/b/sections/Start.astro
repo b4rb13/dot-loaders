@@ -1,0 +1,173 @@
+---
+/**
+ * Get started: three steps beside the code. The code arrives from marks:
+ * dashes in the shape of its lines, then the real code wipes in.
+ */
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
+
+const react = `import { LoadingRegion, SkeletonText } from '@dotquilt/react';
+
+export function Summary({ data }: { data: Revenue | null }) {
+  return (
+    <LoadingRegion
+      aria-label="Revenue"
+      state={data ? 'ready' : 'pending'}
+      placeholder={<SkeletonText lines={3} />}
+    >
+      {data && <RevenueCard data={data} />}
+    </LoadingRegion>
+  );
+}`;
+const native = `<dotquilt-region state="pending" aria-label="Revenue">
+  <dotquilt-skeleton-text slot="placeholder" lines="3"></dotquilt-skeleton-text>
+  <article>…</article>
+</dotquilt-region>
+
+<script type="module">
+  import { registerLoadingRegion } from 'dotquilt/region';
+  import { registerSkeletonText } from 'dotquilt/skeleton';
+  registerLoadingRegion();
+  registerSkeletonText();
+
+  const region = document.querySelector('dotquilt-region');
+  const data = await fetch('/api/revenue').then((r) => r.json());
+  // …fill in your content, then:
+  region.update({ state: 'ready' });
+</script>`;
+---
+
+<section class="home-section vb-start" aria-labelledby="vb-start-title" data-start>
+  <div class="steps">
+    <h2 id="vb-start-title">A calmer page in three steps.</h2>
+    <ol>
+      <li><span><strong>Install</strong> the React adapter, or the core package on its own.</span></li>
+      <li><span><strong>Wrap your content</strong> in a loading region, with a placeholder in its shape.</span></li>
+      <li><span><strong>Set the state</strong> when your data arrives. The region does the rest.</span></li>
+    </ol>
+    <a class="home-button" href="/docs/installation/">Read the installation guide</a>
+  </div>
+  <div class="code" data-code-wrap>
+  <dotquilt-region state="ready" aria-label="Example code" data-arrival data-code>
+    <div slot="placeholder" class="panel">
+      <dotquilt-skeleton-text mark="dash" lines="9"></dotquilt-skeleton-text>
+    </div>
+    <div class="tabs">
+      <Tabs syncKey="framework">
+        <TabItem label="React">
+          <Code code={react} lang="tsx" title="Summary.tsx" />
+        </TabItem>
+        <TabItem label="Native">
+          <Code code={native} lang="html" title="index.html" />
+        </TabItem>
+      </Tabs>
+    </div>
+  </dotquilt-region>
+  </div>
+</section>
+
+<script>
+  import { arriving, load, type Owner, whenSeen } from '../arrive';
+
+  const root = document.querySelector<HTMLElement>('[data-start]');
+  const wrap = root?.querySelector<HTMLElement>('[data-code-wrap]');
+  const code = root?.querySelector<Owner>('[data-code]');
+  if (root && wrap && code) {
+    // The waiting panel sits exactly where the code's frame will be, so the
+    // dashes travel straight into its lines.
+    const fit = () => {
+      const frame = code.querySelector('.expressive-code .frame');
+      if (!frame) return;
+      const top = frame.getBoundingClientRect().top - code.getBoundingClientRect().top;
+      wrap.style.setProperty('--tabs', `${Math.round(top)}px`);
+      wrap.style.setProperty('--frame', `${Math.round(frame.getBoundingClientRect().height)}px`);
+    };
+    fit();
+    new ResizeObserver(fit).observe(wrap);
+    if (arriving()) whenSeen(code, () => load(code, 800), 0.3);
+  }
+</script>
+
+<style>
+  .vb-start {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+  }
+  ol {
+    display: grid;
+    gap: 1rem;
+    margin: 1.75rem 0 2rem;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+  li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: 0.75rem;
+    color: var(--dq-muted);
+    line-height: 1.6;
+  }
+  li::before {
+    content: counter(step);
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--dq-line-2);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  li strong {
+    color: var(--dq-ink);
+    font-weight: 600;
+  }
+  @media (pointer: coarse) {
+    .steps .home-button {
+      height: 44px;
+    }
+  }
+  .code {
+    position: relative;
+    min-width: 0;
+  }
+  /* The dark plate under both layers, so the wipe never shows the page
+     through its soft front. */
+  .code::before {
+    content: '';
+    position: absolute;
+    inset: var(--tabs, 44px) 0 auto;
+    height: var(--frame, 22.5rem);
+    border-radius: var(--dq-radius-md);
+    background: var(--dq-code-bg);
+  }
+  .code dotquilt-region {
+    position: relative;
+  }
+  .tabs {
+    min-width: 0;
+  }
+  .tabs :global(starlight-tabs) {
+    margin-top: 0;
+  }
+  /* The placeholder is the code panel, waiting: dashes on the dark plate. */
+  .panel {
+    box-sizing: border-box;
+    height: var(--frame, 22.5rem);
+    margin-top: var(--tabs, 44px);
+    padding: 3.25rem 1.375rem 1.25rem;
+    --dotquilt-color: var(--dq-code-fg);
+  }
+  .panel dotquilt-skeleton-text {
+    width: 78%;
+  }
+  @media (max-width: 56rem) {
+    .vb-start {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

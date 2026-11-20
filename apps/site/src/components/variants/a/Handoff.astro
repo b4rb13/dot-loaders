@@ -1,0 +1,193 @@
+---
+/**
+ * The handoff, slowed down: a live message card and its phases on a
+ * timeline (design/SPEC.md, "Handoff"). Each phase fills as the real
+ * handoff passes through it, at full speed or in slow motion (3.74 s,
+ * under the runtime's 4 s limit for any motion).
+ */
+const total = 1100;
+const tracks = [
+  { label: 'Marks travel to the real lines and the avatar', from: 0, to: 605 },
+  { label: 'Content wipes in along a soft front', from: 506, to: 1100 },
+  { label: 'Marks leave where the front passes them', from: 506, to: 1100 },
+];
+const speeds = [
+  ['1', 'Full speed'],
+  ['3.4', 'Slow motion'],
+] as const;
+---
+
+<section class="va va-section home-section not-content va-split" aria-labelledby="va-handoff-title" data-va-handoff>
+  <div class="va-head">
+    <h2 id="va-handoff-title">The marks become your content.</h2>
+    <p>
+      When your data lands, the marks don’t vanish. Each line grows or shrinks
+      to the length of your text and the circle becomes the avatar. Then your
+      content wipes in as they leave: a little over a second, on long eased
+      curves, with nothing left to jump at the end.
+    </p>
+    <div class="va-handoff-controls">
+      <div class="va-seg" role="radiogroup" aria-label="Speed" data-speed>
+        <span data-indicator aria-hidden="true"></span>
+        {
+          speeds.map(([value, label]) => (
+            <button type="button" role="radio" aria-checked={value === '1' ? 'true' : 'false'} data-value={value}>
+              {label}
+            </button>
+          ))
+        }
+      </div>
+      <button type="button" class="home-button" data-play>Play the handoff</button>
+    </div>
+  </div>
+
+  <div class="va-handoff-stage home-card">
+    <dotquilt-region aria-label="A message" data-handoff>
+      <div slot="placeholder" class="va-message">
+        <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+        <dotquilt-skeleton-text lines="3"></dotquilt-skeleton-text>
+      </div>
+      <article class="va-message">
+        <span class="va-avatar big">IC</span>
+        <div>
+          <p class="who">Inês Costa <time>10:42</time></p>
+          <p>
+            The new layouts are approved. I’ve attached the final files and the
+            invoice for the second phase.
+          </p>
+        </div>
+      </article>
+    </dotquilt-region>
+
+    <div class="va-timeline" role="img" aria-label="The handoff's three phases over 1.1 seconds">
+      {
+        tracks.map((track) => (
+          <div class="track">
+            <span class="track-label">{track.label}</span>
+            <span class="track-bar">
+              <span
+                class="track-span"
+                style={`left:${(track.from / total) * 100}%;width:${((track.to - track.from) / total) * 100}%`}
+              >
+                <span class="track-done" data-from={track.from} data-to={track.to} />
+              </span>
+              <span class="track-head" />
+            </span>
+          </div>
+        ))
+      }
+      <div class="ticks" aria-hidden="true">
+        <span>0 s</span><span data-mid>0.55 s</span><span data-end>1.1 s</span>
+      </div>
+    </div>
+    <p class="va-caption va-handoff-status" role="status" data-status>Waiting to play.</p>
+  </div>
+</section>
+
+<script>
+  import { startHandoff } from './handoff';
+
+  startHandoff();
+</script>
+
+<style is:global>
+  .va-handoff-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+  }
+  .va-handoff-stage {
+    display: grid;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  .va-message {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.875rem;
+    min-height: 6.25rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--dq-ink);
+  }
+  .va-message dotquilt-skeleton-circle {
+    width: 2.75rem;
+  }
+  .va-message p {
+    margin: 0;
+  }
+  .va-message .who {
+    font-weight: 600;
+  }
+  .va-message .who time {
+    margin-left: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--dq-faint);
+  }
+  .va-timeline {
+    display: grid;
+    gap: 0.875rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--dq-line);
+  }
+  .va-timeline .track {
+    display: grid;
+    gap: 0.4375rem;
+  }
+  .va-timeline .track-label {
+    font-size: 0.75rem;
+    color: var(--dq-muted);
+  }
+  .va-timeline .track-bar {
+    position: relative;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--dq-subtle);
+  }
+  .va-timeline .track-span {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--dq-line-2);
+  }
+  /* The part of each phase the real handoff has passed. */
+  .va-timeline .track-done {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--dq-ink);
+    transform-origin: left;
+    scale: 0 1;
+  }
+  .va-timeline[data-done] .track-done {
+    scale: 1 1;
+  }
+  /* A playhead on each bar, so it never crosses a label. */
+  .va-timeline .track-head {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    left: 0;
+    width: 2px;
+    margin-left: -1px;
+    border-radius: 999px;
+    background: var(--dq-ink);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .va-timeline .ticks {
+    display: flex;
+    justify-content: space-between;
+    font: 0.75rem / 1 var(--dq-font-mono);
+    color: var(--dq-faint);
+  }
+  .va-handoff-status {
+    margin-top: -0.5rem;
+  }
+</style>

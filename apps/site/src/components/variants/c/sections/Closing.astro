@@ -1,0 +1,164 @@
+---
+/**
+ * The last word, over a calm field of marks. As it comes into view, the
+ * heading takes shape in square marks (two TextLoaders, one per line) and
+ * hands over to its words at the page's tempo, while the field joins and its
+ * glow drifts once. With a mouse, the marks near the pointer lift in ink.
+ */
+---
+
+<section class="vc home-section not-content vc-closing" aria-labelledby="vc-closing-title" data-closing>
+  <div class="field-slot" aria-hidden="true" data-field-slot></div>
+  <div class="closing-copy">
+    <h2 id="vc-closing-title">
+      <span class="sr-only">Give every wait its own shape.</span>
+      <span class="lines" aria-hidden="true">
+        <dotquilt-text-loader state="ready" mark="square" data-vc-pending data-line
+          >Give every wait</dotquilt-text-loader
+        >{' '}<dotquilt-text-loader state="ready" mark="square" data-vc-pending data-line
+          >its own shape.</dotquilt-text-loader
+        >
+      </span>
+    </h2>
+    <p>Start with a skeleton. Add the rest when your screens need them.</p>
+    <div class="actions">
+      <a class="home-button primary" href="/docs/">Get started</a>
+      <a class="home-button" href="/docs/components/skeleton/">Browse the components</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { registerSkeletonBlock } from 'dotquilt/skeleton';
+  import { registerTextLoader, type TextLoader } from 'dotquilt/text';
+  import {
+    followTheme,
+    handoffBase,
+    handoffMs,
+    onFirstView,
+    reducedMotion,
+  } from '../network';
+
+  registerSkeletonBlock();
+  registerTextLoader();
+  const closing = document.querySelector<HTMLElement>('[data-closing]');
+  const slot = closing?.querySelector<HTMLElement>('[data-field-slot]');
+  if (closing && slot) {
+    followTheme(closing);
+    // The field joins the page as it comes into view, so its one drift of
+    // glow plays where it can be seen, then it rests.
+    const place = () => {
+      const field = document.createElement('dotquilt-skeleton-block');
+      field.className = 'field';
+      field.setAttribute('pointer-response', 'lift');
+      slot.append(field);
+    };
+    // The heading's arrival: a fresh wait as it comes into view (so its
+    // marks move where they can be seen), then each line locks in, a row
+    // stagger apart, at the page's tempo.
+    const lines = [...closing.querySelectorAll<TextLoader>('[data-line]')];
+    const arrive = () => {
+      place();
+      const duration = handoffMs();
+      const stagger = Math.round((80 * duration) / handoffBase);
+      lines.forEach((line, i) => {
+        const cycle = `closing-${i}`;
+        line.update({ state: 'pending', cycle });
+        window.setTimeout(
+          () => {
+            if (line.cycle !== cycle) return;
+            line.update({ state: 'ready', timing: { duration: duration - i * stagger } });
+          },
+          900 + i * stagger,
+        );
+      });
+    };
+    if (reducedMotion()) place();
+    else onFirstView(closing, arrive, 0.4);
+  }
+</script>
+
+<style>
+  .vc-closing {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 22rem;
+    margin-bottom: 0;
+    padding: 3rem 1.5rem;
+    overflow: hidden;
+    border-radius: var(--dq-radius-lg);
+    text-align: center;
+  }
+  .field-slot {
+    position: absolute;
+    inset: 0;
+  }
+  .field-slot :global(.field) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    /* The first screen's field: small, sparse marks in ink; the pointer
+       lifts them in ink too, never teal. */
+    --dotquilt-dot-size: 2.8px;
+    --dotquilt-dot-gap: 19.6px;
+    --dotquilt-color: var(--dq-ink);
+    --dotquilt-accent-color: var(--dq-ink);
+    mask: radial-gradient(
+      ellipse 75% 85% at 50% 50%,
+      #0000 30%,
+      rgb(0 0 0 / 0.6) 60%,
+      #0000 96%
+    );
+  }
+  .closing-copy {
+    position: relative;
+    max-width: 40rem;
+  }
+  h2 {
+    margin: 0;
+    font-size: clamp(1.9rem, 4vw, 2.75rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--dq-ink);
+  }
+  /* Two lines by design: "Give every wait / its own shape." */
+  .lines dotquilt-text-loader {
+    display: block;
+  }
+  .lines dotquilt-text-loader:not(:defined)[state='pending'] {
+    color: transparent;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  p {
+    margin: 1rem 0 0;
+    color: var(--dq-muted);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.625rem;
+    margin-top: 1.75rem;
+  }
+  .actions .home-button {
+    height: 44px;
+  }
+  @media (max-width: 24rem) {
+    .actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

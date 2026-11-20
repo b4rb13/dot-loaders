@@ -1,0 +1,276 @@
+---
+/**
+ * Shape it yourself: the visitor writes an amount and a note, then loads
+ * them. The value scrambles in the shape of what they wrote and locks into
+ * it; the skeleton keeps the shape of the last message, and its lines grow
+ * or shrink to the new one's lengths on the handoff.
+ */
+const value = '$48,210';
+const message =
+  'Second phase of the brand work: new layouts, the type system and the final files. Thank you for the quick feedback.';
+---
+
+<section class="home-section vb-shape" aria-labelledby="vb-shape-title" data-shape>
+  <div class="intro">
+    <h2 id="vb-shape-title">Write it, and watch it arrive.</h2>
+    <p>
+      Placeholders take the shape of whatever comes. Change the amount or the
+      note and load them: the amount locks in from marks, and each skeleton
+      line grows or shrinks to the length of your text.
+    </p>
+
+    <form class="form" data-form>
+      <label class="field">
+        <span>Amount</span>
+        <input name="value" value={value} maxlength="14" autocomplete="off" spellcheck="false" />
+      </label>
+      <label class="field">
+        <span>Note</span>
+        <textarea name="message" rows="3" maxlength="170">{message}</textarea>
+      </label>
+      <div class="row">
+        <button type="submit" class="home-button">Load it</button>
+        <p class="status" role="status" data-status></p>
+      </div>
+    </form>
+  </div>
+
+  <article class="card home-card" aria-label="Preview">
+    <header class="card-head">
+      <span class="ref">INV-2043</span>
+      <span class="due">Due Oct 29</span>
+    </header>
+    <div class="total">
+      <span class="label">Amount due</span>
+      <span class="figure">
+        <dotquilt-text-loader
+          state="ready"
+          mark="square"
+          mask="$00,000"
+          aria-label="Amount due"
+          data-value
+          data-arrival>{value}</dotquilt-text-loader
+        >
+      </span>
+    </div>
+    <div class="note">
+      <span class="label">Note</span>
+      <dotquilt-region state="ready" aria-label="Note" data-message data-arrival>
+        <dotquilt-skeleton-text slot="placeholder" lines="3" data-lines></dotquilt-skeleton-text>
+        <p class="body" data-body>{message}</p>
+      </dotquilt-region>
+    </div>
+    <p class="caption">Example data.</p>
+  </article>
+</section>
+
+<script>
+  import type { SkeletonText } from 'dotquilt/skeleton';
+  import { arriving, load, type Owner, whenSeen } from '../arrive';
+
+  const root = document.querySelector<HTMLElement>('[data-shape]');
+  const form = root?.querySelector<HTMLFormElement>('[data-form]');
+  const value = root?.querySelector<Owner>('[data-value]');
+  const region = root?.querySelector<Owner>('[data-message]');
+  const body = root?.querySelector<HTMLElement>('[data-body]');
+  const skeleton = root?.querySelector<SkeletonText>('[data-lines]');
+  const status = root?.querySelector<HTMLElement>('[data-status]');
+
+  if (root && form && value && region && body && skeleton && status) {
+    /** How many lines the message takes now. */
+    const lineCount = () => {
+      const range = document.createRange();
+      range.selectNodeContents(body);
+      const tops = new Set(
+        [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+      );
+      return Math.max(1, tops.size);
+    };
+    /** The value's shape: digits read as 0, so the marks hint at a number. */
+    const shapeOf = (text: string) => text.replace(/\d/g, '0') || ' ';
+
+    const run = (text: string, words: string, first = false) => {
+      // The skeleton holds the shape of what was there before.
+      skeleton.setAttribute('lines', String(lineCount()));
+      value.setAttribute('mask', shapeOf(text));
+      load(value, first ? 750 : 950, () => {
+        value.textContent = text;
+      });
+      load(region, first ? 1000 : 1200, () => {
+        body.textContent = words;
+      });
+      status.textContent = 'Loading…';
+      setTimeout(() => {
+        status.textContent = first ? '' : 'Loaded. Change it and load it again.';
+      }, first ? 2200 : 2400);
+    };
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const text = String(data.get('value') ?? '').trim() || '$0';
+      const words = String(data.get('message') ?? '').trim() || '…';
+      run(text, words);
+    });
+    // Enter in the message loads it too; Shift+Enter is still a new line.
+    form.querySelector('textarea')?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    if (arriving())
+      whenSeen(root.querySelector('.card') ?? root, () => {
+        load(value, 750);
+        load(region, 1000);
+      });
+  }
+</script>
+
+<style>
+  .vb-shape {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: center;
+  }
+  .intro > p {
+    margin: 1rem 0 0;
+    max-width: 34rem;
+    line-height: 1.65;
+    color: var(--dq-muted);
+  }
+  .form {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.75rem;
+    max-width: 30rem;
+  }
+  .field {
+    display: grid;
+    gap: 0.4375rem;
+  }
+  .field span {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .field input,
+  .field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--dq-line-2);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-surface);
+    color: var(--dq-ink);
+    font: 400 1rem / 1.5 var(--dq-font);
+    caret-color: var(--dq-accent);
+    resize: vertical;
+    transition: border-color var(--dq-duration-ui) var(--dq-ease-settle);
+  }
+  .field input {
+    min-height: 44px;
+    font-variant-numeric: tabular-nums;
+  }
+  .field input:hover,
+  .field textarea:hover {
+    border-color: var(--dq-muted);
+  }
+  .field input:focus-visible,
+  .field textarea:focus-visible {
+    outline: 2px solid var(--dq-accent);
+    outline-offset: 1px;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+  }
+  @media (pointer: coarse) {
+    .row .home-button {
+      height: 44px;
+    }
+  }
+  .row .home-button:active {
+    scale: 0.98;
+  }
+  .status {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+  }
+
+  .card {
+    display: grid;
+    gap: 1.375rem;
+    padding: 1.5rem 1.75rem 1.25rem;
+  }
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--dq-line);
+    font-size: 0.8125rem;
+  }
+  .ref {
+    font-family: var(--dq-font-mono);
+    color: var(--dq-muted);
+  }
+  .due {
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    background: var(--dq-warning-soft);
+    color: var(--dq-warning);
+    font-weight: 500;
+  }
+  .total,
+  .note {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--dq-muted);
+  }
+  .figure {
+    font-size: 2.5rem;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-ink);
+    overflow-wrap: anywhere;
+  }
+  .note dotquilt-region {
+    min-height: 4.75rem;
+  }
+  .body {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--dq-ink);
+    overflow-wrap: anywhere;
+  }
+  .caption {
+    max-width: none;
+    margin: 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--dq-line);
+    font-size: 0.8125rem;
+    color: var(--dq-faint);
+  }
+  @media (max-width: 56rem) {
+    .vb-shape {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 40rem) {
+    .card {
+      padding: 1.25rem;
+    }
+  }
+</style>

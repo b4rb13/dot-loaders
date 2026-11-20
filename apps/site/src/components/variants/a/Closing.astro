@@ -1,0 +1,109 @@
+---
+/**
+ * The last word, over the first screen's field. The field wakes once as it
+ * arrives, and its marks light up around the pointer.
+ */
+---
+
+<section class="va va-section home-section not-content va-closing" aria-labelledby="va-closing-title" data-va-closing>
+  <dotquilt-skeleton-block class="va-closing-field" pointer-response="lift" aria-hidden="true"
+  ></dotquilt-skeleton-block>
+  <div class="va-closing-copy">
+    <h2 id="va-closing-title">Give every wait its own shape.</h2>
+    <p>
+      Start with a skeleton. Add a chart, a table or a reply when your screens
+      need them.
+    </p>
+    <div class="actions">
+      <a class="home-button primary" href="/docs/">Get started</a>
+      <a class="home-button" href="/docs/components/skeleton/">See the components</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { registerAll } from 'dotquilt/register-all';
+  import { arriveOnce, reducedMotion } from './lib';
+
+  registerAll();
+  const section = document.querySelector<HTMLElement>('[data-va-closing]');
+  const field = section?.querySelector('.va-closing-field');
+  if (section && field)
+    arriveOnce(section, () => {
+      // Connect the field again, so its glow drifts once as it arrives.
+      if (!reducedMotion()) section.prepend(field);
+    });
+</script>
+
+<style is:global>
+  .va-closing {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 24rem;
+    margin-bottom: 0;
+    padding: 3.5rem 1.5rem;
+    overflow: hidden;
+    border-radius: var(--dq-radius-lg);
+    text-align: center;
+  }
+  .va-closing-field {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    --dotquilt-dot-size: 2.8px;
+    --dotquilt-dot-gap: 19.6px;
+    --dotquilt-color: var(--dq-ink);
+    /* Clear behind the words, strongest in a ring, gone at the edges. */
+    mask-image: radial-gradient(
+      ellipse 75% 85% at 50% 50%,
+      transparent 30%,
+      rgb(0 0 0 / var(--va-ring, 0.6)) 62%,
+      transparent 96%
+    );
+  }
+  :root[data-theme='dark'] .va-closing-field {
+    --va-ring: 0.85;
+  }
+  .va-closing-copy {
+    position: relative;
+    max-width: 34rem;
+  }
+  .va-closing h2 {
+    margin: 0;
+    font-size: clamp(1.9rem, 4vw, 2.75rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--dq-ink);
+    text-wrap: balance;
+  }
+  .va-closing p {
+    margin: 1rem auto 0;
+    max-width: 28rem;
+    color: var(--dq-muted);
+    text-wrap: balance;
+  }
+  .va-closing .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+  }
+  .va-closing .actions .home-button {
+    height: 48px;
+    padding: 0 22px;
+    font-size: 1rem;
+  }
+  @media (max-width: 40rem) {
+    .va-closing .actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      width: min(100%, 20rem);
+      margin-inline: auto;
+    }
+  }
+</style>

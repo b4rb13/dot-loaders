@@ -53,12 +53,15 @@ const links = [
   </a>
   <script is:inline>
     // A first visit plays the arrival, before anything paints. Later pages
-    // in the same visit, and reduced motion, show the header at rest.
+    // in the same visit, and reduced motion, show the header at rest. The
+    // home page variants have their own arrival as the one focal motion, so
+    // the header rests there too.
     try {
       const brand = document.currentScript.previousElementSibling;
       const seen = sessionStorage.getItem('dotquilt-arrived');
       const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!seen && !still) {
+      const variant = location.pathname.startsWith('/variants/');
+      if (!seen && !still && !variant) {
         brand.querySelector('[data-wordmark]').setAttribute('state', 'pending');
         document.documentElement.dataset.arrival = '';
       }

@@ -1,0 +1,474 @@
+---
+/**
+ * However the network answers: a first load with `delay` and `min-display`
+ * that the visitor times by hand, a flaky request that sometimes fails and
+ * swaps at once, and a feed that stays usable while it refreshes.
+ */
+import { activity, invoices } from '../data';
+import HoldButton from '../HoldButton.astro';
+---
+
+<section class="vc home-section not-content vc-network" aria-labelledby="vc-network-title" data-network>
+  <header>
+    <h2 id="vc-network-title">However the network answers.</h2>
+    <p>
+      A quick answer shows no placeholder at all. A slow one keeps it long
+      enough to read, and an error swaps in at once. Content that is already
+      there stays put while it refreshes. Try each by hand.
+    </p>
+  </header>
+
+  <div class="pair">
+    <article class="card home-card" aria-labelledby="vc-first-title" data-first>
+      <div class="head">
+        <h3 id="vc-first-title">First load</h3>
+        <code class="options">delay=150 · min-display=500</code>
+      </div>
+      <dotquilt-region
+        id="vc-invoices"
+        class="invoices"
+        state="ready"
+        delay="150"
+        min-display="500"
+        aria-label="Example invoices"
+        data-region
+        data-vc-pending
+      >
+        <dotquilt-table-loader slot="placeholder" rows="4" row-height="40"></dotquilt-table-loader>
+        <div class="answer">
+          <table class="table" data-table>
+            <thead>
+              <tr><th scope="col">Customer</th><th scope="col">Amount</th><th scope="col">Status</th></tr>
+            </thead>
+            <tbody>
+              {
+                invoices.map((row) => (
+                  <tr>
+                    <td>{row.customer}</td>
+                    <td class="num">{row.amount}</td>
+                    <td><span class="pill">{row.status}</span></td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+          <div class="error" data-error hidden>
+            <p><strong>We couldn't load invoices.</strong> The request timed out.</p>
+            <button type="button" class="home-button small" data-retry>Retry</button>
+          </div>
+        </div>
+      </dotquilt-region>
+      <div class="controls" data-controls>
+        <HoldButton controls="vc-invoices" describedby="vc-first-how" />
+        <button type="button" class="home-button" data-flaky aria-controls="vc-invoices">
+          Send a flaky request
+        </button>
+        <p class="sr-only" id="vc-first-how">
+          Press and hold to keep the invoices loading. A press shorter than
+          150 milliseconds shows no placeholder.
+        </p>
+        <p class="sr-only" role="status" data-status></p>
+      </div>
+      <ol class="log" aria-label="Requests" data-log>
+        <li class="empty">Tap quickly, hold for a while, or send a flaky request.</li>
+      </ol>
+    </article>
+
+    <article class="card home-card" aria-labelledby="vc-refresh-title" data-refresh>
+      <div class="head">
+        <h3 id="vc-refresh-title">Refresh</h3>
+        <code class="options">state=refreshing</code>
+      </div>
+      <div class="feed-frame">
+        <dotquilt-region id="vc-feed" state="ready" aria-label="Example activity" data-region>
+          <ul class="feed" data-feed>
+            {
+              activity.slice(0, 4).map((item) => (
+                <li>
+                  <span>{item}</span>
+                  <a href="/docs/components/loading-region/">Open</a>
+                </li>
+              ))
+            }
+          </ul>
+        </dotquilt-region>
+      </div>
+      <div class="controls" data-controls>
+        <HoldButton
+          label="Hold to refresh"
+          controls="vc-feed"
+          describedby="vc-refresh-how"
+        />
+        <p class="vc-readout" data-readout aria-hidden="true"></p>
+        <p class="sr-only" id="vc-refresh-how">
+          Press and hold to keep the feed refreshing. It stays visible and its
+          links keep working. Let go to deliver new activity.
+        </p>
+        <p class="sr-only" role="status" data-status></p>
+      </div>
+      <p class="note">
+        While it refreshes, a row of marks rests just above the feed, so nothing
+        moves, and every link still works.
+      </p>
+    </article>
+  </div>
+  <p class="caption">Example data. The flaky request waits 0.3 to 2.6 s and fails about one time in three.</p>
+</section>
+
+<script>
+  import type { LoadingRegion } from 'dotquilt/region';
+  import { registerAll } from 'dotquilt/register-all';
+  import type { TableLoader } from 'dotquilt/table';
+  import { activity } from '../data';
+  import {
+    Connection,
+    handoffMs,
+    onFirstView,
+    reducedMotion,
+    seconds,
+    spoken,
+  } from '../network';
+
+  registerAll();
+  const section = document.querySelector<HTMLElement>('[data-network]');
+  const first = section?.querySelector<HTMLElement>('[data-first]');
+  const refresh = section?.querySelector<HTMLElement>('[data-refresh]');
+
+  if (section && first && refresh) {
+    const region = first.querySelector<LoadingRegion>('[data-region]');
+    const table = first.querySelector<TableLoader>('dotquilt-table-loader');
+    const log = first.querySelector<HTMLElement>('[data-log]');
+    const status = first.querySelector<HTMLElement>('[data-controls] [data-status]');
+    const errorBox = first.querySelector<HTMLElement>('[data-error]');
+    const tableBox = first.querySelector<HTMLElement>('[data-table]');
+    if (table)
+      table.columns = [{ kind: 'text', width: 1.6 }, { kind: 'number' }, { kind: 'badge' }];
+
+    /** A new line at the top of the request log, newest first. */
+    const record = (what: string, how: string) => {
+      if (!log) return;
+      log.querySelector('.empty')?.remove();
+      const item = document.createElement('li');
+      const head = document.createElement('span');
+      head.textContent = what;
+      const tail = document.createElement('span');
+      tail.textContent = how;
+      item.append(head, tail);
+      log.prepend(item);
+      while (log.children.length > 4) log.lastElementChild?.remove();
+      if (!reducedMotion())
+        item.animate(
+          [
+            { opacity: 0, translate: '0 -4px' },
+            { opacity: 1, translate: '0 0' },
+          ],
+          { duration: 700, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+        );
+    };
+    const show = (failed: boolean) => {
+      tableBox?.toggleAttribute('hidden', failed);
+      errorBox?.toggleAttribute('hidden', !failed);
+    };
+
+    let flaky: number | undefined;
+    let requests = 0;
+    if (region) {
+      const connection = new Connection({
+        name: 'first',
+        subject: 'The invoices',
+        root: first,
+        begin: (cycle) => {
+          clearTimeout(flaky);
+          region.update({ state: 'pending', cycle });
+        },
+        deliver: (handoff, waited, held) => {
+          show(false);
+          region.update({ state: 'ready', timing: handoff });
+          // What the region did with that timing, in the words of its options.
+          record(
+            `#${++requests} ${held ? 'held' : 'first load'} ${seconds(waited)}`,
+            waited < 150
+              ? 'under the delay: no placeholder'
+              : waited < 650
+                ? 'placeholder kept to 0.65 s'
+                : `handoff ${seconds(handoff.duration)}`,
+          );
+        },
+      });
+
+      /** A request nobody holds: it takes its own time, and may fail. */
+      const send = (label: string, failChance: number) => {
+        clearTimeout(flaky);
+        connection.abandon();
+        const cycle = `flaky-${++requests}`;
+        const number = requests;
+        const started = performance.now();
+        const latency = 300 + Math.random() * 2300;
+        const fails = Math.random() < failChance;
+        region.update({ state: 'pending', cycle });
+        if (status) status.textContent = 'The invoices are loading.';
+        flaky = window.setTimeout(() => {
+          if (region.cycle !== cycle) return;
+          const took = seconds(performance.now() - started);
+          show(fails);
+          if (fails) {
+            // An error is news, not a reveal: it swaps in at once.
+            region.update({ state: 'ready', timing: { duration: 0 } });
+            record(`#${number} ${label} ${took}`, 'failed, swapped at once');
+            if (status) status.textContent = "The invoices couldn't load. Retry is available.";
+          } else {
+            const handoff = { duration: handoffMs() };
+            region.update({ state: 'ready', timing: handoff });
+            record(`#${number} ${label} ${took}`, `handoff ${seconds(handoff.duration)}`);
+            if (status)
+              status.textContent = `The invoices arrived after ${spoken(performance.now() - started)}.`;
+          }
+        }, latency);
+      };
+      first.querySelector('[data-flaky]')?.addEventListener('click', () => send('flaky', 0.34));
+      first.querySelector('[data-retry]')?.addEventListener('click', () => send('retry', 0));
+
+      if (!reducedMotion()) onFirstView(first, () => connection.auto(1300), 0.45);
+    }
+
+    // The feed: it refreshes while held, and new activity lands on top.
+    const feed = refresh.querySelector<LoadingRegion>('[data-region]');
+    const list = refresh.querySelector<HTMLElement>('[data-feed]');
+    let next = 4;
+    if (feed && list) {
+      const connection = new Connection({
+        name: 'refresh',
+        subject: 'The activity feed',
+        root: refresh,
+        labels: ['Hold to refresh', 'Let go to deliver', 'Hold to refresh again'],
+        words: { waiting: 'Refreshing', arrived: 'Updated after' },
+        begin: (cycle) => feed.update({ state: 'refreshing', cycle }),
+        deliver: () => {
+          const item = document.createElement('li');
+          const text = document.createElement('span');
+          text.textContent = activity[next++ % activity.length] ?? '';
+          const link = document.createElement('a');
+          link.href = '/docs/components/loading-region/';
+          link.textContent = 'Open';
+          item.append(text, link);
+          list.prepend(item);
+          list.lastElementChild?.remove();
+          feed.update({ state: 'ready' });
+          if (!reducedMotion())
+            item.animate(
+              [
+                { opacity: 0, translate: '0 -6px' },
+                { opacity: 1, translate: '0 0' },
+              ],
+              { duration: 910, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+            );
+        },
+      });
+      if (!reducedMotion()) onFirstView(refresh, () => setTimeout(() => connection.auto(2200), 300), 0.45);
+    }
+  }
+</script>
+
+<style>
+  .pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+  .card {
+    display: grid;
+    gap: 1.25rem;
+    padding: 1.5rem;
+  }
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+  }
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  .options {
+    padding: 0;
+    background: none;
+    font: 400 0.75rem / 1.4 var(--dq-font-mono);
+    color: var(--dq-faint);
+  }
+  .invoices {
+    min-height: 200px;
+  }
+  .table {
+    display: table;
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    color: var(--dq-ink);
+  }
+  .table th {
+    height: 40px;
+    padding: 0 0.5rem;
+    border: 0;
+    border-bottom: 1px solid var(--dq-line-2);
+    background: none;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: left;
+    color: var(--dq-muted);
+  }
+  .table td {
+    height: 40px;
+    padding: 0 0.5rem;
+    border: 0;
+    border-bottom: 1px solid var(--dq-line);
+  }
+  .table tr:last-child td {
+    border-bottom: 0;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  .pill {
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    background: var(--dq-subtle);
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+  }
+  .error {
+    display: grid;
+    justify-items: start;
+    align-content: center;
+    gap: 0.875rem;
+    min-height: 200px;
+    padding: 1.25rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-sm);
+    background: var(--dq-subtle);
+    font-size: 0.875rem;
+    color: var(--dq-muted);
+  }
+  .error p {
+    margin: 0;
+  }
+  .error strong {
+    color: var(--dq-negative);
+    font-weight: 600;
+  }
+  .error[hidden],
+  .table[hidden] {
+    display: none;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+  }
+  .log {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--dq-line);
+  }
+  .log :global(li) {
+    /* Not the docs' reading measure: each row spans the card. */
+    max-width: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    margin: 0;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--dq-line);
+    font: 400 0.75rem / 1.4 var(--dq-font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-muted);
+  }
+  .log :global(li:first-child) {
+    color: var(--dq-ink);
+  }
+  .log .empty {
+    font-family: var(--dq-font);
+    font-size: 0.8125rem;
+    color: var(--dq-faint);
+  }
+  /* Room above the feed for the refresh row of marks. */
+  .feed-frame {
+    padding-top: 1rem;
+  }
+  .feed {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--dq-line);
+  }
+  .feed :global(li) {
+    max-width: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin: 0;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--dq-line);
+    font-size: 0.875rem;
+    color: var(--dq-ink);
+  }
+  .feed :global(a) {
+    flex: none;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--dq-ink);
+    text-decoration-color: var(--dq-line-2);
+    text-underline-offset: 3px;
+  }
+  .feed :global(a:focus-visible) {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+    border-radius: var(--dq-radius-sm);
+  }
+  .note {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--dq-muted);
+  }
+  .caption {
+    margin: 0.875rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+  }
+  @media (max-width: 56rem) {
+    .pair {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 40rem) {
+    .card {
+      padding: 1.125rem;
+    }
+    .controls :global(.vc-hold),
+    .controls .home-button {
+      flex: 1 1 100%;
+      height: 44px;
+    }
+    .feed :global(a) {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      margin-block: -0.75rem;
+      padding-inline: 0.5rem;
+      margin-inline-end: -0.5rem;
+    }
+  }
+</style>

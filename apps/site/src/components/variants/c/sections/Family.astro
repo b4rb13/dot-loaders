@@ -1,0 +1,610 @@
+---
+/**
+ * Six live tiles, one per loader, each in the content it stands in for. The
+ * ChartLoader leads, wide, because the chart is this page's story. Holding
+ * a tile keeps it loading; letting go delivers new data.
+ */
+import { fitPoints, revenues, series } from '../data';
+import Key from '../Key.astro';
+
+// The lead tile's chart fills its plot: a 240 × 120 box, stretched to fit.
+const plot = { width: 240, height: 120 };
+const first = fitPoints(series[0] ?? [], plot.width, plot.height);
+const spark = first
+  .map(({ x, y }, i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`)
+  .join(' ');
+const last = first[first.length - 1] ?? { x: 0, y: 0 };
+const tiles = [
+  {
+    id: 'chart',
+    name: 'ChartLoader',
+    href: '/docs/components/chart-loader/',
+    text: 'Marks that glide onto your real line, then the line draws in. Hold it, slow the tempo, and watch the field become the chart.',
+    subject: 'The chart',
+    wide: true,
+  },
+  {
+    id: 'revenue',
+    name: 'TextLoader',
+    href: '/docs/components/text-loader/',
+    text: 'Numbers and short labels that take shape in marks.',
+    subject: 'Revenue',
+  },
+  {
+    id: 'profile',
+    name: 'Skeleton',
+    href: '/docs/components/skeleton/',
+    text: 'Images, text, avatars and paragraphs.',
+    subject: 'The profile',
+  },
+  {
+    id: 'table',
+    name: 'TableLoader',
+    href: '/docs/components/table-loader/',
+    text: 'Rows that settle in one after another.',
+    subject: 'The invoices',
+  },
+  {
+    id: 'reply',
+    name: 'TypingDots',
+    href: '/docs/components/typing-dots/',
+    text: 'A reply that is being written.',
+    subject: 'The reply',
+  },
+  {
+    id: 'feed',
+    name: 'LoadingRegion',
+    href: '/docs/components/loading-region/',
+    text: 'Switches to your content, or keeps it usable while it refreshes.',
+    subject: 'The activity',
+  },
+] as const satisfies readonly {
+  id: string;
+  name: string;
+  href: string;
+  text: string;
+  subject: string;
+  wide?: boolean;
+}[];
+---
+
+<section class="vc home-section not-content vc-family" aria-labelledby="vc-family-title">
+  <header>
+    <h2 id="vc-family-title">One quiet language for every wait.</h2>
+    <p>
+      A number, a chart, a table and a reply all take their own time. Each
+      loader holds the shape of what it stands for. Press and hold a tile to
+      keep it waiting, then let go to deliver its data.
+    </p>
+  </header>
+  <p class="sr-only" id="vc-family-how">
+    Press and hold, or hold Space or Enter, to keep this example loading. Let
+    go to deliver its data.
+  </p>
+
+  <div class="family" data-family>
+    {
+      tiles.map((tile) => (
+        <article
+          class:list={['tile', 'home-card', { wide: 'wide' in tile }]}
+          data-tile={tile.id}
+          data-subject={tile.subject}
+        >
+          <div
+            class="stage"
+            role="button"
+            tabindex="0"
+            aria-label={`${tile.subject}: hold to load`}
+            aria-describedby="vc-family-how"
+            data-hold
+            data-surface
+          >
+            {tile.id === 'profile' && (
+              <dotquilt-region state="ready" aria-label="Example profile" data-owner data-vc-pending>
+                <div slot="placeholder" class="profile">
+                  <dotquilt-skeleton-circle />
+                  <div class="lines">
+                    <dotquilt-skeleton-line />
+                    <dotquilt-skeleton-line style="width: 60%" />
+                  </div>
+                </div>
+                <div class="profile">
+                  <span class="initials">AL</span>
+                  <div>
+                    <strong>Ada Lovelace</strong>
+                    <br />
+                    <span class="muted">Analytical engines</span>
+                  </div>
+                </div>
+              </dotquilt-region>
+            )}
+            {tile.id === 'revenue' && (
+              <p class="figure">
+                <dotquilt-text-loader state="ready" mask="$00,000" aria-label="Example revenue" data-owner data-vc-pending>
+                  {revenues[0]}
+                </dotquilt-text-loader>
+              </p>
+            )}
+            {tile.id === 'chart' && (
+              <div class="plot">
+                {/* At rest the hero's field stays behind the line, scaled
+                    down; while the chart loads it steps aside for the live
+                    ChartLoader field. */}
+                <dotquilt-skeleton-block class="ghost" motion="paused" aria-hidden="true" />
+                <dotquilt-region state="ready" aria-label="Example revenue chart" data-owner data-vc-pending>
+                  <dotquilt-chart-loader slot="placeholder" class="field" data-spark />
+                  <div class="chart-art" aria-hidden="true">
+                    <svg class="spark" viewBox={`0 0 ${plot.width} ${plot.height}`} preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="vc-tile-area" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0" class="area-top" />
+                          <stop offset="1" class="area-bottom" />
+                        </linearGradient>
+                      </defs>
+                      <path class="area" d={`${spark} L${plot.width} ${plot.height} L0 ${plot.height} Z`} data-spark-area />
+                      <path class="line" d={spark} data-spark-line />
+                    </svg>
+                    <span
+                      class="node"
+                      style={`left:${(last.x / plot.width) * 100}%;top:${(last.y / plot.height) * 100}%`}
+                      data-spark-node
+                    />
+                  </div>
+                </dotquilt-region>
+              </div>
+            )}
+            {tile.id === 'table' && (
+              <dotquilt-region state="ready" aria-label="Example invoices" data-owner data-vc-pending>
+                <dotquilt-table-loader slot="placeholder" rows="3" row-height="26" />
+                <table class="mini-table">
+                  <tbody>
+                    <tr><td>Northwind</td><td>$4,200</td><td><span class="pill">Paid</span></td></tr>
+                    <tr><td>Acme Labs</td><td>$1,870</td><td><span class="pill">Sent</span></td></tr>
+                    <tr><td>Globex</td><td>$9,640</td><td><span class="pill">Due</span></td></tr>
+                  </tbody>
+                </table>
+              </dotquilt-region>
+            )}
+            {tile.id === 'reply' && (
+              <dotquilt-region state="ready" aria-label="Example reply" data-owner data-vc-pending>
+                <div slot="placeholder" class="bubble"><dotquilt-typing-dots /></div>
+                <div class="bubble">Your invoice is on its way.</div>
+              </dotquilt-region>
+            )}
+            {tile.id === 'feed' && (
+              <dotquilt-region state="ready" aria-label="Example activity" data-owner data-vc-pending data-refresh>
+                <dotquilt-skeleton-text slot="placeholder" lines="3" />
+                <ul class="activity" data-feed>
+                  <li>Northwind paid $4,200</li>
+                  <li>Globex invoice is overdue</li>
+                  <li>Initech paid $3,115</li>
+                </ul>
+              </dotquilt-region>
+            )}
+          </div>
+          <div class="meta">
+            <h3><a href={tile.href}>{tile.name}</a></h3>
+            <p>{tile.text}</p>
+          </div>
+          <p class="foot" aria-hidden="true">
+            <Key />
+            <span class="vc-readout" data-readout>Hold to load</span>
+          </p>
+          <p class="sr-only" role="status" data-status></p>
+        </article>
+      ))
+    }
+  </div>
+  <p class="caption">Example data.</p>
+</section>
+
+<script>
+  import type { ChartLoader } from 'dotquilt/chart';
+  import type { LoadingRegion } from 'dotquilt/region';
+  import { registerAll } from 'dotquilt/register-all';
+  import type { TableLoader } from 'dotquilt/table';
+  import type { TextLoader } from 'dotquilt/text';
+  import { activity, fitPoints, revenues, series } from '../data';
+  import { Connection, followTheme, onFirstView, reducedMotion } from '../network';
+
+  registerAll();
+  const family = document.querySelector<HTMLElement>('[data-family]');
+  if (family) {
+    followTheme(family);
+    const chart = family.querySelector<ChartLoader>('[data-spark]');
+    const line = family.querySelector<SVGPathElement>('[data-spark-line]');
+    let pick = 0;
+    const area = family.querySelector('[data-spark-area]');
+    const node = family.querySelector<HTMLElement>('[data-spark-node]');
+    /** One answer drawn into the lead tile, and where its marks land. */
+    const draw = (values: readonly number[]) => {
+      const points = fitPoints(values, 240, 120);
+      const d = points
+        .map(({ x, y }, i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`)
+        .join(' ');
+      line?.setAttribute('d', d);
+      area?.setAttribute('d', `${d} L240 120 L0 120 Z`);
+      const end = points[points.length - 1];
+      if (node && end) {
+        node.style.left = `${(end.x / 240) * 100}%`;
+        node.style.top = `${(end.y / 120) * 100}%`;
+      }
+      if (chart)
+        chart.targetProvider = ({ width, height }) => ({
+          kind: 'line',
+          points: fitPoints(values, width, height),
+          baseline: height,
+        });
+    };
+    draw(series[0] ?? []);
+    for (const table of family.querySelectorAll<TableLoader>('dotquilt-table-loader'))
+      table.columns = [{ kind: 'text', width: 1.6 }, { kind: 'number' }, { kind: 'badge' }];
+
+    let revenue = 0;
+    let news = 0;
+    const connections: Connection[] = [];
+    for (const tile of family.querySelectorAll<HTMLElement>('[data-tile]')) {
+      const owner = tile.querySelector<(LoadingRegion | TextLoader) & HTMLElement>('[data-owner]');
+      if (!owner) continue;
+      const kind = tile.dataset.tile;
+      // A feed that has loaded once refreshes instead: it stays usable.
+      const refreshing = () => kind === 'feed' && owner.dataset.loaded === 'true';
+      connections.push(
+        new Connection({
+          name: `family-${kind}`,
+          subject: tile.dataset.subject ?? 'The example',
+          root: tile,
+          hold: { deferTouch: true },
+          words: () =>
+            refreshing()
+              ? { waiting: 'Refreshing', arrived: 'Updated after' }
+              : { waiting: 'Waiting', arrived: 'Arrived after' },
+          begin: (cycle) =>
+            owner.update({ state: refreshing() ? 'refreshing' : 'pending', cycle }),
+          deliver: (handoff) => {
+            if (kind === 'revenue') {
+              revenue = (revenue + 1) % revenues.length;
+              owner.textContent = revenues[revenue] ?? '';
+            }
+            if (kind === 'chart') {
+              pick = (pick + 1) % series.length;
+              draw(series[pick] ?? []);
+            }
+            if (kind === 'feed' && refreshing()) {
+              const list = owner.querySelector('[data-feed]');
+              const item = document.createElement('li');
+              item.textContent = activity[(news++ + 4) % activity.length] ?? '';
+              list?.prepend(item);
+              list?.lastElementChild?.remove();
+              if (!reducedMotion())
+                item.animate(
+                  [
+                    { opacity: 0, translate: '0 -5px' },
+                    { opacity: 1, translate: '0 0' },
+                  ],
+                  { duration: 700, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+                );
+            }
+            owner.update({ state: 'ready', timing: handoff });
+            owner.dataset.loaded = 'true';
+          },
+        }),
+      );
+    }
+
+    // One arrival: when the tiles come into view, each starts waiting and
+    // its data lands in a wave, left to right and down.
+    if (!reducedMotion())
+      onFirstView(family, () =>
+        connections.forEach((connection, i) => connection.auto(1300 + i * 220)),
+      0.3);
+  }
+</script>
+
+<style>
+  .family {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  .tile {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 0.5rem 0.5rem 1rem;
+  }
+  /* The lead tile: the chart, two columns wide and two rows tall. */
+  .tile.wide {
+    grid-column: span 2;
+    grid-row: span 2;
+    grid-template-rows: 1fr auto auto;
+  }
+  .wide .stage {
+    height: auto;
+    min-height: 16rem;
+    padding: 1.25rem 1.25rem 1.5rem;
+  }
+  /* The lead tile's plot: the hero's field at rest behind a chart that
+     fills it (a 2.6 px line, a soft area and the end node), scaled down. */
+  .plot {
+    position: relative;
+    height: 100%;
+    min-height: 13rem;
+  }
+  .plot dotquilt-region {
+    position: relative;
+    display: grid;
+    height: 100%;
+  }
+  .plot .field,
+  .plot .ghost {
+    --dotquilt-dot-size: 2.8px;
+    --dotquilt-dot-gap: 14.8px;
+    --dotquilt-color: var(--dq-ink);
+    --dotquilt-accent-color: var(--dq-accent);
+    mask-image:
+      linear-gradient(to right, transparent, #000 18%),
+      linear-gradient(#000, rgb(0 0 0 / 0.55));
+    mask-composite: intersect;
+  }
+  .plot .field {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .ghost {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    opacity: 0;
+    transition: opacity var(--dq-duration-ui) var(--dq-ease-fade);
+    pointer-events: none;
+  }
+  .plot:has(
+      dotquilt-region:is(
+          [data-presentation='ready'],
+          :not([data-presentation])[state='ready']
+        )
+    )
+    .ghost {
+    opacity: 0.6;
+    transition-duration: var(--dq-duration-fade);
+  }
+  .chart-art {
+    position: relative;
+    height: 100%;
+    min-height: 13rem;
+  }
+  .wide .spark {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .wide .spark .line {
+    stroke-width: 2.6;
+  }
+  .area {
+    fill: url(#vc-tile-area);
+    stroke: none;
+  }
+  .area-top {
+    stop-color: var(--dq-accent);
+    stop-opacity: 0.14;
+  }
+  .area-bottom {
+    stop-color: var(--dq-accent);
+    stop-opacity: 0;
+  }
+  .node {
+    position: absolute;
+    width: 0.5625rem;
+    height: 0.5625rem;
+    border-radius: 50%;
+    background: var(--dq-accent);
+    box-shadow: 0 0 0 0.375rem color-mix(in srgb, var(--dq-accent) 14%, transparent);
+    translate: -50% -50%;
+  }
+  .wide .meta h3 {
+    font-size: 1rem;
+  }
+  .wide .meta p {
+    max-width: 44ch;
+  }
+  /* The region fades its placeholder layer across the handoff, which halves
+     the chart's marks in flight; they leave where the front passes anyway. */
+  .wide dotquilt-region::part(placeholder) {
+    opacity: 1 !important;
+  }
+  .stage {
+    display: grid;
+    align-items: center;
+    height: 9rem;
+    padding: 1rem 1rem 1.25rem;
+    border-radius: var(--dq-radius-sm);
+    overflow: hidden;
+  }
+  .stage:hover {
+    background: var(--dq-subtle);
+  }
+  .stage[data-held] {
+    background: var(--dq-subtle);
+    box-shadow: inset 0 0 0 1px var(--dq-line);
+  }
+  .meta {
+    display: grid;
+    align-content: start;
+    gap: 0.25rem;
+    margin: 0 0.875rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--dq-line);
+  }
+  .meta h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .meta a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    margin-block: -0.375rem;
+    color: var(--dq-ink);
+    text-decoration: none;
+  }
+  .meta a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--dq-line-2);
+  }
+  .meta a:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+    border-radius: var(--dq-radius-sm);
+  }
+  .meta p {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--dq-muted);
+  }
+  .foot {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.875rem 0.875rem 0;
+    color: var(--dq-faint);
+  }
+  .foot .vc-readout {
+    color: var(--dq-faint);
+  }
+  .tile[data-phase='waiting'] .foot,
+  .tile[data-phase='resting'] .foot,
+  .tile[data-phase='waiting'] .foot .vc-readout,
+  .tile[data-phase='resting'] .foot .vc-readout {
+    color: var(--dq-ink);
+  }
+  .tile:has([data-held]) .foot :global(.core) {
+    scale: 1;
+  }
+
+  .profile {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.875rem;
+    font-size: 0.875rem;
+    color: var(--dq-ink);
+  }
+  .profile dotquilt-skeleton-circle {
+    width: 2.75rem;
+  }
+  .lines {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .initials {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--dq-accent-soft);
+    font-weight: 600;
+    color: var(--dq-accent);
+  }
+  .muted {
+    color: var(--dq-muted);
+  }
+  .figure {
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    color: var(--dq-ink);
+  }
+  .spark .line {
+    fill: none;
+    stroke: var(--dq-accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .mini-table {
+    display: table;
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+    color: var(--dq-ink);
+  }
+  .mini-table td {
+    height: 26px;
+    padding: 0 0.25rem;
+    border: 0;
+  }
+  .mini-table td:nth-child(2) {
+    font-variant-numeric: tabular-nums;
+  }
+  .pill {
+    padding: 0.0625rem 0.4375rem;
+    border-radius: 999px;
+    background: var(--dq-subtle);
+    font-size: 0.75rem;
+    font-family: var(--dq-font-mono);
+    color: var(--dq-muted);
+  }
+  .bubble {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-md) var(--dq-radius-md) var(--dq-radius-md) 4px;
+    background: var(--dq-surface);
+    font-size: 0.875rem;
+    color: var(--dq-ink);
+  }
+  .activity {
+    display: grid;
+    gap: 0.375rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.8125rem;
+    color: var(--dq-ink);
+  }
+  .activity li {
+    margin: 0;
+  }
+  .caption {
+    margin: 0.875rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--dq-muted);
+  }
+  @media (max-width: 64rem) {
+    .family {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .tile.wide {
+      grid-row: span 1;
+    }
+  }
+  @media (max-width: 40rem) {
+    .family {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .tile.wide {
+      grid-column: auto;
+    }
+    .meta a {
+      min-height: 44px;
+      margin-block: -0.75rem;
+    }
+  }
+</style>

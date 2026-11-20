@@ -1,0 +1,294 @@
+---
+/**
+ * The last word. Beneath it, the first screen's field rises once more into
+ * a line: the same ChartLoader and region, now drawing whatever line the
+ * visitor left at the top of the page. At rest it keeps the first screen's
+ * look: the field on the plane, a trail of marks into the line.
+ */
+import { normalized, pathOf, series, trailOf } from '../series';
+
+const first = series[0];
+const points = normalized(first.values, first);
+const trail = points[0] ? trailOf(points[0]) : [];
+---
+
+<section class="home-section vb-closing" aria-labelledby="vb-closing-title" data-closing>
+  <div class="words">
+    <h2 id="vb-closing-title">Give every wait its own shape.</h2>
+    <p>Start with a skeleton. Add the rest when your screens need them.</p>
+    <div class="actions">
+      <a class="home-button primary" href="/docs/">Get started</a>
+      <a class="home-button" href="/docs/components/skeleton/">Browse the components</a>
+    </div>
+  </div>
+
+  <figure class="art" data-art>
+    <dotquilt-skeleton-block class="ground" motion="paused" aria-hidden="true"
+    ></dotquilt-skeleton-block>
+    <dotquilt-region class="region" state="ready" aria-label="The line from the top of the page" data-arrival data-region>
+      <dotquilt-chart-loader slot="placeholder" class="field" pointer-response="lift" data-field
+      ></dotquilt-chart-loader>
+      <div class="plot">
+        <ol class="trail" aria-hidden="true" data-trail>
+          {trail.map((mark) => <li style={`--x:${mark.x};--y:${mark.y};--o:${mark.o}`} />)}
+        </ol>
+        <svg class="chart" viewBox="0 0 1000 1000" preserveAspectRatio="none" role="img" aria-label="Revenue by month, rising. Example data." data-chart>
+          <path class="trace" d={pathOf(points)} vector-effect="non-scaling-stroke" data-line></path>
+        </svg>
+        <ol class="points" aria-hidden="true" data-points>
+          {points.map((point) => <li style={`--x:${point.x};--y:${point.y}`} />)}
+        </ol>
+      </div>
+    </dotquilt-region>
+    <figcaption data-caption>Revenue by month. Example data.</figcaption>
+    <svg class="defs" aria-hidden="true" focusable="false">
+      <filter id="vb-closing-lift" color-interpolation-filters="sRGB">
+        <feComponentTransfer>
+          <feFuncA type="gamma" amplitude="1" exponent="0.6" offset="0"></feFuncA>
+        </feComponentTransfer>
+      </filter>
+    </svg>
+  </figure>
+</section>
+
+<script>
+  import type { ChartLoader } from 'dotquilt/chart';
+  import { arriving, load, type Owner, whenSeen } from '../arrive';
+  import { heroLine } from '../line-store';
+  import { describe, glidePath, normalized, pathOf, trailOf } from '../series';
+  import { cutTrail } from '../trail-cut';
+
+  const root = document.querySelector<HTMLElement>('[data-closing]');
+  const art = root?.querySelector<HTMLElement>('[data-art]');
+  const region = root?.querySelector<Owner>('[data-region]');
+  const field = root?.querySelector<ChartLoader>('[data-field]');
+  const line = root?.querySelector<SVGPathElement>('[data-line]');
+  const chart = root?.querySelector<SVGSVGElement>('[data-chart]');
+  const caption = root?.querySelector<HTMLElement>('[data-caption]');
+  const ground = root?.querySelector<HTMLElement>('.ground');
+  if (root && art && region && field && line && chart && caption) {
+    const points = () => normalized(heroLine.values, heroLine.series);
+    field.targetProvider = ({ width, height }) => ({
+      kind: 'line',
+      points: glidePath(points()).map(({ x, y }) => ({ x: x * width, y: y * height })),
+      baseline: height,
+    });
+    /** The visitor's line from the first screen, as it is now. */
+    const land = () => {
+      const now = points();
+      line.setAttribute('d', pathOf(now));
+      const place = (selector: string, at: readonly { x: number; y: number }[]) =>
+        root.querySelectorAll<HTMLElement>(`${selector} li`).forEach((mark, i) => {
+          const p = at[i];
+          if (!p) return;
+          mark.style.setProperty('--x', String(p.x));
+          mark.style.setProperty('--y', String(p.y));
+        });
+      place('[data-points]', now);
+      place('[data-trail]', now[0] ? trailOf(now[0]) : []);
+      if (ground) cutTrail(ground, now[0]);
+      chart.setAttribute('aria-label', describe(heroLine.series, heroLine.values));
+      caption.textContent = heroLine.edited
+        ? `${heroLine.series.name}, as you shaped it at the top of the page.`
+        : `${heroLine.series.name} by month. Example data.`;
+    };
+    // The field at rest shows only once the line has fully arrived; while
+    // the region waits or hands over, the live field has the plane.
+    const follow = () => {
+      art.toggleAttribute('data-landing', region.presentation === 'handoff');
+      art.toggleAttribute('data-rest', region.presentation === 'ready');
+    };
+    new MutationObserver(follow).observe(region, {
+      attributes: true,
+      attributeFilter: ['state', 'data-presentation'],
+    });
+    if (ground)
+      new ResizeObserver(() => cutTrail(ground, points()[0])).observe(ground);
+    if (arriving()) whenSeen(region, () => load(region, 700, land), 0.6);
+    else land();
+    follow();
+  }
+</script>
+
+<style>
+  @property --vb-close-open {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+  .vb-closing {
+    display: grid;
+    justify-items: center;
+    margin-bottom: 0;
+    text-align: center;
+  }
+  .words {
+    max-width: 40rem;
+  }
+  h2 {
+    margin: 0;
+    font-size: clamp(1.9rem, 4vw, 2.75rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--dq-ink);
+    text-wrap: balance;
+  }
+  p {
+    margin: 1rem 0 0;
+    color: var(--dq-muted);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.625rem;
+    margin-top: 1.75rem;
+  }
+  @media (pointer: coarse) {
+    .actions .home-button {
+      height: 44px;
+    }
+  }
+  .actions .home-button:active {
+    scale: 0.98;
+  }
+  .art {
+    --h: clamp(170px, 20vw, 250px);
+    position: relative;
+    width: 100%;
+    margin: clamp(1.5rem, 4vw, 2.5rem) 0 0;
+  }
+  /* The site's field at rest, around the line: strongest at the top,
+     fading downwards and dissolving at both ends. */
+  .ground {
+    position: absolute;
+    inset: 0 0 auto;
+    width: 100%;
+    height: var(--h);
+    border-radius: 0;
+    --dotquilt-dot-size: 2.8px;
+    --dotquilt-dot-gap: 19.6px;
+    --dotquilt-color: var(--dq-ink);
+    /* Lifted like the live field, so the two read alike on both themes. */
+    filter: url(#vb-closing-lift);
+    mask:
+      linear-gradient(to right, #0000, #000 30%, #000 72%, #0000),
+      linear-gradient(rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.4) 55%, #0000 95%),
+      /* Cleared along the trail, so it reads as one row (trail-cut.ts). */
+      var(--trail-cut, linear-gradient(#0000, #0000));
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    mask-composite: intersect, subtract;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 240ms var(--dq-ease-fade);
+  }
+  .art[data-rest] .ground {
+    opacity: 1;
+    transition-duration: var(--dq-duration-fade);
+  }
+  .region {
+    position: relative;
+    display: grid;
+  }
+  /* As on the first screen: the marks leave where the wipe passes them,
+     so their layer stays at full strength through the handoff. */
+  .region::part(placeholder) {
+    opacity: 1 !important;
+  }
+  .field,
+  .plot {
+    display: block;
+    width: 100%;
+    height: var(--h);
+  }
+  .field {
+    --dotquilt-dot-size: var(--dq-mark-size);
+    --dotquilt-dot-gap: calc(22.4px - var(--dq-mark-size));
+    --dotquilt-color: var(--dq-ink);
+    --dotquilt-accent-color: var(--dq-accent);
+    filter: url(#vb-closing-lift);
+    mask:
+      linear-gradient(
+        to right,
+        rgb(0 0 0 / calc(var(--vb-close-open) * 0.6)),
+        #000 26%,
+        #000 74%,
+        rgb(0 0 0 / calc(var(--vb-close-open) * 0.6))
+      ),
+      linear-gradient(#000 50%, rgb(0 0 0 / calc(var(--vb-close-open) * 0.8)));
+    mask-composite: intersect;
+  }
+  .art[data-landing] .field {
+    --vb-close-open: 1;
+    transition: --vb-close-open 620ms var(--dq-ease-sine);
+  }
+  .plot {
+    position: relative;
+  }
+  .chart {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .trace {
+    fill: none;
+    stroke: var(--dq-accent);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .trail,
+  .points {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .trail li,
+  .points li {
+    position: absolute;
+    left: calc(var(--x) * 100%);
+    top: calc(var(--y) * 100%);
+    border-radius: 50%;
+  }
+  .trail li {
+    /* A whole-pixel size: a fractional box is snapped to the pixel grid
+       unevenly, which turns some marks into ovals. */
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    background: var(--dq-mark);
+    opacity: var(--o);
+  }
+  /* The line's points: mark-sized dots, the first a larger junction. */
+  .points li {
+    /* Whole pixels, so the dots stay round (see the trail above). */
+    --d: round(var(--dq-mark-size), 1px);
+    width: var(--d);
+    height: var(--d);
+    margin: calc(var(--d) / -2) 0 0 calc(var(--d) / -2);
+    background: var(--dq-accent);
+  }
+  .points li:first-child {
+    --d: round(2 * var(--dq-mark-size), 1px);
+  }
+  .defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+  figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--dq-faint);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ground {
+      transition: none;
+    }
+  }
+</style>

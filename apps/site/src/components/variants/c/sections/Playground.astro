@@ -1,0 +1,517 @@
+---
+/**
+ * Make it yours: change the mark, the colour, the size or the pace, and the
+ * preview loads again in the new look; hold it to look longer, let go to see
+ * that look hand over to real content. The CSS updates beside it.
+ */
+import { chartPath, palettes, series } from '../data';
+import HoldButton from '../HoldButton.astro';
+
+const line = chartPath(series[2] ?? [], 320, 112);
+---
+
+<section class="vc home-section not-content vc-yours" aria-labelledby="vc-yours-title" data-yours>
+  <header>
+    <h2 id="vc-yours-title">Quiet by default. Yours in a few lines.</h2>
+    <p>
+      The marks start in a slate that sits beside any text, with a soft glow
+      drifting through. Change the shape, the colour, the size or the pace,
+      and take the CSS with you.
+    </p>
+  </header>
+
+  <div class="yours">
+    <div class="settings home-card">
+      <fieldset>
+        <legend id="vc-mark-label">Mark</legend>
+        <div class="segmented" role="radiogroup" aria-labelledby="vc-mark-label">
+          {
+            ['dot', 'dash', 'square'].map((mark) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={mark === 'dot' ? 'true' : 'false'}
+                tabindex={mark === 'dot' ? 0 : -1}
+                data-set-mark={mark}
+              >
+                <span class:list={['mark-glyph', mark]} aria-hidden="true" />
+                {mark[0]?.toUpperCase()}
+                {mark.slice(1)}
+              </button>
+            ))
+          }
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend id="vc-colour-label">Colour</legend>
+        <div class="swatches" role="radiogroup" aria-labelledby="vc-colour-label">
+          {
+            palettes.map((palette, i) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={i === 0 ? 'true' : 'false'}
+                tabindex={i === 0 ? 0 : -1}
+                aria-label={palette.name}
+                title={palette.name}
+                data-mark-color={palette.mark}
+                data-glow-color={palette.glow}
+                style={`--swatch:${palette.swatch}`}
+              />
+            ))
+          }
+        </div>
+      </fieldset>
+      <label class="range" for="vc-dot-size">
+        <span>Dot size <output data-size-out>4.4 px</output></span>
+        <small class="hint" data-size-hint hidden>Squares and dashes have a fixed size.</small>
+        <input type="range" id="vc-dot-size" min="3.4" max="6" step="0.2" value="4.4" data-size />
+      </label>
+      <label class="range" for="vc-pace">
+        <span>Idle pace <output data-speed-out>1×</output></span>
+        <input type="range" id="vc-pace" min="0.5" max="2" step="0.25" value="1" data-speed />
+      </label>
+    </div>
+
+    <div class="preview home-card" data-preview>
+      <dotquilt-region state="ready" aria-label="Example profile" id="vc-preview" data-region data-vc-pending>
+        <div slot="placeholder" class="grid">
+          <div class="profile">
+            <dotquilt-skeleton-circle></dotquilt-skeleton-circle>
+            <div class="lines">
+              <dotquilt-skeleton-line></dotquilt-skeleton-line>
+              <dotquilt-skeleton-line style="width: 55%"></dotquilt-skeleton-line>
+            </div>
+          </div>
+          <dotquilt-skeleton-text lines="3"></dotquilt-skeleton-text>
+          <dotquilt-chart-loader data-chart></dotquilt-chart-loader>
+          <div class="bubble"><dotquilt-typing-dots></dotquilt-typing-dots></div>
+        </div>
+        <div class="grid">
+          <div class="profile">
+            <span class="initials">TS</span>
+            <div class="who">
+              <strong>Tomás Silva</strong>
+              <span>Studio lead</span>
+            </div>
+          </div>
+          <p class="text">
+            Twelve weeks of steady growth. The autumn launch carried the last
+            month, and refunds stayed low.
+          </p>
+          <svg class="chart" viewBox="0 0 320 112" preserveAspectRatio="none" aria-hidden="true">
+            <path d={line}></path>
+          </svg>
+          <div class="bubble">Shall I send the report?</div>
+        </div>
+      </dotquilt-region>
+      <div class="bar" data-controls>
+        <HoldButton size="small" controls="vc-preview" describedby="vc-yours-how" />
+        <p class="vc-readout" data-readout aria-hidden="true"></p>
+        <p class="sr-only" id="vc-yours-how">
+          Press and hold to keep the preview loading in your look. Let go to
+          watch it hand over.
+        </p>
+        <p class="sr-only" role="status" data-status></p>
+      </div>
+    </div>
+
+    <div class="css">
+      <div class="css-head">
+        <span>Your CSS</span>
+        <button type="button" class="copy" data-copy-css>Copy</button>
+      </div>
+      <pre><code data-css></code></pre>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { refreshStyles } from 'dotquilt';
+  import type { ChartLoader } from 'dotquilt/chart';
+  import type { LoadingRegion } from 'dotquilt/region';
+  import { registerAll } from 'dotquilt/register-all';
+  import { chartPoints, series } from '../data';
+  import { Connection, followTheme, onFirstView, reducedMotion } from '../network';
+
+  registerAll();
+  const root = document.querySelector<HTMLElement>('[data-yours]');
+  const preview = root?.querySelector<HTMLElement>('[data-preview]');
+  const region = preview?.querySelector<LoadingRegion>('[data-region]');
+  const output = root?.querySelector<HTMLElement>('[data-css]');
+  const bar = preview?.querySelector<HTMLElement>('[data-controls]');
+  if (root && preview && region && output && bar) {
+    followTheme(preview);
+    const chart = preview.querySelector<ChartLoader>('[data-chart]');
+    if (chart)
+      chart.targetProvider = ({ width, height }) => ({
+        kind: 'line',
+        points: chartPoints(series[2] ?? [], width, height),
+        baseline: height,
+      });
+    const state = { mark: 'dot', color: '', glow: '', size: 4.4, speed: 1 };
+    const loaders = () =>
+      preview.querySelectorAll(
+        'dotquilt-skeleton-circle, dotquilt-skeleton-line, dotquilt-skeleton-text, dotquilt-chart-loader, dotquilt-typing-dots',
+      );
+    const size = root.querySelector<HTMLInputElement>('[data-size]');
+
+    const connection = new Connection({
+      name: 'yours',
+      subject: 'The preview',
+      root: bar,
+      begin: (cycle) => region.update({ state: 'pending', cycle }),
+      deliver: (handoff) => region.update({ state: 'ready', timing: handoff }),
+    });
+    /** Load again in the new look: wait a little, then hand over. */
+    const again = () => {
+      if (connection.held) return;
+      if (connection.loading) connection.abandon();
+      connection.auto(2400);
+    };
+
+    function apply(load = true) {
+      const style = preview?.style;
+      if (!style || !output) return;
+      if (state.color) style.setProperty('--dotquilt-color', state.color);
+      else style.removeProperty('--dotquilt-color');
+      if (state.glow) style.setProperty('--dotquilt-accent-color', state.glow);
+      else style.removeProperty('--dotquilt-accent-color');
+      style.setProperty('--dotquilt-dot-size', `${state.size}px`);
+      // Squares and dashes have a fixed size; only dots follow the slider.
+      if (size) size.disabled = state.mark !== 'dot';
+      root?.querySelector('[data-size-hint]')?.toggleAttribute('hidden', state.mark === 'dot');
+      for (const loader of loaders()) {
+        if (state.mark === 'dot') loader.removeAttribute('mark');
+        else loader.setAttribute('mark', state.mark);
+        loader.setAttribute('speed', String(state.speed));
+      }
+      // The chart draws on a canvas: it reads the new colours on request.
+      refreshStyles(preview);
+      const lines = [
+        state.color && `  --dotquilt-color: ${state.color};`,
+        state.glow && `  --dotquilt-accent-color: ${state.glow};`,
+        state.mark === 'dot' && state.size !== 4.4 && `  --dotquilt-dot-size: ${state.size}px;`,
+      ].filter(Boolean);
+      const attributes = [
+        state.mark !== 'dot' && `mark="${state.mark}"`,
+        state.speed !== 1 && `speed="${state.speed}"`,
+      ].filter(Boolean);
+      output.textContent = [
+        lines.length ? `.your-app {\n${lines.join('\n')}\n}` : '/* The defaults: nothing to add. */',
+        attributes.length ? `\n<dotquilt-skeleton-text ${attributes.join(' ')}>` : '',
+      ].join('\n');
+      if (load) again();
+    }
+
+    /** A radio group of buttons: click or arrow keys choose. */
+    const group = (selector: string, choose: (button: HTMLElement) => void) => {
+      const buttons = [...root.querySelectorAll<HTMLElement>(selector)];
+      const select = (button: HTMLElement) => {
+        for (const other of buttons) {
+          other.setAttribute('aria-checked', String(other === button));
+          other.tabIndex = other === button ? 0 : -1;
+        }
+        choose(button);
+        apply();
+      };
+      for (const [i, button] of buttons.entries()) {
+        button.addEventListener('click', () => select(button));
+        button.addEventListener('keydown', (event) => {
+          const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+          if (!step) return;
+          event.preventDefault();
+          const next = buttons[(i + step + buttons.length) % buttons.length];
+          if (!next) return;
+          select(next);
+          next.focus();
+        });
+      }
+    };
+    group('[data-set-mark]', (button) => {
+      state.mark = button.dataset.setMark ?? 'dot';
+    });
+    group('[data-mark-color]', (button) => {
+      state.color = button.dataset.markColor ?? '';
+      state.glow = button.dataset.glowColor ?? '';
+    });
+    size?.addEventListener('change', () => {
+      state.size = Number(size.value);
+      const out = root.querySelector('[data-size-out]');
+      if (out) out.textContent = `${state.size} px`;
+      apply();
+    });
+    const speed = root.querySelector<HTMLInputElement>('[data-speed]');
+    speed?.addEventListener('change', () => {
+      state.speed = Number(speed.value);
+      const out = root.querySelector('[data-speed-out]');
+      if (out) out.textContent = `${state.speed}×`;
+      apply();
+    });
+    root.querySelector('[data-copy-css]')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget as HTMLButtonElement;
+      try {
+        await navigator.clipboard.writeText(output.textContent ?? '');
+        button.textContent = 'Copied';
+      } catch {
+        button.textContent = 'Select and copy';
+      }
+      setTimeout(() => {
+        button.textContent = 'Copy';
+      }, 1600);
+    });
+    apply(false);
+
+    if (!reducedMotion()) onFirstView(preview, () => connection.auto(1600), 0.4);
+  }
+</script>
+
+<style>
+  .yours {
+    display: grid;
+    grid-template-columns: 17rem minmax(0, 1fr);
+    grid-template-areas: 'settings preview' 'settings css';
+    gap: 1rem;
+  }
+  .settings {
+    grid-area: settings;
+    display: grid;
+    align-content: start;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  legend,
+  .range span {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--dq-ink);
+  }
+  output {
+    font-weight: 400;
+    font-family: var(--dq-font-mono);
+    font-size: 0.75rem;
+    color: var(--dq-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Nested radii on the system ramp: 9 px segments in a 12 px control. */
+  .settings .segmented {
+    border-radius: var(--dq-radius-md);
+  }
+  .settings .segmented button {
+    border-radius: var(--dq-radius-sm);
+  }
+  .settings .segmented button[aria-checked='true'] {
+    background: var(--dq-ink);
+    color: var(--dq-surface);
+    box-shadow: none;
+  }
+  .swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .swatches button {
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 0;
+    border-radius: 50%;
+    background: var(--swatch);
+    box-shadow:
+      inset 0 0 0 2px var(--dq-surface),
+      0 0 0 1px var(--dq-line-2);
+    cursor: pointer;
+  }
+  .swatches button[aria-checked='true'] {
+    box-shadow:
+      inset 0 0 0 2px var(--dq-surface),
+      0 0 0 2px var(--dq-ink);
+  }
+  .swatches button:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 3px;
+  }
+  .range {
+    display: block;
+  }
+  .range input {
+    width: 100%;
+    accent-color: var(--dq-ink);
+  }
+  .range input:disabled {
+    opacity: 0.4;
+  }
+  .range input:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+  }
+  .hint[hidden] {
+    display: none;
+  }
+  .hint {
+    display: block;
+    margin: -0.25rem 0 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--dq-faint);
+  }
+  .preview {
+    grid-area: preview;
+    display: grid;
+    gap: 1.25rem;
+    padding: 1.5rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem 2rem;
+    align-items: center;
+  }
+  .profile {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 0.875rem;
+    align-items: center;
+  }
+  .profile dotquilt-skeleton-circle {
+    width: 3rem;
+  }
+  .lines {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .initials {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--dq-subtle);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--dq-muted);
+  }
+  .who {
+    display: grid;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--dq-ink);
+  }
+  .who span {
+    color: var(--dq-muted);
+  }
+  .text {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--dq-ink);
+  }
+  .grid dotquilt-chart-loader,
+  .chart {
+    display: block;
+    width: 100%;
+    height: 7rem;
+  }
+  .chart path {
+    fill: none;
+    stroke: var(--dq-accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .bubble {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--dq-line);
+    border-radius: var(--dq-radius-md) var(--dq-radius-md) var(--dq-radius-md) 4px;
+    background: var(--dq-bg);
+    font-size: 0.875rem;
+    color: var(--dq-ink);
+  }
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--dq-line);
+  }
+  .css {
+    grid-area: css;
+    overflow: hidden;
+    border-radius: var(--dq-radius-md);
+    background: var(--dq-code-bg);
+  }
+  .css-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--dq-code-fg) 12%, transparent);
+    font-size: 0.8125rem;
+    color: var(--dq-code-punct);
+  }
+  .copy {
+    height: 30px;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: var(--dq-radius-sm);
+    background: transparent;
+    color: var(--dq-code-fg);
+    font: 500 0.8125rem / 1 var(--dq-font);
+    cursor: pointer;
+  }
+  .copy:hover {
+    background: color-mix(in srgb, var(--dq-code-fg) 10%, transparent);
+  }
+  .copy:focus-visible {
+    outline: 2px solid var(--dq-focus);
+    outline-offset: 2px;
+  }
+  pre {
+    margin: 0;
+    padding: 1rem;
+    border: 0;
+    background: none;
+    overflow-x: auto;
+  }
+  pre code {
+    padding: 0;
+    background: none;
+    font: 0.8125rem / 1.6 var(--dq-font-mono);
+    color: var(--dq-code-fg);
+    white-space: pre;
+  }
+  @media (max-width: 56rem) {
+    .yours {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'preview' 'settings' 'css';
+    }
+  }
+  @media (max-width: 40rem) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .segmented button,
+    .swatches button {
+      min-height: 44px;
+    }
+    .swatches button {
+      width: 44px;
+    }
+    .copy {
+      height: 44px;
+    }
+  }
+</style>
