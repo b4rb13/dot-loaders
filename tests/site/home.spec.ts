@@ -38,12 +38,6 @@ async function reveal(page: Page, selector: string) {
   );
 }
 
-test.beforeEach(async ({ page }) => {
-  await page.route('https://fonts.googleapis.com/**', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
-  );
-});
-
 test('the first screen arrives: the figures lock, the line draws and the rows settle', async ({
   page,
 }) => {

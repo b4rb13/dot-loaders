@@ -12,10 +12,13 @@ import home from '../markdown/home.md?raw';
  * text/markdown.
  */
 export const getStaticPaths = (async () =>
-  (await getCollection('docs')).map((entry) => ({
-    params: { slug: entry.id },
-    props: { entry },
-  }))) satisfies GetStaticPaths;
+  (await getCollection('docs'))
+    // The 404 page is the site's, not a page to read.
+    .filter((entry) => entry.id !== '404')
+    .map((entry) => ({
+      params: { slug: entry.id },
+      props: { entry },
+    }))) satisfies GetStaticPaths;
 
 function markdown(entry: CollectionEntry<'docs'>, site: URL | undefined) {
   if (entry.id === 'index') return home;

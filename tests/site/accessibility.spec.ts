@@ -4,10 +4,6 @@ import { pages } from './pages';
 // WCAG AA checks that a script can judge, on every page of the site.
 
 async function open(page: Page, path: string) {
-  // Google Fonts are the one external request; tests stay offline.
-  await page.route('https://fonts.googleapis.com/**', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
-  );
   await page.goto(path);
   await page.waitForLoadState('networkidle');
 }

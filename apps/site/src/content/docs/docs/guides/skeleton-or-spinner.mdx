@@ -1,0 +1,46 @@
+---
+title: Skeleton loader or spinner?
+description: When a skeleton loader helps, when a spinner, a progress bar or nothing at all is better, and how to keep fast loads from flashing.
+head:
+  - tag: title
+    content: 'Skeleton screen vs spinner: when to use each | Dotquilt'
+---
+
+A skeleton loader, a spinner and a progress bar all say that something is loading. They differ in what else they tell people: a skeleton shows what is coming and where, a spinner only that the page is working, and a progress bar how long is left. Choose by what is loading and how long it takes.
+
+## Use a skeleton when you know the shape
+
+A skeleton loader suits content whose layout you know before the data arrives: a list, a feed, a card, a profile, a table, a chart, a number on a dashboard. It holds the content's place, so nothing jumps when the content arrives, and people can see where to look before it does.
+
+In Dotquilt, that's a [loading region](/docs/components/loading-region/) with a placeholder in the content's shape:
+
+- a list, card, profile or paragraph: [Skeleton](/docs/components/skeleton/);
+- a number or a short label, such as a KPI: [TextLoader](/docs/components/text-loader/);
+- a line, bar or scatter chart: [ChartLoader](/docs/components/chart-loader/);
+- a table whose rows load or page: [TableLoader](/docs/components/table-loader/);
+- a chat reply being written: [TypingDots](/docs/components/typing-dots/).
+
+## Use a spinner for actions
+
+A spinner suits a short wait after something people did, when there's no content shape to show: a button that saves, a form that submits, a dialog that confirms. Keep it on the control that started the work. Dotquilt isn't for actions: keep your spinners there.
+
+## Use a progress bar for long waits
+
+For a wait you can measure, such as an upload, an export or a long import, a progress bar tells people how long is left. Nielsen Norman Group's guidance is to use skeleton screens and spinners for waits under about 10 seconds, and to show progress beyond that ([Skeleton Screens 101](https://www.nngroup.com/articles/skeleton-screens/), [Progress Indicators](https://www.nngroup.com/articles/progress-indicators/)).
+
+## Show nothing for very short waits
+
+Below about a tenth of a second, a response feels instant, and up to about a second it doesn't interrupt the flow of thought ([Response Time Limits](https://www.nngroup.com/articles/response-times-3-important-limits/)). A placeholder that appears and vanishes inside that time only flashes. A Dotquilt region has two settings for this:
+
+- `delay`: a load shorter than this never shows the placeholder, so a fast answer shows none;
+- `min-display`: a placeholder that did show stays at least this long, so it never flickers.
+
+Values around 150 ms and 500 ms suit most screens. See [LoadingRegion](/docs/components/loading-region/).
+
+## Keep content visible while it refreshes
+
+When you already show data and fetch a newer copy, don't replace it with a skeleton: people lose their place. Use the region's `refreshing` state instead, which keeps the content visible and usable while the new data loads. See [LoadingRegion](/docs/components/loading-region/).
+
+## Make it accessible
+
+Whatever you choose, label what is loading and announce the result in your own words. Dotquilt's loaders are silent and their pending content is skipped by screen readers: see [What screen readers hear](/docs/guides/motion/#what-screen-readers-hear).
