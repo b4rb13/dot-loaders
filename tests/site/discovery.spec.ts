@@ -126,6 +126,19 @@ test('the home page has a Markdown copy written for agents', async ({
   );
 });
 
+test('robots.txt lets every crawler in and names the sitemap', async ({
+  request,
+}) => {
+  const response = await request.get('/robots.txt');
+  expect(response.ok()).toBe(true);
+  expect(response.headers()['content-type']).toContain('text/plain');
+  const robots = await response.text();
+  expect(robots).toContain('User-agent: *\nAllow: /\n');
+  expect(robots).not.toContain('Disallow');
+  expect(robots).toContain('Sitemap: https://dotquilt.dev/sitemap-index.xml');
+  expect((await request.get('/sitemap-index.xml')).ok()).toBe(true);
+});
+
 test('llms.txt says when to use Dotquilt and how an agent should', async ({
   request,
 }) => {
