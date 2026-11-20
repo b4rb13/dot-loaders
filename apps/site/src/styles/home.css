@@ -9,10 +9,6 @@
 :root[data-has-hero] .sl-container {
   max-width: 1276px;
 }
-/* The closing field hands straight to the footer's seam. */
-:root:has([data-va-hero]) .site-footer {
-  margin-top: 0;
-}
 
 .home-button {
   display: inline-flex;
