@@ -1,7 +1,8 @@
 import { expect, type Page, test } from '@playwright/test';
 
 // Loaders take their content's size: a pending TextLoader keeps its line's
-// height, and a region is as tall as its content once it has handed over.
+// height, a region is as tall as its content once it has handed over, and the
+// Skeleton page's line-height recipe puts each line where a line of text sits.
 
 async function open(page: Page) {
   await page.goto('/?component=region');
@@ -111,4 +112,51 @@ for (const state of ['ready', 'refreshing'] as const)
         .height,
     }));
     expect(heights.region).toBe(heights.content);
+  });
+
+for (const mark of ['dot', 'square', 'dash'] as const)
+  test(`the Skeleton page's recipe puts each SkeletonText line on a line of text (${mark})`, async ({
+    page,
+  }) => {
+    await open(page);
+    // apps/site/src/content/docs/docs/components/skeleton.mdx
+    const line = { dot: 18, square: 17, dash: 19 }[mark];
+    await build(
+      page,
+      `<style>.excerpt dotquilt-skeleton-text{--line:${line}px;gap:calc(1lh - var(--line));margin-block:calc((1lh - var(--line)) / 2)}</style><div class="excerpt" style="display:flex;align-items:flex-start;gap:16px;width:360px;font:16px/1.5 sans-serif"><dotquilt-skeleton-text id="lines" mark="${mark}" lines="3" style="flex:1"></dotquilt-skeleton-text><p id="text" style="flex:1;margin:0">Placeholders hold the shape of your content while it loads.</p></div>`,
+    );
+    const result = await page.evaluate(() => {
+      const host = document.getElementById('lines') as HTMLElement;
+      const centres = (selector: string) =>
+        [...(host.shadowRoot?.querySelectorAll(selector) ?? [])].map((line) => {
+          const box = line.getBoundingClientRect();
+          return box.top + box.height / 2;
+        });
+      const range = document.createRange();
+      range.selectNodeContents(document.getElementById('text') as Node);
+      const text = [...range.getClientRects()].map(
+        (box) => box.top + box.height / 2,
+      );
+      const css = getComputedStyle(host);
+      return {
+        lines: centres('.lines:not(.pulse,.lift) .line'),
+        glow: centres('.lines.pulse .line'),
+        text,
+        height:
+          host.getBoundingClientRect().height +
+          Number.parseFloat(css.marginTop) +
+          Number.parseFloat(css.marginBottom),
+        lineHeight: Number.parseFloat(css.lineHeight),
+        drawn: host.shadowRoot?.querySelector('.line')?.getBoundingClientRect()
+          .height,
+      };
+    });
+    expect(result.drawn).toBe(line);
+    expect(result.text.length).toBeGreaterThanOrEqual(3);
+    expect(result.lines).toHaveLength(3);
+    for (const [i, centre] of result.lines.entries()) {
+      expect(Math.abs(centre - (result.text[i] ?? 0))).toBeLessThan(1);
+      expect(Math.abs(centre - (result.glow[i] ?? 0))).toBeLessThan(1);
+    }
+    expect(result.height).toBeCloseTo(3 * result.lineHeight, 1);
   });
