@@ -68,7 +68,14 @@ const columns = [
       ))
     }
   </div>
-  <p class="bottom">© 2026 Dotquilt. Free and open source under the MIT license.</p>
+  <div class="bottom">
+    <p>© 2026 Dotquilt. Free and open source under the MIT license.</p>
+    <nav aria-label="About this site" class="trust">
+      <a href="/about/">About</a>
+      <a href="/contact/">Contact</a>
+      <a href="/privacy/">Privacy</a>
+    </nav>
+  </div>
 </footer>
 <Analytics />
 
@@ -134,11 +141,29 @@ const columns = [
     color: var(--dq-ink);
   }
   .bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem 2rem;
     margin: 2.5rem 0 0;
     padding-top: 1.25rem;
     border-top: 1px solid var(--dq-line);
     font-size: 0.8125rem;
     color: var(--dq-faint);
+  }
+  .bottom p {
+    margin: 0;
+  }
+  .trust {
+    display: flex;
+    gap: 1.25rem;
+  }
+  .trust a {
+    font-size: 0.8125rem;
+    color: var(--dq-faint);
+  }
+  .trust a:hover {
+    color: var(--dq-ink);
   }
   @media (max-width: 56rem) {
     .grid {

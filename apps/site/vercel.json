@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "headers": [
+    {
+      "source": "/((?!_astro/|_vercel/|pagefind/|.*\\.[^/]+$).*)",
+      "headers": [{ "key": "Vary", "value": "Accept" }]
+    }
+  ]
+}

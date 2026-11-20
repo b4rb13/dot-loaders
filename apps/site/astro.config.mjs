@@ -21,6 +21,9 @@ export default defineConfig({
       title: 'Dotquilt',
       description:
         'Dot-based loading placeholders that hand off gently to your real content.',
+      // Head tags Starlight doesn't add: the social card image everywhere,
+      // and JSON-LD on the home page.
+      routeMiddleware: './src/routeData.ts',
       customCss: [
         './src/styles/theme.css',
         './src/styles/demos.css',
