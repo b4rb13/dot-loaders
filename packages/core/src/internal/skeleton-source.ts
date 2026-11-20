@@ -1,10 +1,15 @@
 import type { LoadingRegion } from '../region.js';
 import type { SkeletonBlock } from '../skeleton-block.js';
 import { definitionOf } from './binding.js';
+import { dissolveSkeleton } from './dissolve.js';
 import { media } from './dom.js';
 import type { HandoffDriver, HandoffSource } from './handoff.js';
 import { handoff } from './marks.js';
-import { skeletonHandoff } from './skeleton-handoff.js';
+import {
+  type SkeletonExit,
+  type SkeletonParticipant,
+  skeletonHandoff,
+} from './skeleton-handoff.js';
 import { targetChanges } from './target-changes.js';
 
 /**
@@ -27,14 +32,48 @@ export function loadMorph(): void {
   );
 }
 
+/**
+ * Starts one skeleton's dissolve and returns its release. The dissolve is
+ * the region's code (dissolve.ts): only a region hands a skeleton over.
+ */
+function launch(
+  skeleton: HTMLElement,
+  exit: SkeletonExit,
+  duration: number,
+  easing: string | undefined,
+  own: (animation: Animation) => void,
+  invalidate: () => void,
+): () => void {
+  if (!exit.dissolves || !exit.canAnimate()) return () => {};
+  const effect = dissolveSkeleton(
+    skeleton,
+    duration,
+    easing,
+    exit.departure,
+    own,
+    invalidate,
+    exit.report,
+  );
+  const unwatch = exit.watch(effect.check);
+  return () => {
+    unwatch();
+    effect.dispose();
+  };
+}
+
 export function createSkeletonSource(
   child: SkeletonBlock | undefined,
   owner: LoadingRegion,
   participants: readonly HTMLElement[],
 ): HandoffSource {
-  const launches = participants.flatMap((participant) =>
+  const exits = participants.flatMap((participant) =>
     skeletonHandoff in participant
-      ? [(participant as SkeletonBlock)[skeletonHandoff]()]
+      ? [
+          [
+            participant,
+            (participant as SkeletonParticipant)[skeletonHandoff](),
+          ] as const,
+        ]
       : [],
   );
   const easing = owner.timing.easing;
@@ -83,9 +122,11 @@ export function createSkeletonSource(
         draw: driver?.draw,
         activate(callback) {
           if (!definition || definition.dissolve) {
-            for (const launch of launches) {
+            for (const [skeleton, exit] of exits) {
               releases.push(
-                launch(duration, easing, own, () => owner.refresh()),
+                launch(skeleton, exit, duration, easing, own, () =>
+                  owner.refresh(),
+                ),
               );
               if (!current()) {
                 for (const release of releases) release();

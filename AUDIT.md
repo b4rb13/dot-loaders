@@ -27,7 +27,7 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
 - **Size:** `bun run size` reports sizes without enforcing budgets.
 - **CI:** `quality.yml` runs the checks above; `legacy.yml` runs on demand.
 - **Left over:**
-  - React adapter client tests in the fast suite. The React tests still live only in the legacy suites.
+  - ~~React adapter client tests in the fast suite.~~ Done when the legacy suites were ported: the React suite is the `react-chromium` project of `bun run test:e2e` (39 tests, about 17 s) and runs in CI on every runtime change. The legacy runner keeps only the React 19.0 rerun and catalog SSR under Node and Bun.
   - Porting the legacy suites component by component.
   - Size budgets, pending decision 1.
 
@@ -462,9 +462,14 @@ This is a rebuild, not a polish pass. The current site, docs and default visuals
 
 Before the alpha, from the product research (2026-11-19, [docs/planning/product-strategy-2026-11.md](docs/planning/product-strategy-2026-11.md)):
 - **Anti-flicker timing** on LoadingRegion: a `delay` before the placeholder shows, and a minimum display time. Element Plus and react-placeholder have both; fast responses flash a placeholder today.
-- **A size diet.** Entries measure 6.4–16 KB gzip, against about 2.2 KB for react-loading-skeleton. Target −30%, then lower the budgets.
+- **A size diet.** Entries measured 6.4–16 KB gzip, against about 2.2 KB for react-loading-skeleton. Target −30%, then lower the budgets. Native gzip up front, against the sizes before step 1:
+  - Step 1 (#81): each loader loads only its own styles.
+  - Step 2 (#85): the region's morph loads when its placeholder first shows.
+  - Step 3 (2026-11-20): only a region hands a skeleton or TypingDots over, so the skeleton's dissolve and the morph's reading of CSS-drawn marks are the region's code now. The dissolve loads with the region, so handoffs behave exactly as before.
+  - Where it stands: SkeletonBlock 10.0 → 7.0 KB (−30%), SkeletonLine and SkeletonCircle −29%, SkeletonText −28%, TypingDots 7.5 → 5.2 KB (−31%), LoadingRegion 14.5 → 11.7 KB (−19%; step 3 moved about 1.9 KB into it, and its budget went back up to that size plus 15%). Left: TextLoader (−5%), ChartLoader and TableLoader (unchanged).
+  - CI's Bun (1.4.3, pinned) measures the budgets; an older local Bun can read 100–900 B differently.
 - **ViewTransition compatibility.** React 19.3 made `<ViewTransition>` stable; document and test the handoff alongside it.
-- **README, changelog and a publish dry run**, a Next.js example project, and React fast tests.
+- **README, changelog and a publish dry run**, a Next.js example project, and React fast tests (already in `test:e2e`).
 - **Agent-ready docs:** `/llms.txt`, per-page Markdown and "Copy page".
 
 Performance qualification on real devices comes after there are users, against budgets you choose, not before.

@@ -241,24 +241,24 @@ test('selective skeleton and region bundles leave the dense renderer out', async
 }, 30_000);
 
 // Each loader carries only its own styles: TypingDots, TextLoader and the
-// region don't bring the skeletons' stylesheets, and TextLoader doesn't
-// bring the region's refresh cue.
+// region don't bring the skeletons' stylesheets (their glow layer's rule),
+// and TextLoader doesn't bring the region's refresh cue.
 test('typing, text and region bundles leave the skeleton stylesheets out', async () => {
   for (const [name, source, absent] of [
     [
       'typing',
       "import {registerTypingDots} from '@dotquilt-internal/core/typing';registerTypingDots();",
-      ['.pulse', '--dotquilt-refresh-gap'],
+      [':host .pulse{', '--dotquilt-refresh-gap'],
     ],
     [
       'text',
       "import {registerTextLoader} from '@dotquilt-internal/core/text';registerTextLoader();",
-      ['.pulse', '--dotquilt-refresh-gap'],
+      [':host .pulse{', '--dotquilt-refresh-gap'],
     ],
     [
       'region-only',
       "import {registerLoadingRegion} from '@dotquilt-internal/core/region';registerLoadingRegion();",
-      ['.pulse'],
+      [':host .pulse{'],
     ],
   ] as const) {
     const entry = resolve(work, `${name}-styles-entry.ts`);
@@ -272,6 +272,41 @@ test('typing, text and region bundles leave the skeleton stylesheets out', async
     expect(bundle.success).toBe(true);
     const code = (await bundle.outputs[0]?.text()) ?? '';
     for (const text of absent)
+      expect(code.includes(text), `${name}: ${text}`).toBe(false);
+  }
+}, 30_000);
+
+// Only a region hands a skeleton or TypingDots over, so the dissolve and the
+// morph's mark reading are the region's code, not theirs.
+test('skeleton and typing bundles leave the region handoff out', async () => {
+  for (const [name, source] of [
+    [
+      'block',
+      "import {registerSkeletonBlock} from '@dotquilt-internal/core/skeleton';registerSkeletonBlock();",
+    ],
+    [
+      'text-skeleton',
+      "import {registerSkeletonText} from '@dotquilt-internal/core/skeleton';registerSkeletonText();",
+    ],
+    [
+      'typing',
+      "import {registerTypingDots} from '@dotquilt-internal/core/typing';registerTypingDots();",
+    ],
+  ] as const) {
+    const entry = resolve(work, `${name}-handoff-entry.ts`);
+    await writeFile(entry, source);
+    const bundle = await Bun.build({
+      entrypoints: [entry],
+      minify: true,
+      target: 'browser',
+      format: 'esm',
+    });
+    expect(bundle.success).toBe(true);
+    const code = (await bundle.outputs[0]?.text()) ?? '';
+    expect(code.length).toBeGreaterThan(0);
+    // The dissolve's SVG pattern, and the morph marks' symbol. (The skeleton
+    // stylesheet still styles the dissolve's layer, which the region adds.)
+    for (const text of ['userSpaceOnUse', 'dotquilt.morph-marks'])
       expect(code.includes(text), `${name}: ${text}`).toBe(false);
   }
 }, 30_000);
