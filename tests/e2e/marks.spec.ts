@@ -293,15 +293,24 @@ for (const mark of ['dot', 'dash', 'square'] as const)
       const dots = Reflect.get(
         host,
         Symbol.for('dotquilt.painter.v1'),
-      ).capture() as { x: number; y: number; size: number; opacity: number }[];
+      ).capture() as {
+        x: number;
+        y: number;
+        size: number;
+        opacity: number;
+        angle?: number;
+      }[];
       const canvas = host.shadowRoot?.querySelector('canvas');
       const context = canvas?.getContext('2d');
       if (!canvas || !context) return undefined;
       const box = canvas.getBoundingClientRect(),
         origin = host.getBoundingClientRect(),
         scale = canvas.width / box.width;
-      // Alpha a few px right of and below the strongest mark's centre.
+      // Alpha a few px along and across the strongest mark, measured on its
+      // own axis: a chart's dashes turn to follow the line.
       const strongest = dots.reduce((a, b) => (b.opacity > a.opacity ? b : a));
+      const cos = Math.cos(strongest.angle ?? 0),
+        sin = Math.sin(strongest.angle ?? 0);
       const alpha = (dx: number, dy: number) =>
         context.getImageData(
           Math.round((origin.left + strongest.x + dx - box.left) * scale),
@@ -318,8 +327,8 @@ for (const mark of ['dot', 'dash', 'square'] as const)
       return {
         across: step(dots.map((dot) => dot.x)),
         down: step(dots.map((dot) => dot.y)),
-        right: alpha(3.6, 0),
-        below: alpha(0, 2.6),
+        right: alpha(3.6 * cos, 3.6 * sin),
+        below: alpha(-2.6 * sin, 2.6 * cos),
       };
     });
     const pitch = { dot: [9, 9], dash: [13, 9.5], square: [8.5, 8.5] }[mark];
