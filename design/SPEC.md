@@ -120,7 +120,7 @@ Every text colour meets WCAG AA (4.5:1) on `bg`, `surface` and `subtle`. `faint`
 - **Docs:** left navigation, a reading column of about 68ch, an on-page table of contents and a live preview with Start loading / Reveal. Code tabs cover React and native. API tables list type, default and description per prop.
 - **Copy:** plain user-facing language only. No milestones, freezes or "provisional" wording.
 - **Themes:** light and dark at parity, following the system setting, with a manual switch.
-- **Dependencies:** Google Fonts are the only external dependency.
+- **Dependencies:** Google Fonts are the only external request a visitor's browser makes. Vercel Web Analytics (cookieless, owner's request, 2026-11-20) is served from the site's own origin, and the GitHub star count in the header is read once at build time.
 
 ## How marks map onto the runtime (decided in 4b, 2026-11-19)
 
