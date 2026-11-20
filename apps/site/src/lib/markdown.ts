@@ -8,6 +8,7 @@ import { dirname, resolve } from 'node:path';
  * except outside code fences:
  * - module imports and exports go;
  * - live previews go (they are demos, and the code tabs show the same);
+ * - page-only `<style>` blocks and layout `<div>` wrappers go;
  * - `<Code code={file} …/>` becomes a fenced block holding that file;
  * - code tabs become a bold label before each block.
  */
@@ -30,7 +31,8 @@ export function pageMarkdown(entry: CollectionEntry<'docs'>): string {
 
   const out: string[] = [];
   let fenced = false,
-    preview = false;
+    preview = false,
+    style = false;
   for (const line of source.split('\n')) {
     if (/^\s*(```|~~~)/.test(line) && !preview) {
       fenced = !fenced;
@@ -46,6 +48,13 @@ export function pageMarkdown(entry: CollectionEntry<'docs'>): string {
       continue;
     }
     const trimmed = line.trim();
+    // The page's own styles: they dress the HTML page only.
+    if (style || trimmed.startsWith('<style')) {
+      style = !trimmed.includes('</style>');
+      continue;
+    }
+    // Layout wrappers on their own lines (their content stays).
+    if (/^<\/?div(\s[^>]*)?>$/.test(trimmed)) continue;
     // MDX's module block: imports, exports and their comments.
     if (/^(import|export)\s/.test(trimmed) || trimmed.startsWith('// '))
       continue;

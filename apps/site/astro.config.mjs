@@ -74,6 +74,7 @@ export default defineConfig({
           items: [
             { label: 'Introduction', slug: 'docs' },
             { label: 'Installation', slug: 'docs/installation' },
+            { label: 'AI assistant setup', slug: 'docs/ai-setup' },
             { label: 'Theming', slug: 'docs/theming' },
           ],
         },

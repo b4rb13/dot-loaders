@@ -25,7 +25,7 @@ export const GET: APIRoute = async ({ site }) => {
       '',
       '> Dot-based loading placeholders for the web. They hold the shape of your content while it loads, then hand over to it: native Web Components with no runtime dependencies, and React 19 components with server rendering.',
       '',
-      `Pre-alpha, not yet on npm. Each link below is the page as Markdown; ${url('/llms-full.txt')} has every page in one file.`,
+      `Install with \`npm install dotquilt\` (and \`@dotquilt/react\` for React 19). Each link below is the page as Markdown; ${url('/llms-full.txt')} has every page in one file. To add Dotquilt to a project, follow ${url('/setup-prompt.md')}.`,
       '',
       ...section(
         'Getting started',

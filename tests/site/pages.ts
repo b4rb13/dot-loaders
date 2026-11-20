@@ -18,6 +18,7 @@ export const pages = [
   '/',
   '/docs/',
   '/docs/installation/',
+  '/docs/ai-setup/',
   '/docs/theming/',
   '/license/',
   '/pricing/',
