@@ -14,12 +14,6 @@ const sections = [
   ['Pricing', '/pricing/'],
 ] as const;
 
-test.beforeEach(async ({ page }) => {
-  await page.route('https://fonts.googleapis.com/**', (route) =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
-  );
-});
-
 const menuButton = (page: Page) => page.getByRole('button', { name: 'Menu' });
 const mainNav = (page: Page) => page.getByRole('navigation', { name: 'Main' });
 
