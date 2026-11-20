@@ -225,6 +225,50 @@ test('a plain TableLoader becomes the text of each real cell', async ({
     expect(runs.some((run) => within(run, mark, 6))).toBe(true);
 });
 
+// getClientRects() ignores clipping: text you can't see must not become a
+// row of marks. Each header sits where its marks would show up clearly, at the
+// top of the table, above the cells' text.
+const hiddenHeaders = {
+  'Tailwind sr-only (clip-path)':
+    'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border-width:0',
+  'visually-hidden (clip)':
+    'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0',
+  'clip-path alone': 'clip-path:inset(50%)',
+  'a zero-height box': 'display:block;height:0;overflow:hidden',
+};
+for (const [name, style] of Object.entries(hiddenHeaders))
+  test(`a visually hidden table header gets no marks: ${name}`, async ({
+    page,
+  }) => {
+    await open(page);
+    const cells = [
+      ['Atlas redesign', '24', 'Live'],
+      ['Billing export', '8', 'Review'],
+      ['Search index', '13', 'Live'],
+    ];
+    const html = `<dotquilt-region id="owner" aria-label="Projects" style="display:block;width:340px"><dotquilt-table-loader slot="placeholder" rows="3" style="height:180px"></dotquilt-table-loader><table id="text" style="width:100%;border-collapse:collapse;font:14px/20px sans-serif"><thead style="${style}"><tr><th>Project</th><th>Items</th><th>Status</th></tr></thead><tbody>${cells.map((row) => `<tr>${row.map((cell) => `<td style="height:60px;padding:0;vertical-align:bottom">${cell}</td>`).join('')}</tr>`).join('')}</tbody></table></dotquilt-region>`;
+    const { marks } = await sample(page, html, 2480);
+    const runs = await page.evaluate(() => {
+      const owner = document.getElementById('owner')?.getBoundingClientRect();
+      return [...document.querySelectorAll('#text td')].map((cell) => {
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        const box = range.getBoundingClientRect();
+        return {
+          left: box.left - (owner?.left ?? 0),
+          top: box.top - (owner?.top ?? 0),
+          right: box.right - (owner?.left ?? 0),
+          bottom: box.bottom - (owner?.top ?? 0),
+        };
+      });
+    });
+    expect(marks.length).toBeGreaterThan(20);
+    const stray = marks.filter(
+      (mark) => !runs.some((run) => within(run, mark, 6)),
+    );
+    expect(stray).toEqual([]);
+  });
+
 test('TextLoader marks take the real characters before the text wipes in', async ({
   page,
 }) => {

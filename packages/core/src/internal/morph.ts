@@ -87,19 +87,196 @@ function contentNodes(region: HTMLElement): Node[] {
   );
 }
 
+/** A box by its edges, in viewport px. */
+interface Edges {
+  readonly left: number;
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+}
+const unclipped: Edges = {
+  left: Number.NEGATIVE_INFINITY,
+  top: Number.NEGATIVE_INFINITY,
+  right: Number.POSITIVE_INFINITY,
+  bottom: Number.POSITIVE_INFINITY,
+};
+const intersect = (a: Edges, b: Edges): Edges => ({
+  left: Math.max(a.left, b.left),
+  top: Math.max(a.top, b.top),
+  right: Math.min(a.right, b.right),
+  bottom: Math.min(a.bottom, b.bottom),
+});
+
+/** How an element clips what it draws. */
+interface Clip {
+  /** `clip` or `clip-path`: clips the element and everything in it. */
+  readonly own: Edges | undefined;
+  /** Its padding box, on the axes where `overflow` clips its content. */
+  readonly content: Edges | undefined;
+  readonly position: string;
+  /** Positioned or transformed: absolutely positioned content stays inside it. */
+  readonly anchors: boolean;
+  readonly transformed: boolean;
+}
+
+/** `clip-path: inset(…)` as edges, or undefined for anything else. */
+function insetOf(value: string, box: DOMRect): Edges | undefined {
+  const match = /^inset\(([^)]*)\)/.exec(value);
+  const lengths = match?.[1]?.split(' round ')[0]?.trim().split(/\s+/) ?? [];
+  const px = (length: string | undefined, of: number) => {
+    const parts = /^(-?[\d.]+)(px|%)$/.exec(length ?? '');
+    if (!parts) return Number.NaN;
+    return parts[2] === '%' ? (Number(parts[1]) / 100) * of : Number(parts[1]);
+  };
+  const [top, right = top, bottom = top, left = right] = lengths;
+  const edges = {
+    left: box.left + px(left, box.width),
+    top: box.top + px(top, box.height),
+    right: box.right - px(right, box.width),
+    bottom: box.bottom - px(bottom, box.height),
+  };
+  return Object.values(edges).every(Number.isFinite) ? edges : undefined;
+}
+
+/** `clip: rect(…)`, which applies to absolutely positioned elements. */
+function rectOf(value: string, box: DOMRect): Edges | undefined {
+  const sides = /^rect\((.*)\)$/.exec(value)?.[1]?.split(/[\s,]+/);
+  if (sides?.length !== 4) return undefined;
+  const [top, right, bottom, left] = sides.map((side) =>
+    side === 'auto' ? undefined : Number.parseFloat(side),
+  );
+  return {
+    left: box.left + (left ?? 0),
+    top: box.top + (top ?? 0),
+    right: box.left + (right ?? box.width),
+    bottom: box.top + (bottom ?? box.height),
+  };
+}
+
+function clipOf(element: Element, win: Window): Clip {
+  const css = win.getComputedStyle(element);
+  const position = css.position;
+  const transformed = css.transform !== 'none';
+  let own: Edges | undefined;
+  let content: Edges | undefined;
+  const box = () => element.getBoundingClientRect();
+  // Other shapes count as the element's box, which they mostly stay inside.
+  if (css.clipPath !== 'none') own = insetOf(css.clipPath, box()) ?? box();
+  if ((position === 'absolute' || position === 'fixed') && css.clip !== 'auto')
+    own = intersect(own ?? unclipped, rectOf(css.clip, box()) ?? unclipped);
+  // Overflow clips block, flex, grid and table cell boxes, not inline ones
+  // or table rows and groups.
+  const x = css.overflowX !== 'visible',
+    y = css.overflowY !== 'visible';
+  if (
+    (x || y) &&
+    css.display !== 'inline' &&
+    css.display !== 'contents' &&
+    !/^table-(row|column|header|footer)/.test(css.display)
+  ) {
+    const { left, top } = box();
+    const padding = {
+      left: left + element.clientLeft,
+      top: top + element.clientTop,
+      right: left + element.clientLeft + element.clientWidth,
+      bottom: top + element.clientTop + element.clientHeight,
+    };
+    content = {
+      left: x ? padding.left : unclipped.left,
+      top: y ? padding.top : unclipped.top,
+      right: x ? padding.right : unclipped.right,
+      bottom: y ? padding.bottom : unclipped.bottom,
+    };
+  }
+  return {
+    own,
+    content,
+    position,
+    anchors: position !== 'static' || transformed,
+    transformed,
+  };
+}
+
+/**
+ * The part of `rect` that shows once `from` and its ancestors up to `region`
+ * have clipped it, or undefined when less than 2px of it shows either way.
+ * getClientRects() and getBoundingClientRect() ignore clipping, so without
+ * this a visually hidden header (a 1px box with `overflow: hidden`, `clip`
+ * or `clip-path: inset(50%)`) would become a row of marks.
+ *
+ * With `ownBox`, `rect` is `from`'s own box, which its overflow doesn't clip.
+ */
+function visiblePart(
+  rect: DOMRect,
+  from: Element | null,
+  region: Element,
+  clips: (element: Element) => Clip,
+  ownBox = false,
+): Edges | undefined {
+  let edges: Edges = rect;
+  // Absolutely positioned content escapes the overflow of ancestors until
+  // the one that contains it (any positioned one; a transformed one for fixed).
+  let escaping: string | undefined;
+  for (
+    let element = from;
+    element && element !== region;
+    element = element.parentElement
+  ) {
+    const clip = clips(element);
+    if (escaping && (escaping === 'fixed' ? clip.transformed : clip.anchors))
+      escaping = undefined;
+    if (clip.content && !escaping && !(ownBox && element === from))
+      edges = intersect(edges, clip.content);
+    if (clip.own) edges = intersect(edges, clip.own);
+    if (clip.position === 'absolute' || clip.position === 'fixed')
+      escaping = clip.position;
+  }
+  return edges.right - edges.left >= 2 && edges.bottom - edges.top >= 2
+    ? edges
+    : undefined;
+}
+
+/** Caches each element's clip for one plan. */
+function clipCache(region: Element): (element: Element) => Clip {
+  const win = region.ownerDocument.defaultView;
+  const cache = new Map<Element, Clip>();
+  const none: Clip = {
+    own: undefined,
+    content: undefined,
+    position: 'static',
+    anchors: false,
+    transformed: false,
+  };
+  return (element) => {
+    let clip = cache.get(element);
+    if (!clip) {
+      clip = win ? clipOf(element, win) : none;
+      cache.set(element, clip);
+    }
+    return clip;
+  };
+}
+
 /** Lines of text, as runs of words that sit together, in reading order. */
-function textRuns(nodes: readonly Node[], origin: DOMRect): Box[] {
+function textRuns(
+  nodes: readonly Node[],
+  origin: DOMRect,
+  region: Element,
+  clips: (element: Element) => Clip,
+): Box[] {
   const doc = nodes[0]?.ownerDocument;
   if (!doc) return [];
-  const rects: DOMRect[] = [];
+  const rects: Edges[] = [];
   const range = doc.createRange();
   const collect = (text: Text) => {
     if (!/\S/.test(text.data) || rects.length > 600) return;
     const parent = text.parentElement;
     if (parent?.closest('[aria-hidden=true] svg, script, style')) return;
     range.selectNodeContents(text);
-    for (const rect of range.getClientRects())
-      if (rect.width > 0.5 && rect.height > 0.5) rects.push(rect);
+    for (const rect of range.getClientRects()) {
+      const shown = visiblePart(rect, parent, region, clips);
+      if (shown) rects.push(shown);
+    }
   };
   for (const node of nodes) {
     if (node instanceof Text) collect(node);
@@ -111,16 +288,17 @@ function textRuns(nodes: readonly Node[], origin: DOMRect): Box[] {
   }
   rects.sort(
     (a, b) =>
-      Math.round((a.top + a.height / 2) / 4) -
-        Math.round((b.top + b.height / 2) / 4) || a.left - b.left,
+      Math.round((a.top + a.bottom) / 8) - Math.round((b.top + b.bottom) / 8) ||
+      a.left - b.left,
   );
   const runs: { l: number; t: number; r: number; b: number }[] = [];
   for (const rect of rects) {
+    const height = rect.bottom - rect.top;
     const run = runs.find(
       (run) =>
         Math.min(run.b, rect.bottom) - Math.max(run.t, rect.top) >=
-          0.5 * Math.min(run.b - run.t, rect.height) &&
-        rect.left - run.r <= 0.6 * rect.height &&
+          0.5 * Math.min(run.b - run.t, height) &&
+        rect.left - run.r <= 0.6 * height &&
         rect.left - run.r >= -2,
     );
     if (run) {
@@ -144,6 +322,8 @@ function contentBoxes(
   nodes: readonly Node[],
   origin: DOMRect,
   area: number,
+  region: Element,
+  clips: (element: Element) => Clip,
 ): Atom[] {
   const win = nodes[0]?.ownerDocument?.defaultView;
   if (!win) return [];
@@ -168,8 +348,19 @@ function contentBoxes(
         !visual(css)
       )
         continue;
-      const r = radiusOf(css, rect.width, rect.height);
-      const box = relative(rect, origin, r);
+      const shown = visiblePart(rect, element, region, clips, true);
+      if (!shown) continue;
+      const width = shown.right - shown.left,
+        height = shown.bottom - shown.top;
+      if (width < 14 || height < 14) continue;
+      const r = radiusOf(css, width, height);
+      const box: Box = {
+        x: shown.left - origin.left,
+        y: shown.top - origin.top,
+        w: width,
+        h: height,
+        r,
+      };
       atoms.push({
         kind: round(box) ? 'round' : 'box',
         box,
@@ -274,8 +465,9 @@ export function planMorph(
   );
   const nodes = contentNodes(region);
   const area = Math.max(1, origin.width * origin.height);
-  const runs = textRuns(nodes, origin);
-  const boxes = contentBoxes(nodes, origin, area);
+  const clips = clipCache(region);
+  const runs = textRuns(nodes, origin, region, clips);
+  const boxes = contentBoxes(nodes, origin, area, region, clips);
 
   // Blocks and circles become the content's boxes: a circle prefers a round
   // one, and a box much bigger or smaller than the block is not its match.

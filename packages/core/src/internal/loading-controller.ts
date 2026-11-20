@@ -505,11 +505,15 @@ export abstract class LoadingController<
     if (revision !== this.#revision) return;
     const prior = this.#previous;
     this.#previous = state;
+    // A placeholder that hands over keeps its place until the handoff ends,
+    // and the handoff reads its layout as it starts: the presentation goes
+    // from pending straight to handoff, never through ready.
+    const handingOff = state === 'ready' && prior === 'pending' && !skipHandoff;
     content.inert = state === 'pending';
     content.setAttribute('aria-busy', String(state !== 'ready'));
     if (state === 'pending') content.setAttribute('aria-hidden', 'true');
     else content.removeAttribute('aria-hidden');
-    this.setAttribute('data-presentation', state);
+    this.setAttribute('data-presentation', handingOff ? 'handoff' : state);
     this.placeholderChanged(
       placeholder.firstElementChild as HTMLSlotElement,
       state,
@@ -550,7 +554,7 @@ export abstract class LoadingController<
       return;
     }
     this.#participants = undefined;
-    if (prior === 'pending' && !skipHandoff) this.#start(revision, w);
+    if (handingOff) this.#start(revision, w);
     else this.#settled = true;
   }
   /** Runs `task` after `ms`, replacing any earlier timer. */

@@ -54,6 +54,20 @@ Put a skeleton in a region's `placeholder` slot and size it with CSS like any ot
   </TabItem>
 </Tabs>
 
+### Matching your text's line height
+
+SkeletonText draws each line two rows of marks tall and spaces the lines `0.5em` apart. A line is 18 px tall with the default dots (twice the dot size plus the gap), 17 px with squares and 19 px with dashes. That holds a paragraph's shape without knowing your text's line height. To put each line where a line of text sits, so the placeholder is as tall as the same number of lines of text, set its gap and margins from `1lh`, the line height it inherits:
+
+```css
+.excerpt dotquilt-skeleton-text {
+  --line: 18px; /* 17px for squares, 19px for dashes */
+  gap: calc(1lh - var(--line));
+  margin-block: calc((1lh - var(--line)) / 2);
+}
+```
+
+Use margins rather than padding: the idle glow's copy of the lines spans the padding box, so padding moves it off the lines.
+
 ## Elements
 
 | Element | React | Use |

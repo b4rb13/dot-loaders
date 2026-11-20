@@ -1,8 +1,12 @@
 import { markColor, textMarkShapes } from './internal/marks.js';
 import { regionCss } from './region-css.js';
+// The layers share one baseline, so the loader sits on the text's baseline
+// even while its content is empty and only the mask has text: an empty first
+// layer would otherwise put the baseline at its bottom edge and make the line
+// taller.
 export const textStyles: readonly string[] = /* @__PURE__ */ Object.freeze([
   regionCss +
-    ':host{display:inline-grid;vertical-align:baseline;min-height:1em}:host .mask{display:block;min-height:1em;white-space:pre;opacity:.3;color:transparent;background:radial-gradient(circle,' +
+    ':host{display:inline-grid;vertical-align:baseline;min-height:1em}:host [part]{align-self:baseline}:host .mask{display:block;min-height:1em;white-space:pre;opacity:.3;color:transparent;background:radial-gradient(circle,' +
     markColor +
     ' 1px,#0000 0) 0 0/6px 6px}' +
     textMarkShapes((mark) => `:host([mark=${mark}])`, '.mask') +
