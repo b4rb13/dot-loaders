@@ -1,5 +1,15 @@
 # @dotquilt/react
 
+## 0.1.2
+
+### Patch Changes
+
+- 6f01d44: `DotquiltStyle` accepts `--dotquilt-refresh-gap`, the distance between a refreshing region's top edge and its row of marks, as the theming and LoadingRegion docs describe.
+- Updated dependencies [51f4f5c]
+- Updated dependencies [4bf062a]
+- Updated dependencies [e0ba90e]
+  - dotquilt@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
