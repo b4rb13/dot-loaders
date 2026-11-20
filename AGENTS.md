@@ -41,7 +41,7 @@ Use Bun (pinned in `.bun-version`) and Node 24+.
 
 ## Rules
 
-- **Privacy and release.** Keep the repository private. Don't publish to npm, deploy, or change visibility unless the owner asks for that specific action.
+- **Public repository and release.** The repository is public (owner, 2026-11-20): keep it clean, with no secrets, private notes, stray branches or large artifacts. Don't publish to npm, deploy, or change visibility unless the owner asks for that specific action. A merge to `main` deploys dotquilt.dev.
 - **Package boundaries.** Core stays framework-independent. React, Next.js and Tailwind belong only in the adapter or a future site.
 - **Release requirements.** These are real requirements, not polish:
   - accessibility: focus, inert content, reduced motion, forced colors

@@ -2,7 +2,9 @@
 
 React 19 components for [Dotquilt](https://dotquilt.dev): loading placeholders that hold the shape of your content, then hand over to it. They are thin wrappers over the native Web Components in `dotquilt`. Server rendering is included: placeholders are in the first HTML at your content's size, and hydration keeps your content and focus.
 
-> **Status:** pre-alpha and not yet published to npm. The package names are provisional.
+<a href="https://dotquilt.dev"><img src="https://raw.githubusercontent.com/b4rb13/dot-loaders/main/.github/assets/hero-light.gif" alt="A revenue screen loading: its figures take shape in square marks, a chart line draws from a field of dots, and the table rows settle, then everything hands over to the real content." width="100%"></a>
+
+> **Status:** alpha (0.x). The API may still change before 1.0.
 
 ## Install
 
