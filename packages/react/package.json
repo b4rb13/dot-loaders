@@ -1,6 +1,6 @@
 {
   "name": "@dotquilt/react",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "React components for Dotquilt: loading placeholders that hold the shape of your content, then hand over to it.",
   "type": "module",
   "license": "MIT",
@@ -58,7 +58,7 @@
     "./styles/*.css": "./dist/*.css"
   },
   "dependencies": {
-    "dotquilt": "0.1.1"
+    "dotquilt": "0.1.2"
   },
   "peerDependencies": {
     "react": "^19.0.0",
