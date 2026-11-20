@@ -25,6 +25,8 @@ export type ChartShader = (
     n: number,
     distance: number,
   ) => ChartStyle,
+  /** How much the crest is a line that dashes follow: 1, or 0 for bars and scatter. */
+  line?: number,
 ];
 
 /**
@@ -32,7 +34,8 @@ export type ChartShader = (
  * line and a shaded area under it. The ridge drifts slowly, the field
  * breathes ±7% every 3.2 s, and a teal glow drifts across every 2.8 s; the
  * glow is drawn as accent marks over the resting ones. Every mark is the same
- * size; the grid starts half a pitch in, like the CSS dot grid.
+ * size; the grid starts half a pitch in, like the CSS dot grid. Dashes follow
+ * the line: near the crest they turn to its slope, and level off below it.
  */
 export function chartPainter(configure?: ChartShader): IdlePaint {
   return ({ surface: rawSurface, options: rawOptions, timeMs, still, dot }) => {
@@ -46,10 +49,12 @@ export function chartPainter(configure?: ChartShader): IdlePaint {
       pitch = 9,
       rows = pitch,
       scale = 2.2,
+      mark,
     } = (Reflect.get(surface, chartAppearance) as Appearance | undefined) ?? {};
     if (Math.ceil(w / pitch) * Math.ceil(full / rows) > 4096)
       throw new TypeError();
     const shader = configure?.(options, timeMs, still, w, h, t);
+    const follow = mark === 'dash' ? (shader?.[2] ?? 1) : 0;
     const amplitude = (options.amplitude as number | undefined) ?? 0.24,
       sigma =
         0.2 * (((options.highlightWidth as number | undefined) ?? 90) / 90),
@@ -59,9 +64,15 @@ export function chartPainter(configure?: ChartShader): IdlePaint {
     // Scratch belongs to this invocation: nested paints cannot overwrite it.
     const base: ChartStyle = [0, 0, 0, 0];
     let count = 0;
+    const crest = (x: number) =>
+      shader ? shader[0](x) : ridgeHeight(x / Math.max(1, w), h, t, amplitude);
     for (let x = pitch / 2; x < w; x += pitch) {
       const u = x / Math.max(1, w),
-        ridge = shader ? shader[0](x) : ridgeHeight(u, h, t, amplitude);
+        ridge = crest(x),
+        // The line's direction here, over one pitch.
+        slope = follow
+          ? Math.atan2(crest(x + pitch / 2) - crest(x - pitch / 2), pitch)
+          : 0;
       for (let y = rows / 2; y < full; y += rows) {
         const distance = y - ridge,
           c = Math.exp(-((distance / band) ** 2)),
@@ -74,6 +85,8 @@ export function chartPainter(configure?: ChartShader): IdlePaint {
         base[2] = 0;
         base[3] = 0;
         const value = shader ? shader[1](x, base, c, n, distance) : base;
+        // Marks on the crest take its slope; the area below stays level.
+        const angle = follow * c * slope;
         if (value[0] >= 0.012 && ++count <= 4096)
           dot({
             x,
@@ -81,6 +94,7 @@ export function chartPainter(configure?: ChartShader): IdlePaint {
             size: value[1] * scale,
             opacity: clamp(value[0]),
             tone: value[3] ? 'accent' : 'base',
+            ...(angle ? { angle } : {}),
           });
         if (still || v < 0.02) continue;
         const d = (u * 0.8 + (y / Math.max(1, full)) * 0.2 - glowAt) / sigma;
@@ -93,6 +107,7 @@ export function chartPainter(configure?: ChartShader): IdlePaint {
             size: value[1] * scale,
             opacity: glow,
             tone: 'accent',
+            ...(angle ? { angle } : {}),
           });
       }
     }

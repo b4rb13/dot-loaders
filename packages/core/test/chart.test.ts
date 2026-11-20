@@ -18,6 +18,7 @@ import {
 import { definitionOf } from '../src/internal/binding.js';
 import { chartAppearance } from '../src/internal/chart-appearance.js';
 import { defaultRidge } from '../src/internal/chart-definitions.js';
+import { ridgeHeight } from '../src/internal/chart-math.js';
 import { chartProjection } from '../src/internal/chart-projection.js';
 import type { HandoffPaint, IdlePaint } from '../src/internal/paint.js';
 import { renderStatic } from '../src/server.js';
@@ -485,4 +486,83 @@ test('Cycle keeps every hold/blend/wrap phase finite, including Scatter and paus
           ).toBe(true);
         }
   }
+});
+
+// design/SPEC.md, "Marks": a dash "on charts follows the line".
+const dashLook = Object.freeze({ pitch: 13, rows: 9.5, scale: 2.2 });
+function drawWith(
+  factory: (typeof factories)[keyof typeof factories],
+  mark: 'dot' | 'square' | 'dash',
+): Dot[] {
+  const binding = factory();
+  const definition = definitionOf(binding) as unknown as { draw: IdlePaint };
+  const dots: Dot[] = [];
+  definition.draw({
+    surface: Object.freeze({
+      ...surface,
+      [chartAppearance]: Object.freeze({ ...dashLook, mark }),
+    }),
+    options: binding.options,
+    timeMs: 1700,
+    still: false,
+    dot: (dot) => dots.push(dot),
+    deltaMs: 16,
+  });
+  return dots;
+}
+test('chart dashes turn to follow the ridge; the area below and other marks stay level', () => {
+  const dashes = drawWith(ridge, 'dash');
+  // Only the angle differs from the same field drawn in dots.
+  const strip = (dots: Dot[]) => dots.map(({ angle: _, ...rest }) => rest);
+  expect(strip(dashes)).toEqual(drawWith(ridge, 'dot'));
+  for (const mark of ['dot', 'square'] as const)
+    expect(drawWith(ridge, mark).some((dot) => 'angle' in dot)).toBe(false);
+  // On the crest (the brightest mark of each column) a dash takes the
+  // ridge's direction there: downhill to the right turns it clockwise.
+  const h = surface.height - 25,
+    t = 1.7,
+    crest = (x: number) => ridgeHeight(x / surface.width, h, t, 0.24);
+  const columns = new Map<number, Dot>();
+  for (const dot of dashes)
+    if (dot.tone === 'base' && dot.opacity > (columns.get(dot.x)?.opacity ?? 0))
+      columns.set(dot.x, dot);
+  let checked = 0;
+  for (const [x, top] of columns) {
+    const direction = Math.atan2(crest(x + 6.5) - crest(x - 6.5), 13);
+    if (Math.abs(direction) < 0.15) continue;
+    expect(Math.sign(top.angle ?? 0)).toBe(Math.sign(direction));
+    expect(Math.abs(top.angle ?? 0)).toBeLessThanOrEqual(
+      Math.abs(direction) + 1e-9,
+    );
+    checked++;
+  }
+  expect(checked).toBeGreaterThan(5);
+  // Far below the crest, in the shaded area, dashes are level.
+  for (const dot of dashes)
+    if (dot.y - crest(dot.x) > 9.5 * 1.45 * 3)
+      expect(Math.abs(dot.angle ?? 0)).toBeLessThan(0.01);
+  // Bars and scatter have no line to follow.
+  for (const factory of [bars, scatter])
+    expect(drawWith(factory, 'dash').some((dot) => 'angle' in dot)).toBe(false);
+});
+test('the chart handoff turns dashes that land on the line to its direction', () => {
+  const binding = morphWipe(),
+    definition = definitionOf(binding) as HandoffDefinition<
+      'chart',
+      typeof binding.options,
+      readonly { opacity: number; angle?: number }[]
+    >;
+  const prepare = (mark: 'dot' | 'dash') =>
+    definition.prepare(
+      Object.freeze({
+        ...surface,
+        [chartAppearance]: Object.freeze({ ...dashLook, mark }),
+      }),
+      binding.options,
+    );
+  // surface.input runs from (0, 30) to (320, 60).
+  const onLine = prepare('dash').filter((end) => end.opacity === 0.95);
+  expect(onLine.length).toBeGreaterThan(0);
+  for (const end of onLine) expect(end.angle).toBeCloseTo(Math.atan2(30, 320));
+  expect(prepare('dot').some((end) => 'angle' in end)).toBe(false);
 });

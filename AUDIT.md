@@ -37,7 +37,7 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
 - **Locked:** the refined System is locked as [design/SPEC.md](design/SPEC.md), with [design/tokens.css](design/tokens.css). Mockups are in `design/directions*/`.
 - **Marks:** dot by default; dash and square are offered as a component option.
 
-**Phase 4b — done (2026-11-19), except the open items under B (reduced motion) and G (marks).** The components' default look, built to [design/SPEC.md](design/SPEC.md). Phase 3 is done; its last item, one renderer per element, is settled by decision 2. Slices go by family, so each PR leaves its family consistent:
+**Phase 4b — done (2026-11-19), except the open item under B (reduced motion).** The components' default look, built to [design/SPEC.md](design/SPEC.md). Phase 3 is done; its last item, one renderer per element, is settled by decision 2. Slices go by family, so each PR leaves its family consistent:
 - **A. Marks and the skeleton family — done on `design/4b-skeleton`.**
   - **One marks module:** `internal/marks.ts` holds the default mark size (4.4 px), gap (4.6 px), colours, resting opacity (37%), glow peak (90%) and the CSS dot grid.
   - **Static look:** skeleton blocks, lines, circles and text use it, both before upgrade and after.
@@ -74,9 +74,9 @@ What I checked: build, typecheck, lint and all unit tests (run locally); the pro
   - **Painters and handoff:** the SVG and Canvas painters draw rounded rectangles. The dissolve leaves as the same shapes, on the same grid. Chart and table fields use the mark's own pitch across and down.
   - **TypingDots and TextLoader:** squares are 90% of the dot size; dashes are 80% of it tall and 2.7 times as wide (the mockup). TextLoader's squares make a pixel font.
   - **Size:** the mark rules add about 1.5 KB gzip across the nine external stylesheets. The owner raised the legacy catalog SSR gate (24 loaders with every external stylesheet) from 8 KB to 9 KB; the page then measured 8.36 KB. The refresh cue took it to about 9.2 KB, and the owner raised the gate to 9.5 KB (2026-11-19).
-  - **Not done:**
-    - On charts, dashes stay horizontal. The spec says they follow the line, which needs an angle on painter commands, a change to the authoring API.
-    - Squares and dashes have a fixed size, so `--dotquilt-dot-size` and `--dotquilt-dot-gap` change dots only.
+  - **Follow-ups:**
+    - ~~On charts, dashes stay horizontal.~~ Done (2026-11-20): a mark command takes an optional `angle` (radians, clockwise), which both painters draw and captures keep. With dashes, the chart idle turns the marks on its ridge to its slope (the shaded area stays level; bars and scatter have no line), and the handoff turns the marks that land on the line to its direction.
+    - Squares and dashes have a fixed size, so `--dotquilt-dot-size` and `--dotquilt-dot-gap` change dots only. That is the spec ("The size and gap properties apply to dots only"), not a gap.
 - **I. Feature parity restored — 2026-11-19, at the owner's request ("make sure we have all the functionality we had before").**
   - **Animations:** the six variants slice H dropped are back: chart idles `scan`, `terrain` and `cycle` (moves between line, bars and scatter), and text `scrambleCharacters`, `scrambleWords` and `printText`. They follow the spec's rule that every mark is the same size, with shape coming from opacity. The kept recipes draw exactly as before (all 144 snapshot cases unchanged).
   - **Pointer lift:** `pointer-response="lift"` on skeletons again lights the marks around the pointer, now as a glow that follows it, for as long as the placeholder shows. After the redesign it only brightened the drifting glow band, and only during the first seconds.
@@ -468,6 +468,7 @@ Before the alpha, from the product research (2026-11-19, [docs/planning/product-
   - Step 3 (2026-11-20): only a region hands a skeleton or TypingDots over, so the skeleton's dissolve and the morph's reading of CSS-drawn marks are the region's code now. The dissolve loads with the region, so handoffs behave exactly as before.
   - Where it stands: SkeletonBlock 10.0 → 7.0 KB (−30%), SkeletonLine and SkeletonCircle −29%, SkeletonText −28%, TypingDots 7.5 → 5.2 KB (−31%), LoadingRegion 14.5 → 11.7 KB (−19%; step 3 moved about 1.9 KB into it, and its budget went back up to that size plus 15%). Left: TextLoader (−5%), ChartLoader and TableLoader (unchanged).
   - CI's Bun (1.4.3, pinned) measures the budgets; an older local Bun can read 100–900 B differently.
+  - Stopped (owner, 2026-11-20). TextLoader, ChartLoader and TableLoader stay near their sizes before step 1: TextLoader is a full loading controller (about 11 KB of its 43 KB minified), and chart and table are mostly the canvas renderer. Loading TextLoader's default reveal lazily would save about 1.2 KB (−8%) and was not taken. Moving the server-only stylesheets out of the browser bundles saved 50–130 B and grew the React bundles, so it was dropped.
 - **ViewTransition compatibility.** React 19.3 made `<ViewTransition>` stable; document and test the handoff alongside it.
 - **README, changelog and a publish dry run**, a Next.js example project, and React fast tests (already in `test:e2e`).
 - **Agent-ready docs:** `/llms.txt`, per-page Markdown and "Copy page".

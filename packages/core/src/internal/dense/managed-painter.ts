@@ -18,7 +18,9 @@ interface Context {
   release: Set<() => void>;
 }
 const ns = 'http://www.w3.org/2000/svg';
-const bufferBytes = 4096 * 5 * 8;
+/** Each mark is x, y, radius, opacity, tone and angle. */
+const stride = 6;
+const bufferBytes = 4096 * stride * 8;
 const factoryKey = Symbol.for('dotquilt.painter.v1');
 // Rich hosts opt into this private backend; basic consumers do not import Canvas.
 export function installDensePainter(host: HTMLElement): void {
@@ -217,7 +219,7 @@ function createDensePainter(
     )
       return false;
     try {
-      values ??= new Float64Array(4096 * 5);
+      values ??= new Float64Array(4096 * stride);
       drawing ??= canvas.getContext('2d');
       if (!drawing) return false;
       if (canvas.width !== w || canvas.height !== h) {
@@ -240,17 +242,18 @@ function createDensePainter(
     fallback
       ? capturePainter(fallback, limit)
       : Object.freeze(
-          Array.from({ length: Math.min(length, limit) }, (_, i) =>
-            Object.freeze({
-              x: (values?.[i * 5] ?? 0) + 0,
-              y: (values?.[i * 5 + 1] ?? 0) + 0,
-              size: values?.[i * 5 + 2] ?? 0,
-              opacity: values?.[i * 5 + 3] ?? 0,
-              tone: values?.[i * 5 + 4]
-                ? ('accent' as const)
-                : ('base' as const),
-            }),
-          ),
+          Array.from({ length: Math.min(length, limit) }, (_, i) => {
+            const at = i * stride,
+              angle = values?.[at + 5] ?? 0;
+            return Object.freeze({
+              x: (values?.[at] ?? 0) + 0,
+              y: (values?.[at + 1] ?? 0) + 0,
+              size: values?.[at + 2] ?? 0,
+              opacity: values?.[at + 3] ?? 0,
+              tone: values?.[at + 4] ? ('accent' as const) : ('base' as const),
+              ...(angle ? { angle } : {}),
+            });
+          }),
         );
   context.sources.add(capture);
   return {
@@ -331,6 +334,7 @@ function createDensePainter(
           size: number,
           opacity: number,
           accent: boolean,
+          angle: number,
         ) => {
           if (++count > 4096) {
             report('dot-limit');
@@ -341,26 +345,27 @@ function createDensePainter(
             if (!resources.set('dots', length + 1)) return;
             slot = length++;
           }
-          const at = slot * 5,
+          const at = slot * stride,
             r = Math.max(0, Math.min(32, size));
           data[at] = x;
           data[at + 1] = y;
           data[at + 2] = r;
           data[at + 3] = Math.max(0, Math.min(1, opacity));
           data[at + 4] = accent ? 1 : 0;
+          data[at + 5] = angle;
         };
         produce((value) => {
           if (!active || disposed) return;
-          const { x, y, size, opacity, tone } = value;
-          if (![x, y, size, opacity].every(Number.isFinite)) {
+          const { x, y, size, opacity, tone, angle = 0 } = value;
+          if (![x, y, size, opacity, angle].every(Number.isFinite)) {
             report('invalid-dot');
             return;
           }
-          store(x, y, size, opacity, tone === 'accent');
+          store(x, y, size, opacity, tone === 'accent', angle);
           // The pointer lights the marks around it, as a skeleton's lift does.
           const halo = position ? liftAt(x - position.x, y - position.y) : 0;
           if (halo > 0.02 && tone !== 'accent')
-            store(x, y, size, halo * Math.min(1, opacity * 3), true);
+            store(x, y, size, halo * Math.min(1, opacity * 3), true, angle);
         });
       } catch (caught) {
         failed = true;
@@ -380,13 +385,15 @@ function createDensePainter(
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, bitmap.width, bitmap.height);
         ctx.setTransform(ratio, 0, 0, ratio, padding * ratio, padding * ratio);
+        const page = ctx.getTransform();
         let tone = -1;
         const mark = markOf(host);
         for (let i = 0; i < length; i++) {
-          const at = i * 5,
+          const at = i * stride,
             r = data[at + 2] ?? 0,
             opacity = data[at + 3] ?? 0,
-            nextTone = data[at + 4] ?? 0;
+            nextTone = data[at + 4] ?? 0,
+            angle = data[at + 5] ?? 0;
           if (tone !== nextTone) {
             tone = nextTone;
             ctx.fillStyle = tone ? accentColor : color;
@@ -399,13 +406,28 @@ function createDensePainter(
           if (mark === 'dot') ctx.arc(x, y, r, 0, Math.PI * 2);
           else {
             const box = markBox(mark, r);
-            ctx.roundRect(
-              x - box.width / 2,
-              y - box.height / 2,
-              box.width,
-              box.height,
-              box.radius,
-            );
+            if (!angle)
+              ctx.roundRect(
+                x - box.width / 2,
+                y - box.height / 2,
+                box.width,
+                box.height,
+                box.radius,
+              );
+            else {
+              // A turned square or dash is drawn about its centre, then the
+              // page's transform comes back (the path keeps the turn).
+              ctx.translate(x, y);
+              ctx.rotate(angle);
+              ctx.roundRect(
+                -box.width / 2,
+                -box.height / 2,
+                box.width,
+                box.height,
+                box.radius,
+              );
+              ctx.setTransform(page);
+            }
           }
           ctx.fill();
         }

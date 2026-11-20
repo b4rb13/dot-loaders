@@ -1,5 +1,6 @@
 import type { AnimationSurface, Dot } from '../animations.js';
 import type { ChartInput } from '../chart.js';
+import { type Appearance, chartAppearance } from './chart-appearance.js';
 import { chartBinding, chartFactory } from './chart-factory.js';
 import { chartPainter } from './chart-field.js';
 import { mix, smooth } from './chart-math.js';
@@ -25,6 +26,8 @@ interface Destination {
   readonly y: number;
   readonly size: number;
   readonly opacity: number;
+  /** Dashes that land on the line take its direction there. */
+  readonly angle?: number;
 }
 const morphDefinition = /* @__PURE__ */ Object.freeze({
   id: 'dotquilt/chart/morph-wipe',
@@ -42,7 +45,10 @@ const morphDefinition = /* @__PURE__ */ Object.freeze({
   prepare(surface: AnimationSurface<'chart'>) {
     const input = surface.input,
       items = geometry(input),
-      columns = input.kind === 'line' ? new Map<number, Dot>() : undefined;
+      columns = input.kind === 'line' ? new Map<number, Dot>() : undefined,
+      dashes =
+        (Reflect.get(surface, chartAppearance) as Appearance | undefined)
+          ?.mark === 'dash';
     if (columns)
       for (const d of surface.source) {
         const key = Math.round(d.x),
@@ -55,7 +61,8 @@ const morphDefinition = /* @__PURE__ */ Object.freeze({
         let x = d.x,
           y = d.y,
           size = d.size,
-          opacity = d.opacity;
+          opacity = d.opacity,
+          angle = 0;
         if (input.kind === 'line' && items.length) {
           // Sample the supplied path in its original order, including descending
           // or vertical segments. No sorting or invented data values.
@@ -72,6 +79,7 @@ const morphDefinition = /* @__PURE__ */ Object.freeze({
             if (Math.abs(y - target) < 5.5) {
               y = target;
               opacity = 0.95;
+              if (dashes) angle = Math.atan2(b.y - a.y, b.x - a.x);
             } else if (y > target && y < input.baseline) {
               opacity =
                 0.05 +
@@ -108,7 +116,13 @@ const morphDefinition = /* @__PURE__ */ Object.freeze({
             opacity = i < items.length ? 0.85 : 0;
           }
         }
-        return Object.freeze({ x, y, size, opacity });
+        return Object.freeze({
+          x,
+          y,
+          size,
+          opacity,
+          ...(angle ? { angle } : {}),
+        });
       }),
     );
   },
@@ -148,12 +162,15 @@ const morphDefinition = /* @__PURE__ */ Object.freeze({
               : clamp(
                   (x - front * surface.width + options.edge) / options.edge,
                 );
+      // Dashes turn from the idle's slope to the line's.
+      const angle = mix(d.angle ?? 0, end.angle ?? 0, q);
       dot({
         x,
         y: mix(d.y, end.y, q),
         size: mix(d.size, end.size, q),
         opacity: mix(d.opacity, end.opacity, q) * leave,
         tone: q > 0.3 ? 'accent' : d.tone,
+        ...(angle ? { angle } : {}),
       });
     }
   },

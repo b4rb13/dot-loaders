@@ -9,4 +9,6 @@ export interface Appearance {
   readonly rows: number;
   /** Radius of each painter command. */
   readonly scale: number;
+  /** The loader's mark; with dashes, the built-in recipes follow the line. */
+  readonly mark?: import('../types.js').Mark | undefined;
 }

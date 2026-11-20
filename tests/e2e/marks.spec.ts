@@ -133,6 +133,148 @@ test('a custom idle draws circles, squares or dashes with the host mark', async 
   ]);
 });
 
+// A mark's `angle` turns squares and dashes about their centre; dots ignore it.
+test('a custom idle turns a dash by its angle', async ({ page }) => {
+  await open(page, 'component=skeleton-block&mark=dash');
+  const box = await page.evaluate(async () => {
+    const { defineAnimation } = Reflect.get(window, 'e2eAnimations');
+    const one = {
+      x: 40,
+      y: 40,
+      size: 2.2,
+      opacity: 1,
+      tone: 'base',
+      angle: Math.PI / 2,
+    };
+    const upright = defineAnimation({
+      contractVersion: 1,
+      id: 'e2e/upright',
+      family: 'skeleton',
+      phase: 'idle',
+      options: { parse: () => ({}) },
+      frame: ({ dot }: { dot: (value: object) => void }) => dot(one),
+      still: ({ dot }: { dot: (value: object) => void }) => dot(one),
+    });
+    const host = window.e2e.decoration as HTMLElement & {
+      animations: unknown;
+    };
+    host.animations = { idle: upright() };
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve)),
+    );
+    const r = host.shadowRoot
+      ?.querySelector('[data-dotquilt-painter] > rect')
+      ?.getBoundingClientRect();
+    return r && [r.width, r.height].map((v) => Math.round(v * 10) / 10);
+  });
+  // Upright: 3.4 px wide and 9.4 px tall.
+  expect(box).toEqual([3.4, 9.4]);
+});
+
+// The chart's Canvas draws each dash turned: ink lies along its turned axis,
+// and none where a level dash's end would be.
+test("dash: the chart's Canvas draws its dashes turned", async ({ page }) => {
+  await open(page, 'component=chart-loader&mark=dash');
+  const ink = await page.evaluate(async () => {
+    const host = window.e2e.decoration;
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve)),
+    );
+    const dots = Reflect.get(
+      host,
+      Symbol.for('dotquilt.painter.v1'),
+    ).capture() as {
+      x: number;
+      y: number;
+      opacity: number;
+      tone: string;
+      angle?: number;
+    }[];
+    const canvas = host.shadowRoot?.querySelector('canvas');
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) return undefined;
+    const steepest = dots
+      .filter((dot) => dot.tone === 'base' && dot.opacity > 0.3)
+      .reduce((a, b) =>
+        Math.abs(b.angle ?? 0) > Math.abs(a.angle ?? 0) ? b : a,
+      );
+    const angle = steepest.angle ?? 0;
+    const box = canvas.getBoundingClientRect(),
+      origin = host.getBoundingClientRect(),
+      scale = canvas.width / box.width;
+    const alpha = (dx: number, dy: number) =>
+      context.getImageData(
+        Math.round((origin.left + steepest.x + dx - box.left) * scale),
+        Math.round((origin.top + steepest.y + dy - box.top) * scale),
+        1,
+        1,
+      ).data[3] ?? 0;
+    return {
+      angle,
+      along: alpha(4 * Math.cos(angle), 4 * Math.sin(angle)),
+      level: alpha(4.2, 0),
+    };
+  });
+  // Steeper than about 24 degrees, a level dash's end lies outside it.
+  expect(Math.abs(ink?.angle ?? 0)).toBeGreaterThan(0.45);
+  expect(ink?.along).toBeGreaterThan(0);
+  expect(ink?.level).toBe(0);
+});
+
+// design/SPEC.md: a dash "on charts follows the line". Paused, the chart
+// draws with SVG, so each mark's turn is readable from the page.
+for (const mark of ['dash', 'square'] as const)
+  test(`${mark}: a chart's ${mark === 'dash' ? 'dashes follow its line' : 'squares stay level'}`, async ({
+    page,
+  }) => {
+    await open(page, `component=chart-loader&mark=${mark}&motion=paused`);
+    const marks = await page.evaluate(() =>
+      [
+        ...(window.e2e.decoration.shadowRoot?.querySelectorAll(
+          '[data-dotquilt-painter] > rect',
+        ) ?? []),
+      ].map((rect) => ({
+        x:
+          +(rect.getAttribute('x') ?? 0) +
+          +(rect.getAttribute('width') ?? 0) / 2,
+        y:
+          +(rect.getAttribute('y') ?? 0) +
+          +(rect.getAttribute('height') ?? 0) / 2,
+        opacity: +(rect.getAttribute('opacity') ?? 0),
+        angle: +(
+          /rotate\(([-\d.e]+)/.exec(
+            rect.getAttribute('transform') ?? '',
+          )?.[1] ?? 0
+        ),
+      })),
+    );
+    expect(marks.length).toBeGreaterThan(100);
+    const turned = marks.filter((m) => Math.abs(m.angle) > 1);
+    if (mark === 'square') {
+      expect(turned).toEqual([]);
+      return;
+    }
+    // The line is the brightest mark of each column; where it climbs or
+    // falls, its dash turns the same way (SVG angles are clockwise).
+    const top = new Map<number, (typeof marks)[number]>();
+    for (const m of marks)
+      if (m.opacity > (top.get(m.x)?.opacity ?? 0)) top.set(m.x, m);
+    const columns = [...top.keys()].sort((a, b) => a - b);
+    let agree = 0,
+      total = 0;
+    for (let i = 2; i < columns.length - 2; i++) {
+      const fall =
+        (top.get(columns[i + 2] as number)?.y ?? 0) -
+        (top.get(columns[i - 2] as number)?.y ?? 0);
+      const angle = top.get(columns[i] as number)?.angle ?? 0;
+      if (Math.abs(fall) < 9 || Math.abs(angle) < 1) continue;
+      total++;
+      if (Math.sign(fall) === Math.sign(angle)) agree++;
+    }
+    expect(total).toBeGreaterThan(3);
+    expect(agree / total).toBeGreaterThan(0.8);
+  });
+
 // Chart and table fields draw on a Canvas at the mark's own pitch: a dash is
 // wider than its pitch down, so rows sit closer than columns.
 for (const mark of ['dot', 'dash', 'square'] as const)
