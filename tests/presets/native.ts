@@ -1,4 +1,4 @@
-import * as core from '@dotquilt-internal/core';
+import * as core from 'dotquilt';
 import {
   authoredHandoff,
   authoredPreset,

@@ -1,4 +1,4 @@
-import * as components from '@dotquilt-internal/react';
+import * as components from '@dotquilt/react';
 import {
   type ComponentType,
   createElement as h,

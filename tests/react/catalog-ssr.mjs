@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { PassThrough } from 'node:stream';
 import { gzipSync } from 'node:zlib';
-import { renderStatic } from '@dotquilt-internal/core/server';
 import {
   ChartLoader,
   LoadingRegion,
@@ -13,7 +12,8 @@ import {
   TableLoader,
   TextLoader,
   TypingDots,
-} from '@dotquilt-internal/react';
+} from '@dotquilt/react';
+import { renderStatic } from 'dotquilt/server';
 
 const root = {
   SkeletonBlock,
@@ -108,7 +108,7 @@ const entries = [
   ],
 ];
 for (const [name, family] of entries) {
-  const selected = await import(`@dotquilt-internal/react/${family}`);
+  const selected = await import(`@dotquilt/react/${family}`);
   assert.equal(root[name], selected[name]);
 }
 const byte = (s) => Buffer.byteLength(s),
@@ -250,9 +250,7 @@ const assets = [
   'table',
   'region',
 ].map((family) => {
-  const css = readFileSync(
-    `node_modules/@dotquilt-internal/react/dist/${family}.css`,
-  );
+  const css = readFileSync(`node_modules/@dotquilt/react/dist/${family}.css`);
   return { family, bytes: css.length, gzip: gzip(css) };
 });
 // Gzip bytes the loaders add to a 24-surface page, including every external

@@ -1,7 +1,4 @@
-import {
-  defineAnimation,
-  definePreset,
-} from '@dotquilt-internal/core/animations';
+import { defineAnimation, definePreset } from 'dotquilt/animations';
 import {
   bars,
   cycle,
@@ -10,7 +7,7 @@ import {
   scan,
   scatter,
   terrain,
-} from '@dotquilt-internal/core/animations/chart';
+} from 'dotquilt/animations/chart';
 
 const recipes = { ridge, scan, terrain, bars, scatter, cycle, morphWipe };
 
@@ -18,11 +15,8 @@ import {
   type ChartInput,
   type ChartLoader,
   registerChartLoader,
-} from '@dotquilt-internal/core/chart';
-import {
-  type LoadingRegion,
-  registerLoadingRegion,
-} from '@dotquilt-internal/core/region';
+} from 'dotquilt/chart';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
 
 const chart = document.getElementById('chart') as ChartLoader,
   region = document.getElementById('chart-region') as LoadingRegion;
@@ -210,8 +204,7 @@ Object.assign(window, {
     customFrames: () => customFrames,
     broken: () => (chart.animations = { handoff: broken() }),
     frozen: () => {
-      const s =
-        captured as import('@dotquilt-internal/core').AnimationSurface<'chart'>;
+      const s = captured as import('dotquilt').AnimationSurface<'chart'>;
       return (
         Object.isFrozen(s) &&
         Object.isFrozen(s.input) &&

@@ -10,12 +10,12 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 <Tabs syncKey="pkg">
   <TabItem label="npm">
     ```sh
-    npm install @dotquilt-internal/core
+    npm install dotquilt
     ```
   </TabItem>
   <TabItem label="bun">
     ```sh
-    bun add @dotquilt-internal/core
+    bun add dotquilt
     ```
   </TabItem>
 </Tabs>
@@ -23,7 +23,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 For React, add the adapter too:
 
 ```sh
-npm install @dotquilt-internal/react
+npm install @dotquilt/react
 ```
 
 ## Register the components
@@ -33,8 +33,8 @@ Each component has its own entry point, so you only ship what you use. Register 
 <Tabs syncKey="framework">
   <TabItem label="Native">
     ```ts
-    import { registerLoadingRegion } from '@dotquilt-internal/core/region';
-    import { registerSkeletonText } from '@dotquilt-internal/core/skeleton';
+    import { registerLoadingRegion } from 'dotquilt/region';
+    import { registerSkeletonText } from 'dotquilt/skeleton';
 
     registerLoadingRegion();
     registerSkeletonText();
@@ -44,12 +44,12 @@ Each component has its own entry point, so you only ship what you use. Register 
     The React components register themselves. Import them from the adapter:
 
     ```tsx
-    import { LoadingRegion, SkeletonText } from '@dotquilt-internal/react';
+    import { LoadingRegion, SkeletonText } from '@dotquilt/react';
     ```
   </TabItem>
 </Tabs>
 
-To register every component at once, call `registerAll()` from `@dotquilt-internal/core/register-all`.
+To register every component at once, call `registerAll()` from `dotquilt/register-all`.
 
 `LoadingRegion` loads its reveal animation on its own, the first time a region shows its placeholder, so it doesn't weigh on the first page load. Bundlers such as Vite and webpack split it into its own file. If the data arrives before that file has loaded, that one handover uses the simpler dissolve.
 

@@ -1,8 +1,5 @@
-import {
-  defineAnimation,
-  definePreset,
-} from '@dotquilt-internal/core/animations';
-import type { SkeletonBlock } from '@dotquilt-internal/core/skeleton';
+import { defineAnimation, definePreset } from 'dotquilt/animations';
+import type { SkeletonBlock } from 'dotquilt/skeleton';
 
 /**
  * An idle for skeletons: a slow tide of brighter marks rolling across each

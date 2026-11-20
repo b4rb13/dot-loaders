@@ -1,6 +1,6 @@
-import type { ChartLoader } from '@dotquilt-internal/core/chart';
-import type { LoadingRegion } from '@dotquilt-internal/core/region';
 import { expect, test } from '@playwright/test';
+import type { ChartLoader } from 'dotquilt/chart';
+import type { LoadingRegion } from 'dotquilt/region';
 import { capture } from '../capture';
 import { expectPaint, paintCount, readPaint } from '../paint-output';
 

@@ -4,7 +4,7 @@ import type {
   Mark,
   Motion,
   StylePolicy,
-} from '@dotquilt-internal/core';
+} from 'dotquilt';
 import type { CSSProperties, HTMLAttributes } from 'react';
 export interface DotquiltStyle extends CSSProperties {
   '--dotquilt-color'?: string | undefined;
@@ -39,4 +39,4 @@ export type {
   Motion,
   StylePolicy,
   Timing,
-} from '@dotquilt-internal/core';
+} from 'dotquilt';

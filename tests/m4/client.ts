@@ -1,15 +1,15 @@
-import { dissolve } from '@dotquilt-internal/core/animations/skeleton';
-import type { LoadingRegion } from '@dotquilt-internal/core/region';
-import { registerLoadingRegion } from '@dotquilt-internal/core/region';
-import type { SkeletonText } from '@dotquilt-internal/core/skeleton';
+import { dissolve } from 'dotquilt/animations/skeleton';
+import type { LoadingRegion } from 'dotquilt/region';
+import { registerLoadingRegion } from 'dotquilt/region';
+import type { SkeletonText } from 'dotquilt/skeleton';
 import {
   registerSkeletonBlock,
   registerSkeletonCircle,
   registerSkeletonLine,
   registerSkeletonText,
-} from '@dotquilt-internal/core/skeleton';
-import type { TypingDots } from '@dotquilt-internal/core/typing';
-import { registerTypingDots } from '@dotquilt-internal/core/typing';
+} from 'dotquilt/skeleton';
+import type { TypingDots } from 'dotquilt/typing';
+import { registerTypingDots } from 'dotquilt/typing';
 
 const mode = new URL(location.href).searchParams.get('mode');
 for (const host of document.querySelectorAll<HTMLElement>('[data-host]')) {

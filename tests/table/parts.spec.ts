@@ -79,9 +79,7 @@ test('table content-box alignment, intrinsic row height and pointer coordinates 
   });
   await page
     .locator('#table')
-    .evaluate((e) =>
-      (e as import('@dotquilt-internal/core/table').TableLoader).refresh(),
-    );
+    .evaluate((e) => (e as import('dotquilt/table').TableLoader).refresh());
   const host = await page.locator('#table').boundingBox(),
     field = await page
       .locator('#table svg[data-dotquilt-painter]')
@@ -134,7 +132,7 @@ test('standalone decoration never samples geometry; adoption releases the old do
     await page.evaluate(() => Reflect.get(window, 'standaloneCalls')),
   ).toBe(0);
   const state = await page.locator('#standalone-table').evaluate((element) => {
-    const t = element as import('@dotquilt-internal/core/table').TableLoader,
+    const t = element as import('dotquilt/table').TableLoader,
       started = t.activity.started,
       doc = document.implementation.createHTMLDocument('adopted');
     doc.body.append(t);

@@ -6,13 +6,9 @@ import {
   scan,
   scatter,
   terrain,
-} from '@dotquilt-internal/core/animations/chart';
-import { dissolve, pulse } from '@dotquilt-internal/core/animations/skeleton';
-import {
-  rows,
-  tableShimmer,
-  typeOn,
-} from '@dotquilt-internal/core/animations/table';
+} from 'dotquilt/animations/chart';
+import { dissolve, pulse } from 'dotquilt/animations/skeleton';
+import { rows, tableShimmer, typeOn } from 'dotquilt/animations/table';
 import {
   fade,
   labelPulse,
@@ -21,7 +17,7 @@ import {
   scramble,
   scrambleCharacters,
   scrambleWords,
-} from '@dotquilt-internal/core/animations/text';
+} from 'dotquilt/animations/text';
 
 // Local bindings are immutable data. Assign a family's bindings to `animations`;
 // use `preset` for shared defaults. The owning region controls the total handoff.

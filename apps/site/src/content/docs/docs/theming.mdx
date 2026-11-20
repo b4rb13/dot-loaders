@@ -38,7 +38,7 @@ The default colours follow the page's `color-scheme`. If your dark theme is a cl
 ChartLoader and TableLoader draw on a canvas and read their colours once. When you switch themes with a class, tell them to read again:
 
 ```ts
-import { refreshStyles } from '@dotquilt-internal/core';
+import { refreshStyles } from 'dotquilt';
 
 document.documentElement.classList.toggle('theme-dark');
 refreshStyles(document);

@@ -1,6 +1,6 @@
 // Serves the API examples against the workspace build (packages/*/dist).
 import { resolve, sep } from 'node:path';
-import { renderStatic } from '@dotquilt-internal/core/server';
+import { renderStatic } from 'dotquilt/server';
 
 const root = resolve(import.meta.dir, '../..');
 const core = resolve(root, 'packages/core/dist');

@@ -1,8 +1,5 @@
-import { refreshStyles } from '@dotquilt-internal/core';
-import {
-  defineAnimation,
-  definePreset,
-} from '@dotquilt-internal/core/animations';
+import { refreshStyles } from 'dotquilt';
+import { defineAnimation, definePreset } from 'dotquilt/animations';
 import {
   fade,
   labelPulse,
@@ -11,12 +8,9 @@ import {
   scramble,
   scrambleCharacters,
   scrambleWords,
-} from '@dotquilt-internal/core/animations/text';
-import { registerLoadingRegion } from '@dotquilt-internal/core/region';
-import {
-  registerTextLoader,
-  type TextLoader,
-} from '@dotquilt-internal/core/text';
+} from 'dotquilt/animations/text';
+import { registerLoadingRegion } from 'dotquilt/region';
+import { registerTextLoader, type TextLoader } from 'dotquilt/text';
 
 const host = document.getElementById('text') as TextLoader;
 const mode = new URL(location.href).searchParams.get('mode');
@@ -98,10 +92,7 @@ const broken = defineAnimation({
   },
 });
 let captured:
-  | import('@dotquilt-internal/core/animations').HandoffContext<
-      'text',
-      undefined
-    >
+  | import('dotquilt/animations').HandoffContext<'text', undefined>
   | undefined;
 let frozen = false;
 let interrupt = false;

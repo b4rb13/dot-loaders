@@ -1,19 +1,16 @@
-import type {
-  LoadingRegion as NativeRegion,
-  SkeletonBlock as NativeSkeleton,
-} from '@dotquilt-internal/core';
 import {
   type DotquiltStyle,
   type HandoffDetail,
   LoadingRegion,
   SkeletonBlock,
-} from '@dotquilt-internal/react';
-import { LoadingRegion as FamilyRegion } from '@dotquilt-internal/react/region';
-import {
-  reactRegionStyles,
-  reactSkeletonStyles,
-} from '@dotquilt-internal/react/server';
-import { SkeletonBlock as FamilySkeleton } from '@dotquilt-internal/react/skeleton';
+} from '@dotquilt/react';
+import { LoadingRegion as FamilyRegion } from '@dotquilt/react/region';
+import { reactRegionStyles, reactSkeletonStyles } from '@dotquilt/react/server';
+import { SkeletonBlock as FamilySkeleton } from '@dotquilt/react/skeleton';
+import type {
+  LoadingRegion as NativeRegion,
+  SkeletonBlock as NativeSkeleton,
+} from 'dotquilt';
 import { createRef } from 'react';
 
 const region = createRef<NativeRegion>();
@@ -60,11 +57,8 @@ void [
 ];
 
 // Animation bindings and explicit DOM targets use the same native public types.
-import {
-  defineAnimation,
-  definePreset,
-} from '@dotquilt-internal/core/animations';
-import { dissolve, pulse } from '@dotquilt-internal/core/animations/skeleton';
+import { defineAnimation, definePreset } from 'dotquilt/animations';
+import { dissolve, pulse } from 'dotquilt/animations/skeleton';
 
 declare const target: HTMLDivElement;
 const handoff = defineAnimation({
@@ -112,16 +106,16 @@ const wrongTarget = (
 );
 void [customized, wrongFamily, wrongPhase, wrongTarget];
 
-import type {
-  SkeletonText as NativeSkeletonText,
-  TypingDots as NativeTypingDots,
-} from '@dotquilt-internal/core';
 import {
   SkeletonCircle,
   SkeletonLine,
   SkeletonText,
-} from '@dotquilt-internal/react/skeleton';
-import { TypingDots } from '@dotquilt-internal/react/typing';
+} from '@dotquilt/react/skeleton';
+import { TypingDots } from '@dotquilt/react/typing';
+import type {
+  SkeletonText as NativeSkeletonText,
+  TypingDots as NativeTypingDots,
+} from 'dotquilt';
 
 const paragraphRef = createRef<NativeSkeletonText>();
 const typingRef = createRef<NativeTypingDots>();
@@ -141,9 +135,9 @@ const wrongTyping = <TypingDots pointerResponse="lift" />;
 const wrongWidths = <SkeletonText widths={['50%']} />;
 void [catalog, wrongLine, wrongTyping, wrongWidths];
 
-import { lock, scramble } from '@dotquilt-internal/core/animations/text';
-import type { TextLoader as NativeTextLoader } from '@dotquilt-internal/core/text';
-import { TextLoader } from '@dotquilt-internal/react/text';
+import { TextLoader } from '@dotquilt/react/text';
+import { lock, scramble } from 'dotquilt/animations/text';
+import type { TextLoader as NativeTextLoader } from 'dotquilt/text';
 
 const inlineRef = createRef<NativeTextLoader>();
 const inline = (
@@ -163,7 +157,7 @@ const inline = (
     {0}
   </TextLoader>
 );
-const richInline: import('@dotquilt-internal/react/text').TextLoaderProps = {
+const richInline: import('@dotquilt/react/text').TextLoaderProps = {
   // @ts-expect-error TextLoader children are plain text; rich composition uses LoadingRegion
   children: <button type="button">Action</button>,
 };
@@ -171,12 +165,12 @@ const richInline: import('@dotquilt-internal/react/text').TextLoaderProps = {
 lock({ reelMs: 'fast' });
 void [inline, richInline];
 
+import { ChartLoader as ChartComponent } from '@dotquilt/react/chart';
 import {
   ridge as chartRidge,
   morphWipe as chartWipe,
-} from '@dotquilt-internal/core/animations/chart';
-import type { ChartLoader as NativeChart } from '@dotquilt-internal/core/chart';
-import { ChartLoader as ChartComponent } from '@dotquilt-internal/react/chart';
+} from 'dotquilt/animations/chart';
+import type { ChartLoader as NativeChart } from 'dotquilt/chart';
 
 const chartRef = createRef<NativeChart>();
 const chartExample = (
@@ -198,11 +192,8 @@ void chartChildren;
 const chartWrongVariant = <ChartComponent variant="pie" />;
 void chartWrongVariant;
 
-import {
-  rows as tableRows,
-  typeOn,
-} from '@dotquilt-internal/core/animations/table';
-import { TableLoader as Table } from '@dotquilt-internal/react/table';
+import { TableLoader as Table } from '@dotquilt/react/table';
+import { rows as tableRows, typeOn } from 'dotquilt/animations/table';
 
 const tableExample = (
   <Table
@@ -236,10 +227,7 @@ const summaryExample = (
   </Summary>
 );
 void summaryExample;
-declare const regionIdle: import('@dotquilt-internal/core').AnimationBinding<
-  'region',
-  'idle'
->;
+declare const regionIdle: import('dotquilt').AnimationBinding<'region', 'idle'>;
 // @ts-expect-error region idle is not a supported component prop
 const invalidRegionIdle = <LoadingRegion animations={{ idle: regionIdle }} />;
 void invalidRegionIdle;

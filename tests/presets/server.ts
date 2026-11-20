@@ -1,6 +1,6 @@
 // Serves the preset fixture against the workspace build (packages/*/dist).
 import { resolve } from 'node:path';
-import { renderStatic } from '@dotquilt-internal/core/server';
+import { renderStatic } from 'dotquilt/server';
 import { createElement as h } from 'react';
 import { renderToString } from 'react-dom/server';
 import { PresetFixture } from './react.js';

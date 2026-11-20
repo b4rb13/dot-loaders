@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { PassThrough } from 'node:stream';
-import { LoadingRegion, SkeletonBlock } from '@dotquilt-internal/react';
+import { LoadingRegion, SkeletonBlock } from '@dotquilt/react';
 import { createElement as h, Suspense, use } from 'react';
 import { renderToPipeableStream } from 'react-dom/server';
 

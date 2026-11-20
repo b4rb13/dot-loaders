@@ -8,7 +8,7 @@ import {
   registerTableLoader,
   registerTextLoader,
   registerTypingDots,
-} from '@dotquilt-internal/core';
+} from 'dotquilt';
 
 registerSkeletonBlock();
 registerLoadingRegion();

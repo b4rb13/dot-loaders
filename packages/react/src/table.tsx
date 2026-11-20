@@ -1,5 +1,5 @@
 'use client';
-import type { Animations } from '@dotquilt-internal/core';
+import type { Animations } from 'dotquilt';
 import {
   type TableLoader as NativeTableLoader,
   registerTableLoader,
@@ -7,7 +7,7 @@ import {
   type TableColumn,
   type TablePreset,
   type TableTargetProvider,
-} from '@dotquilt-internal/core/table';
+} from 'dotquilt/table';
 import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
 import { reactTableStyles } from './server.js';

@@ -7,8 +7,8 @@
       "devDependencies": {
         "@biomejs/biome": "2.5.15",
         "@changesets/cli": "3.0.3",
-        "@dotquilt-internal/core": "workspace:*",
-        "@dotquilt-internal/react": "workspace:*",
+        "dotquilt": "workspace:*",
+        "@dotquilt/react": "workspace:*",
         "@playwright/test": "1.64.1",
         "@types/bun": "1.4.3",
         "@types/react": "19.3.0",
@@ -21,23 +21,23 @@
       },
     },
     "apps/site": {
-      "name": "@dotquilt-internal/site",
+      "name": "dotquilt-site",
       "dependencies": {
         "@astrojs/starlight": "0.43.1",
-        "@dotquilt-internal/core": "workspace:*",
+        "dotquilt": "workspace:*",
         "astro": "7.4.12",
         "satteri": "0.10.5",
       },
     },
     "packages/core": {
-      "name": "@dotquilt-internal/core",
+      "name": "dotquilt",
       "version": "0.0.0",
     },
     "packages/react": {
-      "name": "@dotquilt-internal/react",
+      "name": "@dotquilt/react",
       "version": "0.0.0",
       "dependencies": {
-        "@dotquilt-internal/core": "0.0.0",
+        "dotquilt": "0.0.0",
       },
       "peerDependencies": {
         "react": "^19.0.0",
@@ -174,11 +174,11 @@
 
     "@ctrl/tinycolor": ["@ctrl/tinycolor@4.3.1", "", {}, "sha512-miLzcPaPApfChfqxxDw7nsTA8hlU4M9GZnL3UVdaxgyRzewiYaI0lsmn72SOARHgVDlVSagTTh2zWt4OcxYmmg=="],
 
-    "@dotquilt-internal/core": ["@dotquilt-internal/core@workspace:packages/core"],
+    "dotquilt": ["dotquilt@workspace:packages/core"],
 
-    "@dotquilt-internal/react": ["@dotquilt-internal/react@workspace:packages/react"],
+    "@dotquilt/react": ["@dotquilt/react@workspace:packages/react"],
 
-    "@dotquilt-internal/site": ["@dotquilt-internal/site@workspace:apps/site"],
+    "dotquilt-site": ["dotquilt-site@workspace:apps/site"],
 
     "@emnapi/core": ["@emnapi/core@1.11.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.2", "tslib": "^2.4.0" } }, "sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ=="],
 

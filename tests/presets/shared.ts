@@ -1,7 +1,4 @@
-import {
-  defineAnimation,
-  definePreset,
-} from '@dotquilt-internal/core/animations';
+import { defineAnimation, definePreset } from 'dotquilt/animations';
 
 export const cases = [
   ['block', 'skeleton', 'skeleton-block', 'SkeletonBlock', 'skeleton'],

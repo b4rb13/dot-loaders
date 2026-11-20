@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
-import { renderStatic } from '@dotquilt-internal/core/server';
-import { TableLoader } from '@dotquilt-internal/react/table';
+import { TableLoader } from '@dotquilt/react/table';
+import { renderStatic } from 'dotquilt/server';
 import { createElement as h } from 'react';
 import { renderToString } from 'react-dom/server';
 

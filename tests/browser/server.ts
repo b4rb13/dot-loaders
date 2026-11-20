@@ -35,15 +35,15 @@ const productionBundles = new Map<string, Blob>();
 for (const [name, source] of [
   [
     'skeleton',
-    "import {registerSkeletonBlock} from '@dotquilt-internal/core/skeleton';registerSkeletonBlock();document.body.append(document.createElement('dotquilt-skeleton-block'));",
+    "import {registerSkeletonBlock} from 'dotquilt/skeleton';registerSkeletonBlock();document.body.append(document.createElement('dotquilt-skeleton-block'));",
   ],
   [
     'region',
-    "import {registerLoadingRegion} from '@dotquilt-internal/core/region';registerLoadingRegion();document.body.append(document.createElement('dotquilt-region'));",
+    "import {registerLoadingRegion} from 'dotquilt/region';registerLoadingRegion();document.body.append(document.createElement('dotquilt-region'));",
   ],
   [
     'chart',
-    "import {registerLoadingRegion} from '@dotquilt-internal/core/region';import {registerChartLoader} from '@dotquilt-internal/core/chart';registerLoadingRegion();registerChartLoader();for(const variant of ['line','bar','scatter']){const region=document.createElement('dotquilt-region');region.state='pending';const chart=document.createElement('dotquilt-chart-loader');chart.slot='placeholder';chart.variant=variant;chart.style.height='120px';const content=document.createElement('p');content.textContent=variant+' chart';region.append(chart,content);document.body.append(region);}",
+    "import {registerLoadingRegion} from 'dotquilt/region';import {registerChartLoader} from 'dotquilt/chart';registerLoadingRegion();registerChartLoader();for(const variant of ['line','bar','scatter']){const region=document.createElement('dotquilt-region');region.state='pending';const chart=document.createElement('dotquilt-chart-loader');chart.slot='placeholder';chart.variant=variant;chart.style.height='120px';const content=document.createElement('p');content.textContent=variant+' chart';region.append(chart,content);document.body.append(region);}",
   ],
 ] as const) {
   const path = `/production-${name}.js`;

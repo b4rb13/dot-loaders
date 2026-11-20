@@ -1,5 +1,5 @@
-import type { TargetProvider } from '@dotquilt-internal/core/chart';
-import type { TableTargetProvider } from '@dotquilt-internal/core/table';
+import type { TargetProvider } from 'dotquilt/chart';
+import type { TableTargetProvider } from 'dotquilt/table';
 
 // Coordinates are content-box CSS pixels; callers provide their actual chart geometry.
 export const sampleChart: TargetProvider = ({ width, height }) => ({

@@ -1,6 +1,6 @@
 // Shared by the docs examples and the live previews, so both draw the same.
-import type { Point } from '@dotquilt-internal/core/chart';
-import type { TableColumn } from '@dotquilt-internal/core/table';
+import type { Point } from 'dotquilt/chart';
+import type { TableColumn } from 'dotquilt/table';
 
 /** Monthly revenue, in thousands. */
 export const revenue: readonly number[] = [32, 41, 38, 52, 47, 61, 58, 72];

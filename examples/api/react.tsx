@@ -1,6 +1,6 @@
 'use client';
-import type { LoadingRegionProps } from '@dotquilt-internal/react';
-import { LoadingRegion, SkeletonText } from '@dotquilt-internal/react';
+import type { LoadingRegionProps } from '@dotquilt/react';
+import { LoadingRegion, SkeletonText } from '@dotquilt/react';
 
 /** One committed snapshot contains the app-owned state, outcome and settlement timing. */
 export function Summary({

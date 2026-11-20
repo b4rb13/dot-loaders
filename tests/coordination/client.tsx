@@ -1,5 +1,5 @@
-import * as core from '@dotquilt-internal/core';
-import * as adapter from '@dotquilt-internal/react';
+import * as adapter from '@dotquilt/react';
+import * as core from 'dotquilt';
 import { createElement as h, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 

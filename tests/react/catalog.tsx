@@ -1,11 +1,4 @@
 'use client';
-import type {
-  HandoffDetail,
-  LoadingState,
-  Motion,
-  StylePolicy,
-} from '@dotquilt-internal/core';
-import { definePreset } from '@dotquilt-internal/core/animations';
 import {
   ChartLoader,
   LoadingRegion,
@@ -16,7 +9,14 @@ import {
   TableLoader,
   TextLoader,
   TypingDots,
-} from '@dotquilt-internal/react';
+} from '@dotquilt/react';
+import type {
+  HandoffDetail,
+  LoadingState,
+  Motion,
+  StylePolicy,
+} from 'dotquilt';
+import { definePreset } from 'dotquilt/animations';
 import {
   createElement as h,
   type ReactNode,

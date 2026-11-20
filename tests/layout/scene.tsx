@@ -1,9 +1,5 @@
-import type {
-  LoadingState,
-  StylePolicy,
-  TableColumn,
-} from '@dotquilt-internal/core';
-import * as adapter from '@dotquilt-internal/react';
+import * as adapter from '@dotquilt/react';
+import type { LoadingState, StylePolicy, TableColumn } from 'dotquilt';
 import { createElement as h, useLayoutEffect } from 'react';
 
 export const profiles = {

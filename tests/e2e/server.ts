@@ -1,9 +1,9 @@
 // Serves the e2e fixture against the workspace build (packages/*/dist).
 // Run `bun run build` first; no packing or temp installs are involved.
 import { resolve } from 'node:path';
-import { renderStatic } from '@dotquilt-internal/core/server';
-import { LoadingRegion } from '@dotquilt-internal/react/region';
-import { SkeletonText } from '@dotquilt-internal/react/skeleton';
+import { LoadingRegion } from '@dotquilt/react/region';
+import { SkeletonText } from '@dotquilt/react/skeleton';
+import { renderStatic } from 'dotquilt/server';
 import { createElement as h } from 'react';
 import { renderToString } from 'react-dom/server';
 

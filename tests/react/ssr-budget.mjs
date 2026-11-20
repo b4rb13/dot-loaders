@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { performance } from 'node:perf_hooks';
 import { gzipSync } from 'node:zlib';
-import { LoadingRegion, SkeletonBlock } from '@dotquilt-internal/react';
+import { LoadingRegion, SkeletonBlock } from '@dotquilt/react';
 import { createElement as h } from 'react';
 import { renderToString } from 'react-dom/server';
 
@@ -91,14 +91,10 @@ for (const mode of ['inline', 'nonce', 'external']) {
       ? ['skeleton', 'region'].map((family) => ({
           path: `/dotquilt/${family}.css`,
           bytes: bytes(
-            readFileSync(
-              `node_modules/@dotquilt-internal/react/dist/${family}.css`,
-            ),
+            readFileSync(`node_modules/@dotquilt/react/dist/${family}.css`),
           ),
           gzip: gzip(
-            readFileSync(
-              `node_modules/@dotquilt-internal/react/dist/${family}.css`,
-            ),
+            readFileSync(`node_modules/@dotquilt/react/dist/${family}.css`),
           ),
         }))
       : [];

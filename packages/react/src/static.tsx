@@ -1,7 +1,4 @@
-import {
-  LoaderConfigurationError,
-  type StylePolicy,
-} from '@dotquilt-internal/core';
+import { LoaderConfigurationError, type StylePolicy } from 'dotquilt';
 import { useId, useRef, useSyncExternalStore, version } from 'react';
 export function initialPolicy(value: StylePolicy | undefined): StylePolicy {
   const policy = value ?? { mode: 'inline' };

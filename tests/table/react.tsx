@@ -1,7 +1,7 @@
-import type { LoadingRegion as NativeRegion } from '@dotquilt-internal/core/region';
-import type { TableLoader as NativeTable } from '@dotquilt-internal/core/table';
-import { LoadingRegion } from '@dotquilt-internal/react/region';
-import { TableLoader } from '@dotquilt-internal/react/table';
+import { LoadingRegion } from '@dotquilt/react/region';
+import { TableLoader } from '@dotquilt/react/table';
+import type { LoadingRegion as NativeRegion } from 'dotquilt/region';
+import type { TableLoader as NativeTable } from 'dotquilt/table';
 import {
   createElement as h,
   StrictMode,

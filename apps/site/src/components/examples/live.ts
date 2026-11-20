@@ -10,13 +10,9 @@ import {
   scan,
   scatter,
   terrain,
-} from '@dotquilt-internal/core/animations/chart';
-import { dissolve, pulse } from '@dotquilt-internal/core/animations/skeleton';
-import {
-  rows,
-  tableShimmer,
-  typeOn,
-} from '@dotquilt-internal/core/animations/table';
+} from 'dotquilt/animations/chart';
+import { dissolve, pulse } from 'dotquilt/animations/skeleton';
+import { rows, tableShimmer, typeOn } from 'dotquilt/animations/table';
 import {
   fade,
   labelPulse,
@@ -25,11 +21,11 @@ import {
   scramble,
   scrambleCharacters,
   scrambleWords,
-} from '@dotquilt-internal/core/animations/text';
-import type { ChartLoader } from '@dotquilt-internal/core/chart';
-import type { LoadingRegion } from '@dotquilt-internal/core/region';
-import type { TableColumn, TableLoader } from '@dotquilt-internal/core/table';
-import type { TextLoader } from '@dotquilt-internal/core/text';
+} from 'dotquilt/animations/text';
+import type { ChartLoader } from 'dotquilt/chart';
+import type { LoadingRegion } from 'dotquilt/region';
+import type { TableColumn, TableLoader } from 'dotquilt/table';
+import type { TextLoader } from 'dotquilt/text';
 import { linePoints, revenue } from '../../../../../examples/site/data';
 
 /** Every animation a recipe can name, by name, taking its options. */

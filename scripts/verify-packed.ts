@@ -65,7 +65,7 @@ await writeFile(
   JSON.stringify({
     private: true,
     type: 'module',
-    dependencies: { '@dotquilt-internal/core': `file:${tarball}` },
+    dependencies: { dotquilt: `file:${tarball}` },
   }),
 );
 await run(
@@ -85,7 +85,7 @@ await writeFile(
   await readFile(resolve(consumer, 'package.json')),
 );
 await run(['bun', 'install', '--ignore-scripts'], bunConsumer);
-const installed = resolve(consumer, 'node_modules/@dotquilt-internal/core');
+const installed = resolve(consumer, 'node_modules/dotquilt');
 const installedManifest = JSON.parse(
   await readFile(resolve(installed, 'package.json'), 'utf8'),
 );
@@ -97,7 +97,7 @@ if (
 for (const target of [consumer, bunConsumer]) {
   await writeFile(
     resolve(target, 'import-check.mjs'),
-    `for (const path of ['', '/server', '/animations', '/skeleton', '/region', '/register-all', '/animations/skeleton','/table','/animations/table']) await import('@dotquilt-internal/core'+path); for (const path of ['/internal/table-static','/internal/table-model','/dist/internal/table-model.js']) { let rejected=false; try {await import('@dotquilt-internal/core'+path)} catch {rejected=true} if(!rejected) throw Error('Private implementation path exported: '+path); }`,
+    `for (const path of ['', '/server', '/animations', '/skeleton', '/region', '/register-all', '/animations/skeleton','/table','/animations/table']) await import('dotquilt'+path); for (const path of ['/internal/table-static','/internal/table-model','/dist/internal/table-model.js']) { let rejected=false; try {await import('dotquilt'+path)} catch {rejected=true} if(!rejected) throw Error('Private implementation path exported: '+path); }`,
   );
   await run(['node', 'import-check.mjs'], target);
   await run(['bun', 'import-check.mjs'], target);
@@ -144,23 +144,23 @@ const sizes: Record<
 for (const [name, source, limit] of [
   [
     'skeleton',
-    "import {registerSkeletonBlock} from '@dotquilt-internal/core/skeleton';registerSkeletonBlock();document.body.append(document.createElement('dotquilt-skeleton-block'));",
+    "import {registerSkeletonBlock} from 'dotquilt/skeleton';registerSkeletonBlock();document.body.append(document.createElement('dotquilt-skeleton-block'));",
     skeletonClosureLimit,
   ],
   [
     'region',
-    "import {registerLoadingRegion} from '@dotquilt-internal/core/region';registerLoadingRegion();document.body.append(document.createElement('dotquilt-region'));",
+    "import {registerLoadingRegion} from 'dotquilt/region';registerLoadingRegion();document.body.append(document.createElement('dotquilt-region'));",
     regionClosureLimit,
   ],
-  ['server', "export * from '@dotquilt-internal/core/server';", 12288],
+  ['server', "export * from 'dotquilt/server';", 12288],
   [
     'skeletonRoot',
-    "import {registerSkeletonBlock} from '@dotquilt-internal/core';registerSkeletonBlock();document.body.append(document.createElement('dotquilt-skeleton-block'));",
+    "import {registerSkeletonBlock} from 'dotquilt';registerSkeletonBlock();document.body.append(document.createElement('dotquilt-skeleton-block'));",
     skeletonClosureLimit,
   ],
   [
     'regionRoot',
-    "import {registerLoadingRegion} from '@dotquilt-internal/core';registerLoadingRegion();document.body.append(document.createElement('dotquilt-region'));",
+    "import {registerLoadingRegion} from 'dotquilt';registerLoadingRegion();document.body.append(document.createElement('dotquilt-region'));",
     regionClosureLimit,
   ],
 ] as const) {

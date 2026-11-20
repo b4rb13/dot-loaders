@@ -1,14 +1,11 @@
 import {
-  defineAnimation,
-  type LoadingRegion as NativeRegion,
-} from '@dotquilt-internal/core';
-import {
   LoadingRegion,
   type LoadingState,
   type Motion,
   SkeletonBlock,
   type StylePolicy,
-} from '@dotquilt-internal/react';
+} from '@dotquilt/react';
+import { defineAnimation, type LoadingRegion as NativeRegion } from 'dotquilt';
 import {
   createElement as h,
   type ReactNode,

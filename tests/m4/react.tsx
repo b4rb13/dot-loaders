@@ -1,10 +1,10 @@
-import type { SkeletonText as NativeSkeletonText } from '@dotquilt-internal/core/skeleton';
 import {
   SkeletonCircle,
   SkeletonLine,
   SkeletonText,
-} from '@dotquilt-internal/react/skeleton';
-import { TypingDots } from '@dotquilt-internal/react/typing';
+} from '@dotquilt/react/skeleton';
+import { TypingDots } from '@dotquilt/react/typing';
+import type { SkeletonText as NativeSkeletonText } from 'dotquilt/skeleton';
 import { createRef, createElement as h, StrictMode, useState } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 

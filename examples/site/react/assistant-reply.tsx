@@ -1,5 +1,5 @@
 'use client';
-import { LoadingRegion, TypingDots } from '@dotquilt-internal/react';
+import { LoadingRegion, TypingDots } from '@dotquilt/react';
 import { useEffect, useState } from 'react';
 
 async function fetchReply(

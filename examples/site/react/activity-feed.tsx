@@ -1,5 +1,5 @@
 'use client';
-import { LoadingRegion, SkeletonText } from '@dotquilt-internal/react';
+import { LoadingRegion, SkeletonText } from '@dotquilt/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 async function fetchActivity(signal: AbortSignal): Promise<string[]> {

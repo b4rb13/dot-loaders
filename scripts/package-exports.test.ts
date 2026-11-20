@@ -21,6 +21,7 @@ const root = resolve(import.meta.dir, '..');
 for (const name of ['core', 'react']) {
   const directory = resolve(root, 'packages', name);
   const manifest = require(resolve(directory, 'package.json')) as {
+    name: string;
     exports: Record<string, unknown>;
   };
 
@@ -37,7 +38,7 @@ for (const name of ['core', 'react']) {
   test(`${name}: every documented stylesheet path resolves to its file`, () => {
     for (const sheet of stylesheets) {
       const path = Bun.resolveSync(
-        `@dotquilt-internal/${name}/styles/${sheet}.css`,
+        `${manifest.name}/styles/${sheet}.css`,
         root,
       );
       expect(path).toBe(resolve(directory, 'dist', `${sheet}.css`));
@@ -56,8 +57,6 @@ for (const name of ['core', 'react']) {
 
   test(`${name}: private implementation paths stay unexported`, () => {
     for (const path of ['/internal/table-model', '/dist/index.js'])
-      expect(() =>
-        Bun.resolveSync(`@dotquilt-internal/${name}${path}`, root),
-      ).toThrow();
+      expect(() => Bun.resolveSync(`${manifest.name}${path}`, root)).toThrow();
   });
 }

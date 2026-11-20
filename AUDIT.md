@@ -455,7 +455,7 @@ This is a rebuild, not a polish pass. The current site, docs and default visuals
 - 4c and 4d wait for the API to settle in Phase 3; they can overlap with 4b.
 
 ### Phase 5 — ship an alpha
-- pick the npm name
+- ~~pick the npm name~~ `dotquilt` and `@dotquilt/react` (decision 16)
 - publish `0.x`
 - deploy the site behind protection
 - get feedback
@@ -520,7 +520,7 @@ The full reasoning, with sources, is in the product strategy and `docs/research/
    - **Only one case was supported:** registration already rejects a copy of another version. What remained was the same version bundled twice, which bundlers deduplicate and micro-frontends avoid by sharing the dependency.
    - **Same as peers:** React fails with a duplicate copy, and Lit warns about one in development.
    - **Timing:** nothing is published, so dropping it now breaks no one. After 1.0 it would be a breaking change.
-6. **Process.** OK to drop the evidence/receipt/"owner authorisation" machinery and work with normal commits, PRs and tests?
+6. ~~**Process.**~~ **Decided 2026-11-20 by the owner: keep working as now**, with normal commits, PRs and tests. The old evidence, receipt and "owner authorisation" machinery stays retired.
 7. ~~**Visual direction.**~~ **Decided 2026-11-18:** "System, refined" (see design/SPEC.md). Dots stay as the core idea, with dot/dash/square as mark options.
 8. ~~**Website stack.**~~ **Decided 2026-11-19 by the owner: Astro + Starlight.** It is static and light, and it brings docs navigation, an on-page table of contents and a theme switch. Pages show the native loaders directly, with React only where an example needs it. A runnable Next.js example project covers the React adapter's SSR and hydration instead of the site.
 9. ~~**Old site retirement.**~~ **Decided 2026-11-19 by the owner: retire it now.** `apps/website` and its workspace, scripts and dependencies are deleted, so the old animation variants it used can be pruned (Phase 4b slice H). It stays in git history as reference; the new site is Phase 4c–4d.
@@ -541,5 +541,5 @@ The full reasoning, with sources, is in the product strategy and `docs/research/
 13. **Pro pricing:** Solo $149 / Team (10) $449 / Company $999 with about 50% renewal, or the earlier guess of $99 / $299.
 14. **The seller and the country.** This decides the merchant of record: Polar, Paddle, or Stripe Managed Payments. Lemon Squeezy closed to new sellers on 2026-11-16.
 15. **A Pro waitlist** by email (needs a privacy page and a mail provider), or GitHub Releases only.
-16. **The npm name and a "Dotquilt" trademark.**
+16. ~~**The npm name.**~~ **Decided 2026-11-20 by the owner: "dotquilt".** The packages are `dotquilt` (the native elements) and `@dotquilt/react`; both names and the `@dotquilt` scope were free on npm that day. Publishing 0.1.0 is its own go-ahead: until then both packages stay `"private": true`. A "Dotquilt" trademark is the owner's own step, with the commercial setup.
 17. **Pro v1 scope** (which screens first), and **who runs the 10 discovery conversations**.

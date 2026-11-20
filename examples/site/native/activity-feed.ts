@@ -1,8 +1,5 @@
-import {
-  type LoadingRegion,
-  registerLoadingRegion,
-} from '@dotquilt-internal/core/region';
-import { registerSkeletonText } from '@dotquilt-internal/core/skeleton';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+import { registerSkeletonText } from 'dotquilt/skeleton';
 
 registerLoadingRegion();
 registerSkeletonText();

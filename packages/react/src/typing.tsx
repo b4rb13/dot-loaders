@@ -3,7 +3,7 @@ import {
   type TypingDots as NativeTypingDots,
   registerTypingDots,
   type TypingPreset,
-} from '@dotquilt-internal/core/typing';
+} from 'dotquilt/typing';
 import { forwardRef, useState } from 'react';
 import { useHost } from './host.js';
 import { reactTypingMarkStyles, reactTypingStyles } from './server.js';

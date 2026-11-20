@@ -1,22 +1,13 @@
-import {
-  defineAnimation,
-  definePreset,
-} from '@dotquilt-internal/core/animations';
-import { dissolve, pulse } from '@dotquilt-internal/core/animations/skeleton';
+import { defineAnimation, definePreset } from 'dotquilt/animations';
+import { dissolve, pulse } from 'dotquilt/animations/skeleton';
 
 dissolve({ fallPx: 8 });
 // @ts-expect-error Fall displacement is a typed finite numeric option.
 dissolve({ fallPx: '5px' });
 
-import {
-  type LoadingRegion,
-  registerLoadingRegion,
-} from '@dotquilt-internal/core/region';
-import { renderStatic } from '@dotquilt-internal/core/server';
-import {
-  registerSkeletonBlock,
-  type SkeletonBlock,
-} from '@dotquilt-internal/core/skeleton';
+import { type LoadingRegion, registerLoadingRegion } from 'dotquilt/region';
+import { renderStatic } from 'dotquilt/server';
+import { registerSkeletonBlock, type SkeletonBlock } from 'dotquilt/skeleton';
 
 registerSkeletonBlock();
 registerLoadingRegion();
@@ -80,7 +71,7 @@ const handoff = defineAnimation({
 });
 region.animations = { handoff: handoff() };
 // @ts-expect-error every idle author must supply its static renderer
-const missingStill: import('@dotquilt-internal/core/animations').IdleDefinition<
+const missingStill: import('dotquilt/animations').IdleDefinition<
   'skeleton',
   object
 > = {
@@ -98,11 +89,8 @@ import {
   registerSkeletonLine,
   registerSkeletonText,
   type SkeletonText,
-} from '@dotquilt-internal/core/skeleton';
-import {
-  registerTypingDots,
-  type TypingDots,
-} from '@dotquilt-internal/core/typing';
+} from 'dotquilt/skeleton';
+import { registerTypingDots, type TypingDots } from 'dotquilt/typing';
 
 registerSkeletonLine();
 registerSkeletonCircle();
@@ -132,11 +120,8 @@ import {
   scramble,
   scrambleCharacters,
   scrambleWords,
-} from '@dotquilt-internal/core/animations/text';
-import {
-  registerTextLoader,
-  type TextLoader,
-} from '@dotquilt-internal/core/text';
+} from 'dotquilt/animations/text';
+import { registerTextLoader, type TextLoader } from 'dotquilt/text';
 
 registerTextLoader();
 declare const label: TextLoader;
@@ -172,13 +157,13 @@ import {
   scan,
   scatter,
   terrain,
-} from '@dotquilt-internal/core/animations/chart';
+} from 'dotquilt/animations/chart';
 import {
   type ChartInput,
   type ChartLoader,
   registerChartLoader,
   type TargetProvider,
-} from '@dotquilt-internal/core/chart';
+} from 'dotquilt/chart';
 
 const chart = document.createElement('dotquilt-chart-loader');
 const chartClass: ChartLoader = chart;
@@ -208,7 +193,7 @@ const chartIdleVariants = [
   cycle({ holdMs: 900 }),
 ];
 void chartIdleVariants;
-const wrongChartText: import('@dotquilt-internal/core').Animations<'text'> = {
+const wrongChartText: import('dotquilt').Animations<'text'> = {
   // @ts-expect-error chart family cannot be used on text
   idle: ridge(),
 };
@@ -251,17 +236,13 @@ definePreset({
   stylePolicy: { mode: 'inline', nonce: 'request' },
 });
 
-import {
-  rows,
-  tableShimmer,
-  typeOn,
-} from '@dotquilt-internal/core/animations/table';
+import { rows, tableShimmer, typeOn } from 'dotquilt/animations/table';
 import {
   registerTableLoader,
   type TableInput,
   type TableLoader,
   type TableTargetProvider,
-} from '@dotquilt-internal/core/table';
+} from 'dotquilt/table';
 
 registerTableLoader();
 const table: TableLoader = document.createElement('dotquilt-table-loader');
@@ -295,11 +276,11 @@ rows({ delay: 40 });
 table.targetProvider = async () => null;
 const tableInput: TableInput = { kind: 'table', cells: [] };
 void tableInput;
-declare const multiline: import('@dotquilt-internal/core/skeleton').SkeletonText;
+declare const multiline: import('dotquilt/skeleton').SkeletonText;
 multiline.update({ lines: undefined, widths: undefined });
 multiline.lines = undefined;
 
-import { registerAll } from '@dotquilt-internal/core/register-all';
+import { registerAll } from 'dotquilt/register-all';
 import { drift, fanReveal, rise } from './examples/api/custom.js';
 import { sampleChart, tableTargets } from './examples/api/geometry.js';
 import { summary } from './examples/api/native.js';
@@ -307,7 +288,7 @@ import { recipes } from './examples/api/recipes.js';
 
 void [registerAll, summary, sampleChart, tableTargets];
 
-import { refreshStyles } from '@dotquilt-internal/core';
+import { refreshStyles } from 'dotquilt';
 
 declare const themedPanel: HTMLElement;
 refreshStyles(themedPanel);
@@ -322,10 +303,7 @@ region.animations = { handoff: fanReveal({ spread: 30 }) };
 rise({ distance: '4px' });
 // @ts-expect-error explicit registration does not accept a tag prefix/options bag
 registerAll({ prefix: 'other' });
-declare const regionIdle: import('@dotquilt-internal/core').AnimationBinding<
-  'region',
-  'idle'
->;
+declare const regionIdle: import('dotquilt').AnimationBinding<'region', 'idle'>;
 // @ts-expect-error a region owns a handoff, never a second idle renderer
 region.animations = { idle: regionIdle };
 // @ts-expect-error atomic patches have the same phase boundary
@@ -336,6 +314,6 @@ chartClass.update({ state: 'pending' });
 table.update({ state: 'ready' });
 
 // @ts-expect-error Private implementation paths are not package entry points.
-import { tableRows as privateTableRows } from '@dotquilt-internal/core/internal/table-static';
+import { tableRows as privateTableRows } from 'dotquilt/internal/table-static';
 
 void privateTableRows;

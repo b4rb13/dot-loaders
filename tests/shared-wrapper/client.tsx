@@ -1,8 +1,8 @@
-import * as core from '@dotquilt-internal/core';
-import type { AnimationFamily } from '@dotquilt-internal/core/animations';
-import * as chartAnimations from '@dotquilt-internal/core/animations/chart';
-import * as tableAnimations from '@dotquilt-internal/core/animations/table';
-import * as adapter from '@dotquilt-internal/react';
+import * as adapter from '@dotquilt/react';
+import * as core from 'dotquilt';
+import type { AnimationFamily } from 'dotquilt/animations';
+import * as chartAnimations from 'dotquilt/animations/chart';
+import * as tableAnimations from 'dotquilt/animations/table';
 import { createElement as h } from 'react';
 import { createRoot } from 'react-dom/client';
 

@@ -1,10 +1,10 @@
+import { ChartLoader } from '@dotquilt/react/chart';
+import { LoadingRegion } from '@dotquilt/react/region';
 import type {
   ChartInput,
   ChartVariant,
   ChartLoader as NativeChartLoader,
-} from '@dotquilt-internal/core/chart';
-import { ChartLoader } from '@dotquilt-internal/react/chart';
-import { LoadingRegion } from '@dotquilt-internal/react/region';
+} from 'dotquilt/chart';
 import { createRef, createElement as h, StrictMode, useState } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 

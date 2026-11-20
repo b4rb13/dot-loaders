@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import * as core from '@dotquilt-internal/core/server';
+import * as core from 'dotquilt/server';
 
 /**
  * Every stylesheet Dotquilt may add, as CSP hashes. Recompute them whenever

@@ -35,7 +35,7 @@ interface Shared {
   repertoire(
     variant: 'line' | 'bar' | 'scatter',
     idle: 'typeOn' | 'tableShimmer',
-    cellStyle: import('@dotquilt-internal/core/animations/table').TypeOnOptions['cellStyle'],
+    cellStyle: import('dotquilt/animations/table').TypeOnOptions['cellStyle'],
     index: number,
   ): void;
   idleOnly(): void;

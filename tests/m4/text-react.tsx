@@ -1,12 +1,12 @@
+import { TextLoader } from '@dotquilt/react/text';
 import {
   fade,
   lock,
   printText,
   scrambleCharacters,
   scrambleWords,
-} from '@dotquilt-internal/core/animations/text';
-import type { TextLoader as NativeTextLoader } from '@dotquilt-internal/core/text';
-import { TextLoader } from '@dotquilt-internal/react/text';
+} from 'dotquilt/animations/text';
+import type { TextLoader as NativeTextLoader } from 'dotquilt/text';
 
 const recipes = { scrambleCharacters, scrambleWords, lock, printText, fade };
 let selectRecipe: ((name: keyof typeof recipes) => void) | undefined;

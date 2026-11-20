@@ -56,8 +56,6 @@ for (const directory of packages) {
     `\n${manifest.name}@${manifest.version}: ${pack.entryCount} files, ${kb(pack.size)} packed, ${kb(pack.unpackedSize)} unpacked (${pack.filename})`,
   );
   if (manifest.private) blockers.push(`${manifest.name} is "private": true.`);
-  if (manifest.name.startsWith('@dotquilt-internal/'))
-    blockers.push(`${manifest.name} has the provisional name.`);
   if (manifest.publishConfig?.access !== 'public')
     blockers.push(
       `${manifest.name} publishes with access "${manifest.publishConfig?.access}", not "public".`,

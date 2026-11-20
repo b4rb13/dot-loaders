@@ -1,6 +1,6 @@
-import type { LoadingRegion } from '@dotquilt-internal/core/region';
-import type { TableLoader } from '@dotquilt-internal/core/table';
 import { expect, test } from '@playwright/test';
+import type { LoadingRegion } from 'dotquilt/region';
+import type { TableLoader } from 'dotquilt/table';
 import { capture } from '../capture';
 import { expectPaint, paintCount } from '../paint-output';
 import type {} from './api.js';

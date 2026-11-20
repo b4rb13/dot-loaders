@@ -26,53 +26,53 @@ const work = resolve(root, '.artifacts/size');
 const components: [name: string, native: string, react: string][] = [
   [
     'SkeletonBlock',
-    "import { registerSkeletonBlock } from '@dotquilt-internal/core/skeleton'; registerSkeletonBlock();",
-    "export { SkeletonBlock } from '@dotquilt-internal/react/skeleton';",
+    "import { registerSkeletonBlock } from 'dotquilt/skeleton'; registerSkeletonBlock();",
+    "export { SkeletonBlock } from '@dotquilt/react/skeleton';",
   ],
   [
     'SkeletonLine',
-    "import { registerSkeletonLine } from '@dotquilt-internal/core/skeleton'; registerSkeletonLine();",
-    "export { SkeletonLine } from '@dotquilt-internal/react/skeleton';",
+    "import { registerSkeletonLine } from 'dotquilt/skeleton'; registerSkeletonLine();",
+    "export { SkeletonLine } from '@dotquilt/react/skeleton';",
   ],
   [
     'SkeletonCircle',
-    "import { registerSkeletonCircle } from '@dotquilt-internal/core/skeleton'; registerSkeletonCircle();",
-    "export { SkeletonCircle } from '@dotquilt-internal/react/skeleton';",
+    "import { registerSkeletonCircle } from 'dotquilt/skeleton'; registerSkeletonCircle();",
+    "export { SkeletonCircle } from '@dotquilt/react/skeleton';",
   ],
   [
     'SkeletonText',
-    "import { registerSkeletonText } from '@dotquilt-internal/core/skeleton'; registerSkeletonText();",
-    "export { SkeletonText } from '@dotquilt-internal/react/skeleton';",
+    "import { registerSkeletonText } from 'dotquilt/skeleton'; registerSkeletonText();",
+    "export { SkeletonText } from '@dotquilt/react/skeleton';",
   ],
   [
     'TypingDots',
-    "import { registerTypingDots } from '@dotquilt-internal/core/typing'; registerTypingDots();",
-    "export { TypingDots } from '@dotquilt-internal/react/typing';",
+    "import { registerTypingDots } from 'dotquilt/typing'; registerTypingDots();",
+    "export { TypingDots } from '@dotquilt/react/typing';",
   ],
   [
     'TextLoader',
-    "import { registerTextLoader } from '@dotquilt-internal/core/text'; registerTextLoader();",
-    "export { TextLoader } from '@dotquilt-internal/react/text';",
+    "import { registerTextLoader } from 'dotquilt/text'; registerTextLoader();",
+    "export { TextLoader } from '@dotquilt/react/text';",
   ],
   [
     'ChartLoader',
-    "import { registerChartLoader } from '@dotquilt-internal/core/chart'; registerChartLoader();",
-    "export { ChartLoader } from '@dotquilt-internal/react/chart';",
+    "import { registerChartLoader } from 'dotquilt/chart'; registerChartLoader();",
+    "export { ChartLoader } from '@dotquilt/react/chart';",
   ],
   [
     'TableLoader',
-    "import { registerTableLoader } from '@dotquilt-internal/core/table'; registerTableLoader();",
-    "export { TableLoader } from '@dotquilt-internal/react/table';",
+    "import { registerTableLoader } from 'dotquilt/table'; registerTableLoader();",
+    "export { TableLoader } from '@dotquilt/react/table';",
   ],
   [
     'LoadingRegion',
-    "import { registerLoadingRegion } from '@dotquilt-internal/core/region'; registerLoadingRegion();",
-    "export { LoadingRegion } from '@dotquilt-internal/react/region';",
+    "import { registerLoadingRegion } from 'dotquilt/region'; registerLoadingRegion();",
+    "export { LoadingRegion } from '@dotquilt/react/region';",
   ],
   [
     'Everything',
-    "import { registerAll } from '@dotquilt-internal/core/register-all'; registerAll();",
-    "export * from '@dotquilt-internal/react';",
+    "import { registerAll } from 'dotquilt/register-all'; registerAll();",
+    "export * from '@dotquilt/react';",
   ],
 ];
 

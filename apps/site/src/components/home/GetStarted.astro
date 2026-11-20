@@ -2,7 +2,7 @@
 /** Three steps from install to a page that settles into place. */
 import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 
-const react = `import { LoadingRegion, SkeletonText } from '@dotquilt-internal/react';
+const react = `import { LoadingRegion, SkeletonText } from '@dotquilt/react';
 
 export function Summary({ data }: { data: Revenue | null }) {
   return (
@@ -21,8 +21,8 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
 </dotquilt-region>
 
 <script type="module">
-  import { registerLoadingRegion } from '@dotquilt-internal/core/region';
-  import { registerSkeletonText } from '@dotquilt-internal/core/skeleton';
+  import { registerLoadingRegion } from 'dotquilt/region';
+  import { registerSkeletonText } from 'dotquilt/skeleton';
   registerLoadingRegion();
   registerSkeletonText();
 

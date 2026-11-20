@@ -1,9 +1,5 @@
-import type {
-  LoadingRegion,
-  LoadingState,
-  TextLoader,
-} from '@dotquilt-internal/core';
-import { registerAll } from '@dotquilt-internal/core/register-all';
+import type { LoadingRegion, LoadingState, TextLoader } from 'dotquilt';
+import { registerAll } from 'dotquilt/register-all';
 import { createElement as h } from 'react';
 import { flushSync } from 'react-dom';
 import { hydrateRoot, type Root } from 'react-dom/client';
