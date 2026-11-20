@@ -89,11 +89,8 @@ const installed = resolve(consumer, 'node_modules/dotquilt');
 const installedManifest = JSON.parse(
   await readFile(resolve(installed, 'package.json'), 'utf8'),
 );
-if (
-  !installedManifest.private ||
-  Object.keys(installedManifest.dependencies ?? {}).length
-)
-  throw new Error('Private/runtime dependency invariant failed');
+if (Object.keys(installedManifest.dependencies ?? {}).length)
+  throw new Error('Runtime dependency invariant failed');
 for (const target of [consumer, bunConsumer]) {
   await writeFile(
     resolve(target, 'import-check.mjs'),

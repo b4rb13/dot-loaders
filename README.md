@@ -14,6 +14,8 @@ Placeholders that hold the shape of your content, then become it.
 
 [Website](https://dotquilt.dev) · [Docs](https://dotquilt.dev/docs/) · [Components](https://dotquilt.dev/docs/components/skeleton/) · [Examples](https://dotquilt.dev/examples/) · [Playground](https://dotquilt.dev/playground/)
 
+[![npm: dotquilt](https://img.shields.io/npm/v/dotquilt?label=dotquilt&color=2f6f74)](https://www.npmjs.com/package/dotquilt)
+[![npm: @dotquilt/react](https://img.shields.io/npm/v/@dotquilt/react?label=@dotquilt/react&color=2f6f74)](https://www.npmjs.com/package/@dotquilt/react)
 [![Quality](https://github.com/b4rb13/dot-loaders/actions/workflows/quality.yml/badge.svg)](https://github.com/b4rb13/dot-loaders/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2f6f74)](LICENSE)
 ![Web Components](https://img.shields.io/badge/web_components-native-1b2230)
@@ -42,7 +44,7 @@ Dotquilt is a set of loading placeholders made of small marks. When your data ar
 - **Only what you use.** Each component has its own entry point and registers itself on demand.
 
 > [!NOTE]
-> Dotquilt is in alpha and not on npm yet; the first release, 0.1.0, is on its way. Until then you can build it from source (see [CONTRIBUTING.md](CONTRIBUTING.md)).
+> Dotquilt is in alpha (0.x): the API may still change before 1.0. Feedback and issues are very welcome.
 
 ## Install
 
