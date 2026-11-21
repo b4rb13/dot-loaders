@@ -4,7 +4,7 @@ Thanks for helping. Issues and pull requests are welcome: bug reports with a sma
 
 ## Setup
 
-You need [Bun](https://bun.sh) (the version in `.bun-version`) and Node 24 or later.
+You need [Bun](https://bun.sh) (the version in `.bun-version`) and Node 24.15 or later (Angular 22, used by `examples/angular`, needs it).
 
 ```bash
 bun install

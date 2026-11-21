@@ -61,6 +61,10 @@ const frameworks = [
     name: '@dotquilt/svelte',
     external: ['svelte', 'svelte/*'],
   },
+  // @dotquilt/angular isn't measured here: its partial-compiled code needs
+  // Angular's own linker before a bundler can drop unused components. In an
+  // Angular build it does: a page using only SkeletonBlock bundles none of
+  // the other loaders (checked with examples/angular).
 ] as const;
 
 // Component, its native usage, and its entry in every framework package

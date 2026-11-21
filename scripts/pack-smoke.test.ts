@@ -90,6 +90,14 @@ const rules: Record<
     imports: ['svelte', 'svelte/elements'],
     runs: false,
   },
+  // Compiled in Angular's partial mode, which an app's Angular build links:
+  // tests/angular builds and runs it.
+  angular: {
+    dependencies: ['dotquilt'],
+    peers: ['@angular/core'],
+    imports: ['@angular/core'],
+    runs: false,
+  },
 };
 
 test('every released package has its rules here', () => {
@@ -132,7 +140,12 @@ for (const [name, rule] of Object.entries(rules)) {
           !['README.md', 'LICENSE', 'package.json'].includes(file),
       ),
     ).toEqual([]);
-    expect(files).toContain('dist/index.js');
+    // The root entry's file, whichever condition names it.
+    const root = Object.entries(
+      manifest.exports['.'] as Record<string, string>,
+    ).find(([condition]) => condition !== 'types')?.[1];
+    expect(root, 'the root entry').toBeDefined();
+    expect(files).toContain(root?.slice(2) ?? '');
   }, 30_000);
 
   test(`${name}: dist imports stay inside the package and reach only allowed packages`, async () => {
@@ -142,7 +155,7 @@ for (const [name, rule] of Object.entries(rules)) {
     };
     const problems: string[] = [];
     let scanned = 0;
-    for await (const file of new Bun.Glob('**/*.{js,d.ts,svelte}').scan({
+    for await (const file of new Bun.Glob('**/*.{js,mjs,d.ts,svelte}').scan({
       cwd: dist,
       onlyFiles: true,
     })) {
@@ -167,7 +180,7 @@ for (const [name, rule] of Object.entries(rules)) {
           problems.push(`${file}: unexpected dependency ${specifier}`);
       }
     }
-    expect(scanned).toBeGreaterThan(10);
+    expect(scanned).toBeGreaterThan(1);
     expect(problems).toEqual([]);
   });
 

@@ -19,7 +19,10 @@
       "!**/.nuxt",
       "!**/.output",
       "!**/.svelte-kit",
-      "!examples/sveltekit/build"
+      "!examples/sveltekit/build",
+      "!**/.angular",
+      "!examples/angular/dist",
+      "!packages/angular/src/styles.generated.ts"
     ]
   },
   "formatter": {
