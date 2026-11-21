@@ -70,13 +70,8 @@ export const ChartLoader = /* @__PURE__ */ defineComponent({
           ref: host,
         },
         [
-          sheet(wrapperChartStyles, policy, 'ChartLoader'),
-          markSheet(
-            () => wrapperChartMarkStyles,
-            policy,
-            'ChartLoader',
-            props.mark,
-          ),
+          sheet(wrapperChartStyles(), policy, 'ChartLoader'),
+          markSheet(wrapperChartMarkStyles, policy, 'ChartLoader', props.mark),
           staticDrawing(),
         ],
       );

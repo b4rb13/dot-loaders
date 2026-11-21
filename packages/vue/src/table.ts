@@ -76,7 +76,7 @@ export const TableLoader = /* @__PURE__ */ defineComponent({
           ref: host,
         },
         [
-          sheet(wrapperTableStyles, policy, 'TableLoader'),
+          sheet(wrapperTableStyles(), policy, 'TableLoader'),
           h('span', { [wrapperStatic]: '', 'aria-hidden': 'true' }, [
             h(
               'svg',

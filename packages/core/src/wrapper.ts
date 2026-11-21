@@ -32,17 +32,15 @@ import { staticSkeletonMarkStyles, staticSkeletonStyles } from './styles.js';
 import { LoaderConfigurationError, type StylePolicy } from './types.js';
 
 export {
-  staticChartMarkStyles as wrapperChartMarkStyles,
-  staticChartStyles as wrapperChartStyles,
-} from './chart-styles.js';
-export {
   type StaticTableLayout,
   staticTableLayout,
 } from './internal/table-model.js';
-export { staticTableStyles as wrapperTableStyles } from './table-styles.js';
-export {
-  staticTextLoaderMarkStyles as wrapperTextMarkStyles,
-  staticTextLoaderStyles as wrapperTextStyles,
+
+import { staticChartMarkStyles, staticChartStyles } from './chart-styles.js';
+import { staticTableStyles } from './table-styles.js';
+import {
+  staticTextLoaderMarkStyles,
+  staticTextLoaderStyles,
 } from './text-styles.js';
 
 /**
@@ -58,8 +56,23 @@ export const wrapperSlot = 'data-dotquilt-wrapper-slot';
 /** On a region host that has no placeholder to show. */
 export const wrapperEmpty = 'data-dotquilt-wrapper-empty';
 
+/**
+ * The element while it's undefined or waiting for its stylesheet, at zero
+ * specificity: the page's own classes win over these rules, as they do over
+ * the element's shadow styles once it's defined.
+ */
 const beforeDefinition = (tag: string) =>
-  `${tag}:is(:not(:defined),:state(unstyled))`;
+  `:where(${tag}:is(:not(:defined),:state(unstyled)))`;
+/** Lowers every element selector in rules core already scopes. */
+const lowered = (css: readonly string[]) =>
+  Object.freeze(
+    css.map((text) =>
+      text.replace(
+        /(?<!:where\()(dotquilt-[a-z-]+):is\(:not\(:defined\),:state\(unstyled\)\)/g,
+        (_, tag: string) => beforeDefinition(tag),
+      ),
+    ),
+  );
 function scoped(
   css: readonly string[],
   tag: string,
@@ -76,19 +89,20 @@ function scoped(
 // Getters, not constants: a bundle keeps only the families a component
 // actually draws, even though the shared style modules do work as they load.
 const cache = new Map<string, readonly string[]>();
+const lazily = (key: string, make: () => readonly string[]) => {
+  let value = cache.get(key);
+  if (!value) {
+    value = make();
+    cache.set(key, value);
+  }
+  return value;
+};
 const styles = (
   key: string,
   css: () => readonly string[],
   tag: string,
   hidden: boolean,
-) => {
-  let value = cache.get(key);
-  if (!value) {
-    value = scoped(css(), tag, hidden);
-    cache.set(key, value);
-  }
-  return value;
-};
+) => lazily(key, () => scoped(css(), tag, hidden));
 
 export function wrapperSkeletonStyles(): readonly string[] {
   return styles(
@@ -128,6 +142,22 @@ export function wrapperTypingStyles(): readonly string[] {
     'dotquilt-typing-dots',
     true,
   );
+}
+
+export function wrapperTextStyles(): readonly string[] {
+  return lazily('text', () => lowered(staticTextLoaderStyles));
+}
+export function wrapperTextMarkStyles(): readonly string[] {
+  return lazily('text-marks', () => lowered(staticTextLoaderMarkStyles));
+}
+export function wrapperChartStyles(): readonly string[] {
+  return lazily('chart', () => lowered(staticChartStyles));
+}
+export function wrapperChartMarkStyles(): readonly string[] {
+  return lazily('chart-marks', () => lowered(staticChartMarkStyles));
+}
+export function wrapperTableStyles(): readonly string[] {
+  return lazily('table', () => lowered(staticTableStyles));
 }
 
 /** Static rules for squares and dashes; add them only when drawing one. */
@@ -174,12 +204,13 @@ export function wrapperTypingMarkStyles(): readonly string[] {
 
 const region = beforeDefinition('dotquilt-region');
 /**
- * A region's placeholder and refresh slots, laid over the content. While a
- * pending region has no content yet, its placeholder stays in flow instead,
- * so the first HTML already reserves the space the element will give it.
+ * A region's slots. While pending, the placeholder is in flow, with any
+ * content below it, so the first HTML reserves its space (and without
+ * JavaScript the content stays visible under it). The refresh cue lies over
+ * the content.
  */
 export const wrapperRegionStyles: readonly string[] = [
-  `${region}{display:flow-root;position:relative}${region}[hidden]{display:none}${region}>[${wrapperSlot}]{position:absolute;inset:0;pointer-events:none}${region}:not([state=pending])>[slot=placeholder],${region}:not([state=refreshing])>[slot=refresh-indicator]{display:none}${region}[state=pending][${wrapperEmpty}]::before{content:"";position:absolute;inset:0;min-height:1em;border:1px dotted currentColor}${region}[state=pending]:not(:has(>:not([slot])))>[slot=placeholder]{position:relative}`,
+  `${region}{display:flow-root;position:relative}${region}[hidden]{display:none}${region}>[${wrapperSlot}]{position:absolute;inset:0;pointer-events:none}${region}[state=pending]>[slot=placeholder]{position:relative}${region}:not([state=pending])>[slot=placeholder],${region}:not([state=refreshing])>[slot=refresh-indicator]{display:none}${region}[state=pending][${wrapperEmpty}]::before{content:"";position:absolute;inset:0;min-height:1em;border:1px dotted currentColor}`,
 ];
 
 /** Checks a style policy the way the elements do, before any markup uses it. */

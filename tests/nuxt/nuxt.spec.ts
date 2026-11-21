@@ -144,6 +144,27 @@ test('with reduced motion, the placeholders stay still', async ({ page }) => {
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
+  test("the page's own classes size a loader, and a region with content keeps its placeholder's space", async ({
+    page,
+  }) => {
+    await page.goto('/checks');
+    const avatar = await page.locator('[data-check=avatar]').boundingBox();
+    expect(avatar?.width).toBeCloseTo(48, 0);
+    const region = page.locator('[data-check=region]');
+    const [regionBox, placeholderBox, afterBox] = await Promise.all([
+      region.boundingBox(),
+      region.locator('[slot=placeholder]').boundingBox(),
+      page.locator('[data-check=after]').boundingBox(),
+    ]);
+    expect(placeholderBox?.height ?? 0).toBeGreaterThan(20);
+    expect(regionBox?.height ?? 0).toBeGreaterThanOrEqual(
+      placeholderBox?.height ?? 1,
+    );
+    expect(afterBox?.y ?? 0).toBeGreaterThanOrEqual(
+      (placeholderBox?.y ?? 0) + (placeholderBox?.height ?? 0),
+    );
+  });
+
   test('the placeholders keep the page layout: each component is one element', async ({
     page,
   }) => {

@@ -43,15 +43,15 @@ export async function writeWrapperStyles(dist: string): Promise<void> {
     ],
     text: [
       textStyles,
-      wrapper.wrapperTextStyles,
-      wrapper.wrapperTextMarkStyles,
+      wrapper.wrapperTextStyles(),
+      wrapper.wrapperTextMarkStyles(),
     ],
     chart: [
       chartStyles,
-      wrapper.wrapperChartStyles,
-      wrapper.wrapperChartMarkStyles,
+      wrapper.wrapperChartStyles(),
+      wrapper.wrapperChartMarkStyles(),
     ],
-    table: [tableStyles, wrapper.wrapperTableStyles],
+    table: [tableStyles, wrapper.wrapperTableStyles()],
   };
   for (const [name, parts] of Object.entries(files))
     await writeFile(resolve(dist, `${name}.css`), parts.flat().join('\n'));

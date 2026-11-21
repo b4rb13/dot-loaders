@@ -107,13 +107,8 @@ export const TextLoader = /* @__PURE__ */ defineComponent({
           ref: host,
         },
         [
-          sheet(wrapperTextStyles, policy, 'TextLoader'),
-          markSheet(
-            () => wrapperTextMarkStyles,
-            policy,
-            'TextLoader',
-            props.mark,
-          ),
+          sheet(wrapperTextStyles(), policy, 'TextLoader'),
+          markSheet(wrapperTextMarkStyles, policy, 'TextLoader', props.mark),
           h(
             'span',
             {
