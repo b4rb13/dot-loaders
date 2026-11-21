@@ -30,8 +30,13 @@ const suites: {
   // The built docs site (apps/site).
   { name: 'site', port: 4331 },
 ];
-// The Next.js example (examples/next), built by `bun run build`.
-const next = { name: 'next', port: 4360 };
+// Example apps built by `bun run build`, each tested in tests/<name>.
+const apps = [
+  { name: 'next', port: 4360 },
+  { name: 'nuxt', port: 4361 },
+  { name: 'sveltekit', port: 4362 },
+  { name: 'angular', port: 4363 },
+];
 const browsers = (
   process.env.ALL_BROWSERS ? ['chromium', 'firefox', 'webkit'] : ['chromium']
 ) as ('chromium' | 'firefox' | 'webkit')[];
@@ -75,12 +80,12 @@ export default defineConfig({
         ...(suite.viewport ? { viewport: suite.viewport } : {}),
       },
     })),
-    {
-      name: `${next.name}-${browserName}`,
-      testDir: './tests/next',
+    ...apps.map((app) => ({
+      name: `${app.name}-${browserName}`,
+      testDir: `./tests/${app.name}`,
       fullyParallel: true,
-      use: { browserName, baseURL: `http://127.0.0.1:${next.port}` },
-    },
+      use: { browserName, baseURL: `http://127.0.0.1:${app.port}` },
+    })),
   ]),
   webServer: [
     {
@@ -99,10 +104,10 @@ export default defineConfig({
       port: suite.port,
       reuseExistingServer: false,
     })),
-    {
-      command: 'bun run --cwd examples/next start',
-      port: next.port,
+    ...apps.map((app) => ({
+      command: `bun run --cwd examples/${app.name} start`,
+      port: app.port,
       reuseExistingServer: false,
-    },
+    })),
   ],
 });

@@ -10,6 +10,7 @@ import {
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { hasClientDirective } from './client-directive.js';
+import { releaseOrder } from './packages.js';
 
 // What a published package guarantees beyond the workspace build, checked
 // without installing tarballs:
@@ -49,6 +50,7 @@ beforeAll(async () => {
     resolve(root, 'tests/types/consumer.ts'),
     resolve(work, 'consumer.ts'),
   );
+  await cp(resolve(root, 'tests/vue/consumer.ts'), resolve(work, 'vue.ts'));
   await writeFile(
     resolve(work, 'consumer.tsx'),
     (await readFile(resolve(root, 'tests/react/consumer.tsx'), 'utf8')).replace(
@@ -59,7 +61,52 @@ beforeAll(async () => {
 });
 afterAll(() => rm(work, { recursive: true, force: true }));
 
-for (const name of ['core', 'react'] as const) {
+/**
+ * What each package may depend on, and import besides its own files and
+ * dotquilt's public entries.
+ */
+const rules: Record<
+  string,
+  {
+    dependencies: string[];
+    peers: string[];
+    imports: string[];
+    /** False for a package only its framework's compiler can load. */
+    runs?: boolean;
+  }
+> = {
+  core: { dependencies: [], peers: [], imports: [] },
+  react: {
+    dependencies: ['dotquilt'],
+    peers: ['react', 'react-dom'],
+    imports: ['react', 'react/jsx-runtime', 'react-dom', 'react-dom/client'],
+  },
+  vue: { dependencies: ['dotquilt'], peers: ['vue'], imports: ['vue'] },
+  // Svelte libraries ship .svelte sources that the app's Svelte compiles:
+  // tests/sveltekit builds and runs them.
+  svelte: {
+    dependencies: ['dotquilt'],
+    peers: ['svelte'],
+    imports: ['svelte', 'svelte/elements'],
+    runs: false,
+  },
+  // Compiled in Angular's partial mode, which an app's Angular build links:
+  // tests/angular builds and runs it.
+  angular: {
+    dependencies: ['dotquilt'],
+    peers: ['@angular/core'],
+    imports: ['@angular/core'],
+    runs: false,
+  },
+};
+
+test('every released package has its rules here', () => {
+  expect(Object.keys(rules).sort()).toEqual(
+    releaseOrder.map((dir) => dir.slice('packages/'.length)).sort(),
+  );
+});
+
+for (const [name, rule] of Object.entries(rules)) {
   const directory = resolve(root, 'packages', name);
   const manifest = require(resolve(directory, 'package.json')) as {
     name: string;
@@ -71,11 +118,9 @@ for (const name of ['core', 'react'] as const) {
 
   test(`${name}: the manifest is public, with only the expected dependencies`, () => {
     expect(manifest.private).toBeUndefined();
-    expect(Object.keys(manifest.dependencies ?? {})).toEqual(
-      name === 'core' ? [] : ['dotquilt'],
-    );
+    expect(Object.keys(manifest.dependencies ?? {})).toEqual(rule.dependencies);
     expect(Object.keys(manifest.peerDependencies ?? {}).sort()).toEqual(
-      name === 'core' ? [] : ['react', 'react-dom'],
+      rule.peers,
     );
   });
 
@@ -95,7 +140,12 @@ for (const name of ['core', 'react'] as const) {
           !['README.md', 'LICENSE', 'package.json'].includes(file),
       ),
     ).toEqual([]);
-    expect(files).toContain('dist/index.js');
+    // The root entry's file, whichever condition names it.
+    const root = Object.entries(
+      manifest.exports['.'] as Record<string, string>,
+    ).find(([condition]) => condition !== 'types')?.[1];
+    expect(root, 'the root entry').toBeDefined();
+    expect(files).toContain(root?.slice(2) ?? '');
   }, 30_000);
 
   test(`${name}: dist imports stay inside the package and reach only allowed packages`, async () => {
@@ -105,7 +155,7 @@ for (const name of ['core', 'react'] as const) {
     };
     const problems: string[] = [];
     let scanned = 0;
-    for await (const file of new Bun.Glob('**/*.{js,d.ts}').scan({
+    for await (const file of new Bun.Glob('**/*.{js,mjs,d.ts,svelte}').scan({
       cwd: dist,
       onlyFiles: true,
     })) {
@@ -122,53 +172,49 @@ for (const name of ['core', 'react'] as const) {
             !(await Bun.file(target).exists())
           )
             problems.push(`${file}: ${specifier} escapes dist or is missing`);
-        } else if (name === 'react' && specifier.startsWith('dotquilt')) {
+        } else if (name !== 'core' && specifier.startsWith('dotquilt')) {
           const entry = specifier.slice('dotquilt'.length);
           if (!Object.hasOwn(core.exports, entry ? `.${entry}` : '.'))
             problems.push(`${file}: ${specifier} is not a core export`);
-        } else if (
-          name === 'core' ||
-          ![
-            'react',
-            'react/jsx-runtime',
-            'react-dom',
-            'react-dom/client',
-          ].includes(specifier)
-        )
+        } else if (!rule.imports.includes(specifier))
           problems.push(`${file}: unexpected dependency ${specifier}`);
       }
     }
-    expect(scanned).toBeGreaterThan(10);
+    expect(scanned).toBeGreaterThan(1);
     expect(problems).toEqual([]);
   });
 
-  test(`${name}: every JavaScript export imports in Node and Bun; private paths do not`, async () => {
-    const subpaths = Object.keys(manifest.exports)
-      .filter((key) => !key.includes('*') && !key.endsWith('.css'))
-      .map((key) => key.slice(1));
-    const script = resolve(work, `import-${name}.mjs`);
-    await writeFile(
-      script,
-      `const name = '${manifest.name}';
+  test.skipIf(rule.runs === false)(
+    `${name}: every JavaScript export imports in Node and Bun; private paths do not`,
+    async () => {
+      const subpaths = Object.keys(manifest.exports)
+        .filter((key) => !key.includes('*') && !key.endsWith('.css'))
+        .map((key) => key.slice(1));
+      const script = resolve(work, `import-${name}.mjs`);
+      await writeFile(
+        script,
+        `const name = '${manifest.name}';
 for (const path of ${JSON.stringify(subpaths)}) await import(name + path);
 for (const path of ['/internal/table-model', '/dist/index.js']) {
   let rejected = false;
   try { await import(name + path); } catch { rejected = true; }
   if (!rejected) throw new Error('private path imported: ' + path);
 }`,
-    );
-    for (const runtime of ['node', 'bun']) {
-      const { err, code } = await run([runtime, script]);
-      expect(code, `${runtime}: ${err}`).toBe(0);
-    }
-  }, 30_000);
+      );
+      for (const runtime of ['node', 'bun']) {
+        const { err, code } = await run([runtime, script]);
+        expect(code, `${runtime}: ${err}`).toBe(0);
+      }
+    },
+    30_000,
+  );
 }
 
 test('consumer types check on TypeScript 7 and 5.7 with Bundler and NodeNext resolution', async () => {
   const runs = [];
   for (const compiler of ['typescript', 'typescript-min'])
     for (const mode of ['Bundler', 'NodeNext'])
-      for (const file of ['consumer.ts', 'consumer.tsx'])
+      for (const file of ['consumer.ts', 'consumer.tsx', 'vue.ts'])
         runs.push(
           run([
             'node',

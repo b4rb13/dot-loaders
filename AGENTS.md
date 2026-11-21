@@ -6,6 +6,9 @@ Dotquilt is a set of dot-based loading components. Placeholder dots animate whil
 | --- | --- |
 | `packages/core` | Native Web Components runtime, framework-free. 9 elements: SkeletonBlock/Line/Circle/Text, TextLoader, ChartLoader, TableLoader, TypingDots, LoadingRegion. |
 | `packages/react` | Thin React 19 adapter over the same runtime, with SSR markup. |
+| `packages/vue` | Thin Vue 3 adapter (`@dotquilt/vue`), with SSR markup; tested in `examples/nuxt`. |
+| `packages/svelte` | Thin Svelte 5 adapter (`@dotquilt/svelte`), with SSR markup; tested in `examples/sveltekit`. |
+| `packages/angular` | Thin Angular 22 adapter (`@dotquilt/angular`, ng-packagr), with SSR markup; tested in `examples/angular`. |
 | `apps/site` | Docs site: Astro + Starlight. Pages in `src/content/docs`, live previews in `src/components/Preview.astro`. |
 | `tests/`, `scripts/` | Browser/SSR/size tests and tooling. Many scripts are legacy and slated for deletion in Phase 1. |
 | `design/` | Design directions and specs for the visual rework. |
@@ -20,7 +23,7 @@ Follow `AUDIT.md` (2026-11-18). It holds the audit findings, the phases and the 
 
 ## Commands
 
-Use Bun (pinned in `.bun-version`) and Node 24+.
+Use Bun (pinned in `.bun-version`) and Node 24.15+ (Angular 22 in `examples/angular` needs it).
 
 - **Install:** `bun install`, then `bunx playwright install chromium` once for browser tests.
 - **Build everything:** `bun run build` (Turbo builds the packages).

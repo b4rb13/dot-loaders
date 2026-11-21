@@ -1,5 +1,6 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { elements } from '../packages/core/meta/elements.js';
 import {
   skeletonCircleStyles,
   skeletonLineStyles,
@@ -36,6 +37,7 @@ import {
   staticTextLoaderStyles,
   textStyles,
 } from '../packages/core/src/text-styles.js';
+import { customElementsManifest, webTypes } from './element-manifest.js';
 import { skeletonSheet } from './skeleton-sheet.js';
 
 const root = resolve(import.meta.dir, '..');
@@ -112,4 +114,15 @@ await writeFile(
       staticTextMarkStyles,
     ],
   ),
+);
+
+// What editors and tools read about the elements (packages/core/meta).
+const { version } = await Bun.file(resolve(cwd, 'package.json')).json();
+await writeFile(
+  resolve(cwd, 'dist/custom-elements.json'),
+  `${JSON.stringify(customElementsManifest(elements), null, 2)}\n`,
+);
+await writeFile(
+  resolve(cwd, 'dist/web-types.json'),
+  `${JSON.stringify(webTypes(elements, version), null, 2)}\n`,
 );
