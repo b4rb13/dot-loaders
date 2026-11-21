@@ -46,3 +46,10 @@ main {
   font-size: 2rem;
   font-weight: 600;
 }
+.check-avatar {
+  width: 48px;
+  height: 48px;
+}
+.check-total {
+  display: grid;
+}
