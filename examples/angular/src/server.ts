@@ -6,6 +6,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+import { revenue } from './app/docs/data';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -13,10 +14,11 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 // A slow API, so the placeholders show for a moment.
+const wait = () => new Promise((resolve) => setTimeout(resolve, 900));
 const slow =
   <T>(body: T) =>
   async (_: unknown, res: express.Response) => {
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    await wait();
     res.json(body);
   };
 app.get(
@@ -37,10 +39,43 @@ app.get(
 app.get(
   '/api/invoices',
   slow([
-    { customer: 'Northwind', amount: '$4,200', status: 'Paid' },
-    { customer: 'Globex', amount: '$1,150', status: 'Due' },
-    { customer: 'Initech', amount: '$860', status: 'Paid' },
-    { customer: 'Umbrella', amount: '$2,975', status: 'Overdue' },
+    { customer: 'Northwind', amount: '$4,200', status: 'Paid', due: 'Nov 2' },
+    { customer: 'Globex', amount: '$1,150', status: 'Due', due: 'Nov 28' },
+    { customer: 'Initech', amount: '$860', status: 'Paid', due: 'Nov 20' },
+    { customer: 'Umbrella', amount: '$2,975', status: 'Overdue', due: 'Nov 1' },
+  ]),
+);
+
+// For the docs examples (src/app/docs).
+const members = new Map([
+  [
+    'ada',
+    {
+      name: 'Ada Lovelace',
+      role: 'Engineering lead',
+      bio: 'Wrote the first published program, for a machine not yet built.',
+    },
+  ],
+]);
+app.get('/api/members/:id', async (req, res) => {
+  await wait();
+  const member = members.get(req.params.id);
+  if (member) res.json(member);
+  else res.sendStatus(404);
+});
+app.get('/api/revenue/:period', slow(revenue));
+app.get('/api/revenue/:period/total', slow({ total: 48120 }));
+// The reply doesn't depend on the question here.
+app.post(
+  '/api/assistant',
+  slow({ reply: 'The Globex invoice was due on Oct 28 and is now overdue.' }),
+);
+app.get(
+  '/api/activity',
+  slow([
+    'Northwind paid $4,200',
+    'Acme Labs opened an invoice',
+    'Globex invoice is overdue',
   ]),
 );
 

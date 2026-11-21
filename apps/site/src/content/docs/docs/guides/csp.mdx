@@ -23,6 +23,8 @@ Generate a fresh nonce for every request, send it in your `Content-Security-Poli
 Content-Security-Policy: style-src 'self' 'nonce-…'
 ```
 
+The option has the same name in every package (`style-policy` in Vue templates). Where the nonce comes from depends on the framework: see [Vue and Nuxt](/docs/guides/vue/#styles-and-csp), [Svelte and SvelteKit](/docs/guides/svelte/#styles-and-csp) and [Angular](/docs/guides/angular/#styles-and-csp), which uses your app's `CSP_NONCE` without any option.
+
 Never reuse a nonce across requests, and don't cache HTML that contains one.
 
 ## Hashes
@@ -30,6 +32,8 @@ Never reuse a nonce across requests, and don't cache HTML that contains one.
 If you can't send a nonce, allow Dotquilt's exact stylesheets by hash. Compute them from the installed version, and recompute them whenever you upgrade:
 
 <Code code={hashesTs} lang="ts" title="style-hashes.ts" />
+
+These hashes cover the elements' own stylesheets. The Vue, Svelte and Angular packages also write styles for their server-rendered placeholders, which these hashes don't include, so with those packages use a nonce or external stylesheets.
 
 ## External stylesheets
 
@@ -46,7 +50,7 @@ Serve Dotquilt's stylesheets as files, and point each component at the one for i
 >
 ```
 
-The files ship in the package as `dotquilt/styles/<file>.css`. Copy them into your public folder from the same installed version as your JavaScript.
+The files ship in the package as `dotquilt/styles/<file>.css`. Copy them into your public folder from the same installed version as your JavaScript. With a framework package, copy them from that package instead, from `@dotquilt/react/styles/`, `@dotquilt/vue/styles/`, `@dotquilt/svelte/styles/` or `@dotquilt/angular/styles/`: each file also holds the rules for the placeholder markup the package renders on the server.
 
 | File | For |
 | --- | --- |

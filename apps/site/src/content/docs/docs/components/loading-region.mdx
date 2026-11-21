@@ -10,6 +10,9 @@ import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import Preview from '../../../../components/Preview.astro';
 // Real files, type-checked with the repository, so the code here always works.
 import feedTsx from '../../../../../../../examples/site/react/activity-feed.tsx?raw';
+import feedVue from '../../../../../../../examples/nuxt/app/docs/ActivityFeed.vue?raw';
+import feedSvelte from '../../../../../../../examples/sveltekit/src/lib/docs/ActivityFeed.svelte?raw';
+import feedAngular from '../../../../../../../examples/angular/src/app/docs/activity-feed.ts?raw';
 import feedHtml from '../../../../../../../examples/site/native/activity-feed.html?raw';
 import feedTs from '../../../../../../../examples/site/native/activity-feed.ts?raw';
 
@@ -47,6 +50,15 @@ Going from `pending` to `ready` plays the handoff. First the marks take your con
 <Tabs syncKey="framework">
   <TabItem label="React">
     <Code code={feedTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="ActivityFeed.tsx" />
+  </TabItem>
+  <TabItem label="Vue">
+    <Code code={feedVue} lang="vue" title="ActivityFeed.vue" />
+  </TabItem>
+  <TabItem label="Svelte">
+    <Code code={feedSvelte} lang="svelte" title="ActivityFeed.svelte" />
+  </TabItem>
+  <TabItem label="Angular">
+    <Code code={feedAngular} lang="ts" title="activity-feed.ts" />
   </TabItem>
   <TabItem label="HTML">
     <Code code={feedHtml} lang="html" title="index.html" />

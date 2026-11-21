@@ -48,6 +48,11 @@ test('llms.txt links every docs page as clean Markdown', async ({
   ).text();
   expect(table).toContain('```tsx title="InvoiceTable.tsx"');
   expect(table).toContain('export function InvoiceTable()');
+  // The framework tabs come from the example apps, which build and run them.
+  expect(table).toContain('```vue title="InvoiceTable.vue"');
+  expect(table).toContain('```svelte title="InvoiceTable.svelte"');
+  expect(table).toContain('```ts title="invoice-table.ts"');
+  expect(table).toContain('export class InvoiceTable');
 });
 
 test('llms-full.txt holds every docs page', async ({ request }) => {

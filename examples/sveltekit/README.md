@@ -19,3 +19,5 @@ bun run --cwd examples/sveltekit dev
 Then open http://127.0.0.1:4362.
 
 `tests/sveltekit` checks the server HTML, that hydration keeps the server's elements, the handoffs, events, a client-side navigation and the layout without JavaScript (`bun run test:e2e --project=sveltekit-chromium`, after `bun run build`). The build runs `svelte-check` first. The root `tsc` run skips this folder.
+
+`src/lib/docs/` holds the Svelte code the docs site's component pages show, and `/docs` runs it; keep it in step with the React versions in `examples/site/react/`.

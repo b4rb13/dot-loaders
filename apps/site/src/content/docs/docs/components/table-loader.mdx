@@ -11,6 +11,9 @@ import Preview from '../../../../components/Preview.astro';
 import TableDemo from '../../../../components/demos/TableDemo.astro';
 // Real files, type-checked with the repository, so the code here always works.
 import tableTsx from '../../../../../../../examples/site/react/invoice-table.tsx?raw';
+import tableVue from '../../../../../../../examples/nuxt/app/docs/InvoiceTable.vue?raw';
+import tableSvelte from '../../../../../../../examples/sveltekit/src/lib/docs/InvoiceTable.svelte?raw';
+import tableAngular from '../../../../../../../examples/angular/src/app/docs/invoice-table.ts?raw';
 import tableHtml from '../../../../../../../examples/site/native/invoice-table.html?raw';
 import tableTs from '../../../../../../../examples/site/native/invoice-table.ts?raw';
 import dataTs from '../../../../../../../examples/site/data.ts?raw';
@@ -28,6 +31,18 @@ Describe the columns and set how many rows to show. The handoff reads your real 
 <Tabs syncKey="framework">
   <TabItem label="React">
     <Code code={tableTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="InvoiceTable.tsx" />
+    <Code code={dataTs} lang="ts" title="data.ts" />
+  </TabItem>
+  <TabItem label="Vue">
+    <Code code={tableVue} lang="vue" title="InvoiceTable.vue" />
+    <Code code={dataTs} lang="ts" title="data.ts" />
+  </TabItem>
+  <TabItem label="Svelte">
+    <Code code={tableSvelte} lang="svelte" title="InvoiceTable.svelte" />
+    <Code code={dataTs} lang="ts" title="data.ts" />
+  </TabItem>
+  <TabItem label="Angular">
+    <Code code={tableAngular} lang="ts" title="invoice-table.ts" />
     <Code code={dataTs} lang="ts" title="data.ts" />
   </TabItem>
   <TabItem label="HTML">

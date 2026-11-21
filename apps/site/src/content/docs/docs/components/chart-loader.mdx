@@ -11,6 +11,9 @@ import Preview from '../../../../components/Preview.astro';
 import ChartDemo from '../../../../components/demos/ChartDemo.astro';
 // Real files, type-checked with the repository, so the code here always works.
 import chartTsx from '../../../../../../../examples/site/react/revenue-chart.tsx?raw';
+import chartVue from '../../../../../../../examples/nuxt/app/docs/RevenueChart.vue?raw';
+import chartSvelte from '../../../../../../../examples/sveltekit/src/lib/docs/RevenueChart.svelte?raw';
+import chartAngular from '../../../../../../../examples/angular/src/app/docs/revenue-chart.ts?raw';
 import chartHtml from '../../../../../../../examples/site/native/revenue-chart.html?raw';
 import chartTs from '../../../../../../../examples/site/native/revenue-chart.ts?raw';
 import dataTs from '../../../../../../../examples/site/data.ts?raw';
@@ -28,6 +31,18 @@ Put a ChartLoader in a region's placeholder slot, sized like the chart it stands
 <Tabs syncKey="framework">
   <TabItem label="React">
     <Code code={chartTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="RevenueChart.tsx" />
+    <Code code={dataTs} lang="ts" title="data.ts" />
+  </TabItem>
+  <TabItem label="Vue">
+    <Code code={chartVue} lang="vue" title="RevenueChart.vue" />
+    <Code code={dataTs} lang="ts" title="data.ts" />
+  </TabItem>
+  <TabItem label="Svelte">
+    <Code code={chartSvelte} lang="svelte" title="RevenueChart.svelte" />
+    <Code code={dataTs} lang="ts" title="data.ts" />
+  </TabItem>
+  <TabItem label="Angular">
+    <Code code={chartAngular} lang="ts" title="revenue-chart.ts" />
     <Code code={dataTs} lang="ts" title="data.ts" />
   </TabItem>
   <TabItem label="HTML">

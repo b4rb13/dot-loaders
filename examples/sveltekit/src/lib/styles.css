@@ -61,3 +61,8 @@ main {
   text-align: left;
   border-bottom: 1px solid #dfe3e8;
 }
+
+/* The docs examples' member card (/docs) has no avatar column. */
+article.member {
+  display: block;
+}

@@ -203,3 +203,22 @@ test('an invalid option on the first render reaches (loaderError)', async ({
   // count 0 is invalid: reported during the element's first update().
   await expect(page.getByText('Errors: invalid-option')).toBeVisible();
 });
+
+test('a skeleton block is drawn in the server HTML, then hydrates and registers', async ({
+  page,
+  request,
+}) => {
+  const html = await (await request.get('/checks')).text();
+  expect(html).toMatch(
+    /<dotquilt-skeleton-block aria-hidden="true" data-dotquilt-surface=""[^>]*><span data-dotquilt-wrapper-static="" aria-hidden="true"><span data-dotquilt-static=""><\/span><\/span><\/dotquilt-skeleton-block>/,
+  );
+  const problems = await watchErrors(page);
+  await page.goto('/checks');
+  const block = page.locator('dotquilt-skeleton-block');
+  await expect
+    .poll(() => block.evaluate((element) => element.matches(':defined')))
+    .toBe(true);
+  expect((await block.boundingBox())?.height).toBeCloseTo(80, 0);
+  // The typing dots' count 0 is the page's one intended error.
+  expect(problems).toEqual(['dotquilt-error invalid-option']);
+});

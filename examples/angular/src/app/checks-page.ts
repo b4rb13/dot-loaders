@@ -1,10 +1,10 @@
 import { Component, signal } from '@angular/core';
-import { TypingDots } from '@dotquilt/angular';
+import { SkeletonBlock, TypingDots } from '@dotquilt/angular';
 
 /** Edge cases tests/angular drives in a browser; not part of the example. */
 @Component({
   selector: 'app-checks-page',
-  imports: [TypingDots],
+  imports: [SkeletonBlock, TypingDots],
   template: `
     <h1>Checks</h1>
     <dotquilt-typing-dots
@@ -12,6 +12,7 @@ import { TypingDots } from '@dotquilt/angular';
       (loaderError)="errors.set([...errors(), $event.detail.code])"
     />
     <p>Errors: {{ errors().join(', ') || 'none' }}</p>
+    <dotquilt-skeleton-block style="height: 80px" />
   `,
 })
 export class ChecksPage {

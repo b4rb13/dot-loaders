@@ -8,9 +8,14 @@ import serverTs from '../../../../../../../examples/site/server-render.ts?raw';
 
 A placeholder rendered on the server reserves its space in the first HTML, so the page doesn't jump when JavaScript arrives. When the components register in the browser, they take over the same elements.
 
-## React
+## React, Vue, Svelte and Angular
 
-The React components render their placeholder markup and styles on the server automatically. Render the same state on the server and in the first client render, so hydration matches. See [React and Next.js](/docs/guides/react/).
+The framework components render their placeholder markup and styles on the server automatically, so with Next.js, Nuxt, SvelteKit or Angular SSR the placeholder is in the first HTML. Render the same state on the server and in the first browser render, so hydration matches. The elements register only after hydration, so they never change the markup the framework is checking. Each framework guide shows how with its own data loading:
+
+- [React and Next.js](/docs/guides/react/)
+- [Vue and Nuxt](/docs/guides/vue/)
+- [Svelte and SvelteKit](/docs/guides/svelte/)
+- [Angular](/docs/guides/angular/)
 
 ## Native
 

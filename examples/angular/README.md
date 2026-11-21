@@ -19,3 +19,5 @@ bun run --cwd examples/angular dev
 Then open http://127.0.0.1:4363.
 
 `tests/angular` checks the server HTML, hydration without errors, the handoffs, outputs, a client-side navigation and the layout without JavaScript (`bun run test:e2e --project=angular-chromium`, after `bun run build`). `ng build` type-checks the templates strictly. The root `tsc` run skips this folder.
+
+`src/app/docs/` holds the Angular code the docs site's component pages show, and `/docs` runs it; keep it in step with the React versions in `examples/site/react/`.

@@ -1,7 +1,7 @@
 <script lang="ts">
 // Edge cases tests/sveltekit drives in a browser; not part of the
 // example's story.
-import { TableLoader, TypingDots } from '@dotquilt/svelte';
+import { SkeletonBlock, TableLoader, TypingDots } from '@dotquilt/svelte';
 import type { TableColumn } from 'dotquilt/table';
 import type { TypingDots as NativeTypingDots } from 'dotquilt/typing';
 
@@ -36,5 +36,6 @@ $effect(() => {
   onLoaderError={() => seen.push(clicks)}
 />
 <TableLoader data-check="table" {columns} rows={2} />
+<SkeletonBlock data-check="block" style="height: 48px" />
 <p>Errors at: {seen.join(', ') || 'none'}</p>
 <p>Updates: {updates}</p>
