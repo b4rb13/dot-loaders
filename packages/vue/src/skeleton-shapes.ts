@@ -89,7 +89,8 @@ export const SkeletonText = /* @__PURE__ */ defineComponent({
           speed: initial.speed,
           'pointer-response': initial.pointerResponse,
           lines: initial.count,
-          mark: props.mark,
+          // As an attribute: clearing the property would set an empty, invalid mark.
+          '^mark': props.mark,
           ref: host,
         },
         [

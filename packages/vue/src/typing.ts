@@ -61,7 +61,8 @@ export const TypingDots = /* @__PURE__ */ defineComponent({
           count: initial.count,
           speed: initial.speed,
           motion: 'paused',
-          mark: props.mark,
+          // As an attribute: clearing the property would set an empty, invalid mark.
+          '^mark': props.mark,
           ref: host,
         },
         [

@@ -102,7 +102,8 @@ export const TextLoader = /* @__PURE__ */ defineComponent({
           state,
           mask,
           motion: 'paused',
-          mark: props.mark,
+          // As an attribute: clearing the property would set an empty, invalid mark.
+          '^mark': props.mark,
           ref: host,
         },
         [

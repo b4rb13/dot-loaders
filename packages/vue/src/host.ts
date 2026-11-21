@@ -90,7 +90,9 @@ export function useHost<E extends Host>(
       attached.addEventListener(name, listen);
     apply(patch());
   });
-  watch(patch, apply, { flush: 'post' });
+  // Deep, so an array or object changed in place (`columns.push(…)`)
+  // reaches the element too.
+  watch(patch, apply, { flush: 'post', deep: true });
   // After removal, so the cancellation the element sends as it disconnects
   // still reaches the component.
   onUnmounted(() => {

@@ -65,7 +65,8 @@ export const ChartLoader = /* @__PURE__ */ defineComponent({
           'data-dotquilt-surface': '',
           motion: 'paused',
           variant,
-          mark: props.mark,
+          // As an attribute: clearing the property would set an empty, invalid mark.
+          '^mark': props.mark,
           ref: host,
         },
         [

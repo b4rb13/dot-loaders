@@ -71,7 +71,8 @@ export const TableLoader = /* @__PURE__ */ defineComponent({
           motion: 'paused',
           rows: layout.rows,
           'row-height': layout.rowHeight,
-          mark: props.mark,
+          // As an attribute: clearing the property would set an empty, invalid mark.
+          '^mark': props.mark,
           ref: host,
         },
         [

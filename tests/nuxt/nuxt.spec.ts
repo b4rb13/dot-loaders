@@ -174,3 +174,27 @@ test.describe('without JavaScript', () => {
     );
   });
 });
+
+test('options change as Vue changes them: a cleared mark, a column pushed in place', async ({
+  page,
+}) => {
+  await page.goto('/checks');
+  const text = page.locator('[data-check=text]');
+  const table = page.locator('[data-check=table]');
+  await expect(text).toHaveAttribute('data-dotquilt-surface', '');
+  await page.getByRole('button', { name: 'Dashes' }).click();
+  await expect(text).toHaveAttribute('mark', 'dash');
+  // Back to the default: the attribute goes, and nothing is reported.
+  await page.getByRole('button', { name: 'Default mark' }).click();
+  await expect(text).not.toHaveAttribute('mark');
+  await expect(page.getByText('Errors: none')).toBeVisible();
+  // A column pushed into the reactive array reaches the element.
+  const columnCount = () =>
+    table.evaluate(
+      (element) =>
+        (element as HTMLElement & { columns: unknown[] }).columns.length,
+    );
+  await expect.poll(columnCount).toBe(2);
+  await page.getByRole('button', { name: 'Add column' }).click();
+  await expect.poll(columnCount).toBe(3);
+});

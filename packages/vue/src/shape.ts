@@ -64,7 +64,8 @@ export function shape<E extends Host>(
             motion: 'paused',
             speed: initial.speed,
             'pointer-response': initial.pointerResponse,
-            mark: props.mark,
+            // As an attribute: clearing the property would set an empty, invalid mark.
+            '^mark': props.mark,
             ref: host,
           },
           [
