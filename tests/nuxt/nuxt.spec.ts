@@ -3,10 +3,10 @@ import { expect, type Page, test } from '@playwright/test';
 // The Nuxt example (examples/nuxt): @dotquilt/vue in a real Nuxt build,
 // server-rendered, hydrated, and through a client-side navigation.
 
-function watchErrors(page: Page) {
+async function watchErrors(page: Page) {
   const problems: string[] = [];
   // Problems a loader reports, such as a value it can't read as text.
-  void page.addInitScript(() =>
+  await page.addInitScript(() =>
     document.addEventListener(
       'dotquilt-error',
       (event) =>
@@ -42,7 +42,7 @@ test('the placeholders are in the server HTML, before any JavaScript', async ({
 test('the page hydrates without errors and hands over when the data arrives', async ({
   page,
 }) => {
-  const problems = watchErrors(page);
+  const problems = await watchErrors(page);
   await page.goto('/');
   const team = page.getByRole('group', { name: 'Team members' });
   await expect(team).toHaveAttribute('data-presentation', 'pending');
@@ -87,7 +87,7 @@ test('pending content is hidden from assistive technology until it is ready', as
 test('after a client-side navigation, the next page loads and hands over the same way', async ({
   page,
 }) => {
-  const problems = watchErrors(page);
+  const problems = await watchErrors(page);
   await page.goto('/');
   await expect(
     page.getByRole('group', { name: 'Team members' }),
