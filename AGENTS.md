@@ -6,6 +6,7 @@ Dotquilt is a set of dot-based loading components. Placeholder dots animate whil
 | --- | --- |
 | `packages/core` | Native Web Components runtime, framework-free. 9 elements: SkeletonBlock/Line/Circle/Text, TextLoader, ChartLoader, TableLoader, TypingDots, LoadingRegion. |
 | `packages/react` | Thin React 19 adapter over the same runtime, with SSR markup. |
+| `packages/vue` | Thin Vue 3 adapter (`@dotquilt/vue`), with SSR markup; tested in `examples/nuxt`. |
 | `apps/site` | Docs site: Astro + Starlight. Pages in `src/content/docs`, live previews in `src/components/Preview.astro`. |
 | `tests/`, `scripts/` | Browser/SSR/size tests and tooling. Many scripts are legacy and slated for deletion in Phase 1. |
 | `design/` | Design directions and specs for the visual rework. |

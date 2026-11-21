@@ -1,0 +1,21 @@
+{
+  "name": "dotquilt-example-nuxt",
+  "private": true,
+  "type": "module",
+  "description": "Dotquilt in a Nuxt project: server-rendered placeholders that hydrate and hand over.",
+  "scripts": {
+    "dev": "nuxt dev --port 4361",
+    "build": "nuxt build",
+    "start": "PORT=4361 HOST=127.0.0.1 node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "@dotquilt/vue": "workspace:*",
+    "dotquilt": "workspace:*",
+    "nuxt": "4.6.4",
+    "vue": "3.5.46"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vue-tsc": "3.3.14"
+  }
+}
