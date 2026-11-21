@@ -2,6 +2,8 @@ node_modules/
 .next/
 .nuxt/
 .output/
+.svelte-kit/
+examples/sveltekit/build/
 next-env.d.ts
 .turbo/
 .vercel/

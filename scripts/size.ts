@@ -19,6 +19,29 @@ import { existsSync } from 'node:fs';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
+import type { BunPlugin } from 'bun';
+import { compile, compileModule } from 'svelte/compiler';
+
+/** Compiles Svelte components for the browser, as an app's bundler would. */
+const svelte: BunPlugin = {
+  name: 'svelte',
+  setup(build) {
+    build.onLoad({ filter: /\.svelte$/ }, async ({ path }) => ({
+      contents: compile(await Bun.file(path).text(), {
+        filename: path,
+        generate: 'client',
+      }).js.code,
+      loader: 'js',
+    }));
+    build.onLoad({ filter: /\.svelte\.js$/ }, async ({ path }) => ({
+      contents: compileModule(await Bun.file(path).text(), {
+        filename: path,
+        generate: 'client',
+      }).js.code,
+      loader: 'js',
+    }));
+  },
+};
 
 const root = resolve(import.meta.dir, '..');
 const work = resolve(root, '.artifacts/size');
@@ -32,6 +55,12 @@ const frameworks = [
     external: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   { key: 'vue', label: 'Vue', name: '@dotquilt/vue', external: ['vue'] },
+  {
+    key: 'svelte',
+    label: 'Svelte',
+    name: '@dotquilt/svelte',
+    external: ['svelte', 'svelte/*'],
+  },
 ] as const;
 
 // Component, its native usage, and its entry in every framework package
@@ -91,6 +120,7 @@ const components: [name: string, native: string, entry: string][] = [
 
 /** Gzip bytes the usage loads up front, and what it loads later on its own. */
 async function gzipSize(name: string, source: string, external: string[] = []) {
+  const forSvelte = external.includes('svelte');
   const entry = resolve(work, `${name}.ts`);
   await writeFile(entry, source);
   const build = await Bun.build({
@@ -100,6 +130,7 @@ async function gzipSize(name: string, source: string, external: string[] = []) {
     minify: true,
     splitting: true,
     external,
+    ...(forSvelte ? { plugins: [svelte], conditions: ['svelte'] } : {}),
   });
   if (!build.success || !build.outputs[0])
     throw new Error(`Cannot bundle ${name}:\n${build.logs.join('\n')}`);

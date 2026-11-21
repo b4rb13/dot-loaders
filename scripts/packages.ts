@@ -12,4 +12,5 @@ export const releaseOrder = [
   'packages/core',
   'packages/react',
   'packages/vue',
+  'packages/svelte',
 ] as const;

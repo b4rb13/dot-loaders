@@ -17,7 +17,9 @@
       "!**/next-env.d.ts",
       "!examples/next/tsconfig.json",
       "!**/.nuxt",
-      "!**/.output"
+      "!**/.output",
+      "!**/.svelte-kit",
+      "!examples/sveltekit/build"
     ]
   },
   "formatter": {
@@ -41,7 +43,7 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.astro", "**/*.vue"],
+      "includes": ["**/*.astro", "**/*.vue", "**/*.svelte"],
       "linter": {
         "rules": {
           "correctness": {
