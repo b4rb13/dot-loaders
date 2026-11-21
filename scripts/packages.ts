@@ -13,4 +13,5 @@ export const releaseOrder = [
   'packages/react',
   'packages/vue',
   'packages/svelte',
+  'packages/angular',
 ] as const;

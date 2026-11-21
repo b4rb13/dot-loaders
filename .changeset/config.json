@@ -3,7 +3,13 @@
   "changelog": ["@changesets/cli/changelog", null],
   "commit": false,
   "fixed": [
-    ["dotquilt", "@dotquilt/react", "@dotquilt/vue", "@dotquilt/svelte"]
+    [
+      "dotquilt",
+      "@dotquilt/react",
+      "@dotquilt/vue",
+      "@dotquilt/svelte",
+      "@dotquilt/angular"
+    ]
   ],
   "linked": [],
   "access": "public",

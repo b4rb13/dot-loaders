@@ -1,0 +1,60 @@
+{
+  "name": "@dotquilt/angular",
+  "version": "0.1.2",
+  "description": "Angular components for Dotquilt: loading placeholders that hold the shape of your content, then hand over to it.",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://dotquilt.dev",
+  "keywords": [
+    "angular",
+    "loading",
+    "skeleton",
+    "skeleton loader",
+    "placeholder",
+    "loader",
+    "accessibility",
+    "ssr"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types/dotquilt-angular.d.ts",
+      "default": "./dist/fesm2022/dotquilt-angular.mjs"
+    },
+    "./styles/*.css": "./dist/*.css"
+  },
+  "dependencies": {
+    "dotquilt": "0.1.2"
+  },
+  "peerDependencies": {
+    "@angular/core": "^22.0.0"
+  },
+  "devDependencies": {
+    "@angular/compiler": "22.3.0",
+    "@angular/compiler-cli": "22.3.0",
+    "@angular/core": "22.3.0",
+    "ng-packagr": "22.3.0",
+    "rxjs": "7.8.2",
+    "typescript": "6.0.3"
+  },
+  "scripts": {
+    "build": "bun run ../../scripts/build-angular.ts"
+  },
+  "author": "Derenik Khachatryan",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/b4rb13/dot-loaders.git",
+    "directory": "packages/angular"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  }
+}

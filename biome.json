@@ -19,7 +19,9 @@
       "!**/.nuxt",
       "!**/.output",
       "!**/.svelte-kit",
-      "!examples/sveltekit/build"
+      "!examples/sveltekit/build",
+      "!**/.angular",
+      "!examples/angular/dist"
     ]
   },
   "formatter": {
