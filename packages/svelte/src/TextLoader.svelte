@@ -102,8 +102,8 @@ useHost(
   mask={initial.mask}
   motion="paused"
   {mark}
-  >{@html sheet(wrapperTextStyles, initial.policy, 'TextLoader')}{@html markSheet(
-    () => wrapperTextMarkStyles,
+  >{@html sheet(wrapperTextStyles(), initial.policy, 'TextLoader')}{@html markSheet(
+    wrapperTextMarkStyles,
     initial.policy,
     'TextLoader',
     mark,

@@ -94,7 +94,7 @@ useHost(
   rows={initial.layout.rows}
   row-height={initial.layout.rowHeight}
   {mark}
-  >{@html sheet(wrapperTableStyles, initial.policy, 'TableLoader')}<span
+  >{@html sheet(wrapperTableStyles(), initial.policy, 'TableLoader')}<span
     data-dotquilt-wrapper-static
     aria-hidden="true"
     ><svg

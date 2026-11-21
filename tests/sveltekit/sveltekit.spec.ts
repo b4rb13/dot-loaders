@@ -4,10 +4,10 @@ import { expect, type Page, test } from '@playwright/test';
 // SvelteKit build, server-rendered, hydrated, and through a client-side
 // navigation.
 
-function watchErrors(page: Page) {
+async function watchErrors(page: Page) {
   const problems: string[] = [];
   // Problems a loader reports, such as a value it can't read as text.
-  void page.addInitScript(() =>
+  await page.addInitScript(() =>
     document.addEventListener(
       'dotquilt-error',
       (event) =>
@@ -19,7 +19,7 @@ function watchErrors(page: Page) {
   // A production Svelte build doesn't log a hydration mismatch: it renders
   // again, replacing the server's nodes. Mark the server-rendered loaders
   // before any script runs; they must still be the page's after hydration.
-  void page.addInitScript(() =>
+  await page.addInitScript(() =>
     document.addEventListener('readystatechange', () => {
       if (document.readyState === 'interactive')
         for (const element of document.querySelectorAll(
@@ -53,7 +53,7 @@ test('the placeholders are in the server HTML, before any JavaScript', async ({
 test('the page hydrates without errors and hands over when the data arrives', async ({
   page,
 }) => {
-  const problems = watchErrors(page);
+  const problems = await watchErrors(page);
   await page.goto('/');
   const team = page.getByRole('group', { name: 'Team members' });
   await expect(team).toHaveAttribute('data-presentation', 'pending');
@@ -108,7 +108,7 @@ test('pending content is hidden from assistive technology until it is ready', as
 test('after a client-side navigation, the next page loads and hands over the same way', async ({
   page,
 }) => {
-  const problems = watchErrors(page);
+  const problems = await watchErrors(page);
   await page.goto('/');
   await expect(
     page.getByRole('group', { name: 'Team members' }),
@@ -194,4 +194,26 @@ test.describe('without JavaScript', () => {
       (regionBox?.y ?? 0) + (regionBox?.height ?? 0),
     );
   });
+});
+
+test('event callbacks stay outside the options effect, and options changed in place arrive', async ({
+  page,
+}) => {
+  await page.goto('/checks');
+  // The invalid count was reported once, while clicks was 0.
+  await expect(page.getByText('Errors at: 0')).toBeVisible();
+  // The callback read `clicks`; changing it must not run update() again.
+  for (let i = 0; i < 3; i++)
+    await page.getByRole('button', { name: 'Click' }).click();
+  await expect(page.getByText('Updates: 0')).toBeVisible();
+  // A column pushed into the $state array reaches the element.
+  const table = page.locator('[data-check=table]');
+  const columnCount = () =>
+    table.evaluate(
+      (element) =>
+        (element as HTMLElement & { columns: unknown[] }).columns.length,
+    );
+  await expect.poll(columnCount).toBe(2);
+  await page.getByRole('button', { name: 'Add column' }).click();
+  await expect.poll(columnCount).toBe(3);
 });

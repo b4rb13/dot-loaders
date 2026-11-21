@@ -80,8 +80,8 @@ useHost(
   motion="paused"
   variant={initial.variant}
   {mark}
-  >{@html sheet(wrapperChartStyles, initial.policy, 'ChartLoader')}{@html markSheet(
-    () => wrapperChartMarkStyles,
+  >{@html sheet(wrapperChartStyles(), initial.policy, 'ChartLoader')}{@html markSheet(
+    wrapperChartMarkStyles,
     initial.policy,
     'ChartLoader',
     mark,

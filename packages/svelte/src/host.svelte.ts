@@ -10,7 +10,7 @@ import {
   wrapperPolicyAttributes,
   wrapperStyleSlot,
 } from 'dotquilt/wrapper';
-import { onMount } from 'svelte';
+import { onMount, untrack } from 'svelte';
 import type { HTMLAttributes } from 'svelte/elements';
 
 /** Callbacks for the native events, as in `@dotquilt/react`. */
@@ -67,6 +67,18 @@ function apply(node: Host, register: () => void, value: object) {
   }
 }
 
+/** Reads plain objects and arrays a few levels deep, to track them. */
+function touch(value: unknown, depth = 0): void {
+  if (
+    depth > 3 ||
+    !value ||
+    typeof value !== 'object' ||
+    (typeof Node !== 'undefined' && value instanceof Node)
+  )
+    return;
+  for (const item of Object.values(value)) touch(item, depth + 1);
+}
+
 /**
  * Registers the element after mount (so it never changes markup Svelte is
  * hydrating), then delivers every option through `update()` on mount and on
@@ -100,7 +112,12 @@ export function useHost(
   $effect(() => {
     const value = patch();
     const node = host() as Host | undefined;
-    if (node) apply(node, register, value);
+    // Read the options deeply here, so an array changed in place
+    // (`columns.push(…)`) runs this again; then apply them untracked:
+    // update() can send events synchronously, and state an event callback
+    // reads must not become this effect's dependency.
+    touch(value);
+    if (node) untrack(() => apply(node, register, value));
   });
 }
 
