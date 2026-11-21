@@ -14,6 +14,7 @@
     "jsx": "react-jsx"
   },
   "include": [
+    "packages/core/meta/**/*.ts",
     "scripts/**/*.ts",
     "tests/**/*.ts",
     "playwright*.config.ts",
