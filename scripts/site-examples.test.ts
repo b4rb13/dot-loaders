@@ -19,3 +19,22 @@ test('native examples that swap an error in at once reset the timing for the nex
   }
   expect(checked.length).toBeGreaterThan(3);
 });
+
+// The framework docs examples live in the example apps, so each app builds,
+// type-checks and runs them. Each app keeps its own copy of the shared data,
+// and the docs show examples/site/data.ts, so the copies must not drift.
+test('the example apps keep the shared docs data unchanged', async () => {
+  const shared = await readFile(
+    resolve(import.meta.dir, '../examples/site/data.ts'),
+    'utf8',
+  );
+  for (const copy of [
+    'examples/nuxt/app/docs/data.ts',
+    'examples/sveltekit/src/lib/docs/data.ts',
+    'examples/angular/src/app/docs/data.ts',
+  ])
+    expect(
+      await readFile(resolve(import.meta.dir, '..', copy), 'utf8'),
+      copy,
+    ).toBe(shared);
+});

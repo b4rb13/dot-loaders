@@ -3,7 +3,7 @@ title: Custom animations
 description: Write your own idle or handoff, and bundle options into presets.
 ---
 
-import { Code } from '@astrojs/starlight/components';
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import customTs from '../../../../../../../examples/site/custom-animation.ts?raw';
 
 Every loader has two animations: an **idle** that plays while it waits, and a **handoff** that plays when the content arrives. You can swap either for a built-in alternative, or write your own with `defineAnimation`.
@@ -32,10 +32,60 @@ Each `dot()` takes a centre (`x`, `y`), a radius (`size`), an `opacity` and a `t
 
 ## Use it
 
-```tsx
-<SkeletonBlock animations={{ idle: tide({ wavelength: 160 }) }} />
-<LoadingRegion animations={{ handoff: rise() }} … />
-```
+Pass them as `animations`, like the built-in ones. Create them once, outside your render, so the loader isn't handed new animations every time it renders.
+
+<Tabs syncKey="framework">
+  <TabItem label="React">
+    ```tsx
+    const idle = { idle: tide({ wavelength: 160 }) };
+    const handoff = { handoff: rise() };
+
+    <SkeletonBlock animations={idle} />
+    <LoadingRegion animations={handoff} … />
+    ```
+  </TabItem>
+  <TabItem label="Vue">
+    ```vue
+    <script setup lang="ts">
+    const idle = { idle: tide({ wavelength: 160 }) };
+    const handoff = { handoff: rise() };
+    </script>
+
+    <template>
+      <SkeletonBlock :animations="idle" />
+      <LoadingRegion :animations="handoff" …>
+    </template>
+    ```
+  </TabItem>
+  <TabItem label="Svelte">
+    ```svelte
+    <script lang="ts">
+    const idle = { idle: tide({ wavelength: 160 }) };
+    const handoff = { handoff: rise() };
+    </script>
+
+    <SkeletonBlock animations={idle} />
+    <LoadingRegion animations={handoff} …>
+    ```
+  </TabItem>
+  <TabItem label="Angular">
+    ```ts
+    // In the component class:
+    protected readonly idle = { idle: tide({ wavelength: 160 }) };
+    protected readonly handoff = { handoff: rise() };
+    ```
+    ```html
+    <dotquilt-skeleton-block [animations]="idle" />
+    <dotquilt-region [animations]="handoff" …>
+    ```
+  </TabItem>
+  <TabItem label="HTML">
+    ```ts
+    block.animations = { idle: tide({ wavelength: 160 }) };
+    region.animations = { handoff: rise() };
+    ```
+  </TabItem>
+</Tabs>
 
 ## Presets
 

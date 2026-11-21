@@ -2,6 +2,7 @@
 // Edge cases tests/nuxt drives in a browser; not part of the example's story.
 import {
   LoadingRegion,
+  SkeletonBlock,
   SkeletonCircle,
   SkeletonText,
   TableLoader,
@@ -26,6 +27,7 @@ const columns = reactive<TableColumn[]>([{ kind: 'text' }, { kind: 'number' }]);
     @loader-error="(event) => errors.push(event.detail.code)"
   />
   <TableLoader data-check="table" :columns="columns" :rows="2" />
+  <SkeletonBlock data-check="block" style="height: 48px" />
   <p>Errors: {{ errors.join(', ') || 'none' }}</p>
   <!-- Before the elements register: the page's classes size a loader, and a
        pending region keeps its placeholder's space with content present. -->

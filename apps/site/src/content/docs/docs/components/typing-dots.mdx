@@ -10,6 +10,9 @@ import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import Preview from '../../../../components/Preview.astro';
 // Real files, type-checked with the repository, so the code here always works.
 import replyTsx from '../../../../../../../examples/site/react/assistant-reply.tsx?raw';
+import replyVue from '../../../../../../../examples/nuxt/app/docs/AssistantReply.vue?raw';
+import replySvelte from '../../../../../../../examples/sveltekit/src/lib/docs/AssistantReply.svelte?raw';
+import replyAngular from '../../../../../../../examples/angular/src/app/docs/assistant-reply.ts?raw';
 import replyHtml from '../../../../../../../examples/site/native/assistant-reply.html?raw';
 import replyTs from '../../../../../../../examples/site/native/assistant-reply.ts?raw';
 
@@ -31,6 +34,15 @@ Use TypingDots as a region's placeholder, inside the same bubble your message wi
 <Tabs syncKey="framework">
   <TabItem label="React">
     <Code code={replyTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="AssistantReply.tsx" />
+  </TabItem>
+  <TabItem label="Vue">
+    <Code code={replyVue} lang="vue" title="AssistantReply.vue" />
+  </TabItem>
+  <TabItem label="Svelte">
+    <Code code={replySvelte} lang="svelte" title="AssistantReply.svelte" />
+  </TabItem>
+  <TabItem label="Angular">
+    <Code code={replyAngular} lang="ts" title="assistant-reply.ts" />
   </TabItem>
   <TabItem label="HTML">
     <Code code={replyHtml} lang="html" title="index.html" />

@@ -14,6 +14,7 @@ export async function ask(question: string): Promise<void> {
   try {
     const response = await fetch('/api/assistant', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question }),
     });
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);

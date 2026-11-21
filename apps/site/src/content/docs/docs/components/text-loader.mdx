@@ -10,6 +10,9 @@ import { Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import Preview from '../../../../components/Preview.astro';
 // Real files, type-checked with the repository, so the code here always works.
 import totalTsx from '../../../../../../../examples/site/react/revenue-total.tsx?raw';
+import totalVue from '../../../../../../../examples/nuxt/app/docs/RevenueTotal.vue?raw';
+import totalSvelte from '../../../../../../../examples/sveltekit/src/lib/docs/RevenueTotal.svelte?raw';
+import totalAngular from '../../../../../../../examples/angular/src/app/docs/revenue-total.ts?raw';
 import totalHtml from '../../../../../../../examples/site/native/revenue-total.html?raw';
 import totalTs from '../../../../../../../examples/site/native/revenue-total.ts?raw';
 
@@ -28,6 +31,15 @@ TextLoader is its own loading region: set its state, and put the value in as its
 <Tabs syncKey="framework">
   <TabItem label="React">
     <Code code={totalTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="RevenueTotal.tsx" />
+  </TabItem>
+  <TabItem label="Vue">
+    <Code code={totalVue} lang="vue" title="RevenueTotal.vue" />
+  </TabItem>
+  <TabItem label="Svelte">
+    <Code code={totalSvelte} lang="svelte" title="RevenueTotal.svelte" />
+  </TabItem>
+  <TabItem label="Angular">
+    <Code code={totalAngular} lang="ts" title="revenue-total.ts" />
   </TabItem>
   <TabItem label="HTML">
     <Code code={totalHtml} lang="html" title="index.html" />
