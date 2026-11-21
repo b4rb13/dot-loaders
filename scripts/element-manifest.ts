@@ -138,10 +138,14 @@ export function webTypes(elements: readonly ElementSpec[], version: string) {
               ...(attribute.default ? { default: attribute.default } : {}),
             },
           })),
-          slots: element.slots.map((slot) => ({
-            name: slot.name || 'default',
-            description: slot.description,
-          })),
+          // Named slots only: editors offer these as values of the `slot`
+          // attribute, and the default slot has no name to write there.
+          slots: element.slots
+            .filter((slot) => slot.name)
+            .map((slot) => ({
+              name: slot.name,
+              description: slot.description,
+            })),
           js: {
             properties: element.properties.map((property) => ({
               name: property.name,

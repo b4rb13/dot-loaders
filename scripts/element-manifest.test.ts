@@ -49,10 +49,20 @@ test('every element names an entry that exports its register function', async ()
 test('web-types lists every element at the package version', () => {
   const types = read(manifest['web-types']) as {
     version: string;
-    contributions: { html: { elements: { name: string }[] } };
+    contributions: {
+      html: { elements: { name: string; slots: { name: string }[] }[] };
+    };
   };
   expect(types.version).toBe(manifest.version);
   expect(types.contributions.html.elements.map((e) => e.name)).toEqual(
     elements.map((e) => e.tag),
   );
+  // Editors suggest these names for the `slot` attribute: only real ones.
+  const region = types.contributions.html.elements.find(
+    (e) => e.name === 'dotquilt-region',
+  );
+  expect(region?.slots.map((slot) => slot.name)).toEqual([
+    'placeholder',
+    'refresh-indicator',
+  ]);
 });
