@@ -18,9 +18,9 @@ export const skeletonLineCss = ${css(wrapper.wrapperLineStyles(), wrapper.wrappe
 export const skeletonCircleCss = ${css(wrapper.wrapperCircleStyles(), wrapper.wrapperCircleMarkStyles())};
 export const skeletonTextCss = ${css(wrapper.wrapperSkeletonTextStyles(), wrapper.wrapperSkeletonTextMarkStyles())};
 export const typingCss = ${css(wrapper.wrapperTypingStyles(), wrapper.wrapperTypingMarkStyles())};
-export const textCss = ${css(wrapper.wrapperTextStyles, wrapper.wrapperTextMarkStyles)};
-export const chartCss = ${css(wrapper.wrapperChartStyles, wrapper.wrapperChartMarkStyles)};
-export const tableCss = ${css(wrapper.wrapperTableStyles)};
+export const textCss = ${css(wrapper.wrapperTextStyles(), wrapper.wrapperTextMarkStyles())};
+export const chartCss = ${css(wrapper.wrapperChartStyles(), wrapper.wrapperChartMarkStyles())};
+export const tableCss = ${css(wrapper.wrapperTableStyles())};
 export const regionCss = ${css(wrapper.wrapperRegionStyles)};
 `,
 );

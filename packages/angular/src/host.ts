@@ -1,5 +1,4 @@
 import {
-  afterNextRender,
   afterRenderEffect,
   CSP_NONCE,
   DestroyRef,
@@ -9,6 +8,7 @@ import {
   input,
   type OutputEmitterRef,
   output,
+  untracked,
 } from '@angular/core';
 import type {
   HandoffDetail,
@@ -97,28 +97,38 @@ export abstract class Loader<E extends HTMLElement = HTMLElement> {
    */
   protected connect(register: () => void, options: () => object): void {
     const host = this.element as unknown as Host;
+    let listening = false;
     let destroyed = false;
     const listen = (event: Event) => {
       if (event.target !== host || destroyed) return;
       const name = names[event.type as keyof typeof names];
       (this[name] as OutputEmitterRef<Event>).emit(event);
     };
-    afterNextRender(() => {
-      for (const name of Object.keys(names))
-        host.addEventListener(name, listen);
-    });
     inject(DestroyRef).onDestroy(() => {
       destroyed = true;
       for (const name of Object.keys(names))
         host.removeEventListener(name, listen);
     });
     afterRenderEffect({
-      write: () =>
-        apply(host, register, {
+      write: () => {
+        // Read the inputs tracked, so a change runs this again.
+        const value = {
           ...options(),
           motion: this.motion(),
           stylePolicy: this.stylePolicy() ?? this.policy(),
-        }),
+        };
+        untracked(() => {
+          // Listening before the first update(), which can already report
+          // an invalid option; and untracked, so signals an output handler
+          // reads don't become this effect's dependencies.
+          if (!listening) {
+            listening = true;
+            for (const name of Object.keys(names))
+              host.addEventListener(name, listen);
+          }
+          apply(host, register, value);
+        });
+      },
     });
   }
 }

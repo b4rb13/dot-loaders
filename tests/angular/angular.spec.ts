@@ -4,10 +4,10 @@ import { expect, type Page, test } from '@playwright/test';
 // Angular SSR build, server-rendered, hydrated, and through a client-side
 // navigation.
 
-function watchErrors(page: Page) {
+async function watchErrors(page: Page) {
   const problems: string[] = [];
   // Problems a loader reports, such as a value it can't read as text.
-  void page.addInitScript(() =>
+  await page.addInitScript(() =>
     document.addEventListener(
       'dotquilt-error',
       (event) =>
@@ -19,7 +19,7 @@ function watchErrors(page: Page) {
   // Angular reports a hydration mismatch as a console error (NG05xx). As in
   // the SvelteKit suite, also mark the server-rendered loaders before any
   // script runs: hydration must keep them, not render them again.
-  void page.addInitScript(() =>
+  await page.addInitScript(() =>
     document.addEventListener('readystatechange', () => {
       if (document.readyState === 'interactive')
         for (const element of document.querySelectorAll(
@@ -53,7 +53,7 @@ test('the placeholders are in the server HTML, before any JavaScript', async ({
 test('the page hydrates without errors and hands over when the data arrives', async ({
   page,
 }) => {
-  const problems = watchErrors(page);
+  const problems = await watchErrors(page);
   await page.goto('/');
   const team = page.getByRole('group', { name: 'Team members' });
   await expect(team).toHaveAttribute('data-presentation', 'pending');
@@ -108,7 +108,7 @@ test('pending content is hidden from assistive technology until it is ready', as
 test('after a client-side navigation, the next page loads and hands over the same way', async ({
   page,
 }) => {
-  const problems = watchErrors(page);
+  const problems = await watchErrors(page);
   await page.goto('/');
   await expect(
     page.getByRole('group', { name: 'Team members' }),
@@ -194,4 +194,12 @@ test.describe('without JavaScript', () => {
       (regionBox?.y ?? 0) + (regionBox?.height ?? 0),
     );
   });
+});
+
+test('an invalid option on the first render reaches (loaderError)', async ({
+  page,
+}) => {
+  await page.goto('/checks');
+  // count 0 is invalid: reported during the element's first update().
+  await expect(page.getByText('Errors: invalid-option')).toBeVisible();
 });
