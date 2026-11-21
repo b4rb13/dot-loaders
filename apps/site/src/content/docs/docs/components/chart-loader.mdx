@@ -30,7 +30,7 @@ Put a ChartLoader in a region's placeholder slot, sized like the chart it stands
     <Code code={chartTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="RevenueChart.tsx" />
     <Code code={dataTs} lang="ts" title="data.ts" />
   </TabItem>
-  <TabItem label="Native">
+  <TabItem label="HTML">
     <Code code={chartHtml} lang="html" title="index.html" />
     <Code code={chartTs.replaceAll("'../data'", "'./data'")} lang="ts" title="revenue.ts" />
     <Code code={dataTs} lang="ts" title="data.ts" />
@@ -51,7 +51,7 @@ The provider receives the loader's `width` and `height` and returns one of these
 
 ## Options
 
-| Attribute | React | Type | Default | Description |
+| Attribute | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
 | `variant` | `variant` | `line` \| `bar` \| `scatter` | `line` | The kind of chart it stands in for. |
 | | `targetProvider` | function | | Where the real chart is, for the handoff. |

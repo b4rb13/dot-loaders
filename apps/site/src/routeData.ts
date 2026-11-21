@@ -29,7 +29,7 @@ const website = {
   url: `${site}/`,
   name: 'Dotquilt',
   description:
-    'Documentation and examples for Dotquilt, skeleton loaders made of dots for Web Components and React.',
+    'Documentation and examples for Dotquilt, skeleton loaders made of dots for React, Vue, Svelte, Angular and plain HTML.',
   inLanguage: 'en',
 };
 
@@ -39,7 +39,7 @@ const software = {
   name: 'Dotquilt',
   alternateName: 'dotquilt',
   description:
-    'Skeleton loaders for the web that hold the shape of your content while it loads, then hand over to it. Native Web Components with no runtime dependencies, and React 19 components with server rendering.',
+    'Skeleton loaders for the web that hold the shape of your content while it loads, then hand over to it. Native Web Components with no runtime dependencies, and components for React, Vue, Svelte and Angular with server rendering.',
   url: `${site}/`,
   image: `${site}/og.png`,
   applicationCategory: 'DeveloperApplication',
@@ -50,7 +50,7 @@ const software = {
   isAccessibleForFree: true,
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   keywords:
-    'skeleton loader, skeleton screen, loading placeholders, loading states, web components, React components',
+    'skeleton loader, skeleton screen, loading placeholders, loading states, web components, React, Vue, Svelte, Angular',
   featureList: [
     'Skeleton placeholders for text, images and avatars',
     'TextLoader for numbers and short labels',
@@ -66,6 +66,9 @@ const software = {
     repository,
     'https://www.npmjs.com/package/dotquilt',
     'https://www.npmjs.com/package/@dotquilt/react',
+    'https://www.npmjs.com/package/@dotquilt/vue',
+    'https://www.npmjs.com/package/@dotquilt/svelte',
+    'https://www.npmjs.com/package/@dotquilt/angular',
   ],
 };
 

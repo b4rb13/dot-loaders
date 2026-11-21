@@ -20,6 +20,52 @@ export function Summary({ data }: { data: Revenue | null }) {
     </LoadingRegion>
   );
 }`;
+const vue = `<script setup lang="ts">
+import { LoadingRegion, SkeletonText } from '@dotquilt/vue';
+
+defineProps<{ data: Revenue | null }>();
+</script>
+
+<template>
+  <LoadingRegion aria-label="Revenue" :state="data ? 'ready' : 'pending'">
+    <template #placeholder>
+      <SkeletonText :lines="3" />
+    </template>
+    <RevenueCard v-if="data" :data="data" />
+  </LoadingRegion>
+</template>`;
+const svelte = `<script lang="ts">
+  import { LoadingRegion, SkeletonText } from '@dotquilt/svelte';
+
+  let { data }: { data: Revenue | null } = $props();
+</script>
+
+<LoadingRegion aria-label="Revenue" state={data ? 'ready' : 'pending'}>
+  {#snippet placeholder()}
+    <SkeletonText lines={3} />
+  {/snippet}
+  {#if data}
+    <RevenueCard {data} />
+  {/if}
+</LoadingRegion>`;
+const angular = `import { Component, input } from '@angular/core';
+import { DotquiltPlaceholder, LoadingRegion, SkeletonText } from '@dotquilt/angular';
+
+@Component({
+  selector: 'app-summary',
+  imports: [DotquiltPlaceholder, LoadingRegion, SkeletonText, RevenueCard],
+  template: \`
+    <dotquilt-region aria-label="Revenue" [state]="data() ? 'ready' : 'pending'">
+      <div dotquiltPlaceholder><dotquilt-skeleton-text [lines]="3" /></div>
+      @if (data(); as revenue) {
+        <app-revenue-card [data]="revenue" />
+      }
+    </dotquilt-region>
+  \`,
+})
+export class Summary {
+  readonly data = input<Revenue | null>(null);
+}`;
 const native = `<dotquilt-region state="pending" aria-label="Revenue">
   <dotquilt-skeleton-text slot="placeholder" lines="3"></dotquilt-skeleton-text>
   <article>…</article>
@@ -62,7 +108,7 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
         }
       </div>
       <ol>
-        <li><span><strong>Install</strong> the React adapter, or the core package on its own.</span></li>
+        <li><span><strong>Install</strong> the package for React, Vue, Svelte or Angular, or the core package on its own.</span></li>
         <li><span><strong>Wrap your content</strong> in a loading region, with a placeholder in its shape.</span></li>
         <li>
           <span>
@@ -90,7 +136,16 @@ const native = `<dotquilt-region state="pending" aria-label="Revenue">
       <TabItem label="React">
         <Code code={react} lang="tsx" title="Summary.tsx" />
       </TabItem>
-      <TabItem label="Native">
+      <TabItem label="Vue">
+        <Code code={vue} lang="vue" title="Summary.vue" />
+      </TabItem>
+      <TabItem label="Svelte">
+        <Code code={svelte} lang="svelte" title="Summary.svelte" />
+      </TabItem>
+      <TabItem label="Angular">
+        <Code code={angular} lang="ts" title="summary.ts" />
+      </TabItem>
+      <TabItem label="HTML">
         <Code code={native} lang="html" title="index.html" />
       </TabItem>
     </Tabs>

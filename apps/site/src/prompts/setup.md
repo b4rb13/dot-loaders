@@ -6,6 +6,9 @@ Work in four phases. **Change no files until the user has answered your question
 
 - `dotquilt`: native Web Components with no runtime dependencies, for any framework or none.
 - `@dotquilt/react`: React 19 components with server rendering. Peer dependencies: `react` and `react-dom` 19.
+- `@dotquilt/vue`: Vue 3 components with server rendering (Nuxt too). Peer dependency: `vue` 3.5 or later.
+- `@dotquilt/svelte`: Svelte 5 components with server rendering (SvelteKit too). Peer dependency: `svelte` 5.
+- `@dotquilt/angular`: standalone Angular components with server rendering (Angular SSR). Peer dependency: `@angular/core` 22.
 
 ## Phase 1: Learn Dotquilt
 
@@ -35,18 +38,18 @@ Then reply with:
   4. Colours: Dotquilt's neutral slate with a teal glow, or the app's own tokens (name the ones you'd use)?
   5. Fast responses: skip the placeholder for answers under about 150 ms (`delay`), and keep a shown one for at least about 500 ms (`minDisplay`)?
   6. The nonce source, if a Content Security Policy needs one.
-  7. React below 19: upgrade React, or use the native elements?
+  7. React below 19, Vue 2, Svelte 4 or Angular below 22: upgrade, or use the native elements?
 
 **Stop here and wait for the answers.**
 
 ## Phase 3: Implement, in this order
 
-1. **Install** with the project's package manager: `dotquilt`, plus `@dotquilt/react` for React 19, version 0.1.2 or later (upgrade an older install). Check the installed versions and peer dependencies.
+1. **Install** with the project's package manager: `dotquilt`, plus the framework's package (`@dotquilt/react` for React 19, `@dotquilt/vue` for Vue 3.5, `@dotquilt/svelte` for Svelte 5, `@dotquilt/angular` for Angular 22), version 0.2.0 or later (upgrade an older install). Check the installed versions and peer dependencies.
 2. **Set up once, globally.**
    - **Theme**, if the user wants the app's colours: set `--dotquilt-color` (the resting marks) and `--dotquilt-accent-color` (the glow and the chart's handoff) in global CSS, for light and dark, from the app's tokens, under the app's own dark-mode selector.
    - **Dark mode:** Dotquilt's default colours use `light-dark()`, which follows the page's `color-scheme`. If the app has a dark mode but never sets `color-scheme` (common when dark mode is only a media query or a class), set it to match (`color-scheme: light dark`, or `dark` under the app's dark selector), or set both colour properties for each mode as above. Otherwise the marks stay light in dark mode. If the theme switches with a class while the page is open, call `refreshStyles(document)` from `dotquilt` after the switch: ChartLoader and TableLoader draw on a canvas and read their colours once.
    - **Content Security Policy**, if styles need a nonce or hashes: pass the same `stylePolicy` to every Dotquilt component (`{ mode: 'inline', nonce }`, or `{ mode: 'external', href }` with the stylesheets the package ships). A small wrapper that supplies it is fine.
-   - **Native elements only:** call each `register…()` once in the client entry, before the elements are used. The React components register themselves.
+   - **Native elements only:** call each `register…()` once in the client entry, before the elements are used. The framework packages' components register themselves.
 3. **Convert the highest-priority place first,** end to end, and check it in the browser before repeating the pattern.
 4. **Convert the rest, one place at a time,** in priority order. For each:
    - **Wrap only the part that loads** in a `LoadingRegion` (`<dotquilt-region>`) with an `aria-label` naming what loads. Keep headings, card frames, toolbars and table headers outside the region: they are already there and should stay still. A `TextLoader` holds a single value and is its own region, with no wrapper.
@@ -76,9 +79,12 @@ Then reply with:
 5. **Follow the framework's rules.**
    - **Next.js App Router:** the components are client components that also render on the server. Keep the state in a client component of your own. Render the same `state` on the server and in the first client render (no `typeof window` branches), and never load Dotquilt with `dynamic(..., { ssr: false })`. Functions such as `targetProvider` can't cross from a Server Component, so keep them in client components.
    - **Suspense fallbacks and `loading.tsx`:** a placeholder can be the fallback on its own, without a region. On its own it is decoration, hidden from assistive technology, so keep the page's own words nearby if the wait matters.
-   - **Vue, Svelte, Angular or plain HTML:** use the native elements. Tell the framework they are custom elements (Vue's `compilerOptions.isCustomElement`, Angular's `CUSTOM_ELEMENTS_SCHEMA`), and set `state` as an attribute or call `region.update({ state, cycle })`.
-   - **React below 19:** the adapter needs React 19. Use the native elements through refs, or upgrade if the user chose to.
-   - **Import only what a page uses:** `@dotquilt/react` (or a single entry such as `@dotquilt/react/region`); for native elements, `dotquilt/region`, `dotquilt/skeleton`, `dotquilt/text`, `dotquilt/chart`, `dotquilt/table` and `dotquilt/typing`.
+   - **Vue and Nuxt:** use `@dotquilt/vue`; no configuration. Put the placeholder in the region's `#placeholder` slot; events are `@handoff-end` and the like. Load data after mount or with `useFetch(…, { server: false })`, and render the same `state` on the server and in the first client render.
+   - **Svelte and SvelteKit:** use `@dotquilt/svelte`. The placeholder is a `placeholder` snippet; events are callback props such as `onHandoffEnd`. Give a `TextLoader` a `mask`: a snippet's text isn't known on the server.
+   - **Angular:** use `@dotquilt/angular` and add the components to each component's `imports` (no `CUSTOM_ELEMENTS_SCHEMA`). Mark the placeholder element with `dotquiltPlaceholder`; outputs are `(handoffEnd)` and the like. With Angular SSR and `provideClientHydration()`, the placeholders are in the server HTML; the styles use the app's `CSP_NONCE`.
+   - **Plain HTML, or a framework version without a package:** use the native elements. Register them before they render, set `state` as an attribute or call `region.update({ state, cycle })`, and pass objects such as `columns` as properties. In Vue templates set `compilerOptions.isCustomElement`; in Angular templates add `CUSTOM_ELEMENTS_SCHEMA`.
+   - **React below 19:** `@dotquilt/react` needs React 19. Use the native elements through refs, or upgrade if the user chose to.
+   - **Import only what a page uses:** a framework package (or a single entry such as `@dotquilt/vue/region`; Angular has one entry, and its build keeps only what you use); for native elements, `dotquilt/region`, `dotquilt/skeleton`, `dotquilt/text`, `dotquilt/chart`, `dotquilt/table` and `dotquilt/typing`.
 6. **Keep it accessible.** Every region has an `aria-label`. Keep the app's own messages: errors in `role="alert"`, and a `role="status"` line outside the region where the wait matters. Don't add `aria-busy` or your own reduced-motion checks around Dotquilt: the region already keeps pending content out of reach and follows the visitor's motion settings.
 
 ## Phase 4: Verify, then report
@@ -101,6 +107,9 @@ Then reply with:
 Use this only if you can't read the docs.
 
 - **React:** `<LoadingRegion aria-label="…" state={…} cycle={…} placeholder={<SkeletonText lines={3} />} delay={150} minDisplay={500} timing={{ duration: 0 }}>{content}</LoadingRegion>`.
+- **Vue:** `<LoadingRegion aria-label="…" :state="…" :cycle="…"><template #placeholder><SkeletonText :lines="3" /></template>…content…</LoadingRegion>`.
+- **Svelte:** `<LoadingRegion aria-label="…" state={…} cycle={…}>{#snippet placeholder()}<SkeletonText lines={3} />{/snippet}…content…</LoadingRegion>`.
+- **Angular:** `<dotquilt-region aria-label="…" [state]="…" [cycle]="…"><div dotquiltPlaceholder><dotquilt-skeleton-text [lines]="3" /></div>…content…</dotquilt-region>`.
 - **Skeletons:** `SkeletonText` (`lines`), `SkeletonLine`, `SkeletonCircle`, `SkeletonBlock`; size them with CSS like any element.
 - **TextLoader:** `<TextLoader aria-label="Revenue" mask="$00,000" state={…} cycle={…}>{formatted}</TextLoader>`, with the value as one string. The character effect covers printable ASCII on one line; other text falls back to a plain field of marks.
 - **ChartLoader:** `<ChartLoader variant="line" targetProvider={({ width, height }) => data ? { kind: 'line', points: [{ x, y }, …], baseline: height } : null} style={{ height: 160 }} />`; `kind: 'bar'` takes `bars` (rectangles) and a `baseline`, `kind: 'scatter'` takes `points`.

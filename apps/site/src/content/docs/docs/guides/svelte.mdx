@@ -1,0 +1,55 @@
+---
+title: Svelte and SvelteKit
+description: Typed Svelte 5 skeleton loader components with server rendering, for Svelte and SvelteKit.
+head:
+  - tag: title
+    content: Svelte and SvelteKit skeleton loaders | Dotquilt
+---
+
+import { Code } from '@astrojs/starlight/components';
+import teamSvelte from '../../../../../../../examples/sveltekit/src/lib/TeamList.svelte?raw';
+import totalSvelte from '../../../../../../../examples/sveltekit/src/lib/RevenueTotal.svelte?raw';
+
+To show a skeleton loader in Svelte, wrap the part of the page that loads in Dotquilt's `<LoadingRegion>`, give it a `placeholder` snippet such as `<SkeletonText lines={3} />`, and set its `state` from your data: `pending`, `refreshing` or `ready`.
+
+`@dotquilt/svelte` wraps the same native components in typed Svelte 5 components. They register themselves, render their placeholder on the server, and take their state from your props. No configuration is needed.
+
+```sh
+npm install @dotquilt/svelte dotquilt
+```
+
+```ts
+import { LoadingRegion, SkeletonText } from '@dotquilt/svelte';
+```
+
+Each component also has its own entry point, such as `@dotquilt/svelte/region`, if you prefer to import only what a page uses.
+
+## State comes from your data
+
+A region needs only two things from you: whether the data is `pending`, `refreshing` or `ready`, and a `cycle` naming the current request. Keep the request in your own state:
+
+- **Start a new cycle per request**, such as the id you are loading. A stale answer for an older cycle can't settle a newer one.
+- **Use `refreshing`** when you already show data and are fetching a newer copy: the content stays visible and usable.
+- **On an error**, show your message with `state="ready"` and `timing={{ duration: 0 }}`, so it replaces the placeholder at once.
+
+<Code code={teamSvelte} lang="svelte" title="src/lib/TeamList.svelte" />
+
+## SvelteKit
+
+The components render on the server too: the placeholder is in the first HTML, before any JavaScript runs. Hydration keeps it, because the elements register only after the component mounts. Client-side navigation works the same: a loader on the next page starts fresh, and its listeners go when the page does.
+
+A `TextLoader`'s value is a snippet, whose text the server can't read ahead of time. Give it a `mask` with the shape of the answer, so the placeholder in the server HTML has that shape:
+
+<Code code={totalSvelte} lang="svelte" title="src/lib/RevenueTotal.svelte" />
+
+## Events and the element
+
+Events are callback props: `onHandoffStart`, `onHandoffEnd`, `onHandoffCancel` and `onLoaderError`, each with the native `CustomEvent`. `event.detail.reason` says how a handoff ended. `bind:element` gives you the native element, if you need its methods.
+
+## Styles and CSP
+
+By default each component adds its styles inline, inside its element. If your site has a Content Security Policy, pass a `stylePolicy` to every component: a nonce (in SvelteKit, the value of `%sveltekit.nonce%`), or an external stylesheet from `@dotquilt/svelte/styles/`. See [Content Security Policy](/docs/guides/csp/).
+
+## The native elements in Svelte
+
+You can also use the native elements directly, without `@dotquilt/svelte`: register them in the browser before they render, and Svelte sets objects such as a table's `columns` as properties. The native elements have no placeholder in the server HTML: it appears once they register.

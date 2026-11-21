@@ -1,0 +1,67 @@
+---
+title: Vue and Nuxt
+description: Typed Vue 3 skeleton loader components with server rendering, for Vue and Nuxt.
+head:
+  - tag: title
+    content: Vue and Nuxt skeleton loaders | Dotquilt
+---
+
+import { Code } from '@astrojs/starlight/components';
+import teamVue from '../../../../../../../examples/nuxt/app/components/TeamList.vue?raw';
+import chartVue from '../../../../../../../examples/nuxt/app/components/RevenueChart.vue?raw';
+
+To show a skeleton loader in Vue, wrap the part of the page that loads in Dotquilt's `<LoadingRegion>`, put a loader such as `<SkeletonText :lines="3" />` in its `#placeholder` slot, and set its `state` from your data: `pending`, `refreshing` or `ready`.
+
+`@dotquilt/vue` wraps the same native components in typed Vue components. They register themselves, render their placeholder on the server, and take their state from your props. No Vue or Nuxt configuration is needed.
+
+```sh
+npm install @dotquilt/vue dotquilt
+```
+
+```ts
+import { LoadingRegion, SkeletonText } from '@dotquilt/vue';
+```
+
+Each component also has its own entry point, such as `@dotquilt/vue/region`, if you prefer to import only what a page uses.
+
+## State comes from your data
+
+A region needs only two things from you: whether the data is `pending`, `refreshing` or `ready`, and a `cycle` naming the current request. Keep the request in your own state:
+
+- **Start a new cycle per request**, such as the id you are loading. A stale answer for an older cycle can't settle a newer one.
+- **Use `refreshing`** when you already show data and are fetching a newer copy: the content stays visible and usable.
+- **On an error**, show your message with `state="ready"` and `:timing="{ duration: 0 }"`, so it replaces the placeholder at once.
+
+<Code code={teamVue} lang="vue" title="components/TeamList.vue" />
+
+## Nuxt
+
+The components render on the server too: the placeholder is in the first HTML, before any JavaScript runs. Hydration leaves it alone, because the elements register only after the component mounts. Load your data in the component, as above, or with `useFetch` and `server: false`, and pass the state on.
+
+Functions such as `target-provider` and custom animations stay in the browser, so a chart's marks can glide onto the real line once it's there:
+
+<Code code={chartVue} lang="vue" title="components/RevenueChart.vue" />
+
+Client-side navigation works the same: a loader on the next page starts fresh, and its listeners go when the page does.
+
+## Events and the element
+
+Each component emits `@handoff-start`, `@handoff-end`, `@handoff-cancel` and `@loader-error`, with the native `CustomEvent`: `event.detail.reason` says how a handoff ended. A template ref on a component exposes the native element as `element`, if you need its methods.
+
+## Styles and CSP
+
+By default each component adds its styles inline, inside its element. If your site has a Content Security Policy, pass a `style-policy` to every component: a nonce, or an external stylesheet from `@dotquilt/vue/styles/`. See [Content Security Policy](/docs/guides/csp/).
+
+## The native elements in Vue templates
+
+You can also use the native elements directly, without `@dotquilt/vue`. Tell Vue they are custom elements, register them once, and pass objects such as a table's `columns` as properties:
+
+```ts title="vite.config.ts"
+vue({
+  template: {
+    compilerOptions: { isCustomElement: (tag) => tag.startsWith('dotquilt-') },
+  },
+});
+```
+
+In Nuxt, set the same option as `vue.compilerOptions.isCustomElement` in `nuxt.config.ts`. The native elements have no placeholder in the server HTML: it appears once they register in the browser.

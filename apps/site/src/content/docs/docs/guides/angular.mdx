@@ -1,0 +1,57 @@
+---
+title: Angular
+description: Typed Angular skeleton loader components with server rendering, for Angular 22 and Angular SSR.
+head:
+  - tag: title
+    content: Angular skeleton loaders | Dotquilt
+---
+
+import { Code } from '@astrojs/starlight/components';
+import teamTs from '../../../../../../../examples/angular/src/app/team-list.ts?raw';
+import chartTs from '../../../../../../../examples/angular/src/app/revenue-chart.ts?raw';
+
+To show a skeleton loader in Angular, wrap the part of the page that loads in Dotquilt's `<dotquilt-region>`, put a loader such as `<dotquilt-skeleton-text [lines]="3" />` in an element marked `dotquiltPlaceholder`, and set its `state` from your data: `pending`, `refreshing` or `ready`.
+
+`@dotquilt/angular` makes the native components standalone Angular components: each one's host is the native element itself. Templates are type-checked, with no `CUSTOM_ELEMENTS_SCHEMA`. They register themselves, render their placeholder on the server, and take their state from your inputs.
+
+```sh
+npm install @dotquilt/angular dotquilt
+```
+
+```ts
+import { DotquiltPlaceholder, LoadingRegion, SkeletonText } from '@dotquilt/angular';
+```
+
+Import the components a template uses into its component's `imports`. The package has one entry point: an Angular build keeps only the components you use.
+
+## State comes from your data
+
+A region needs only two things from you: whether the data is `pending`, `refreshing` or `ready`, and a `cycle` naming the current request. Keep the request in your own signals:
+
+- **Start a new cycle per request**, such as the id you are loading. A stale answer for an older cycle can't settle a newer one.
+- **Use `refreshing`** when you already show data and are fetching a newer copy: the content stays visible and usable.
+- **On an error**, show your message with `state="ready"` and `[timing]="{ duration: 0 }"`, so it replaces the placeholder at once.
+
+<Code code={teamTs} lang="ts" title="team-list.ts" />
+
+## Server rendering and hydration
+
+With Angular SSR, the placeholder is in the first HTML, before any JavaScript runs, and `provideClientHydration()` keeps it. The elements register in the browser after rendering. Their styles before that go in the document head once, through Angular's own component styles.
+
+Functions such as `targetProvider` and custom animations stay in the browser, so a chart's marks can glide onto the real line once it's there:
+
+<Code code={chartTs} lang="ts" title="revenue-chart.ts" />
+
+Router navigation works the same: a loader on the next page starts fresh, and its listeners go when the page does.
+
+## Outputs and the element
+
+Each component has the outputs `(handoffStart)`, `(handoffEnd)`, `(handoffCancel)` and `(loaderError)`, with the native `CustomEvent`: `$event.detail.reason` says how a handoff ended. A component's `element` is the native element, if you need its methods.
+
+## Styles and CSP
+
+Angular adds the components' styles with your app's `CSP_NONCE` (or `ngCspNonce`), and the elements use the same nonce for their own styles unless you pass a `stylePolicy`. For an external stylesheet instead, pass `{ mode: 'external', href }` and serve the file from `@dotquilt/angular/styles/`. See [Content Security Policy](/docs/guides/csp/).
+
+## The native elements in Angular templates
+
+You can also use the native elements directly, without `@dotquilt/angular`: add `CUSTOM_ELEMENTS_SCHEMA` to the component's `schemas`, register the elements once in the browser, and bind objects such as a table's `columns` as properties (`[columns]="columns"`). Angular then doesn't type-check those bindings, and the native elements have no placeholder in the server HTML: it appears once they register.
