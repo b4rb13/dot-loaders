@@ -1,6 +1,7 @@
 // The remaining checks that need the packed tarballs installed into clean
 // consumers: the React suite rerun on React 19.0 (the oldest supported
-// version) and catalog SSR under Node and Bun on React 19.3 and 19.0.
+// version), catalog SSR under Node and Bun on React 19.3 and 19.0, and the
+// Vue, Svelte and Angular packages built into their example apps.
 // Everything else runs in the main Playwright config and the unit suites.
 //
 //   bun run test:legacy              both suites, Chromium only
@@ -43,6 +44,11 @@ const suites: Record<string, Suite> = {
     env: { DOTQUILT_REACT_FLOOR: '1' },
     // Catalog SSR under Node and Bun with React 19.3 and 19.0.
     checks: [['bun', 'run', 'scripts/verify-catalog-ssr.ts']],
+  },
+  // The Vue, Svelte and Angular packages installed from their tarballs into
+  // fresh copies of the Nuxt, SvelteKit and Angular examples, built and served.
+  frameworks: {
+    prepare: [['bun', 'run', 'scripts/verify-frameworks.ts']],
   },
 };
 // Suites reuse consumers that earlier suites install.

@@ -1,5 +1,14 @@
 # dotquilt
 
+## 0.2.0
+
+### Minor Changes
+
+- f4205bf: Editors now know Dotquilt's elements. The package ships a Custom Elements Manifest (`customElements` in package.json) and JetBrains web-types (`web-types`). Together they describe every element's attributes, properties, methods, events, slots, parts and CSS custom properties. VS Code, WebStorm, Storybook and other tools read them for autocomplete and docs.
+- 75c64b3: New package: `@dotquilt/vue`, Vue 3 components for every loader, with server rendering. Placeholders are in the first HTML in Nuxt or your own Vue SSR, hydration stays clean, props and events are typed, and each component has its own entry.
+  
+  `dotquilt` gains `dotquilt/wrapper`, the framework-neutral markup and styles that framework packages render before an element is defined.
+
 ## 0.1.2
 
 ### Patch Changes
