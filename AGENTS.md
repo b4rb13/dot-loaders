@@ -36,7 +36,7 @@ Use Bun (pinned in `.bun-version`) and Node 24.15+ (Angular 22 in `examples/angu
   - `tests/<suite>/`: coordination, presets, table, shared-wrapper, api, layout, react and m4. Each has its own fixture server, listed in `playwright.config.ts`.
   - `tests/next/` runs against `examples/next`, a Next.js App Router project that `bun run build` builds (server rendering, hydration and a client-side navigation).
   - `bun run test:e2e:all` adds Firefox and WebKit.
-- **Legacy suites:** `bun run test:legacy` (under a minute). Only two checks need packed tarballs: the React suite rerun on React 19.0, the oldest supported version, and catalog SSR under Node and Bun. Run them before a release or when touching the React adapter's hydration or nonce handling.
+- **Legacy suites:** `bun run test:legacy` (a few minutes). The checks that need packed tarballs: the React suite rerun on React 19.0, the oldest supported version; catalog SSR under Node and Bun; and `frameworks`, which installs the Vue, Svelte and Angular tarballs into fresh copies of their example apps, builds and serves them. Run them before a release, or `bun run test:legacy <suite>` when touching that package.
 - **Release dry run:** `bun run release:check` (after `bun run build`) shows the planned versions, the tarball contents and what still blocks publishing. Nothing is published.
 - **Sizes:** `bun run size` prints gzip sizes per entry and fails when one is over its budget in `scripts/size-budgets.json` (about 15% headroom). Raise a budget only on purpose, in a PR that says why.
 - **Docs site:** `bun run --cwd apps/site dev` (http://127.0.0.1:4330; Astro runs it in the background, `bunx astro dev stop` ends it). `bun run build` builds it; `tests/site` checks the built pages.

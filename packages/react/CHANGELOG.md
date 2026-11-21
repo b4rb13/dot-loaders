@@ -1,5 +1,13 @@
 # @dotquilt/react
 
+## 0.2.0
+
+### Patch Changes
+
+- Updated dependencies [f4205bf]
+- Updated dependencies [de635bb]
+  - dotquilt@0.2.0
+
 ## 0.1.2
 
 ### Patch Changes
