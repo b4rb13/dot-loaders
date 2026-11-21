@@ -2,17 +2,17 @@
 //
 //   bun run size            print the report (run `bun run build` first)
 //
-// Each row bundles the smallest real usage (import + register, or the React
-// component) from the workspace build with Bun, minified, default inline
-// styles, with react and react-dom left external. Code an entry loads only
+// Each row bundles the smallest real usage (import + register, or a framework
+// package's component) from the workspace build with Bun, minified, default
+// inline styles, with the framework itself left external. Code an entry loads only
 // later (a dynamic import, such as the region's reveal) is split off: the
 // sizes and budgets count what loads up front (the entry and the chunks it
 // imports statically, compressed together as Vite and webpack would bundle
 // them), and "later" shows the rest.
 //
 // Budgets (AUDIT.md decision 1): scripts/size-budgets.json holds, per entry,
-// the most gzip bytes the native usage and the React usage (native included)
-// may reach: the size when they were set plus about 15% headroom. This script
+// the most gzip bytes the native usage and each framework usage (native
+// included) may reach: the size when they were set plus about 15% headroom. This script
 // fails when an entry goes over. Raising a budget is a deliberate change made
 // in a PR that says why.
 import { existsSync } from 'node:fs';
@@ -23,56 +23,69 @@ import { gzipSync } from 'node:zlib';
 const root = resolve(import.meta.dir, '..');
 const work = resolve(root, '.artifacts/size');
 
-const components: [name: string, native: string, react: string][] = [
+/** Framework packages, each measured with its framework left external. */
+const frameworks = [
+  {
+    key: 'react',
+    label: 'React',
+    name: '@dotquilt/react',
+    external: ['react', 'react-dom', 'react/jsx-runtime'],
+  },
+  { key: 'vue', label: 'Vue', name: '@dotquilt/vue', external: ['vue'] },
+] as const;
+
+// Component, its native usage, and its entry in every framework package
+// (empty: the package root, for everything).
+const components: [name: string, native: string, entry: string][] = [
   [
     'SkeletonBlock',
     "import { registerSkeletonBlock } from 'dotquilt/skeleton'; registerSkeletonBlock();",
-    "export { SkeletonBlock } from '@dotquilt/react/skeleton';",
+    'skeleton',
   ],
   [
     'SkeletonLine',
     "import { registerSkeletonLine } from 'dotquilt/skeleton'; registerSkeletonLine();",
-    "export { SkeletonLine } from '@dotquilt/react/skeleton';",
+    'skeleton',
   ],
   [
     'SkeletonCircle',
     "import { registerSkeletonCircle } from 'dotquilt/skeleton'; registerSkeletonCircle();",
-    "export { SkeletonCircle } from '@dotquilt/react/skeleton';",
+    'skeleton',
   ],
   [
     'SkeletonText',
     "import { registerSkeletonText } from 'dotquilt/skeleton'; registerSkeletonText();",
-    "export { SkeletonText } from '@dotquilt/react/skeleton';",
+    'skeleton',
   ],
   [
     'TypingDots',
     "import { registerTypingDots } from 'dotquilt/typing'; registerTypingDots();",
-    "export { TypingDots } from '@dotquilt/react/typing';",
+    'typing',
   ],
   [
     'TextLoader',
     "import { registerTextLoader } from 'dotquilt/text'; registerTextLoader();",
-    "export { TextLoader } from '@dotquilt/react/text';",
+    'text',
   ],
   [
     'ChartLoader',
     "import { registerChartLoader } from 'dotquilt/chart'; registerChartLoader();",
-    "export { ChartLoader } from '@dotquilt/react/chart';",
+    'chart',
   ],
   [
     'TableLoader',
     "import { registerTableLoader } from 'dotquilt/table'; registerTableLoader();",
-    "export { TableLoader } from '@dotquilt/react/table';",
+    'table',
   ],
   [
     'LoadingRegion',
     "import { registerLoadingRegion } from 'dotquilt/region'; registerLoadingRegion();",
-    "export { LoadingRegion } from '@dotquilt/react/region';",
+    'region',
   ],
   [
     'Everything',
     "import { registerAll } from 'dotquilt/register-all'; registerAll();",
-    "export * from '@dotquilt/react';",
+    '',
   ],
 ];
 
@@ -117,37 +130,40 @@ async function gzipSize(name: string, source: string, external: string[] = []) {
 await rm(work, { recursive: true, force: true });
 await mkdir(work, { recursive: true });
 const budgetFile = resolve(import.meta.dir, 'size-budgets.json');
-const budgets: Record<string, { native: number; react: number }> = existsSync(
-  budgetFile,
-)
+const budgets: Record<string, Record<string, number>> = existsSync(budgetFile)
   ? await Bun.file(budgetFile).json()
   : {};
 const rows: Record<string, string | number>[] = [];
 const overruns: string[] = [];
 const left = (bytes: number, budget?: number) =>
   budget === undefined ? '—' : `${Math.round((1 - bytes / budget) * 100)}%`;
-for (const [name, native, react] of components) {
-  const nativeSize = await gzipSize(`${name}-native`, native);
-  const reactSize = await gzipSize(`${name}-react`, `${native}\n${react}`, [
-    'react',
-    'react-dom',
-    'react/jsx-runtime',
-  ]);
-  const nativeBytes = nativeSize.now,
-    reactBytes = reactSize.now;
+for (const [name, native, entry] of components) {
   const budget = budgets[name];
-  if (budget && nativeBytes > budget.native)
-    overruns.push(`${name} (native): ${nativeBytes} B > ${budget.native} B`);
-  if (budget && reactBytes > budget.react)
-    overruns.push(`${name} (React): ${reactBytes} B > ${budget.react} B`);
-  rows.push({
+  const nativeSize = await gzipSize(`${name}-native`, native);
+  const row: Record<string, string | number> = {
     component: name,
-    'native gzip (B)': nativeBytes,
-    'native left': left(nativeBytes, budget?.native),
-    'React gzip (B)': reactBytes,
-    'React left': left(reactBytes, budget?.react),
-    'later (B)': nativeSize.later || '—',
-  });
+    'native gzip (B)': nativeSize.now,
+    'native left': left(nativeSize.now, budget?.native),
+  };
+  if (budget?.native !== undefined && nativeSize.now > budget.native)
+    overruns.push(`${name} (native): ${nativeSize.now} B > ${budget.native} B`);
+  for (const framework of frameworks) {
+    const usage = entry
+      ? `export { ${name} } from '${framework.name}/${entry}';`
+      : `export * from '${framework.name}';`;
+    const { now } = await gzipSize(
+      `${name}-${framework.key}`,
+      `${native}\n${usage}`,
+      [...framework.external],
+    );
+    const limit = budget?.[framework.key];
+    if (limit !== undefined && now > limit)
+      overruns.push(`${name} (${framework.label}): ${now} B > ${limit} B`);
+    row[`${framework.label} gzip (B)`] = now;
+    row[`${framework.label} left`] = left(now, limit);
+  }
+  row['later (B)'] = nativeSize.later || '—';
+  rows.push(row);
 }
 console.table(rows);
 if (!Object.keys(budgets).length)

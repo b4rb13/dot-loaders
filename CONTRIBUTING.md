@@ -53,6 +53,13 @@ bun run --cwd apps/site dev
 
 Staging uses npm trusted publishing: no npm token is stored anywhere, each release carries a provenance statement, and nothing reaches users without a person's approval. `main` is protected: changes land through pull requests once **All checks** passes.
 
+### Adding a package
+
+1. Add its folder to `scripts/packages.ts`, after the packages it depends on, and its name to the `fixed` group in `.changeset/config.json`. `bun run test` checks that these agree.
+2. npm can only trust a workflow for a package that exists, so the Release workflow skips a package npm has never seen. After the release PR merges, a maintainer publishes that first version by hand from the tagged commit: `bun run build`, then `npm publish` in the package's folder.
+3. Then add the trusted publisher, allowed to stage only: `npm trust github <name> --repo b4rb13/dot-loaders --file release.yml --allow-stage-publish`, or in the package's settings on npmjs.com.
+4. Rerun the Release workflow to tag it. Every later version is staged like the others.
+
 ## License
 
 By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE).

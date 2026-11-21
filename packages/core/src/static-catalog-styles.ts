@@ -27,7 +27,7 @@ export const staticCircleStyles: readonly string[] =
 // the host's gap; the fallback then uses the host's default gap directly.
 export const staticTextStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
-    `dotquilt-skeleton-text{display:grid;position:relative;gap:.5em}dotquilt-skeleton-text [data-dotquilt-static],dotquilt-skeleton-text [data-dotquilt-react-static]{display:grid;gap:inherit}dotquilt-skeleton-text:state(unstyled) [data-dotquilt-static],dotquilt-skeleton-text:state(unstyled) [data-dotquilt-react-static]{gap:.5em}dotquilt-skeleton-text [data-dotquilt-static-line]{display:block;height:${lineHeight};border-radius:999px;${staticLineDots}}@media(forced-colors:active){dotquilt-skeleton-text [data-dotquilt-static-line]{outline:1px dotted CanvasText}}${lineTrim(() => 'dotquilt-skeleton-text', '[data-dotquilt-static-line]', ['dot'])}`,
+    `dotquilt-skeleton-text{display:grid;position:relative;gap:.5em}dotquilt-skeleton-text [data-dotquilt-static],dotquilt-skeleton-text :is([data-dotquilt-react-static],[data-dotquilt-wrapper-static]){display:grid;gap:inherit}dotquilt-skeleton-text:state(unstyled) [data-dotquilt-static],dotquilt-skeleton-text:state(unstyled) :is([data-dotquilt-react-static],[data-dotquilt-wrapper-static]){gap:.5em}dotquilt-skeleton-text [data-dotquilt-static-line]{display:block;height:${lineHeight};border-radius:999px;${staticLineDots}}@media(forced-colors:active){dotquilt-skeleton-text [data-dotquilt-static-line]{outline:1px dotted CanvasText}}${lineTrim(() => 'dotquilt-skeleton-text', '[data-dotquilt-static-line]', ['dot'])}`,
   ]);
 export const staticTypingStyles: readonly string[] =
   /* @__PURE__ */ Object.freeze([
