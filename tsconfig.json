@@ -22,5 +22,5 @@
     "examples/**/*.ts",
     "examples/**/*.tsx"
   ],
-  "exclude": ["tests/types", "examples/next"]
+  "exclude": ["tests/types", "examples/next", "examples/nuxt"]
 }

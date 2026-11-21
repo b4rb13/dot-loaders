@@ -81,6 +81,10 @@
       "types": "./dist/register-all.d.ts",
       "import": "./dist/register-all.js"
     },
+    "./wrapper": {
+      "types": "./dist/wrapper.d.ts",
+      "import": "./dist/wrapper.js"
+    },
     "./styles/*.css": "./dist/*.css"
   },
   "scripts": {

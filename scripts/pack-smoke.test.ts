@@ -10,6 +10,7 @@ import {
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { hasClientDirective } from './client-directive.js';
+import { releaseOrder } from './packages.js';
 
 // What a published package guarantees beyond the workspace build, checked
 // without installing tarballs:
@@ -49,6 +50,7 @@ beforeAll(async () => {
     resolve(root, 'tests/types/consumer.ts'),
     resolve(work, 'consumer.ts'),
   );
+  await cp(resolve(root, 'tests/vue/consumer.ts'), resolve(work, 'vue.ts'));
   await writeFile(
     resolve(work, 'consumer.tsx'),
     (await readFile(resolve(root, 'tests/react/consumer.tsx'), 'utf8')).replace(
@@ -59,7 +61,30 @@ beforeAll(async () => {
 });
 afterAll(() => rm(work, { recursive: true, force: true }));
 
-for (const name of ['core', 'react'] as const) {
+/**
+ * What each package may depend on, and import besides its own files and
+ * dotquilt's public entries.
+ */
+const rules: Record<
+  string,
+  { dependencies: string[]; peers: string[]; imports: string[] }
+> = {
+  core: { dependencies: [], peers: [], imports: [] },
+  react: {
+    dependencies: ['dotquilt'],
+    peers: ['react', 'react-dom'],
+    imports: ['react', 'react/jsx-runtime', 'react-dom', 'react-dom/client'],
+  },
+  vue: { dependencies: ['dotquilt'], peers: ['vue'], imports: ['vue'] },
+};
+
+test('every released package has its rules here', () => {
+  expect(Object.keys(rules).sort()).toEqual(
+    releaseOrder.map((dir) => dir.slice('packages/'.length)).sort(),
+  );
+});
+
+for (const [name, rule] of Object.entries(rules)) {
   const directory = resolve(root, 'packages', name);
   const manifest = require(resolve(directory, 'package.json')) as {
     name: string;
@@ -71,11 +96,9 @@ for (const name of ['core', 'react'] as const) {
 
   test(`${name}: the manifest is public, with only the expected dependencies`, () => {
     expect(manifest.private).toBeUndefined();
-    expect(Object.keys(manifest.dependencies ?? {})).toEqual(
-      name === 'core' ? [] : ['dotquilt'],
-    );
+    expect(Object.keys(manifest.dependencies ?? {})).toEqual(rule.dependencies);
     expect(Object.keys(manifest.peerDependencies ?? {}).sort()).toEqual(
-      name === 'core' ? [] : ['react', 'react-dom'],
+      rule.peers,
     );
   });
 
@@ -122,19 +145,11 @@ for (const name of ['core', 'react'] as const) {
             !(await Bun.file(target).exists())
           )
             problems.push(`${file}: ${specifier} escapes dist or is missing`);
-        } else if (name === 'react' && specifier.startsWith('dotquilt')) {
+        } else if (name !== 'core' && specifier.startsWith('dotquilt')) {
           const entry = specifier.slice('dotquilt'.length);
           if (!Object.hasOwn(core.exports, entry ? `.${entry}` : '.'))
             problems.push(`${file}: ${specifier} is not a core export`);
-        } else if (
-          name === 'core' ||
-          ![
-            'react',
-            'react/jsx-runtime',
-            'react-dom',
-            'react-dom/client',
-          ].includes(specifier)
-        )
+        } else if (!rule.imports.includes(specifier))
           problems.push(`${file}: unexpected dependency ${specifier}`);
       }
     }
@@ -168,7 +183,7 @@ test('consumer types check on TypeScript 7 and 5.7 with Bundler and NodeNext res
   const runs = [];
   for (const compiler of ['typescript', 'typescript-min'])
     for (const mode of ['Bundler', 'NodeNext'])
-      for (const file of ['consumer.ts', 'consumer.tsx'])
+      for (const file of ['consumer.ts', 'consumer.tsx', 'vue.ts'])
         runs.push(
           run([
             'node',

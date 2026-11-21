@@ -1,5 +1,7 @@
 node_modules/
 .next/
+.nuxt/
+.output/
 next-env.d.ts
 .turbo/
 .vercel/

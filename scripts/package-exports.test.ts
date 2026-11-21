@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { releaseOrder } from './packages.js';
 
 // The public stylesheets for the `external` style policy. Each package ships
 // them as dist/<name>.css behind one `./styles/*.css` export pattern.
@@ -18,8 +19,9 @@ const stylesheets = [
 ];
 const root = resolve(import.meta.dir, '..');
 
-for (const name of ['core', 'react']) {
-  const directory = resolve(root, 'packages', name);
+for (const dir of releaseOrder) {
+  const name = dir.slice('packages/'.length);
+  const directory = resolve(root, dir);
   const manifest = require(resolve(directory, 'package.json')) as {
     name: string;
     exports: Record<string, unknown>;

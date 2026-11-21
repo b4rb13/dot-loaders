@@ -8,4 +8,8 @@
  * `.changeset/config.json`, then see "Adding a package" in CONTRIBUTING.md
  * for its first release.
  */
-export const releaseOrder = ['packages/core', 'packages/react'] as const;
+export const releaseOrder = [
+  'packages/core',
+  'packages/react',
+  'packages/vue',
+] as const;

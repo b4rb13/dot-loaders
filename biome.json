@@ -15,7 +15,9 @@
       ".changeset/*.json",
       "!**/.next",
       "!**/next-env.d.ts",
-      "!examples/next/tsconfig.json"
+      "!examples/next/tsconfig.json",
+      "!**/.nuxt",
+      "!**/.output"
     ]
   },
   "formatter": {
@@ -39,7 +41,7 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.astro"],
+      "includes": ["**/*.astro", "**/*.vue"],
       "linter": {
         "rules": {
           "correctness": {
