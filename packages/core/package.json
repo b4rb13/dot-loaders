@@ -17,6 +17,8 @@
   "sideEffects": [
     "**/*.css"
   ],
+  "customElements": "dist/custom-elements.json",
+  "web-types": "dist/web-types.json",
   "files": [
     "dist",
     "README.md",

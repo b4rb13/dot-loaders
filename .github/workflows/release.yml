@@ -1,6 +1,6 @@
 name: Release
-# Stages dotquilt and @dotquilt/react on npm when main holds a version that
-# npm doesn't have yet. A release PR sets the versions with
+# Stages the packages listed in scripts/packages.ts on npm when main holds a
+# version that npm doesn't have yet. A release PR sets the versions with
 # `bunx changeset version`; merging it runs this workflow. A staged version
 # goes public only when a maintainer approves it with 2FA on npmjs.com
 # (the package's Staged Packages tab) or with `npm stage approve`.
@@ -9,13 +9,14 @@ name: Release
 # anywhere, and npm adds a provenance statement to each release. Each
 # package's trusted publisher on npmjs.com names this repository and this
 # workflow file (release.yml), and may only stage; renaming the file breaks
-# releasing.
+# releasing. A package npm has never seen is skipped: its first version is
+# published by hand (CONTRIBUTING.md, "Adding a package"), and a rerun of this
+# workflow then tags it.
 on:
   push:
     branches: [main]
     paths:
-      - packages/core/package.json
-      - packages/react/package.json
+      - packages/*/package.json
   workflow_dispatch:
 permissions:
   contents: read
@@ -58,15 +59,22 @@ jobs:
       - name: Stage what npm doesn't have yet, then tag it
         run: |
           set -euo pipefail
-          # The core first: @dotquilt/react depends on it. A version that is
-          # already staged can't be staged again, so a rerun before approval
-          # fails here; approve or reject the staged one instead.
-          for dir in packages/core packages/react; do
+          # In scripts/packages.ts order: a package after the ones it depends
+          # on. A version that is already staged can't be staged again, so a
+          # rerun before approval fails here; approve or reject the staged one
+          # instead.
+          dirs=$(bun -e "import { releaseOrder } from './scripts/packages.ts'; console.log(releaseOrder.join(' '))")
+          for dir in $dirs; do
             name=$(node -p "require('./$dir/package.json').name")
             version=$(node -p "require('./$dir/package.json').version")
             if npm view "$name@$version" version >/dev/null 2>&1; then
               echo "$name@$version is already on npm."
             else
+              existing=$(npm view "$name" name 2>&1 || true)
+              if grep -q E404 <<<"$existing"; then
+                echo "::warning::$name has never been published. Publish $name@$version by hand and add its trusted publisher (CONTRIBUTING.md, Adding a package), then rerun this workflow to tag it."
+                continue
+              fi
               (cd "$dir" && npm stage publish)
               echo "Staged $name@$version: approve it on npmjs.com to publish."
             fi
