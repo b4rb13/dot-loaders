@@ -67,7 +67,13 @@ afterAll(() => rm(work, { recursive: true, force: true }));
  */
 const rules: Record<
   string,
-  { dependencies: string[]; peers: string[]; imports: string[] }
+  {
+    dependencies: string[];
+    peers: string[];
+    imports: string[];
+    /** False for a package only its framework's compiler can load. */
+    runs?: boolean;
+  }
 > = {
   core: { dependencies: [], peers: [], imports: [] },
   react: {
@@ -76,6 +82,14 @@ const rules: Record<
     imports: ['react', 'react/jsx-runtime', 'react-dom', 'react-dom/client'],
   },
   vue: { dependencies: ['dotquilt'], peers: ['vue'], imports: ['vue'] },
+  // Svelte libraries ship .svelte sources that the app's Svelte compiles:
+  // tests/sveltekit builds and runs them.
+  svelte: {
+    dependencies: ['dotquilt'],
+    peers: ['svelte'],
+    imports: ['svelte', 'svelte/elements'],
+    runs: false,
+  },
 };
 
 test('every released package has its rules here', () => {
@@ -128,7 +142,7 @@ for (const [name, rule] of Object.entries(rules)) {
     };
     const problems: string[] = [];
     let scanned = 0;
-    for await (const file of new Bun.Glob('**/*.{js,d.ts}').scan({
+    for await (const file of new Bun.Glob('**/*.{js,d.ts,svelte}').scan({
       cwd: dist,
       onlyFiles: true,
     })) {
@@ -157,26 +171,30 @@ for (const [name, rule] of Object.entries(rules)) {
     expect(problems).toEqual([]);
   });
 
-  test(`${name}: every JavaScript export imports in Node and Bun; private paths do not`, async () => {
-    const subpaths = Object.keys(manifest.exports)
-      .filter((key) => !key.includes('*') && !key.endsWith('.css'))
-      .map((key) => key.slice(1));
-    const script = resolve(work, `import-${name}.mjs`);
-    await writeFile(
-      script,
-      `const name = '${manifest.name}';
+  test.skipIf(rule.runs === false)(
+    `${name}: every JavaScript export imports in Node and Bun; private paths do not`,
+    async () => {
+      const subpaths = Object.keys(manifest.exports)
+        .filter((key) => !key.includes('*') && !key.endsWith('.css'))
+        .map((key) => key.slice(1));
+      const script = resolve(work, `import-${name}.mjs`);
+      await writeFile(
+        script,
+        `const name = '${manifest.name}';
 for (const path of ${JSON.stringify(subpaths)}) await import(name + path);
 for (const path of ['/internal/table-model', '/dist/index.js']) {
   let rejected = false;
   try { await import(name + path); } catch { rejected = true; }
   if (!rejected) throw new Error('private path imported: ' + path);
 }`,
-    );
-    for (const runtime of ['node', 'bun']) {
-      const { err, code } = await run([runtime, script]);
-      expect(code, `${runtime}: ${err}`).toBe(0);
-    }
-  }, 30_000);
+      );
+      for (const runtime of ['node', 'bun']) {
+        const { err, code } = await run([runtime, script]);
+        expect(code, `${runtime}: ${err}`).toBe(0);
+      }
+    },
+    30_000,
+  );
 }
 
 test('consumer types check on TypeScript 7 and 5.7 with Bundler and NodeNext resolution', async () => {

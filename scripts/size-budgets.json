@@ -2,51 +2,61 @@
   "SkeletonBlock": {
     "native": 8100,
     "react": 9700,
-    "vue": 9600
+    "vue": 9600,
+    "svelte": 9800
   },
   "SkeletonLine": {
     "native": 8600,
     "react": 11000,
-    "vue": 11700
+    "vue": 11700,
+    "svelte": 10800
   },
   "SkeletonCircle": {
     "native": 8600,
     "react": 11000,
-    "vue": 11700
+    "vue": 11700,
+    "svelte": 10800
   },
   "SkeletonText": {
     "native": 9300,
     "react": 11700,
-    "vue": 11500
+    "vue": 11500,
+    "svelte": 11800
   },
   "TypingDots": {
     "native": 6000,
     "react": 9600,
-    "vue": 8900
+    "vue": 8900,
+    "svelte": 9200
   },
   "TextLoader": {
     "native": 16200,
     "react": 18300,
-    "vue": 19100
+    "vue": 19100,
+    "svelte": 19300
   },
   "ChartLoader": {
     "native": 16700,
     "react": 19000,
-    "vue": 19500
+    "vue": 19500,
+    "svelte": 19800
   },
   "TableLoader": {
     "native": 18300,
     "react": 21200,
-    "vue": 21000
+    "vue": 21000,
+    "svelte": 21400
   },
   "LoadingRegion": {
     "native": 13500,
     "react": 15100,
-    "vue": 14700
+    "vue": 14700,
+    "svelte": 15100
   },
   "Everything": {
     "native": 39500,
     "react": 44500,
-    "vue": 44100
+    "vue": 44100,
+    "svelte": 45500
   }
 }

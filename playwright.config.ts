@@ -34,6 +34,7 @@ const suites: {
 const apps = [
   { name: 'next', port: 4360 },
   { name: 'nuxt', port: 4361 },
+  { name: 'sveltekit', port: 4362 },
 ];
 const browsers = (
   process.env.ALL_BROWSERS ? ['chromium', 'firefox', 'webkit'] : ['chromium']

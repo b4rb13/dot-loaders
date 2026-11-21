@@ -1,0 +1,27 @@
+{
+  "name": "dotquilt-example-sveltekit",
+  "private": true,
+  "type": "module",
+  "description": "Dotquilt in a SvelteKit project: server-rendered placeholders that hydrate and hand over.",
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  },
+  "scripts": {
+    "dev": "vite dev --port 4362",
+    "build": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings && vite build",
+    "start": "PORT=4362 HOST=127.0.0.1 node build"
+  },
+  "dependencies": {
+    "@dotquilt/svelte": "workspace:*",
+    "dotquilt": "workspace:*"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "6.0.5",
+    "@sveltejs/kit": "3.4.0",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "svelte": "5.59.1",
+    "svelte-check": "4.7.8",
+    "typescript": "6.0.3",
+    "vite": "8.3.8"
+  }
+}

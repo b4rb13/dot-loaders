@@ -2,7 +2,9 @@
   "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
   "changelog": ["@changesets/cli/changelog", null],
   "commit": false,
-  "fixed": [["dotquilt", "@dotquilt/react", "@dotquilt/vue"]],
+  "fixed": [
+    ["dotquilt", "@dotquilt/react", "@dotquilt/vue", "@dotquilt/svelte"]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",

@@ -22,5 +22,10 @@
     "examples/**/*.ts",
     "examples/**/*.tsx"
   ],
-  "exclude": ["tests/types", "examples/next", "examples/nuxt"]
+  "exclude": [
+    "tests/types",
+    "examples/next",
+    "examples/nuxt",
+    "examples/sveltekit"
+  ]
 }
