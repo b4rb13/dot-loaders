@@ -45,6 +45,14 @@ const packager = Bun.spawn(
 );
 if (await packager.exited) throw new Error('Angular build failed');
 // ng-packagr writes a package.json of its own; the package root's is the one
-// published, pointing into dist.
+// published, pointing into dist. Like the other packages, this one ships no
+// source maps.
 await rm(resolve(cwd, 'dist/package.json'), { force: true });
+for await (const map of new Bun.Glob('dist/**/*.map').scan({ cwd }))
+  await rm(resolve(cwd, map));
+for await (const file of new Bun.Glob('dist/**/*.mjs').scan({ cwd })) {
+  const path = resolve(cwd, file);
+  const code = await Bun.file(path).text();
+  await Bun.write(path, code.replace(/\n\/\/# sourceMappingURL=\S+\s*$/, '\n'));
+}
 await writeWrapperStyles(resolve(cwd, 'dist'));
