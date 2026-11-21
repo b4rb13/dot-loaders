@@ -17,7 +17,7 @@ export default defineConfig({
     starlight({
       title: 'Dotquilt',
       description:
-        'Skeleton loaders made of dots, for Web Components and React: they hold the shape of your content, then hand over to it.',
+        'Skeleton loaders made of dots, for React, Vue, Svelte, Angular and plain HTML: they hold the shape of your content, then hand over to it.',
       // Head tags Starlight doesn't add: each page's social card, a link to
       // its Markdown copy, and JSON-LD.
       routeMiddleware: './src/routeData.ts',
@@ -83,9 +83,17 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Guides',
+          label: 'Frameworks',
           items: [
             { label: 'React and Next.js', slug: 'docs/guides/react' },
+            { label: 'Vue and Nuxt', slug: 'docs/guides/vue' },
+            { label: 'Svelte and SvelteKit', slug: 'docs/guides/svelte' },
+            { label: 'Angular', slug: 'docs/guides/angular' },
+          ],
+        },
+        {
+          label: 'Guides',
+          items: [
             { label: 'Server rendering', slug: 'docs/guides/server-rendering' },
             { label: 'Content Security Policy', slug: 'docs/guides/csp' },
             {

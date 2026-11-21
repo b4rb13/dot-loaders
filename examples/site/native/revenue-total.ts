@@ -11,7 +11,8 @@ const money = new Intl.NumberFormat('en-US', {
 
 export async function showTotal(month: string): Promise<void> {
   if (!total) return;
-  total.update({ state: 'pending', cycle: month });
+  // Each load starts with the default handoff; an error below swaps at once.
+  total.update({ state: 'pending', cycle: month, timing: undefined });
   try {
     const response = await fetch(`/api/revenue/${month}/total`);
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);

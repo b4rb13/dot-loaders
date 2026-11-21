@@ -1,6 +1,6 @@
 ---
 title: Skeleton
-description: Skeleton loaders for images, text lines, avatars and paragraphs, made of marks, as native Web Components or React components.
+description: Skeleton loaders for images, text lines, avatars and paragraphs, made of marks, as native Web Components or components for React, Vue, Svelte and Angular.
 head:
   - tag: title
     content: Skeleton loader for text, images and avatars | Dotquilt
@@ -48,7 +48,7 @@ Put a skeleton in a region's `placeholder` slot and size it with CSS like any ot
   <TabItem label="React">
     <Code code={memberCard.replaceAll("'../data'", "'./data'")} lang="tsx" title="MemberCard.tsx" />
   </TabItem>
-  <TabItem label="Native">
+  <TabItem label="HTML">
     <Code code={memberHtml} lang="html" title="index.html" />
     <Code code={memberTs.replaceAll("'../data'", "'./data'")} lang="ts" title="member.ts" />
   </TabItem>
@@ -70,7 +70,7 @@ Use margins rather than padding: the idle glow's copy of the lines spans the pad
 
 ## Elements
 
-| Element | React | Use |
+| Element | Component | Use |
 | --- | --- | --- |
 | `<dotquilt-skeleton-block>` | `SkeletonBlock` | images, charts and other rectangles |
 | `<dotquilt-skeleton-line>` | `SkeletonLine` | one line of text |
@@ -86,8 +86,9 @@ Use margins rather than padding: the idle glow's copy of the lines spans the pad
 | `speed` | number | `1` | How fast the idle glow moves, from above 0 up to 4. |
 | `pointer-response` | `none` \| `lift` | `none` | `lift` lights the marks around the pointer while the placeholder shows, on devices with a fine pointer. |
 | `lines` | number | `3` | SkeletonText only: how many lines, up to 50. |
+| (property) `widths` | number[] | last line 0.6 | SkeletonText only: each line's length as a share of the width, from above 0 to 1. Set it as a property, or as the `widths` prop in a framework package. |
 
-In React the props have the same names in camelCase (`pointerResponse`).
+In the React, Vue, Svelte and Angular packages the props have the same names in camelCase (`pointerResponse`).
 
 ## Animations
 

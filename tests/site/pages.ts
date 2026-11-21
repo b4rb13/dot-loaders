@@ -9,6 +9,9 @@ export const components = [
 ];
 const guides = [
   'react',
+  'vue',
+  'svelte',
+  'angular',
   'server-rendering',
   'csp',
   'custom-animations',

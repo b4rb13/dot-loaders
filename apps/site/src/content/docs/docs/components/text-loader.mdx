@@ -29,7 +29,7 @@ TextLoader is its own loading region: set its state, and put the value in as its
   <TabItem label="React">
     <Code code={totalTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="RevenueTotal.tsx" />
   </TabItem>
-  <TabItem label="Native">
+  <TabItem label="HTML">
     <Code code={totalHtml} lang="html" title="index.html" />
     <Code code={totalTs.replaceAll("'../data'", "'./data'")} lang="ts" title="total.ts" />
   </TabItem>
@@ -37,7 +37,7 @@ TextLoader is its own loading region: set its state, and put the value in as its
 
 ## Options
 
-| Attribute | React | Type | Default | Description |
+| Attribute | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
 | `state` | `state` | `pending` \| `refreshing` \| `ready` | `ready` | Whether the value is loading. |
 | `cycle` | `cycle` | string | | Names one load, so a stale answer can't settle a newer one. |

@@ -48,7 +48,7 @@ Going from `pending` to `ready` plays the handoff. First the marks take your con
   <TabItem label="React">
     <Code code={feedTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="ActivityFeed.tsx" />
   </TabItem>
-  <TabItem label="Native">
+  <TabItem label="HTML">
     <Code code={feedHtml} lang="html" title="index.html" />
     <Code code={feedTs.replaceAll("'../data'", "'./data'")} lang="ts" title="activity.ts" />
   </TabItem>
@@ -62,9 +62,11 @@ Going from `pending` to `ready` plays the handoff. First the marks take your con
 | `refresh-indicator` | `refreshIndicator` | your own cue while refreshing, in place of the row of marks |
 | (default) | `children` | your content |
 
+In Vue they are the `#placeholder` and `#refresh-indicator` slots, in Svelte the `placeholder` and `refreshIndicator` snippets, and in Angular elements marked `dotquiltPlaceholder` and `dotquiltRefreshIndicator`.
+
 ## Options
 
-| Attribute | React | Type | Default | Description |
+| Attribute | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
 | `state` | `state` | `pending` \| `refreshing` \| `ready` | `ready` | Whether the content is loading. |
 | `cycle` | `cycle` | string | | Names one load, so a stale answer can't settle a newer one. |
@@ -83,7 +85,7 @@ Going from `pending` to `ready` plays the handoff. First the marks take your con
 | `dotquilt-handoff-cancel` | a newer state or cycle replaced it |
 | `dotquilt-error` | an option was invalid or an animation failed; `detail.code` says which |
 
-In React, use `onHandoffStart`, `onHandoffEnd`, `onHandoffCancel` and `onLoaderError`.
+In React and Svelte, use `onHandoffStart`, `onHandoffEnd`, `onHandoffCancel` and `onLoaderError`; in Vue, `@handoff-start`, `@handoff-end`, `@handoff-cancel` and `@loader-error`; in Angular, `(handoffStart)`, `(handoffEnd)`, `(handoffCancel)` and `(loaderError)`.
 
 `dotquilt-error` doesn't repeat itself. A configuration problem, such as an invalid `speed`, reports again only after the option held a valid value in between. A failure while loading, such as an animation that throws, reports at most once per load: the next pending state or new `cycle` can report it again.
 

@@ -1,40 +1,83 @@
 ---
 title: Installation
-description: Install dotquilt with npm or Bun, add @dotquilt/react for React 19, and register only the components you use.
+description: Install Dotquilt with npm or Bun, add the package for React, Vue, Svelte or Angular, and load only the components you use.
 head:
   - tag: title
-    content: Install Dotquilt for Web Components or React | Dotquilt
+    content: Install Dotquilt for React, Vue, Svelte, Angular or HTML | Dotquilt
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 ## Install
 
-<Tabs syncKey="pkg">
-  <TabItem label="npm">
+Every setup uses `dotquilt`, the native Web Components. React, Vue, Svelte and Angular each have a package of typed components on top, with server rendering:
+
+<Tabs syncKey="framework">
+  <TabItem label="React">
+    ```sh
+    npm install @dotquilt/react dotquilt
+    ```
+  </TabItem>
+  <TabItem label="Vue">
+    ```sh
+    npm install @dotquilt/vue dotquilt
+    ```
+  </TabItem>
+  <TabItem label="Svelte">
+    ```sh
+    npm install @dotquilt/svelte dotquilt
+    ```
+  </TabItem>
+  <TabItem label="Angular">
+    ```sh
+    npm install @dotquilt/angular dotquilt
+    ```
+  </TabItem>
+  <TabItem label="HTML">
     ```sh
     npm install dotquilt
     ```
   </TabItem>
-  <TabItem label="bun">
-    ```sh
-    bun add dotquilt
-    ```
-  </TabItem>
 </Tabs>
 
-For React, add the adapter too:
+With Bun, `bun add` the same packages.
 
-```sh
-npm install @dotquilt/react
-```
+## Load the components
 
-## Register the components
-
-Each component has its own entry point, so you only ship what you use. Register them once, before they appear on the page.
+Each component has its own entry point, so you only ship what you use.
 
 <Tabs syncKey="framework">
-  <TabItem label="Native">
+  <TabItem label="React">
+    The components register themselves. Import them from the package:
+
+    ```tsx
+    import { LoadingRegion, SkeletonText } from '@dotquilt/react';
+    ```
+  </TabItem>
+  <TabItem label="Vue">
+    The components register themselves after they mount. Import them from the package:
+
+    ```ts
+    import { LoadingRegion, SkeletonText } from '@dotquilt/vue';
+    ```
+  </TabItem>
+  <TabItem label="Svelte">
+    The components register themselves after they mount. Import them from the package:
+
+    ```ts
+    import { LoadingRegion, SkeletonText } from '@dotquilt/svelte';
+    ```
+  </TabItem>
+  <TabItem label="Angular">
+    The components are standalone: add them to your component's `imports`, and they register themselves in the browser.
+
+    ```ts
+    import { DotquiltPlaceholder, LoadingRegion, SkeletonText } from '@dotquilt/angular';
+    ```
+  </TabItem>
+  <TabItem label="HTML">
+    Register the elements once, before they appear on the page:
+
     ```ts
     import { registerLoadingRegion } from 'dotquilt/region';
     import { registerSkeletonText } from 'dotquilt/skeleton';
@@ -42,24 +85,56 @@ Each component has its own entry point, so you only ship what you use. Register 
     registerLoadingRegion();
     registerSkeletonText();
     ```
-  </TabItem>
-  <TabItem label="React">
-    The React components register themselves. Import them from the adapter:
 
-    ```tsx
-    import { LoadingRegion, SkeletonText } from '@dotquilt/react';
-    ```
+    To register every component at once, call `registerAll()` from `dotquilt/register-all`.
   </TabItem>
 </Tabs>
-
-To register every component at once, call `registerAll()` from `dotquilt/register-all`.
 
 `LoadingRegion` loads its reveal animation on its own, the first time a region shows its placeholder, so it doesn't weigh on the first page load. Bundlers such as Vite and webpack split it into its own file. If the data arrives before that file has loaded, that one handover uses the simpler dissolve.
 
 ## Show a placeholder
 
 <Tabs syncKey="framework">
-  <TabItem label="Native">
+  <TabItem label="React">
+    ```tsx
+    <LoadingRegion
+      state={data ? 'ready' : 'pending'}
+      aria-label="Quarterly revenue"
+      placeholder={<SkeletonText lines={3} />}
+    >
+      <article>…your content…</article>
+    </LoadingRegion>
+    ```
+  </TabItem>
+  <TabItem label="Vue">
+    ```vue
+    <LoadingRegion :state="data ? 'ready' : 'pending'" aria-label="Quarterly revenue">
+      <template #placeholder>
+        <SkeletonText :lines="3" />
+      </template>
+      <article>…your content…</article>
+    </LoadingRegion>
+    ```
+  </TabItem>
+  <TabItem label="Svelte">
+    ```svelte
+    <LoadingRegion state={data ? 'ready' : 'pending'} aria-label="Quarterly revenue">
+      {#snippet placeholder()}
+        <SkeletonText lines={3} />
+      {/snippet}
+      <article>…your content…</article>
+    </LoadingRegion>
+    ```
+  </TabItem>
+  <TabItem label="Angular">
+    ```html
+    <dotquilt-region [state]="data() ? 'ready' : 'pending'" aria-label="Quarterly revenue">
+      <div dotquiltPlaceholder><dotquilt-skeleton-text [lines]="3" /></div>
+      <article>…your content…</article>
+    </dotquilt-region>
+    ```
+  </TabItem>
+  <TabItem label="HTML">
     ```html
     <dotquilt-region state="pending" aria-label="Quarterly revenue">
       <dotquilt-skeleton-text slot="placeholder" lines="3"></dotquilt-skeleton-text>
@@ -74,19 +149,8 @@ To register every component at once, call `registerAll()` from `dotquilt/registe
     region?.update({ state: 'ready' });
     ```
   </TabItem>
-  <TabItem label="React">
-    ```tsx
-    <LoadingRegion
-      state={data ? 'ready' : 'pending'}
-      aria-label="Quarterly revenue"
-      placeholder={<SkeletonText lines={3} />}
-    >
-      <article>…your content…</article>
-    </LoadingRegion>
-    ```
-  </TabItem>
 </Tabs>
 
 Give each region a label, so assistive technology can name what is loading.
 
-For a complete component with a real request, errors and stale answers, see the usage example on the [Skeleton](/docs/components/skeleton/#usage) page.
+Each framework has a guide with a complete, tested example: [React and Next.js](/docs/guides/react/), [Vue and Nuxt](/docs/guides/vue/), [Svelte and SvelteKit](/docs/guides/svelte/) and [Angular](/docs/guides/angular/). For a component with a real request, errors and stale answers, see the usage example on the [Skeleton](/docs/components/skeleton/#usage) page.

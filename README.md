@@ -16,10 +16,16 @@ Skeleton loaders that hold the shape of your content, then become it.
 
 [![npm: dotquilt](https://img.shields.io/npm/v/dotquilt?label=dotquilt&color=2f6f74)](https://www.npmjs.com/package/dotquilt)
 [![npm: @dotquilt/react](https://img.shields.io/npm/v/@dotquilt/react?label=@dotquilt/react&color=2f6f74)](https://www.npmjs.com/package/@dotquilt/react)
+[![npm: @dotquilt/vue](https://img.shields.io/npm/v/@dotquilt/vue?label=@dotquilt/vue&color=2f6f74)](https://www.npmjs.com/package/@dotquilt/vue)
+[![npm: @dotquilt/svelte](https://img.shields.io/npm/v/@dotquilt/svelte?label=@dotquilt/svelte&color=2f6f74)](https://www.npmjs.com/package/@dotquilt/svelte)
+[![npm: @dotquilt/angular](https://img.shields.io/npm/v/@dotquilt/angular?label=@dotquilt/angular&color=2f6f74)](https://www.npmjs.com/package/@dotquilt/angular)
 [![Quality](https://github.com/b4rb13/dot-loaders/actions/workflows/quality.yml/badge.svg)](https://github.com/b4rb13/dot-loaders/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2f6f74)](LICENSE)
 ![Web Components](https://img.shields.io/badge/web_components-native-1b2230)
 ![React 19](https://img.shields.io/badge/React-19-1b2230)
+![Vue 3](https://img.shields.io/badge/Vue-3-1b2230)
+![Svelte 5](https://img.shields.io/badge/Svelte-5-1b2230)
+![Angular 22](https://img.shields.io/badge/Angular-22-1b2230)
 
 </div>
 
@@ -37,7 +43,7 @@ Skeleton loaders that hold the shape of your content, then become it.
 Dotquilt is a set of loading placeholders made of small marks. When your data arrives, the marks don't vanish: they travel to its real shape. Each skeleton line grows or shrinks to the length of your text, a number's marks take the shape of its digits, and a chart's marks glide onto your line. Then the content wipes in as they leave, in about a second.
 
 - **Native Web Components** with no runtime dependencies, for any framework or none.
-- **A React 19 adapter** with server rendering and clean hydration.
+- **Packages for React 19, Vue 3, Svelte 5 and Angular 22,** with server rendering and clean hydration, each tested in a Next.js, Nuxt, SvelteKit or Angular SSR app.
 - **Accessible by default.** Pending content is inert and hidden from screen readers, focus is kept, reduced motion swaps content in at once, and forced-colours mode shows a clear outline.
 - **Calm.** The idle glow stops after four seconds. `delay` and `min-display` keep fast loads from flickering.
 - **Strict CSP.** No inline style attributes: allow the stylesheets with a nonce or hashes, or serve them as files.
@@ -52,10 +58,10 @@ Dotquilt is a set of loading placeholders made of small marks. When your data ar
 npm install dotquilt
 ```
 
-For React:
+For React, Vue, Svelte or Angular, add its package:
 
 ```bash
-npm install @dotquilt/react dotquilt
+npm install @dotquilt/react dotquilt     # or @dotquilt/vue, @dotquilt/svelte, @dotquilt/angular
 ```
 
 ## Quick start
@@ -101,6 +107,8 @@ export function Summary({ data }: { data: Revenue | null }) {
 }
 ```
 
+Vue, Svelte and Angular work the same way; each [framework guide](https://dotquilt.dev/docs/guides/vue/) shows a complete, tested example.
+
 Your app owns the request. The region only needs to know whether the data is `pending`, `refreshing` (the content stays visible and usable) or `ready`.
 
 ## Components
@@ -124,7 +132,8 @@ Every loader comes in dot, dash and square marks, in light and dark, themed with
 ## Guides
 
 - [Installation](https://dotquilt.dev/docs/installation/) and [theming](https://dotquilt.dev/docs/theming/)
-- [React and Next.js](https://dotquilt.dev/docs/guides/react/)
+- [React and Next.js](https://dotquilt.dev/docs/guides/react/), [Vue and Nuxt](https://dotquilt.dev/docs/guides/vue/), [Svelte and SvelteKit](https://dotquilt.dev/docs/guides/svelte/), [Angular](https://dotquilt.dev/docs/guides/angular/)
+- [Skeleton loader or spinner?](https://dotquilt.dev/docs/guides/skeleton-or-spinner/)
 - [Server rendering](https://dotquilt.dev/docs/guides/server-rendering/)
 - [Content Security Policy](https://dotquilt.dev/docs/guides/csp/)
 - [Motion and accessibility](https://dotquilt.dev/docs/guides/motion/)
@@ -133,16 +142,19 @@ Every loader comes in dot, dash and square marks, in light and dark, themed with
 ## Examples
 
 - [Examples gallery](https://dotquilt.dev/examples/): a dashboard and recipes for real product screens, each with its code.
-- [`examples/next`](examples/next): a Next.js App Router project with server rendering, hydration and a client-side navigation.
+- [`examples/next`](examples/next), [`examples/nuxt`](examples/nuxt), [`examples/sveltekit`](examples/sveltekit) and [`examples/angular`](examples/angular): the same small app in each framework, with server rendering, hydration and a client-side navigation, each tested in CI.
 
 ## Repository
 
 | Path | What it is |
 | --- | --- |
 | [`packages/core`](packages/core) | `dotquilt`: the native Web Components runtime, framework-free |
-| [`packages/react`](packages/react) | `@dotquilt/react`: the React 19 adapter, with server rendering |
+| [`packages/react`](packages/react) | `@dotquilt/react`: React 19 components, with server rendering |
+| [`packages/vue`](packages/vue) | `@dotquilt/vue`: Vue 3 components, with server rendering |
+| [`packages/svelte`](packages/svelte) | `@dotquilt/svelte`: Svelte 5 components, with server rendering |
+| [`packages/angular`](packages/angular) | `@dotquilt/angular`: Angular 22 components, with server rendering |
 | [`apps/site`](apps/site) | [dotquilt.dev](https://dotquilt.dev): docs, examples and the playground (Astro + Starlight) |
-| [`examples/next`](examples/next) | A Next.js App Router example |
+| [`examples`](examples) | Next.js, Nuxt, SvelteKit and Angular SSR examples |
 | [`design`](design) | The design spec and tokens |
 
 ## Contributing

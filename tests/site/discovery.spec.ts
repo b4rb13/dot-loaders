@@ -75,7 +75,7 @@ test('titles name what people search for, while headings stay short', async ({
   for (const [path, title, heading] of [
     [
       '/',
-      'Skeleton loaders for Web Components and React | Dotquilt',
+      'Skeleton loaders for React, Vue, Svelte and Angular | Dotquilt',
       'Loading states that hand over.',
     ],
     [

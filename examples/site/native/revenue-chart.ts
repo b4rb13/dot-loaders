@@ -12,7 +12,8 @@ const line = region?.querySelector('path');
 export async function showRevenue(year: number): Promise<void> {
   if (!region || !line) return;
   const cycle = String(year);
-  region.update({ state: 'pending', cycle });
+  // Each load starts with the default handoff; an error below swaps at once.
+  region.update({ state: 'pending', cycle, timing: undefined });
   try {
     const response = await fetch(`/api/revenue/${year}`);
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);

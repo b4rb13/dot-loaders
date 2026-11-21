@@ -4,7 +4,7 @@ Loading placeholders that hold the shape of your content, then hand over to it. 
 
 <a href="https://dotquilt.dev"><img src="https://raw.githubusercontent.com/b4rb13/dot-loaders/main/.github/assets/hero-light.gif" alt="A revenue screen loading: its figures take shape in square marks, a chart line draws from a field of dots, and the table rows settle, then everything hands over to the real content." width="100%"></a>
 
-Native Web Components with no runtime dependencies, for any framework or none. For React, see `@dotquilt/react`.
+Native Web Components with no runtime dependencies, for any framework or none. For typed components with server rendering, see `@dotquilt/react`, `@dotquilt/vue`, `@dotquilt/svelte` and `@dotquilt/angular`.
 
 > **Status:** alpha (0.x). The API may still change before 1.0.
 

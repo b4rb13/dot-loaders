@@ -16,6 +16,8 @@ async function load(): Promise<void> {
   region.update({
     state: list.children.length ? 'refreshing' : 'pending',
     cycle,
+    // Each load starts with the default handoff; an error below swaps at once.
+    timing: undefined,
   });
   try {
     const response = await fetch('/api/activity');

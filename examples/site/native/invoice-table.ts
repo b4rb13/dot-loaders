@@ -13,7 +13,8 @@ table.columns = invoiceColumns;
 
 export async function showInvoices(): Promise<void> {
   if (!region || !body) return;
-  region.update({ state: 'pending', cycle: 'invoices' });
+  // Each load starts with the default handoff; an error below swaps at once.
+  region.update({ state: 'pending', cycle: 'invoices', timing: undefined });
   try {
     const response = await fetch('/api/invoices');
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);
