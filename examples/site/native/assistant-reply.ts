@@ -9,7 +9,8 @@ const bubble = region?.querySelector<HTMLElement>('[data-reply]');
 
 export async function ask(question: string): Promise<void> {
   if (!region || !bubble) return;
-  region.update({ state: 'pending', cycle: question });
+  // Each load starts with the default handoff; an error below swaps at once.
+  region.update({ state: 'pending', cycle: question, timing: undefined });
   try {
     const response = await fetch('/api/assistant', {
       method: 'POST',

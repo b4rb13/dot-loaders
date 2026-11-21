@@ -1,6 +1,6 @@
 ---
 title: TypingDots
-description: 'A typing indicator for chat and AI assistant replies: calm dots that hand over to the message when it arrives, as a Web Component or in React.'
+description: 'A typing indicator for chat and AI assistant replies: calm dots that hand over to the message when it arrives, as a Web Component or in React, Vue, Svelte and Angular.'
 head:
   - tag: title
     content: 'TypingDots: typing indicator for chat replies | Dotquilt'
@@ -32,7 +32,7 @@ Use TypingDots as a region's placeholder, inside the same bubble your message wi
   <TabItem label="React">
     <Code code={replyTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="AssistantReply.tsx" />
   </TabItem>
-  <TabItem label="Native">
+  <TabItem label="HTML">
     <Code code={replyHtml} lang="html" title="index.html" />
     <Code code={replyTs.replaceAll("'../data'", "'./data'")} lang="ts" title="reply.ts" />
   </TabItem>
@@ -48,7 +48,7 @@ TypingDots are decorative: they have no state of their own. On their own, outsid
 
 ## Options
 
-| Attribute | React | Type | Default | Description |
+| Attribute | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
 | `count` | `count` | number | `3` | How many dots, up to 8. |
 | `mark` | `mark` | `dot` \| `square` \| `dash` | `dot` | The shape of each dot. |

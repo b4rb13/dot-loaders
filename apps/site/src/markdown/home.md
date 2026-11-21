@@ -1,6 +1,6 @@
 # Dotquilt
 
-> Skeleton loaders (loading placeholders) for the web, made of dots. They hold the shape of your content while it loads, then hand over to it. Native Web Components with no runtime dependencies, and React 19 components with server rendering. Free and open source under the MIT license.
+> Skeleton loaders (loading placeholders) for the web, made of dots. They hold the shape of your content while it loads, then hand over to it. Native Web Components with no runtime dependencies, and components for React, Vue, Svelte and Angular with server rendering. Free and open source under the MIT license.
 
 When your data arrives, the placeholder's marks travel to the content's real shape: each skeleton line grows or shrinks to the length of its text, a number's marks take the shape of its digits, and a chart's marks glide onto the line. Then the content wipes in as they leave, in about a second.
 
@@ -10,10 +10,10 @@ When your data arrives, the placeholder's marks travel to the content's real sha
 npm install dotquilt
 ```
 
-For React 19:
+For React 19, Vue 3, Svelte 5 or Angular 22, add its package:
 
 ```sh
-npm install @dotquilt/react dotquilt
+npm install @dotquilt/react dotquilt    # or @dotquilt/vue, @dotquilt/svelte, @dotquilt/angular
 ```
 
 ## Quick start
@@ -35,7 +35,7 @@ export function Summary({ data }: { data: Revenue | null }) {
 }
 ```
 
-Without React:
+Without a framework package (the guides cover [Vue](https://dotquilt.dev/docs/guides/vue.md), [Svelte](https://dotquilt.dev/docs/guides/svelte.md) and [Angular](https://dotquilt.dev/docs/guides/angular.md)):
 
 ```html
 <dotquilt-region state="pending" aria-label="Revenue">
@@ -73,4 +73,4 @@ Without React:
 - To add Dotquilt to a project, follow the setup prompt: https://dotquilt.dev/setup-prompt.md
 - Every docs page as Markdown: https://dotquilt.dev/llms.txt (index) and https://dotquilt.dev/llms-full.txt (all in one file)
 - Source and issues: https://github.com/b4rb13/dot-loaders
-- Packages: https://www.npmjs.com/package/dotquilt and https://www.npmjs.com/package/@dotquilt/react
+- Packages: https://www.npmjs.com/package/dotquilt, https://www.npmjs.com/package/@dotquilt/react, https://www.npmjs.com/package/@dotquilt/vue, https://www.npmjs.com/package/@dotquilt/svelte and https://www.npmjs.com/package/@dotquilt/angular

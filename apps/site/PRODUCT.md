@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Front-end developers and design engineers building data-heavy product screens (dashboards, tables, charts, chat, admin) in React or plain HTML. They meet Dotquilt while choosing how their app should look while data loads, and judge it by how it behaves inside a real screen.
+Front-end developers and design engineers building data-heavy product screens (dashboards, tables, charts, chat, admin) in React, Vue, Svelte, Angular or plain HTML. They meet Dotquilt while choosing how their app should look while data loads, and judge it by how it behaves inside a real screen.
 
 ## Product Purpose
 
@@ -20,7 +20,7 @@ The handoff. Placeholders turn into the real content: marks glide onto the chart
 
 ## Operating Context
 
-- Nine native web components (SkeletonBlock, SkeletonLine, SkeletonCircle, SkeletonText, TextLoader, ChartLoader, TableLoader, TypingDots, LoadingRegion) and a typed React 19 adapter.
+- Nine native web components (SkeletonBlock, SkeletonLine, SkeletonCircle, SkeletonText, TextLoader, ChartLoader, TableLoader, TypingDots, LoadingRegion) and typed packages for React 19, Vue 3, Svelte 5 and Angular 22.
 - Server rendering, strict Content Security Policy (nonce, hashes, external stylesheets), reduced motion, pause, forced colours and focus handling are built in.
 - A custom animation authoring API; three mark shapes (dot, dash, square).
 - The docs site (Astro + Starlight) lives at https://dotquilt.dev, deployed from main on Vercel.
@@ -28,7 +28,7 @@ The handoff. Placeholders turn into the real content: marks glide onto the chart
 ## Capabilities and Constraints
 
 - The whole library is free and MIT licensed. Dotquilt Pro (application screens, motion packs, playground export tools; one-time purchase) is coming later with no price, checkout or sign-up shown until the commercial gates pass.
-- The packages are `dotquilt` (the native elements) and `@dotquilt/react` (owner decision, 2026-11-20). They are not published to npm yet.
+- The packages are `dotquilt` (the native elements), `@dotquilt/react` (owner decision, 2026-11-20), and `@dotquilt/vue`, `@dotquilt/svelte` and `@dotquilt/angular` (owner decision, 2026-11-21).
 - Idle motion stops after four seconds; the handoff (about 1.1 s) always plays unless reduced motion, a pause or focus prevents it.
 - Undecided: the npm name, size budgets, ASCII-only TextLoader, how often errors repeat, pending server content before JavaScript.
 

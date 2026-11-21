@@ -30,7 +30,7 @@ Describe the columns and set how many rows to show. The handoff reads your real 
     <Code code={tableTsx.replaceAll("'../data'", "'./data'")} lang="tsx" title="InvoiceTable.tsx" />
     <Code code={dataTs} lang="ts" title="data.ts" />
   </TabItem>
-  <TabItem label="Native">
+  <TabItem label="HTML">
     <Code code={tableHtml} lang="html" title="index.html" />
     <Code code={tableTs.replaceAll("'../data'", "'./data'")} lang="ts" title="invoices.ts" />
     <Code code={dataTs} lang="ts" title="data.ts" />
@@ -41,7 +41,7 @@ With a `targetProvider`, the table uses the `rows` handoff instead: each cell's 
 
 ## Options
 
-| Attribute | React | Type | Default | Description |
+| Attribute | Prop | Type | Default | Description |
 | --- | --- | --- | --- | --- |
 | `rows` | `rows` | number | `5` | How many rows to show, up to 100. |
 | `row-height` | `rowHeight` | number | `32` | Row height in pixels. |

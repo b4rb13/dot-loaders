@@ -12,7 +12,7 @@ const site = 'https://dotquilt.dev';
 
 /** The small label above the title: where the page sits on the site. */
 function section(id: string): string | undefined {
-  if (id === 'index') return 'Web Components · React';
+  if (id === 'index') return 'React · Vue · Svelte · Angular';
   if (id.startsWith('docs/components/')) return 'Components';
   if (id.startsWith('docs/guides/')) return 'Guides';
   if (id === 'docs' || id.startsWith('docs/')) return 'Docs';
