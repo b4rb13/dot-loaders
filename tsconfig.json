@@ -14,6 +14,7 @@
     "jsx": "react-jsx"
   },
   "include": [
+    "packages/core/meta/**/*.ts",
     "scripts/**/*.ts",
     "tests/**/*.ts",
     "playwright*.config.ts",
@@ -21,5 +22,10 @@
     "examples/**/*.ts",
     "examples/**/*.tsx"
   ],
-  "exclude": ["tests/types", "examples/next"]
+  "exclude": [
+    "tests/types",
+    "examples/next",
+    "examples/nuxt",
+    "examples/sveltekit"
+  ]
 }

@@ -3,9 +3,9 @@
 //   bun run release:check
 import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { releaseOrder as packages } from './packages.js';
 
 const root = resolve(import.meta.dir, '..');
-const packages = ['packages/core', 'packages/react'];
 
 async function run(command: string[], cwd = root) {
   const child = Bun.spawn(command, { cwd, stdout: 'pipe', stderr: 'pipe' });

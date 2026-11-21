@@ -481,6 +481,8 @@ The full reasoning, with sources, is in the product strategy and `docs/research/
 **Growth (free):**
 - **A shadcn registry** (`npx shadcn add dotquilt/...`). The `shadcn` package has 18.9M weekly downloads.
 - **Thin, typed Vue, Svelte and Angular wrappers.** NumberFlow shows a custom element plus wrappers can reach millions of weekly downloads.
+  - **In progress (owner, 2026-11-21):** `@dotquilt/vue`, `@dotquilt/svelte` and `@dotquilt/angular` ship with 0.2.0 before launch prep ends on 4 Dec. Each comes with a tested Nuxt, SvelteKit or Angular SSR example, and server-rendered placeholders where hydration stays clean.
+  - **First step:** `dotquilt` gains a Custom Elements Manifest and JetBrains web-types, built from `packages/core/meta/elements.ts` and checked against the running elements. The release workflow follows `scripts/packages.ts`.
 - **An AI pack:**
   - a streaming-text placeholder;
   - a tool-result region (chart, table or text placeholder for a pending tool call);

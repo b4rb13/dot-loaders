@@ -15,7 +15,14 @@
       ".changeset/*.json",
       "!**/.next",
       "!**/next-env.d.ts",
-      "!examples/next/tsconfig.json"
+      "!examples/next/tsconfig.json",
+      "!**/.nuxt",
+      "!**/.output",
+      "!**/.svelte-kit",
+      "!examples/sveltekit/build",
+      "!**/.angular",
+      "!examples/angular/dist",
+      "!packages/angular/src/styles.generated.ts"
     ]
   },
   "formatter": {
@@ -39,7 +46,7 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.astro"],
+      "includes": ["**/*.astro", "**/*.vue", "**/*.svelte"],
       "linter": {
         "rules": {
           "correctness": {

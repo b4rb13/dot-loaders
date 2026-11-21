@@ -1,5 +1,12 @@
 node_modules/
 .next/
+.nuxt/
+.output/
+.svelte-kit/
+examples/sveltekit/build/
+packages/angular/src/styles.generated.ts
+.angular/
+examples/angular/dist/
 next-env.d.ts
 .turbo/
 .vercel/

@@ -1,6 +1,6 @@
 {
   "name": "dotquilt",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Loading placeholders that hold the shape of your content, then hand over to it. Native Web Components.",
   "type": "module",
   "license": "MIT",
@@ -12,11 +12,17 @@
     "loader",
     "web-components",
     "accessibility",
-    "ssr"
+    "ssr",
+    "skeleton-loader",
+    "skeleton loader",
+    "loading placeholder",
+    "custom-elements"
   ],
   "sideEffects": [
     "**/*.css"
   ],
+  "customElements": "dist/custom-elements.json",
+  "web-types": "dist/web-types.json",
   "files": [
     "dist",
     "README.md",
@@ -78,6 +84,10 @@
     "./register-all": {
       "types": "./dist/register-all.d.ts",
       "import": "./dist/register-all.js"
+    },
+    "./wrapper": {
+      "types": "./dist/wrapper.d.ts",
+      "import": "./dist/wrapper.js"
     },
     "./styles/*.css": "./dist/*.css"
   },

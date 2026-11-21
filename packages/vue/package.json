@@ -1,0 +1,82 @@
+{
+  "name": "@dotquilt/vue",
+  "version": "0.2.0",
+  "description": "Vue components for Dotquilt: loading placeholders that hold the shape of your content, then hand over to it.",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://dotquilt.dev",
+  "keywords": [
+    "vue",
+    "nuxt",
+    "loading",
+    "skeleton",
+    "skeleton loader",
+    "placeholder",
+    "loader",
+    "accessibility",
+    "ssr"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./skeleton": {
+      "types": "./dist/skeleton.d.ts",
+      "import": "./dist/skeleton.js"
+    },
+    "./region": {
+      "types": "./dist/region.d.ts",
+      "import": "./dist/region.js"
+    },
+    "./typing": {
+      "types": "./dist/typing.d.ts",
+      "import": "./dist/typing.js"
+    },
+    "./text": {
+      "types": "./dist/text.d.ts",
+      "import": "./dist/text.js"
+    },
+    "./chart": {
+      "types": "./dist/chart.d.ts",
+      "import": "./dist/chart.js"
+    },
+    "./table": {
+      "types": "./dist/table.d.ts",
+      "import": "./dist/table.js"
+    },
+    "./styles/*.css": "./dist/*.css"
+  },
+  "dependencies": {
+    "dotquilt": "0.2.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "vue": "3.5.46"
+  },
+  "scripts": {
+    "build": "bun run ../../scripts/build-vue.ts",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test test"
+  },
+  "author": "Derenik Khachatryan",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/b4rb13/dot-loaders.git",
+    "directory": "packages/vue"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  }
+}
