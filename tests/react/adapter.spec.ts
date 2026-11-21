@@ -101,6 +101,13 @@ test('no JavaScript and missing enhancement retain static pending cues and usabl
   const context = await browser.newContext({ javaScriptEnabled: false });
   const noJs = await context.newPage();
   await noJs.goto(`http://127.0.0.1:4191${path('&state=pending')}`);
+  // Until the element registers, the content lies below the placeholder, so
+  // the region needs room for both. The fixture's fixed height, which the
+  // hydration geometry tests rely on, only fits the placeholder.
+  const roomForBoth = (region: HTMLElement) => {
+    region.style.height = 'auto';
+  };
+  await noJs.locator('#react-region').evaluate(roomForBoth);
   await expect(noJs.locator('#preserved-input')).toBeVisible();
   await expect(noJs.locator('[data-dotquilt-static]')).toBeVisible();
   await noJs.locator('#preserved-input').fill('Without JavaScript');
@@ -108,6 +115,7 @@ test('no JavaScript and missing enhancement retain static pending cues and usabl
   await expect(noJs.getByRole('heading')).toHaveText('Account recovery');
   await context.close();
   await page.goto(path('&state=pending&fail'));
+  await page.locator('#react-region').evaluate(roomForBoth);
   await expect(page.locator('#preserved-input')).toBeVisible();
   await expect(page.locator('[data-dotquilt-static]')).toBeVisible();
   expect(
@@ -399,11 +407,11 @@ test('repeated loaders share one stylesheet per component through hydration and 
   page,
 }) => {
   const errors = await open(page, '&state=pending&mode=hash');
-  // Two regions and one skeleton; each light-DOM sheet starts with its tag.
+  // Two regions and one skeleton; each light-DOM sheet names its tag first.
   const sheets = () =>
     page.evaluate(() =>
       [...document.querySelectorAll('style')]
-        .map((s) => /^dotquilt-[a-z-]+/.exec(s.textContent ?? '')?.[0] ?? '?')
+        .map((s) => /dotquilt-[a-z-]+/.exec(s.textContent ?? '')?.[0] ?? '?')
         .sort(),
     );
   expect(await sheets()).toEqual([

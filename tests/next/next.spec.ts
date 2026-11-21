@@ -76,3 +76,50 @@ test('after a client-side navigation, the next page loads and hands over the sam
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test.describe('without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("the page's own classes size the loaders, and a region with content keeps its placeholder's space", async ({
+    page,
+  }) => {
+    await page.goto('/checks');
+    const avatar = await page.locator('[data-check=avatar]').boundingBox();
+    expect(avatar?.width).toBeCloseTo(48, 0);
+    // `.check-total` makes the text loader a block-level grid, as wide as the
+    // heading above it.
+    const [totalBox, headingBox] = await Promise.all([
+      page.locator('[data-check=total]').boundingBox(),
+      page.getByRole('heading', { name: 'Checks' }).boundingBox(),
+    ]);
+    expect(totalBox?.width).toBeCloseTo(headingBox?.width ?? 0, 0);
+    const region = page.locator('[data-check=region]');
+    const [regionBox, placeholderBox, afterBox] = await Promise.all([
+      region.boundingBox(),
+      region.locator('[slot=placeholder]').boundingBox(),
+      page.locator('[data-check=after]').boundingBox(),
+    ]);
+    expect(placeholderBox?.height ?? 0).toBeGreaterThan(20);
+    expect(regionBox?.height ?? 0).toBeGreaterThanOrEqual(
+      placeholderBox?.height ?? 1,
+    );
+    expect(afterBox?.y ?? 0).toBeGreaterThanOrEqual(
+      (placeholderBox?.y ?? 0) + (placeholderBox?.height ?? 0),
+    );
+  });
+
+  test('a pending region with no content yet reserves its placeholder space', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const region = page.getByRole('group', { name: 'Team members' });
+    const [regionBox, placeholderBox] = await Promise.all([
+      region.boundingBox(),
+      region.locator('[slot=placeholder]').boundingBox(),
+    ]);
+    expect(placeholderBox?.height ?? 0).toBeGreaterThan(20);
+    expect(regionBox?.height ?? 0).toBeGreaterThanOrEqual(
+      placeholderBox?.height ?? 1,
+    );
+  });
+});

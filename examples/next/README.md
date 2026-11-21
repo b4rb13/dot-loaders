@@ -18,4 +18,4 @@ bun run --cwd examples/next dev
 
 Then open http://127.0.0.1:4360.
 
-`tests/next` checks the same three things in a browser (`bun run test:e2e --project=next-chromium`, after `bun run build`). The root `tsc` run skips this folder: `next build` type-checks it.
+`tests/next` checks the same three things in a browser, plus the layout without JavaScript (`bun run test:e2e --project=next-chromium`, after `bun run build`). `/checks` holds the edge cases those tests drive; it isn't part of the example. The root `tsc` run skips this folder: `next build` type-checks it.

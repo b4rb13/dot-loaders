@@ -1,5 +1,27 @@
 import { staticSkeletonStyles, staticTextLoaderStyles } from 'dotquilt/server';
-export const reactTextStyles = staticTextLoaderStyles;
+
+/**
+ * The element while it's undefined or waiting for its stylesheet, at zero
+ * specificity: the page's own classes win over these rules, as they do over
+ * the element's shadow styles once it's defined.
+ */
+const beforeUpgrade = (tag: string) =>
+  `:where(${tag}:is(:not(:defined),:state(unstyled)))`;
+
+/** Lowers the element selectors in TextLoader rules, which core already scopes. */
+function textLoaderLowered(css: readonly string[]): readonly string[] {
+  return Object.freeze(
+    css.map((text) =>
+      text.replaceAll(
+        'dotquilt-text-loader:is(:not(:defined),:state(unstyled))',
+        beforeUpgrade('dotquilt-text-loader'),
+      ),
+    ),
+  );
+}
+export const reactTextStyles = /* @__PURE__ */ textLoaderLowered(
+  staticTextLoaderStyles,
+);
 
 /**
  * Static appearance only. These exact strings can be authorized by CSP hashes.
@@ -12,8 +34,8 @@ export const reactSkeletonStyles: readonly string[] =
       .join('\n')
       .replaceAll(
         'dotquilt-skeleton-block',
-        'dotquilt-skeleton-block:is(:not(:defined),:state(unstyled))',
-      )}dotquilt-skeleton-block:is(:not(:defined),:state(unstyled))[hidden]{display:none}`,
+        beforeUpgrade('dotquilt-skeleton-block'),
+      )}${beforeUpgrade('dotquilt-skeleton-block')}[hidden]{display:none}`,
   ]);
 export { reactRegionStyles } from './region-styles.js';
 
@@ -30,12 +52,8 @@ function beforeDefinition(
 ): readonly string[] {
   return Object.freeze(
     css
-      .map((text) =>
-        text.replaceAll(tag, `${tag}:is(:not(:defined),:state(unstyled))`),
-      )
-      .concat(
-        `${tag}:is(:not(:defined),:state(unstyled))[hidden]{display:none}`,
-      ),
+      .map((text) => text.replaceAll(tag, beforeUpgrade(tag)))
+      .concat(`${beforeUpgrade(tag)}[hidden]{display:none}`),
   );
 }
 export const reactLineStyles = /* @__PURE__ */ beforeDefinition(
@@ -82,9 +100,7 @@ function marksBeforeDefinition(
   tag: string,
 ): readonly string[] {
   return Object.freeze(
-    css.map((text) =>
-      text.replaceAll(tag, `${tag}:is(:not(:defined),:state(unstyled))`),
-    ),
+    css.map((text) => text.replaceAll(tag, beforeUpgrade(tag))),
   );
 }
 export const reactSkeletonMarkStyles = /* @__PURE__ */ marksBeforeDefinition(
@@ -108,6 +124,8 @@ export const reactTypingMarkStyles = /* @__PURE__ */ marksBeforeDefinition(
   staticTypingMarkStyles,
   'dotquilt-typing-dots',
 );
-// These already apply only before definition.
+// This already applies only before definition, to the chart's own drawing.
 export const reactChartMarkStyles = staticChartMarkStyles;
-export const reactTextMarkStyles = staticTextLoaderMarkStyles;
+export const reactTextMarkStyles = /* @__PURE__ */ textLoaderLowered(
+  staticTextLoaderMarkStyles,
+);
