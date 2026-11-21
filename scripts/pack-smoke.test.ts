@@ -144,7 +144,8 @@ for (const [name, rule] of Object.entries(rules)) {
     const root = Object.entries(
       manifest.exports['.'] as Record<string, string>,
     ).find(([condition]) => condition !== 'types')?.[1];
-    expect(files).toContain(root?.slice(2));
+    expect(root, 'the root entry').toBeDefined();
+    expect(files).toContain(root?.slice(2) ?? '');
   }, 30_000);
 
   test(`${name}: dist imports stay inside the package and reach only allowed packages`, async () => {
