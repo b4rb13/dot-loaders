@@ -32,11 +32,23 @@ A region needs only two things from you: whether the data is `pending`, `refresh
 - **Use `refreshing`** when you already show data and are fetching a newer copy: the content stays visible and usable.
 - **On an error**, show your message with `state="ready"` and `:timing="{ duration: 0 }"`, so it replaces the placeholder at once.
 
+Its Reload button starts the list over, so it goes back to `pending`. A refresh that keeps the list on screen would pass `refreshing` instead.
+
 <Code code={teamVue} lang="vue" title="components/TeamList.vue" />
 
 ## Nuxt
 
-The components render on the server too: the placeholder is in the first HTML, before any JavaScript runs. Hydration leaves it alone, because the elements register only after the component mounts. Load your data in the component, as above, or with `useFetch` and `server: false`, and pass the state on.
+The components render on the server too: the placeholder is in the first HTML, before any JavaScript runs. Hydration leaves it alone, because the elements register only after the component mounts. Load your data in the component, as above, or with `useFetch`. Its `status` is `'idle'` on the server and `'pending'` in the first browser render, so map from the data instead:
+
+```ts
+const state = computed(() =>
+  data.value
+    ? status.value === 'pending' ? 'refreshing' : 'ready'
+    : status.value === 'error' ? 'ready' : 'pending',
+);
+```
+
+Data the server already fetched renders `ready`. While pending, render no content in the region (`v-if` on the data), so the placeholder holds its own size.
 
 Functions such as `target-provider` and custom animations stay in the browser, so a chart's marks can glide onto the real line once it's there:
 
@@ -46,7 +58,7 @@ Client-side navigation works the same: a loader on the next page starts fresh, a
 
 ## Events and the element
 
-Each component emits `@handoff-start`, `@handoff-end`, `@handoff-cancel` and `@loader-error`, with the native `CustomEvent`: `event.detail.reason` says how a handoff ended. A template ref on a component exposes the native element as `element`, if you need its methods.
+Each component emits `@handoff-start`, `@handoff-end`, `@handoff-cancel` and `@loader-error`, with the native `CustomEvent`: `event.detail.reason` says how a handoff ended. A template ref on a component exposes the native element as `element`, if you need its methods. A component that leaves through a `<Transition>` is unmounted before its element leaves the page, so it doesn't report the `handoff-cancel` that removal causes.
 
 ## Styles and CSP
 

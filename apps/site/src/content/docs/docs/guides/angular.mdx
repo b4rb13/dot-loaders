@@ -22,7 +22,7 @@ npm install @dotquilt/angular dotquilt
 import { DotquiltPlaceholder, LoadingRegion, SkeletonText } from '@dotquilt/angular';
 ```
 
-Import the components a template uses into its component's `imports`. The package has one entry point: an Angular build keeps only the components you use.
+Import the components a template uses into its component's `imports`, with the `DotquiltPlaceholder` directive wherever you mark a placeholder: without it the build still passes, but the placeholder renders as content and never leaves. The package has one entry point: an Angular build keeps only the components you use.
 
 ## State comes from your data
 
@@ -46,7 +46,9 @@ Router navigation works the same: a loader on the next page starts fresh, and it
 
 ## Outputs and the element
 
-Each component has the outputs `(handoffStart)`, `(handoffEnd)`, `(handoffCancel)` and `(loaderError)`, with the native `CustomEvent`: `$event.detail.reason` says how a handoff ended. A component's `element` is the native element, if you need its methods.
+Each component has the outputs `(handoffStart)`, `(handoffEnd)`, `(handoffCancel)` and `(loaderError)`, with the native `CustomEvent`: `$event.detail.reason` says how a handoff ended. A component's `element` is the native element, if you need its methods. A component that leaves with a leave animation is destroyed before its element leaves the page, so it doesn't report the `handoffCancel` that removal causes.
+
+While pending, render no content in the region (`@if` on the data), so the placeholder holds its own size.
 
 ## Styles and CSP
 

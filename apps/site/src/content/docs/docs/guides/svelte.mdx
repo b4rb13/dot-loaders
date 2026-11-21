@@ -46,6 +46,8 @@ A `TextLoader`'s value is a snippet, whose text the server can't read ahead of t
 
 Events are callback props: `onHandoffStart`, `onHandoffEnd`, `onHandoffCancel` and `onLoaderError`, each with the native `CustomEvent`. `event.detail.reason` says how a handoff ended. `bind:element` gives you the native element, if you need its methods.
 
+To style Dotquilt's elements from a component, use `:global(dotquilt-skeleton-text)` in its `<style>`: Svelte's scoped CSS doesn't reach elements another component renders. And while pending, render no content in the region (`{#if}` on the data), so the placeholder holds its own size.
+
 ## Styles and CSP
 
 By default each component adds its styles inline, inside its element. If your site has a Content Security Policy, pass a `stylePolicy` to every component: a nonce (in SvelteKit, the value of `%sveltekit.nonce%`), or an external stylesheet from `@dotquilt/svelte/styles/`. See [Content Security Policy](/docs/guides/csp/).

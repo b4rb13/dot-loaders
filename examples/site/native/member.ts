@@ -13,7 +13,8 @@ const region = document.getElementById('member') as LoadingRegion | null;
 export async function showMember(id: string): Promise<void> {
   if (!region) return;
   // Each request is a new cycle; the placeholder shows until it settles.
-  region.update({ state: 'pending', cycle: id });
+  // Each load starts with the default handoff; an error below swaps at once.
+  region.update({ state: 'pending', cycle: id, timing: undefined });
   try {
     const response = await fetch(`/api/members/${id}`);
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);

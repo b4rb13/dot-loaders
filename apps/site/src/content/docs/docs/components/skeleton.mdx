@@ -86,6 +86,7 @@ Use margins rather than padding: the idle glow's copy of the lines spans the pad
 | `speed` | number | `1` | How fast the idle glow moves, from above 0 up to 4. |
 | `pointer-response` | `none` \| `lift` | `none` | `lift` lights the marks around the pointer while the placeholder shows, on devices with a fine pointer. |
 | `lines` | number | `3` | SkeletonText only: how many lines, up to 50. |
+| (property) `widths` | number[] | last line 0.6 | SkeletonText only: each line's length as a share of the width, from above 0 to 1. Set it as a property, or as the `widths` prop in a framework package. |
 
 In the React, Vue, Svelte and Angular packages the props have the same names in camelCase (`pointerResponse`).
 
