@@ -162,10 +162,24 @@ test('a custom idle turns a dash by its angle', async ({ page }) => {
     await new Promise((resolve) =>
       requestAnimationFrame(() => requestAnimationFrame(resolve)),
     );
-    const r = host.shadowRoot
-      ?.querySelector('[data-dotquilt-painter] > rect')
-      ?.getBoundingClientRect();
-    return r && [r.width, r.height].map((v) => Math.round(v * 10) / 10);
+    const shape = host.shadowRoot?.querySelector<SVGGraphicsElement>(
+      '[data-dotquilt-painter] > rect',
+    );
+    const matrix = shape?.getScreenCTM();
+    if (!shape || !matrix) return undefined;
+    // The drawn box, from the shape and its transform. Firefox rounds an SVG
+    // element's client rect out to 1/60 px (3.47 for this 3.4 px dash).
+    const b = shape.getBBox();
+    const corners = [
+      [b.x, b.y],
+      [b.x + b.width, b.y],
+      [b.x, b.y + b.height],
+      [b.x + b.width, b.y + b.height],
+    ].map(([x, y]) => new DOMPoint(x, y).matrixTransform(matrix));
+    const extent = (axis: 'x' | 'y') =>
+      Math.max(...corners.map((p) => p[axis])) -
+      Math.min(...corners.map((p) => p[axis]));
+    return [extent('x'), extent('y')].map((v) => Math.round(v * 10) / 10);
   });
   // Upright: 3.4 px wide and 9.4 px tall.
   expect(box).toEqual([3.4, 9.4]);

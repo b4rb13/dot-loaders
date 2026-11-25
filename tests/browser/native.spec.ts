@@ -17,8 +17,12 @@ declare global {
   }
 }
 const r = '#region';
-async function boot(page: Page, mode = 'inline') {
-  await page.goto(`/?mode=${mode}`);
+async function boot(
+  page: Page,
+  mode = 'inline',
+  waitUntil: 'load' | 'domcontentloaded' = 'load',
+) {
+  await page.goto(`/?mode=${mode}`, { waitUntil });
   await page.waitForFunction(() => window.booted);
   await expect(page.locator(r)).toHaveAttribute('data-presentation', 'pending');
 }
@@ -269,7 +273,9 @@ test('data that arrives before the reveal has loaded dissolves, and later cycles
     await held;
     await route.continue();
   });
-  await boot(page);
+  // Firefox and WebKit hold the load event for a module the page starts
+  // importing while it loads, and this one is held until released below.
+  await boot(page, 'inline', 'domcontentloaded');
   await ready(page, 600);
   const starts = () =>
     page.evaluate(() =>
@@ -726,12 +732,15 @@ test('a minified production chart bundle draws every variant and hands off under
   page,
 }) => {
   await page.addInitScript(() =>
-    document.addEventListener('securitypolicyviolation', (event) =>
+    document.addEventListener('securitypolicyviolation', (event) => {
+      // Firefox checks its own favicon request against the page's policy.
+      if (new URL(event.blockedURI, location.href).pathname === '/favicon.ico')
+        return;
       Reflect.set(window, 'violations', [
         ...(Reflect.get(window, 'violations') ?? []),
         event.violatedDirective,
-      ]),
-    ),
+      ]);
+    }),
   );
   await page.goto('/?production=chart');
   const charts = page.locator('dotquilt-chart-loader');
