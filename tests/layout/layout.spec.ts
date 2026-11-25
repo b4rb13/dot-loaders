@@ -50,13 +50,15 @@ async function observe(page: Page) {
       }).observe({ type: 'layout-shift', buffered: true });
     // The handoff raises content into place with a transform, which is not a
     // layout shift; take it out so the samples compare layout only.
-    const rise = (element: Element) => {
-      const layer = element
+    const layer = (element: Element) =>
+      element
         .closest('dotquilt-region')
         ?.shadowRoot?.querySelector('[part=content]');
-      return layer
+    const rise = (element: Element) => {
+      const content = layer(element);
+      return content
         ? Number.parseFloat(
-            getComputedStyle(layer).translate.split(' ')[1] ?? '',
+            getComputedStyle(content).translate.split(' ')[1] ?? '',
           ) || 0
         : 0;
     };
@@ -65,10 +67,20 @@ async function observe(page: Page) {
         ['before', 'owner', 'source', 'after', 'value'].map((id) => {
           const element = document.getElementById(id);
           const r = element?.getBoundingClientRect();
-          const y = element && id === 'value' ? rise(element) : 0;
+          const inside = element && id === 'value';
+          const y = inside ? rise(element) : 0;
           return [
             id,
-            r ? { x: r.x, y: r.y - y, width: r.width, height: r.height } : null,
+            r
+              ? {
+                  x: r.x,
+                  y: r.y - y,
+                  width: r.width,
+                  height: r.height,
+                  animating:
+                    !!inside && !!layer(element)?.getAnimations().length,
+                }
+              : null,
           ];
         }),
       );
@@ -117,9 +129,17 @@ async function probe(page: Page) {
     cls: result.supported ? layoutScore(result.shifts) : null,
   };
 }
+// WebKit reports an element's client rect up to about 0.12 px off while an
+// ancestor animates `translate` with `filter: blur()`, as the content layer
+// does during the handoff (Chromium and Firefox: 0; it happens on a plain
+// page too). No layout moves, so a WebKit sample taken during that
+// animation may differ by `animating`.
+const animatingSlack = (browserName: string) =>
+  browserName === 'webkit' ? 1 / 4 : 0;
 function stable(
   before: Awaited<ReturnType<typeof snapshot>>,
   after: typeof before,
+  animating = 0,
 ) {
   for (const id of Object.keys(before)) {
     const a = before[id],
@@ -128,7 +148,7 @@ function stable(
     if (a && b)
       for (const key of ['x', 'y', 'width', 'height'] as const)
         expect(Math.abs(a[key] - b[key]), `${id}.${key}`).toBeLessThanOrEqual(
-          1 / 64,
+          b.animating ? Math.max(1 / 64, animating) : 1 / 64,
         );
   }
 }
@@ -146,6 +166,7 @@ for (const framework of ['native', 'react'])
           continue;
         test(`${framework} ${mode} ${profile}${frames === 'slow' ? ' with slow frames' : ''}: maximum reserved layout across upgrade, hydration and outcomes`, async ({
           page,
+          browserName,
         }, info) => {
           if (frames === 'slow')
             await page.addInitScript(() => {
@@ -267,7 +288,8 @@ for (const framework of ['native', 'react'])
             errors: window.layoutTest.errors,
             csp: Reflect.get(window, 'violations') ?? [],
           }));
-          for (const sample of result.samples) stable(before, sample);
+          for (const sample of result.samples)
+            stable(before, sample, animatingSlack(browserName));
           const cls = result.supported ? layoutScore(result.shifts) : null;
           if (result.supported)
             expect(
@@ -405,7 +427,13 @@ for (const framework of ['native', 'react'])
     });
     await page.evaluate(() => window.layoutTest.remove());
   });
-type Rect = { x: number; y: number; width: number; height: number };
+type Rect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  animating?: boolean;
+};
 declare global {
   interface Window {
     layoutProbe: {
@@ -528,6 +556,7 @@ for (const framework of ['native', 'react'])
   for (const mode of ['external', 'nonce'])
     test(`${framework} ${mode}: inline TypingDots preserves its baseline`, async ({
       page,
+      browserName,
     }, info) => {
       await observe(page);
       await page.goto(`/${framework}?profile=typing&mode=${mode}&inline=1`);
@@ -555,7 +584,8 @@ for (const framework of ['native', 'react'])
         window.layoutProbe.stop();
         return window.layoutProbe.samples;
       });
-      for (const sample of samples) stable(before, sample);
+      for (const sample of samples)
+        stable(before, sample, animatingSlack(browserName));
       await info.attach('inline-baseline', {
         body: JSON.stringify({
           before,
@@ -577,6 +607,7 @@ for (const framework of ['native', 'react'])
   for (const profile of Object.keys(profiles) as Profile[])
     test(`${framework} ${profile}: a late shadow stylesheet keeps the static layout until it applies`, async ({
       page,
+      browserName,
     }, info) => {
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(String(e)));
@@ -691,7 +722,8 @@ for (const framework of ['native', 'react'])
         // caller's reservation to make, not the stylesheet's arrival.
         if (reservation === 'reserved') {
           stable(before, styled);
-          for (const sample of probe.samples) stable(before, sample);
+          for (const sample of probe.samples)
+            stable(before, sample, animatingSlack(browserName));
           if (probe.supported) expect(cls).toBeLessThanOrEqual(0.01);
         }
         expect(await page.evaluate(() => window.layoutTest.errors)).toEqual([]);
