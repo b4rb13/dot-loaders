@@ -100,6 +100,35 @@ for (const [name, timing] of [
     expect(heights.ready).toBe(heights.content);
   });
 
+// No handoff runs here, so the placeholder stops taking space at once. WebKit
+// once kept the region at the placeholder's height (the frame's percentage
+// min-height held the old row size).
+test('a region is as tall as its content once refreshing after pending', async ({
+  page,
+}) => {
+  await open(page);
+  await build(page, region(' state="pending"'));
+  const heights = await page.evaluate(async () => {
+    const owner = document.getElementById('region') as HTMLElement & {
+      update(patch: object): void;
+    };
+    const height = (id: string) =>
+      document.getElementById(id)?.getBoundingClientRect().height;
+    const pending = height('region');
+    owner.update({ state: 'refreshing' });
+    for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
+    return {
+      pending,
+      presentation: owner.dataset.presentation,
+      refreshing: height('region'),
+      content: height('content'),
+    };
+  });
+  expect(heights.pending).toBeGreaterThan((heights.content ?? 0) + 50);
+  expect(heights.presentation).toBe('refreshing');
+  expect(heights.refreshing).toBe(heights.content);
+});
+
 for (const state of ['ready', 'refreshing'] as const)
   test(`a region that starts ${state} is as tall as its content`, async ({
     page,
