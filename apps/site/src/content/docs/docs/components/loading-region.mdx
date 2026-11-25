@@ -37,13 +37,17 @@ A loading region decides when to switch from Dotquilt's placeholder to your cont
 | `refreshing` | a row of marks just above the top edge, or your `refresh-indicator` | visible and usable |
 | `ready` | gone, after the handoff | visible |
 
-While pending, the region is as tall as the taller of the two: your content is laid out, hidden, so the handoff can read its shape. Once the handoff ends, and while refreshing, the placeholder takes no space and the region is as tall as your content. Give the placeholder your content's size, so nothing moves when the handoff ends.
+While pending, the region is as tall as the taller of the two: your content is laid out, hidden, so the handoff can read its shape. Once the handoff ends, and while refreshing, the placeholder takes no space and the region is as tall as your content. Give the placeholder roughly your content's size, so nothing moves when the handoff ends.
 
 While it refreshes, a row of marks sits just above the region's top edge and the glow drifts along it once, so your content never moves. With reduced motion or a pause the row stays still. Move it with `--dotquilt-refresh-gap` (6 px above the edge by default), style it through `::part(refresh-thread)`, or pass your own `refresh-indicator` instead.
 
 For fast responses, `delay` and `min-display` keep the placeholder from flickering: a load shorter than `delay` never shows it, and a placeholder that did show stays for at least `min-display`. Values around 150 ms and 500 ms suit most screens.
 
+## The handoff
+
 Going from `pending` to `ready` plays the handoff. First the marks take your content's shape: skeleton lines grow or shrink to each real line of text, blocks and circles reshape to the real image or avatar, typing dots unroll into the message, and a placeholder card or bubble grows to the real one's size. Then your content wipes in along a soft front, and the marks leave where it passes them. Only what shows takes part: text that is clipped away, such as a visually hidden table header, gets no marks. It takes about a second, and right-to-left text wipes from the right. With reduced motion, a pause, or focus inside the content, it swaps at once. During a view transition it waits for the transition to end, then plays.
+
+The placeholder doesn't have to match your content exactly, and you never measure anything. The handoff reads your content as it is laid out at the moment it becomes ready, so changes to your typography, spacing or data never break it. A placeholder of a different size still hands over: leftover marks fold into your content and fade, and new ones appear where your content has more. The only cost of a mismatch is movement, as the region grows or shrinks to your content's height. Give the placeholder about as many lines or rows as your content usually has, and the page stays still.
 
 ## Usage
 

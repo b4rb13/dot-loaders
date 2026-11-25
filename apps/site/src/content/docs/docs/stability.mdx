@@ -1,0 +1,91 @@
+---
+title: Stability and support
+description: Whether Dotquilt is ready for production, what every change is tested on, which browsers and frameworks it supports, how versions change, and what you keep if the project stops.
+head:
+  - tag: title
+    content: 'Stability and support: using Dotquilt in production | Dotquilt'
+---
+
+Dotquilt is new: it is at version 0.2 and has one maintainer. This page sets out what that means for a production app, so you can decide with the facts in front of you.
+
+## Using it in production
+
+Dotquilt is built to the standard of a production dependency:
+
+- **No runtime dependencies.** `dotquilt` depends on nothing, and each framework package depends only on `dotquilt`.
+- **Tested on every change,** in a browser and in a real app for each framework (see below).
+- **Accessible by design.** Pending content is inert and hidden from assistive technology, focus is kept, and reduced motion and forced colours are followed. See [Motion and accessibility](/docs/guides/motion/).
+- **Safe to render on the server** and to run under a strict [Content Security Policy](/docs/guides/csp/).
+- **A size budget for every entry,** which CI enforces on every change.
+- **Placeholders don't need measuring.** The handoff reads your content's layout at the moment it is ready, so changes to your typography, spacing or data never break it. See [the handoff](/docs/components/loading-region/#the-handoff).
+
+What it doesn't have yet is a long track record. Few projects use it so far, and its API can still change before 1.0. CI tests it only in Chromium so far (see [Browsers](#browsers)). It hasn't yet been checked with real screen readers and phones ([issue #91](https://github.com/b4rb13/dot-loaders/issues/91)). If that is a risk for your team, see [If the project stops](#if-the-project-stops).
+
+## What every change is tested on
+
+A change can't land until all of these pass:
+
+| Check | What it covers |
+| --- | --- |
+| Types, lint and unit tests | every package, including the published files and their imports in Node and Bun |
+| Browser tests in Chromium | every component's pending, refreshing and ready states, the handoff, focus, inert content, reduced motion, forced colours, and layout down to 320 px |
+| Framework apps | a Next.js, Nuxt, SvelteKit and Angular app, each built and run: the placeholders are in the server HTML, hydration logs no errors, and a handoff plays after a client-side navigation |
+| Size | each entry's gzip size against its budget |
+
+The same browser tests also run in Firefox and WebKit (`bun run test:e2e:all`), but only locally so far, and some still fail there. They join CI once they all pass.
+
+Before each release, the packed Vue, Svelte and Angular packages are installed into fresh copies of their apps and built, and the React package is tested again on React 19.0, the oldest version it supports.
+
+## Browsers
+
+Dotquilt needs custom elements and shadow DOM, which every current browser supports. CI tests it in Chromium, the engine behind Chrome and Edge. Firefox and WebKit, Safari's engine, run the same tests locally, where a few still fail; fixing them comes before calling Dotquilt ready for every browser.
+
+ChartLoader and TableLoader draw with Canvas, which keeps dense loaders fast; if a canvas can't be created, they fall back to SVG. Everything else is SVG and CSS.
+
+Before JavaScript loads, or if it never does, a server-rendered placeholder shows still and your content stays usable. See [Server rendering](/docs/guides/server-rendering/#without-javascript).
+
+## Frameworks
+
+| Package | Works with | Tested in |
+| --- | --- | --- |
+| `dotquilt` | any framework, or none | plain HTML pages |
+| `@dotquilt/react` | React 19 | Next.js 16 (App Router) |
+| `@dotquilt/vue` | Vue 3.5 and later | Nuxt 4 |
+| `@dotquilt/svelte` | Svelte 5 | SvelteKit |
+| `@dotquilt/angular` | Angular 22 | Angular with server rendering |
+
+Each app runs a current version of its framework. Only React is also tested on the oldest version its range allows.
+
+## Versions and breaking changes
+
+All five packages share one version number. Install the same version of `dotquilt` and of your framework package.
+
+Dotquilt follows semantic versioning:
+
+- **Patch releases** (0.2.0 → 0.2.1) contain fixes only, and are never breaking.
+- **Minor releases** (0.2 → 0.3) add features. Until 1.0, a minor release may also contain breaking changes; its changelog entry says what changed and how to update.
+- **From 1.0,** breaking changes come only in major releases.
+
+**What counts as breaking:** removing or renaming an element, attribute, property, event, slot, `::part` or CSS custom property; changing its type, or a default that changes your layout or behaviour; and dropping a framework version from a package's supported range.
+
+**What doesn't:** refining how an animation looks, such as its timing, curve or marks, as long as the space a loader takes, its states and its events stay the same.
+
+**Deprecation:** before anything is removed, it is marked deprecated in the types and the changelog, and keeps working for at least one more minor release.
+
+Each release is listed in the [changelog](https://github.com/b4rb13/dot-loaders/blob/main/packages/core/CHANGELOG.md) and on [GitHub Releases](https://github.com/b4rb13/dot-loaders/releases).
+
+## Support
+
+- **Fixes go into the latest release.** Older versions don't get updates, so stay on the latest.
+- **Bugs and questions:** see [Contact](/contact/).
+- **Security problems:** report them privately, as [SECURITY.md](https://github.com/b4rb13/dot-loaders/blob/main/SECURITY.md) explains.
+- **Releases** are built by GitHub Actions, staged on npm, and go public only after a maintainer approves them with two-factor authentication. `dotquilt` and `@dotquilt/react` carry an npm provenance statement that links each version to the commit it was built from. The Vue, Svelte and Angular packages get one from their next release: their first version was published by hand.
+
+## If the project stops
+
+Dotquilt has one maintainer today. If it stopped being maintained, this is what you would keep:
+
+- **The code is MIT-licensed.** You can copy it, change it and ship it, in your own repository if you like.
+- **It is built on web standards.** The elements don't depend on a framework's internals or on any service, so an installed version keeps working. Only the thin framework packages could need an update for a future major version of their framework.
+- **The framework packages are thin.** Each passes props to the element and renders its server markup; the work happens in `dotquilt`.
+- **Your content doesn't depend on it.** A region wraps markup you already have. Removing Dotquilt means removing the region and its placeholder, and your content renders as before.

@@ -69,6 +69,7 @@ export default defineConfig({
             { label: 'Installation', slug: 'docs/installation' },
             { label: 'AI assistant setup', slug: 'docs/ai-setup' },
             { label: 'Theming', slug: 'docs/theming' },
+            { label: 'Stability and support', slug: 'docs/stability' },
           ],
         },
         {
