@@ -17,9 +17,13 @@ for (const renderer of ['native', 'react'] as const) {
     const action = page.getByRole('button', { name: 'Open report' });
     await expect(action).toBeVisible();
     await page.getByRole('button', { name: 'Before' }).focus();
-    // Safari's Tab skips buttons unless "Press Tab to highlight each item"
-    // is on; Option-Tab reaches them.
-    await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
+    // WebKit on macOS, like Safari, tabs past buttons unless "Press Tab to
+    // highlight each item" is on; Option-Tab reaches them.
+    await page.keyboard.press(
+      browserName === 'webkit' && process.platform === 'darwin'
+        ? 'Alt+Tab'
+        : 'Tab',
+    );
     await expect(action).toBeFocused();
   });
 

@@ -17,6 +17,8 @@ jobs:
   #   docs only (Markdown, docs/, design/)  nothing else
   #   the site only (apps/site, examples)   checks + the site's browser tests
   #   anything else (packages, tests, ...)  checks + every browser test, in 3 shards
+  # Browser tests run in Chromium, Firefox and WebKit, each engine in its own
+  # jobs, side by side, so all three take about as long as one.
   # A merge to main runs the checks only: its pull request already ran the
   # browser tests. A manual run runs everything.
   changes:
@@ -84,13 +86,15 @@ jobs:
         run: bun run size
 
   browser:
+    name: browser (${{ matrix.browser }} ${{ matrix.shard }})
     needs: changes
     if: github.event_name != 'push' && needs.changes.outputs.runtime == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
+        browser: [chromium, firefox, webkit]
         shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -104,26 +108,33 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-      - run: bunx --no-install playwright install --with-deps chromium
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('bun.lock') }}
+      - run: bunx --no-install playwright install --with-deps ${{ matrix.browser }}
       - name: Build
         run: bun run build
-      - name: Browser tests (Chromium)
-        run: bunx --no-install playwright test --shard=${{ matrix.shard }}/3
+      - name: Browser tests (${{ matrix.browser }})
+        env:
+          ALL_BROWSERS: '1'
+        run: bunx --no-install playwright test --project='*-${{ matrix.browser }}' --shard=${{ matrix.shard }}/3
       - name: Upload Playwright report
         if: ${{ failure() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report-${{ matrix.shard }}
+          name: playwright-report-${{ matrix.browser }}-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/
 
   site:
+    name: site (${{ matrix.browser }})
     needs: changes
     if: github.event_name != 'push' && needs.changes.outputs.runtime != 'true' && needs.changes.outputs.site == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
@@ -136,17 +147,19 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-      - run: bunx --no-install playwright install --with-deps chromium
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('bun.lock') }}
+      - run: bunx --no-install playwright install --with-deps ${{ matrix.browser }}
       - name: Build
         run: bun run build
-      - name: Site browser tests (Chromium)
-        run: bunx --no-install playwright test --project=site-chromium
+      - name: Site browser tests (${{ matrix.browser }})
+        env:
+          ALL_BROWSERS: '1'
+        run: bunx --no-install playwright test --project=site-${{ matrix.browser }}
       - name: Upload Playwright report
         if: ${{ failure() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report-site
+          name: playwright-report-site-${{ matrix.browser }}
           path: |
             playwright-report/
             test-results/

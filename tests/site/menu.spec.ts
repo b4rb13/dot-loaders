@@ -60,9 +60,13 @@ test('the phone menu works from the keyboard and closes on Escape', async ({
   page,
   browserName,
 }) => {
-  // Safari's Tab reaches only text fields and menus unless "Press Tab to
-  // highlight each item" is on; Option-Tab reaches links and buttons.
-  const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+  // WebKit on macOS, like Safari, tabs only to text fields and menus unless
+  // "Press Tab to highlight each item" is on; Option-Tab reaches links and
+  // buttons. WebKit on Linux tabs to everything.
+  const tab =
+    browserName === 'webkit' && process.platform === 'darwin'
+      ? 'Alt+Tab'
+      : 'Tab';
   await page.setViewportSize(phone);
   await page.goto('/');
   const button = menuButton(page);
