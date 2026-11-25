@@ -58,7 +58,11 @@ for (const [path, current] of [
 
 test('the phone menu works from the keyboard and closes on Escape', async ({
   page,
+  browserName,
 }) => {
+  // Safari's Tab reaches only text fields and menus unless "Press Tab to
+  // highlight each item" is on; Option-Tab reaches links and buttons.
+  const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
   await page.setViewportSize(phone);
   await page.goto('/');
   const button = menuButton(page);
@@ -69,9 +73,9 @@ test('the phone menu works from the keyboard and closes on Escape', async ({
   await expect(button).toHaveAttribute('aria-expanded', 'true');
   // Focus stays on the button, and the links come next.
   await expect(button).toBeFocused();
-  await page.keyboard.press('Tab');
+  await page.keyboard.press(tab);
   await expect(nav.getByRole('link', { name: 'Docs' })).toBeFocused();
-  await page.keyboard.press('Tab');
+  await page.keyboard.press(tab);
   await expect(nav.getByRole('link', { name: 'Components' })).toBeFocused();
 
   // Escape closes it and returns focus to the button, with a visible ring.
@@ -93,7 +97,7 @@ test('the phone menu works from the keyboard and closes on Escape', async ({
   // Tabbing on past the last control closes it.
   await page.keyboard.press('Enter');
   await page.getByRole('combobox', { name: 'Select theme' }).focus();
-  await page.keyboard.press('Tab');
+  await page.keyboard.press(tab);
   await expect(button).toHaveAttribute('aria-expanded', 'false');
   await expect(nav).toBeHidden();
 });

@@ -1,8 +1,30 @@
-import { expect, test } from '@playwright/test';
+import { type BrowserContext, expect, test } from '@playwright/test';
 
 // Docs for AI assistants and agents: /llms.txt, each docs page as Markdown,
 // /llms-full.txt, a "Copy page" button on every docs page, and the setup
 // prompt for coding assistants.
+
+/**
+ * Lets the page's copy be read back from the clipboard. Each engine names
+ * what it needs: Firefox needs nothing (and knows neither name), WebKit
+ * knows only `clipboard-read`.
+ */
+async function allowClipboard(
+  context: BrowserContext,
+  browserName: string,
+  baseURL: string | undefined,
+) {
+  const permissions =
+    browserName === 'chromium'
+      ? ['clipboard-read', 'clipboard-write']
+      : browserName === 'webkit'
+        ? ['clipboard-read']
+        : [];
+  if (permissions.length)
+    await context.grantPermissions(permissions, {
+      origin: new URL(baseURL ?? 'http://127.0.0.1:4331').origin,
+    });
+}
 
 /** Lines outside code fences. */
 function prose(markdown: string): string[] {
@@ -73,10 +95,9 @@ test('Copy page copies the page as Markdown', async ({
   page,
   context,
   baseURL,
+  browserName,
 }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
-    origin: new URL(baseURL ?? 'http://127.0.0.1:4331').origin,
-  });
+  await allowClipboard(context, browserName, baseURL);
   await page.goto('/docs/components/skeleton/');
   // By attribute: its name changes to "Copied" once clicked.
   const button = page.locator('[data-copy-page]');
@@ -98,6 +119,7 @@ test('the setup prompt is served as Markdown, linked for agents, and copied in o
   context,
   request,
   baseURL,
+  browserName,
 }) => {
   const response = await request.get('/setup-prompt.md');
   expect(response.ok()).toBe(true);
@@ -120,9 +142,7 @@ test('the setup prompt is served as Markdown, linked for agents, and copied in o
   expect(index).toContain('npm install dotquilt');
   expect(index).not.toContain('not yet on npm');
 
-  await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
-    origin: new URL(baseURL ?? 'http://127.0.0.1:4331').origin,
-  });
+  await allowClipboard(context, browserName, baseURL);
   for (const path of ['/docs/ai-setup/', '/']) {
     await page.goto(path);
     // By attribute: its name changes to "Copied" once clicked.
