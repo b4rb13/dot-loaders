@@ -108,6 +108,9 @@ for (const dpr of [1, 2, 3])
       document.addEventListener('dotquilt-error', (event) =>
         errors.push((event as CustomEvent).detail),
       );
+      // The loaders' idle motion starts after this, so it may stop no
+      // sooner than 4 s from here.
+      const opened = performance.now();
       await window.catalogFixture.prepare();
       const running = window.catalogFixture.run(true);
       const rows = [];
@@ -152,6 +155,10 @@ for (const dpr of [1, 2, 3])
         const visible = new Set(snapshot.visibleIds);
         rows.push({
           top,
+          at: performance.now() - opened,
+          moving: snapshot.visibleIds.filter((id) =>
+            document.getElementById(id)?.hasAttribute('data-moving'),
+          ).length,
           visible: snapshot.visible,
           ledger: snapshot.ledger,
           canvases: snapshot.canvases,
@@ -174,7 +181,11 @@ for (const dpr of [1, 2, 3])
       expect(row.visible).toBe(20);
       expect(row.missing).toEqual([]);
       expect(row.offscreen).toEqual([]);
-      expect(row.canvases.length).toBeGreaterThan(0);
+      // Moving loaders draw with Canvas. Idle motion stops after 4 s, and
+      // still loaders draw SVG: a slow runner (Firefox on CI) can reach the
+      // last stops after that, but never before.
+      if (row.moving) expect(row.canvases.length).toBeGreaterThan(0);
+      else expect(row.at).toBeGreaterThanOrEqual(4000);
       expect(row.ledger?.pixels ?? 0).toBeLessThanOrEqual(4194304);
       expect(row.ledger?.bytes ?? 0).toBeLessThanOrEqual(2097152);
       expect(
