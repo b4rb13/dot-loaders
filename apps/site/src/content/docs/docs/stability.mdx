@@ -13,13 +13,13 @@ Dotquilt is new: it is at version 0.2 and has one maintainer. This page sets out
 Dotquilt is built to the standard of a production dependency:
 
 - **No runtime dependencies.** `dotquilt` depends on nothing, and each framework package depends only on `dotquilt`.
-- **Tested on every change,** in a browser and in a real app for each framework (see below).
+- **Tested on every change,** in Chromium, Firefox and WebKit, and in a real app for each framework (see below).
 - **Accessible by design.** Pending content is inert and hidden from assistive technology, focus is kept, and reduced motion and forced colours are followed. See [Motion and accessibility](/docs/guides/motion/).
 - **Safe to render on the server** and to run under a strict [Content Security Policy](/docs/guides/csp/).
 - **A size budget for every entry,** which CI enforces on every change.
 - **Placeholders don't need measuring.** The handoff reads your content's layout at the moment it is ready, so changes to your typography, spacing or data never break it. See [the handoff](/docs/components/loading-region/#the-handoff).
 
-What it doesn't have yet is a long track record. Few projects use it so far, and its API can still change before 1.0. CI tests it only in Chromium so far (see [Browsers](#browsers)). It hasn't yet been checked with real screen readers and phones ([issue #91](https://github.com/b4rb13/dot-loaders/issues/91)). If that is a risk for your team, see [If the project stops](#if-the-project-stops).
+What it doesn't have yet is a long track record. Few projects use it so far, and its API can still change before 1.0. It hasn't yet been checked with real screen readers and phones ([issue #91](https://github.com/b4rb13/dot-loaders/issues/91)). If that is a risk for your team, see [If the project stops](#if-the-project-stops).
 
 ## What every change is tested on
 
@@ -28,17 +28,15 @@ A change can't land until all of these pass:
 | Check | What it covers |
 | --- | --- |
 | Types, lint and unit tests | every package, including the published files and their imports in Node and Bun |
-| Browser tests in Chromium | every component's pending, refreshing and ready states, the handoff, focus, inert content, reduced motion, forced colours, and layout down to 320 px |
+| Browser tests in Chromium, Firefox and WebKit | every component's pending, refreshing and ready states, the handoff, focus, inert content, reduced motion, forced colours, and layout down to 320 px |
 | Framework apps | a Next.js, Nuxt, SvelteKit and Angular app, each built and run: the placeholders are in the server HTML, hydration logs no errors, and a handoff plays after a client-side navigation |
 | Size | each entry's gzip size against its budget |
-
-The same browser tests also run in Firefox and WebKit (`bun run test:e2e:all`), but only locally so far, and some still fail there. They join CI once they all pass.
 
 Before each release, the packed Vue, Svelte and Angular packages are installed into fresh copies of their apps and built, and the React package is tested again on React 19.0, the oldest version it supports.
 
 ## Browsers
 
-Dotquilt needs custom elements and shadow DOM, which every current browser supports. CI tests it in Chromium, the engine behind Chrome and Edge. Firefox and WebKit, Safari's engine, run the same tests locally, where a few still fail; fixing them comes before calling Dotquilt ready for every browser.
+Dotquilt needs custom elements and shadow DOM, which every current browser supports. Every change runs the same browser tests, and the framework apps, in all three engines: Chromium, behind Chrome and Edge; Firefox; and WebKit, Safari's engine. None of them may fail.
 
 ChartLoader and TableLoader draw with Canvas, which keeps dense loaders fast; if a canvas can't be created, they fall back to SVG. Everything else is SVG and CSS.
 
