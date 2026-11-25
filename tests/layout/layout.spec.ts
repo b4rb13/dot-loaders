@@ -620,16 +620,22 @@ for (const framework of ['native', 'react'])
         await gate;
         await route.continue();
       });
-      const shadowSheets = () =>
-        page.evaluate(() => {
+      // Firefox gives a shadow stylesheet the copy the page already loaded
+      // for the same URL (the server markup's fallback link), at once and
+      // without a request to hold. Only those may have loaded there.
+      const shadowSheets = (pageSheets: readonly string[] = []) =>
+        page.evaluate((pageSheets) => {
           const links = [...document.querySelectorAll('*')].flatMap((e) => [
             ...(e.shadowRoot?.querySelectorAll('link') ?? []),
           ]);
+          const loaded = links.filter((link) => link.sheet);
           return {
             requested: links.length,
-            loaded: links.filter((link) => link.sheet).length,
+            loaded: loaded.length,
+            reused: loaded.filter((link) => pageSheets.includes(link.href))
+              .length,
           };
-        });
+        }, pageSheets);
       await observe(page);
       await page.addInitScript(() => {
         const reported: string[] = [];
@@ -670,6 +676,11 @@ for (const framework of ['native', 'react'])
         const before = await snapshot(page);
         if (reservation === 'reserved')
           expect(before.owner?.height).toBe(profiles[profile].height);
+        const pageSheets = await page.evaluate(() =>
+          [...document.styleSheets].flatMap((sheet) =>
+            sheet.href ? [sheet.href] : [],
+          ),
+        );
         gate = new Promise((resolve) => {
           release = resolve;
         });
@@ -685,10 +696,15 @@ for (const framework of ['native', 'react'])
         await settle(page);
         await settle(page);
         const held = await snapshot(page);
-        const sheets = await shadowSheets();
+        const sheets = await shadowSheets(pageSheets);
         expect(sheets.requested).toBeGreaterThan(0);
-        expect(sheets.loaded).toBe(0);
-        stable(before, held);
+        expect(sheets.loaded).toBe(
+          browserName === 'firefox' ? sheets.reused : 0,
+        );
+        // A sheet that applied at once (Firefox, above) has styled its host,
+        // and a natural layout may settle once styled, as it may below.
+        if (reservation === 'reserved' || sheets.loaded === 0)
+          stable(before, held);
         // Pending content stays unavailable while the static layout holds.
         if ('text' in profiles[profile])
           expect(
