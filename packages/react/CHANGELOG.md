@@ -2,6 +2,8 @@
 
 ## 0.2.1
 
+Released: 2026-11-26
+
 ### Patch Changes
 
 - efc0c00: Server-rendered loaders keep their layout until the elements register:
@@ -13,6 +15,8 @@
 
 ## 0.2.0
 
+Released: 2026-11-21
+
 ### Patch Changes
 
 - Updated dependencies [f4205bf]
@@ -20,6 +24,8 @@
   - dotquilt@0.2.0
 
 ## 0.1.2
+
+Released: 2026-11-20
 
 ### Patch Changes
 
@@ -31,6 +37,8 @@
 
 ## 0.1.1
 
+Released: 2026-11-20
+
 ### Patch Changes
 
 - ca484b4: Chart handoffs keep their marks at full strength while they land on the line. A region with a chart placeholder used to fade its whole placeholder layer across the handoff, so the marks reached the line at half strength or less; now the layer holds until the chart's own marks have left, and lets go only in the last tenth of the handoff.
@@ -38,6 +46,8 @@
   - dotquilt@0.1.1
 
 ## 0.1.0
+
+Released: 2026-11-20
 
 ### Minor Changes
 

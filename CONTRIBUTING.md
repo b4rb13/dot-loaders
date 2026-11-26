@@ -47,7 +47,7 @@ bun run --cwd apps/site dev
 ## Releasing
 
 1. Changes that reach users carry changesets (`bunx changeset`).
-2. A release PR runs `bunx changeset version`: it sets the new versions and writes the changelogs. `bun run release:check` shows what would be published.
+2. A release PR runs `bun run release:version`. That runs `bunx changeset version`, which sets the new versions and writes the changelogs, then adds today's date under each new version (`Released: YYYY-MM-DD`; `bun run test` fails without one). `bun run release:check` shows what would be published.
 3. Merging it to `main` runs the [Release workflow](.github/workflows/release.yml). It builds, runs the unit tests, and stages every package version npm doesn't have yet, then tags it (`dotquilt@x.y.z`, `@dotquilt/react@x.y.z`).
 4. A maintainer approves each staged version with 2FA, in the package's **Staged Packages** tab on npmjs.com or with `npm stage approve <stage-id>`. Only then does it go public.
 
