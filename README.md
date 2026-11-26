@@ -50,7 +50,7 @@ Dotquilt is a set of loading placeholders made of small marks. When your data ar
 - **Only what you use.** Each component has its own entry point and registers itself on demand.
 
 > [!NOTE]
-> Dotquilt is in alpha (0.x): the API may still change before 1.0. Feedback and issues are very welcome.
+> Dotquilt is in alpha (0.x): the API may still change before 1.0. [Stability and support](https://dotquilt.dev/docs/stability/) says what is tested, how versions change and what you keep if the project stops. Feedback and issues are very welcome.
 
 ## Install
 
