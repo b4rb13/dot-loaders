@@ -58,11 +58,12 @@ Agents and tools can read these docs without a browser. Every address below is a
 
 ### Errors
 
-A request that doesn't ask for HTML (an agent or script sending `Accept: application/json`, `*/*` or no Accept header) for a page, or a `.md`, `.txt` or `.json` file, that doesn't exist gets a `404` with an RFC 9457 `application/problem+json` body: a `code`, what went wrong (`detail`) and what to do instead (`resolution`). If it prefers `text/markdown`, the 404 comes as Markdown. A browser gets the site's 404 page.
+A request that doesn't ask for HTML (an agent or script sending `Accept: application/json`, `*/*` or no Accept header) for a page, or a `.md`, `.txt` or `.json` file, that doesn't exist gets a `404` with an RFC 9457 `application/problem+json` body: a `code`, what went wrong (`detail`) and what to do instead (`resolution`). If it prefers `text/markdown`, the 404 comes as Markdown. A browser gets the site's 404 page. Any other method than `GET` or `HEAD`, from any client, gets a `405` problem.
 
 | `code` | Status | Meaning |
 | --- | --- | --- |
 | `page_not_found` | 404 | No page has that address. [llms.txt](/llms.txt) lists every page. |
+| `method_not_allowed` | 405 | The site is read-only: every address answers `GET` and `HEAD` (the response's `Allow` header says so). |
 
 ## The prompt
 
