@@ -143,6 +143,31 @@ test('every page has its own social card, with its size, type and alt text', asy
     expect(await meta('property="og:image:alt"')).toBe(alt);
     expect(await meta('name="twitter:image:alt"')).toBe(alt);
     expect(await meta('name="twitter:card"')).toBe('summary_large_image');
+    // A complete Twitter card, ahead of the Open Graph tags: Slack uses
+    // whichever set comes first, and shows a summary_large_image card large.
+    expect(await meta('name="twitter:title"')).toBe(
+      await meta('property="og:title"'),
+    );
+    expect(await meta('name="twitter:description"')).toBe(
+      await meta('property="og:description"'),
+    );
+    const social = await page
+      .locator('head meta[name^="twitter:"], head meta[property^="og:"]')
+      .evaluateAll((tags) =>
+        tags.map(
+          (tag) => tag.getAttribute('name') ?? tag.getAttribute('property'),
+        ),
+      );
+    expect(social.slice(0, 5), path).toEqual([
+      'twitter:card',
+      'twitter:title',
+      'twitter:description',
+      'twitter:image',
+      'twitter:image:alt',
+    ]);
+    expect(social.filter((name) => name?.startsWith('twitter:'))).toHaveLength(
+      5,
+    );
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
       `https://dotquilt.dev${path}`,
@@ -164,6 +189,66 @@ test('every page has its own social card, with its size, type and alt text', asy
   const fixed = await request.get('/og.png');
   expect(fixed.ok()).toBe(true);
   expect(fixed.headers()['content-type']).toContain('image/png');
+});
+
+test('the icon comes as SVG, ICO and PNG, for apps that cannot show an SVG', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/docs/');
+  const links = await page
+    .locator('head link[rel~="icon"], head link[rel="apple-touch-icon"]')
+    .evaluateAll((tags) =>
+      tags.map(
+        (tag) => `${tag.getAttribute('rel')} ${tag.getAttribute('href')}`,
+      ),
+    );
+  expect(links).toEqual(
+    expect.arrayContaining([
+      'shortcut icon /favicon.svg',
+      'icon /favicon.ico',
+      'apple-touch-icon /apple-touch-icon.png',
+    ]),
+  );
+
+  // A .ico with the icon at 16, 32 and 48 pixels, each stored as a PNG.
+  const ico = await request.get('/favicon.ico');
+  expect(ico.ok()).toBe(true);
+  const body = await ico.body();
+  expect([body.readUInt16LE(0), body.readUInt16LE(2)]).toEqual([0, 1]);
+  const count = body.readUInt16LE(4);
+  const images = Array.from({ length: count }, (_, index) => {
+    const at = 6 + 16 * index;
+    const offset = body.readUInt32LE(at + 12);
+    const png = body.subarray(offset, offset + body.readUInt32LE(at + 8));
+    expect(png.subarray(1, 4).toString()).toBe('PNG');
+    expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([
+      body[at],
+      body[at + 1],
+    ]);
+    return body[at];
+  });
+  expect(images).toEqual([16, 32, 48]);
+
+  // The iOS icon: 180 pixels square, with opaque corners, since iOS shows
+  // transparent ones as black.
+  const touch = await request.get('/apple-touch-icon.png');
+  expect(touch.ok()).toBe(true);
+  expect(touch.headers()['content-type']).toContain('image/png');
+  const png = await touch.body();
+  expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([180, 180]);
+  const corner = await page.evaluate(async () => {
+    const image = new Image();
+    image.src = '/apple-touch-icon.png';
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext('2d');
+    context?.drawImage(image, 0, 0);
+    return context?.getImageData(0, 0, 1, 1).data[3];
+  });
+  expect(corner).toBe(255);
 });
 
 test('the 404 page says what happened, and asks not to be indexed', async ({
@@ -318,6 +403,20 @@ test('robots.txt lets every crawler in and names the sitemap', async ({
   expect(robots).toContain('User-agent: *\nAllow: /\n');
   expect(robots).not.toContain('Disallow');
   expect(robots).toContain('Sitemap: https://dotquilt.dev/sitemap-index.xml');
+  // People and tools often try /sitemap.xml; Vercel sends it on.
+  const vercel = JSON.parse(
+    readFileSync(
+      resolve(import.meta.dirname, '../../apps/site/vercel.json'),
+      'utf8',
+    ),
+  ) as { redirects?: { source: string; destination: string }[] };
+  expect(vercel.redirects).toContainEqual(
+    expect.objectContaining({
+      source: '/sitemap.xml',
+      destination: '/sitemap-index.xml',
+      permanent: true,
+    }),
+  );
   const sitemap = await request.get('/sitemap-0.xml');
   expect(sitemap.ok()).toBe(true);
   const urls = await sitemap.text();
