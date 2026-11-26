@@ -48,45 +48,55 @@ export default defineConfig({
   // CI runners have 2 cores; the default would use one worker.
   ...(process.env.CI ? { workers: 2 } : {}),
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
-  // Screenshot baselines are generated on macOS; CI on Linux renders fonts
-  // differently, so CI skips pixel comparisons and keeps layout assertions.
+  // Screenshot baselines are Chromium's, generated on macOS; CI on Linux
+  // renders fonts differently, so CI skips pixel comparisons and keeps layout
+  // assertions. Firefox and WebKit have no baselines (see their projects).
   ignoreSnapshots: !!process.env.CI,
   updateSnapshots: 'missing',
   snapshotPathTemplate: '{testDir}/__screenshots__/{projectName}/{arg}{ext}',
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01 } },
   use: { headless: true, reducedMotion: 'no-preference' },
-  projects: browsers.flatMap((browserName) => [
-    {
-      name: `e2e-${browserName}`,
-      testDir: './tests/e2e',
-      fullyParallel: true,
-      use: { browserName, baseURL: 'http://127.0.0.1:4310' },
-    },
-    {
-      name: `native-${browserName}`,
-      testDir: './tests/browser',
-      // Pages share nothing: ledgers and frame clocks live on each document.
-      fullyParallel: true,
-      use: { browserName, baseURL: 'http://127.0.0.1:4181' },
-    },
-    ...suites.map((suite) => ({
-      name: `${suite.name}-${browserName}`,
-      testDir: `./tests/${suite.name}`,
-      testMatch: '*.spec.ts',
-      fullyParallel: true,
-      use: {
-        browserName,
-        baseURL: `http://127.0.0.1:${suite.port}`,
-        ...(suite.viewport ? { viewport: suite.viewport } : {}),
+  // Firefox and WebKit draw text and edges differently, so they skip pixel
+  // comparisons everywhere and keep every layout assertion. Don't commit
+  // baselines for them.
+  projects: browsers.flatMap((browserName) =>
+    [
+      {
+        name: `e2e-${browserName}`,
+        testDir: './tests/e2e',
+        fullyParallel: true,
+        use: { browserName, baseURL: 'http://127.0.0.1:4310' },
       },
-    })),
-    ...apps.map((app) => ({
-      name: `${app.name}-${browserName}`,
-      testDir: `./tests/${app.name}`,
-      fullyParallel: true,
-      use: { browserName, baseURL: `http://127.0.0.1:${app.port}` },
-    })),
-  ]),
+      {
+        name: `native-${browserName}`,
+        testDir: './tests/browser',
+        // Pages share nothing: ledgers and frame clocks live on each document.
+        fullyParallel: true,
+        use: { browserName, baseURL: 'http://127.0.0.1:4181' },
+      },
+      ...suites.map((suite) => ({
+        name: `${suite.name}-${browserName}`,
+        testDir: `./tests/${suite.name}`,
+        testMatch: '*.spec.ts',
+        fullyParallel: true,
+        use: {
+          browserName,
+          baseURL: `http://127.0.0.1:${suite.port}`,
+          ...(suite.viewport ? { viewport: suite.viewport } : {}),
+        },
+      })),
+      ...apps.map((app) => ({
+        name: `${app.name}-${browserName}`,
+        testDir: `./tests/${app.name}`,
+        fullyParallel: true,
+        use: { browserName, baseURL: `http://127.0.0.1:${app.port}` },
+      })),
+    ].map((project) =>
+      browserName === 'chromium'
+        ? project
+        : { ...project, ignoreSnapshots: true },
+    ),
+  ),
   webServer: [
     {
       command: 'bun tests/e2e/server.ts',

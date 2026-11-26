@@ -159,10 +159,18 @@ for (const restriction of ['reduced', 'pause', 'hidden', 'offscreen'])
       await page
         .locator('#table-region')
         .evaluate((e) => e.setAttribute('hidden', ''));
-    if (restriction === 'offscreen')
+    if (restriction === 'offscreen') {
+      // Out of view for real, and marked by the runtime's own intersection
+      // observer: setting the attribute by hand raced the observer's first
+      // report, which then removed it (seen in WebKit on CI).
       await page
         .locator('#table-region')
-        .evaluate((e) => e.setAttribute('data-dotquilt-offscreen', ''));
+        .evaluate((e) => ((e as HTMLElement).style.translate = '0 -100000px'));
+      await expect(page.locator('#table-region')).toHaveAttribute(
+        'data-dotquilt-offscreen',
+        '',
+      );
+    }
     await expect(page.locator('#table')).not.toHaveAttribute('data-moving', '');
     await page.evaluate(() => window.tableTest.ready());
     await expect(page.locator('#table-region')).toHaveAttribute(

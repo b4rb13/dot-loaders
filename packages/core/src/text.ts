@@ -318,26 +318,46 @@ export class TextLoader extends LoadingController<'text'> {
       this.#mask.textContent = displayMask;
     const rect = this.getBoundingClientRect();
     const measure = (texts: readonly Text[]): readonly GlyphCell[] => {
-      const cells: GlyphCell[] = [];
+      const boxes: {
+        character: string;
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+      }[] = [];
       const range = this.ownerDocument.createRange();
       for (const text of texts)
         for (let i = 0; i < text.length; i++) {
           range.setStart(text, i);
           range.setEnd(text, i + 1);
           const b = range.getBoundingClientRect();
-          cells.push(
-            Object.freeze({
-              character: text.data[i] ?? '',
-              bounds: Object.freeze({
-                x: b.x - rect.x,
-                y: b.y - rect.y + b.height * 0.13,
-                width: b.width,
-                height: b.height * 0.74,
-              }),
-            }),
-          );
+          boxes.push({
+            character: text.data[i] ?? '',
+            x: b.x - rect.x,
+            y: b.y - rect.y + b.height * 0.13,
+            width: b.width,
+            height: b.height * 0.74,
+          });
         }
-      return Object.freeze(cells);
+      // WebKit (Safari too) rounds each character's rect out to whole
+      // pixels, so neighbours overlap by up to a pixel and their marks run
+      // into each other. Neighbours split the overlap.
+      for (let i = 1; i < boxes.length; i++) {
+        const a = boxes[i - 1] as (typeof boxes)[number];
+        const b = boxes[i] as (typeof boxes)[number];
+        const overlap = a.x + a.width - b.x;
+        if (overlap > 0 && overlap < 2 && Math.abs(a.y - b.y) < 1) {
+          const middle = b.x + overlap / 2;
+          a.width = middle - a.x;
+          b.width -= middle - b.x;
+          b.x = middle;
+        }
+      }
+      return Object.freeze(
+        boxes.map(({ character, ...bounds }) =>
+          Object.freeze({ character, bounds: Object.freeze(bounds) }),
+        ),
+      );
     };
     const supported =
       plain &&

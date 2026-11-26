@@ -10,13 +10,20 @@ test.use({ javaScriptEnabled: false });
 for (const renderer of ['native', 'react'] as const) {
   test(`${renderer} SSR: pending shows the placeholder and keeps content usable without JavaScript`, async ({
     page,
+    browserName,
   }) => {
     await page.goto(`/static/${renderer}?state=pending`);
     await expect(page.locator('dotquilt-skeleton-text')).toBeVisible();
     const action = page.getByRole('button', { name: 'Open report' });
     await expect(action).toBeVisible();
     await page.getByRole('button', { name: 'Before' }).focus();
-    await page.keyboard.press('Tab');
+    // WebKit on macOS, like Safari, tabs past buttons unless "Press Tab to
+    // highlight each item" is on; Option-Tab reaches them.
+    await page.keyboard.press(
+      browserName === 'webkit' && process.platform === 'darwin'
+        ? 'Alt+Tab'
+        : 'Tab',
+    );
     await expect(action).toBeFocused();
   });
 

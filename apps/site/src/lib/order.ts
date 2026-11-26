@@ -4,7 +4,13 @@ import type { CollectionEntry } from 'astro:content';
  * The sidebar's order: getting started, then components, then guides, then
  * the API reference.
  */
-const first = ['docs', 'docs/installation', 'docs/ai-setup', 'docs/theming'];
+const first = [
+  'docs',
+  'docs/installation',
+  'docs/ai-setup',
+  'docs/theming',
+  'docs/stability',
+];
 export function docsInOrder(
   entries: readonly CollectionEntry<'docs'>[],
 ): CollectionEntry<'docs'>[] {
