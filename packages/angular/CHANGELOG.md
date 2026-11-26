@@ -1,6 +1,17 @@
 # @dotquilt/angular
 
+## 0.2.1
+
+Released: 2026-11-26
+
+### Patch Changes
+
+- Updated dependencies
+  - dotquilt@0.2.1
+
 ## 0.2.0
+
+Released: 2026-11-21
 
 ### Minor Changes
 

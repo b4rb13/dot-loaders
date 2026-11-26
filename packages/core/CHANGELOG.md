@@ -1,6 +1,20 @@
 # dotquilt
 
+## 0.2.1
+
+Released: 2026-11-26
+
+### Patch Changes
+
+- Fixes for Safari and Firefox, found by running every browser test in all three engines, which CI now does on every change:
+  
+  - In Safari, a `LoadingRegion` shrinks to its content after the handoff, and a `TableLoader` to its rows when they get fewer. Both kept their earlier height: a region with a 200 px placeholder stayed 200 px tall around a 22 px line.
+  - In Safari, a `TextLoader`'s glyph marks no longer run into each other at large sizes. Safari rounds each character's box out to whole pixels, so neighbouring glyphs overlapped by up to a pixel; neighbours on a line now split the overlap.
+  - A `ChartLoader` or `TableLoader` that is redrawn while scrolled out of view, and comes back before the next frame, draws again. It used to stay blank until something else changed, in every browser.
+
 ## 0.2.0
+
+Released: 2026-11-21
 
 ### Minor Changes
 
@@ -11,6 +25,8 @@
 
 ## 0.1.2
 
+Released: 2026-11-20
+
 ### Patch Changes
 
 - 51f4f5c: The handoff no longer draws marks for text you can't see. It measured text with `getClientRects()`, which ignores clipping, so a visually hidden table header (a 1 px box with `overflow: hidden`, `clip` or `clip-path: inset(50%)`) became a stray row of marks. Text and boxes are now clipped by their ancestors' `overflow`, `clip` and `clip-path` up to the region, and what shows less than 2 px isn't a target.
@@ -19,11 +35,15 @@
 
 ## 0.1.1
 
+Released: 2026-11-20
+
 ### Patch Changes
 
 - ca484b4: Chart handoffs keep their marks at full strength while they land on the line. A region with a chart placeholder used to fade its whole placeholder layer across the handoff, so the marks reached the line at half strength or less; now the layer holds until the chart's own marks have left, and lets go only in the last tenth of the handoff.
 
 ## 0.1.0
+
+Released: 2026-11-20
 
 ### Minor Changes
 
