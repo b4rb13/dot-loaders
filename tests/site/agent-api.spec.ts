@@ -187,13 +187,21 @@ test('the RFC 9727 API catalog links the OpenAPI description', async ({
   // The errors' type, too.
   await expect(page.locator('#errors')).toBeVisible();
 
-  // Its media type: Vercel serves files under /.well-known/ as they are,
-  // before any vercel.json header or middleware (with trailingSlash on), so
-  // it goes out as application/octet-stream instead of RFC 9727's
-  // application/linkset+json. Nothing in vercel.json pretends otherwise.
-  expect(
-    vercel.headers.some((rule) => rule.source.startsWith('/.well-known/')),
-  ).toBe(false);
+  // Vercel serves it as a Linkset with the RFC 9727 profile, and a HEAD
+  // request gets the api-catalog Link header. These vercel.json headers
+  // apply only without `trailingSlash`, which stops Vercel's routing for
+  // /.well-known/ before any header (the middleware owns slashes instead).
+  expect(vercel).not.toHaveProperty('trailingSlash');
+  const headers = headersFor('/.well-known/api-catalog');
+  expect(headers['content-type']).toBe(
+    'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"',
+  );
+  expect(headers.link).toContain(
+    '<https://dotquilt.dev/.well-known/api-catalog>; rel="api-catalog"',
+  );
+  expect(headers.link).toContain(
+    '<https://dotquilt.dev/openapi.json>; rel="service-desc"',
+  );
 });
 
 test('pages and llms.txt point agents to the catalog and the files', async ({
