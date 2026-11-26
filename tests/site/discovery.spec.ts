@@ -103,6 +103,11 @@ test('titles name what people search for, while headings stay short', async ({
       'Dotquilt API reference: elements, attributes, events and CSS properties | Dotquilt',
       'Dotquilt API reference',
     ],
+    [
+      '/docs/changelog/',
+      'Dotquilt changelog: every release and what changed | Dotquilt',
+      'Changelog',
+    ],
   ] as const) {
     await page.goto(path);
     await expect(page).toHaveTitle(title);

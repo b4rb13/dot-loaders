@@ -2,7 +2,7 @@ import type { CollectionEntry } from 'astro:content';
 
 /**
  * The sidebar's order: getting started, then components, then guides, then
- * the API reference.
+ * the API reference and the changelog.
  */
 const first = [
   'docs',
@@ -18,6 +18,7 @@ export function docsInOrder(
     const start = first.indexOf(id);
     if (start >= 0) return start;
     if (id === 'docs/api') return 30;
+    if (id === 'docs/changelog') return 31;
     return id.startsWith('docs/components/') ? 10 : 20;
   };
   return entries
