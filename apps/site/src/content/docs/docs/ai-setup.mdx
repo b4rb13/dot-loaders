@@ -58,7 +58,7 @@ Agents and tools can read these docs without a browser. Every address below is a
 
 ### Errors
 
-A request that prefers JSON (`Accept: application/json`) for a page or Markdown copy that doesn't exist gets a `404` with an RFC 9457 `application/problem+json` body: a `code`, what went wrong (`detail`) and what to do instead (`resolution`). Any other request gets the site's 404 page, as HTML, or as Markdown for a page asked for with `Accept: text/markdown`.
+A request that doesn't ask for HTML (an agent or script sending `Accept: application/json`, `*/*` or no Accept header) for a page, or a `.md`, `.txt` or `.json` file, that doesn't exist gets a `404` with an RFC 9457 `application/problem+json` body: a `code`, what went wrong (`detail`) and what to do instead (`resolution`). If it prefers `text/markdown`, the 404 comes as Markdown. A browser gets the site's 404 page.
 
 | `code` | Status | Meaning |
 | --- | --- | --- |
