@@ -10,6 +10,7 @@ import {
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { hasClientDirective } from './client-directive.js';
+import { packResults } from './npm-pack.js';
 import { releaseOrder } from './packages.js';
 
 // What a published package guarantees beyond the workspace build, checked
@@ -130,9 +131,8 @@ for (const [name, rule] of Object.entries(rules)) {
       directory,
     );
     expect(code, err).toBe(0);
-    const files = (JSON.parse(out)[0].files as { path: string }[]).map(
-      (file) => file.path,
-    );
+    const [pack] = packResults<{ files: { path: string }[] }>(out);
+    const files = (pack?.files ?? []).map((file) => file.path);
     expect(
       files.filter(
         (file) =>

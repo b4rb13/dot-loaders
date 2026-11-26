@@ -3,6 +3,7 @@
 //   bun run release:check
 import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { packResults } from './npm-pack.js';
 import { releaseOrder as packages } from './packages.js';
 
 const root = resolve(import.meta.dir, '..');
@@ -50,17 +51,17 @@ for (const directory of packages) {
     private?: boolean;
     publishConfig?: { access?: string };
   };
-  const [pack] = JSON.parse(
-    await run(
-      ['npm', 'pack', '--dry-run', '--json', '--ignore-scripts'],
-      resolve(root, directory),
-    ),
-  ) as {
+  const [pack] = packResults<{
     filename: string;
     size: number;
     unpackedSize: number;
     entryCount: number;
-  }[];
+  }>(
+    await run(
+      ['npm', 'pack', '--dry-run', '--json', '--ignore-scripts'],
+      resolve(root, directory),
+    ),
+  );
   if (!pack) throw new Error(`npm pack returned nothing for ${directory}`);
   console.log(
     `\n${manifest.name}@${manifest.version}: ${pack.entryCount} files, ${kb(pack.size)} packed, ${kb(pack.unpackedSize)} unpacked (${pack.filename})`,

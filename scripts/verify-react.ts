@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { hasClientDirective } from './client-directive.js';
+import { packResults } from './npm-pack.js';
 
 const root = resolve(import.meta.dir, '..'),
   output = resolve(root, '.artifacts/m3');
@@ -43,12 +44,13 @@ if (
   manifest.dependencies.dotquilt !== native.version
 )
   throw new Error('Coordinated artifact policy failed');
-const packed = JSON.parse(
+const [packed] = packResults<{ filename: string; files: { path: string }[] }>(
   await run(
     ['npm', 'pack', '--json', '--ignore-scripts', '--pack-destination', output],
     resolve(root, 'packages/react'),
   ),
-)[0];
+);
+if (!packed) throw new Error('npm pack printed nothing for packages/react');
 const artifact = resolve(output, packed.filename),
   sha256 = hash(await readFile(artifact));
 const archive = resolve(output, 'history', sha256);
