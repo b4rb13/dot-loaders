@@ -1,6 +1,6 @@
 {
   "name": "@dotquilt/svelte",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Svelte components for Dotquilt: loading placeholders that hold the shape of your content, then hand over to it.",
   "type": "module",
   "license": "MIT",
@@ -56,7 +56,7 @@
     "./styles/*.css": "./dist/*.css"
   },
   "dependencies": {
-    "dotquilt": "0.2.0"
+    "dotquilt": "0.2.1"
   },
   "peerDependencies": {
     "svelte": "^5.0.0"

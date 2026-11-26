@@ -1,5 +1,15 @@
 # dotquilt
 
+## 0.2.1
+
+### Patch Changes
+
+- Fixes for Safari and Firefox, found by running every browser test in all three engines, which CI now does on every change:
+  
+  - In Safari, a `LoadingRegion` shrinks to its content after the handoff, and a `TableLoader` to its rows when they get fewer. Both kept their earlier height: a region with a 200 px placeholder stayed 200 px tall around a 22 px line.
+  - In Safari, a `TextLoader`'s glyph marks no longer run into each other at large sizes. Safari rounds each character's box out to whole pixels, so neighbouring glyphs overlapped by up to a pixel; neighbours on a line now split the overlap.
+  - A `ChartLoader` or `TableLoader` that is redrawn while scrolled out of view, and comes back before the next frame, draws again. It used to stay blank until something else changed, in every browser.
+
 ## 0.2.0
 
 ### Minor Changes
