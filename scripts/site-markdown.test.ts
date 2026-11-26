@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import middleware, {
+  apiCatalog,
+  apiCatalogHeaders,
   config,
   markdownFor,
   notFoundMarkdown,
@@ -40,7 +42,7 @@ test('the middleware loads on its own in Node, as Vercel runs it', async () => {
        console.log(typeof m.default, String(answer), m.config.matcher.length);`,
     ]);
     expect(run.stderr.toString()).toBe('');
-    expect(run.stdout.toString().trim()).toBe('function undefined 2');
+    expect(run.stdout.toString().trim()).toBe('function undefined 3');
   } finally {
     await rm(work, { recursive: true, force: true });
   }
@@ -86,7 +88,7 @@ describe('wantsJson', () => {
   });
 });
 
-test('the middleware runs on pages and Markdown copies, never on /.well-known/', () => {
+test('the middleware runs on pages, Markdown copies and the API catalog', () => {
   const matches = (path: string) =>
     config.matcher.some((pattern) =>
       // Vercel's matcher: a path-to-regexp source, here only literal
@@ -95,7 +97,8 @@ test('the middleware runs on pages and Markdown copies, never on /.well-known/',
     );
   expect(matches('/docs/theming/')).toBe(true);
   expect(matches('/docs/theming.md')).toBe(true);
-  expect(matches('/.well-known/api-catalog')).toBe(false);
+  expect(matches('/.well-known/api-catalog')).toBe(true);
+  expect(matches('/.well-known/security.txt')).toBe(false);
   expect(matches('/openapi.json')).toBe(false);
   expect(matches('/_astro/page.js')).toBe(false);
 });
@@ -249,6 +252,43 @@ describe('middleware', () => {
       request('/nope/', 'application/json', 'HEAD'),
     );
     expect(response?.status).toBe(404);
+    expect(await response?.text()).toBe('');
+  });
+
+  test('answers the API catalog as an RFC 9727 Linkset, with the static copy as its body', async () => {
+    const requests = serve({});
+    const response = await middleware(
+      request('/.well-known/api-catalog', 'application/linkset+json'),
+    );
+    expect(response?.status).toBe(200);
+    expect(response?.headers.get('content-type')).toBe(
+      'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"',
+    );
+    expect(response?.headers.get('link')).toContain(
+      '<https://dotquilt.dev/.well-known/api-catalog>; rel="api-catalog"',
+    );
+    // Vercel applies no vercel.json headers under /.well-known/, so the
+    // static file would go out as application/octet-stream: the middleware
+    // answers with the same body.
+    const file = await readFile(
+      resolve(
+        import.meta.dirname,
+        '../apps/site/public/.well-known/api-catalog',
+      ),
+      'utf8',
+    );
+    expect(await response?.text()).toBe(file);
+    expect(JSON.parse(file)).toEqual(apiCatalog);
+    expect(requests).toEqual([]);
+  });
+
+  test('a HEAD request for the API catalog gets its Link header', async () => {
+    serve({});
+    const response = await middleware(
+      request('/.well-known/api-catalog', '*/*', 'HEAD'),
+    );
+    expect(response?.status).toBe(200);
+    expect(response?.headers.get('link')).toBe(apiCatalogHeaders.link);
     expect(await response?.text()).toBe('');
   });
 

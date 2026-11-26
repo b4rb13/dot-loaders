@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { Validator } from '@seriousme/openapi-schema-validator';
+import { apiCatalogHeaders } from '../../apps/site/middleware';
 import { elements } from '../../packages/core/meta/elements';
 import { customElementsManifest } from '../../scripts/element-manifest';
 
@@ -168,16 +169,13 @@ test('the RFC 9727 API catalog links the OpenAPI description', async ({
   // The errors' type, too.
   await expect(page.locator('#errors')).toBeVisible();
 
-  // Vercel serves it as a Linkset with the RFC 9727 profile, and a HEAD
-  // request gets the api-catalog Link header.
-  const headers = headersFor('/.well-known/api-catalog');
-  expect(headers['content-type']).toBe(
+  // On Vercel the middleware answers it, with the RFC 9727 media type and
+  // Link header (scripts/site-markdown.test.ts): Vercel applies no
+  // vercel.json headers under /.well-known/.
+  expect(apiCatalogHeaders['content-type']).toBe(
     'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"',
   );
-  expect(headers.link).toContain(
-    '<https://dotquilt.dev/.well-known/api-catalog>; rel="api-catalog"',
-  );
-  expect(headers.link).toContain(
+  expect(apiCatalogHeaders.link).toContain(
     '<https://dotquilt.dev/openapi.json>; rel="service-desc"',
   );
 });

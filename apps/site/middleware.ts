@@ -10,10 +10,16 @@
  *   that doesn't exist, gets a 404 as RFC 9457 `application/problem+json`
  *   (see /openapi.json). One for a page that exists gets the page.
  *
+ * - /.well-known/api-catalog, the RFC 9727 API catalog, is answered here
+ *   with its Linkset media type and `api-catalog` Link header: Vercel applies
+ *   no vercel.json headers under /.well-known/, so the static copy in
+ *   public/.well-known/ would go out as application/octet-stream. The body
+ *   below is that file's; scripts/site-markdown.test.ts keeps them equal.
+ *
  * Every other request, such as a browser's, passes through to the static site
  * untouched. Of the static files (anything with an extension), only the
  * Markdown copies run it, and it returns at once unless the request prefers
- * JSON; Vercel's own paths and /.well-known/ never run it.
+ * JSON; Vercel's own paths and the rest of /.well-known/ never run it.
  *
  * Vercel compiles this file on its own, without bundling, so it imports
  * nothing: everything it needs is below. scripts/site-markdown.test.ts loads
@@ -24,10 +30,46 @@ export const config = {
   matcher: [
     '/((?!_astro/|_vercel/|pagefind/|\\.well-known/|.*\\.[^/]+$).*)',
     '/(.*)\\.md',
+    '/.well-known/api-catalog',
   ],
 };
 
 const site = 'https://dotquilt.dev';
+
+/** The RFC 9727 API catalog, as public/.well-known/api-catalog holds it. */
+export const apiCatalog = {
+  linkset: [
+    {
+      anchor: `${site}/.well-known/api-catalog`,
+      item: [{ href: `${site}/` }],
+    },
+    {
+      anchor: `${site}/`,
+      'service-desc': [
+        {
+          href: `${site}/openapi.json`,
+          type: 'application/vnd.oai.openapi+json;version=3.1',
+        },
+      ],
+      'service-doc': [
+        {
+          href: `${site}/docs/ai-setup/#docs-for-agents-and-tools`,
+          type: 'text/html',
+        },
+      ],
+    },
+  ],
+};
+
+/** The API catalog's headers: GET and HEAD both carry the Link header. */
+export const apiCatalogHeaders = {
+  'content-type':
+    'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"',
+  link: `<${site}/.well-known/api-catalog>; rel="api-catalog", <${site}/openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json;version=3.1"`,
+  'access-control-allow-origin': '*',
+  'x-content-type-options': 'nosniff',
+  'cache-control': 'public, max-age=0, must-revalidate',
+} as const;
 
 /** The headers of every Markdown answer. */
 const markdownHeaders = {
@@ -181,6 +223,13 @@ export default async function middleware(
   if (request.method !== 'GET' && request.method !== 'HEAD') return undefined;
   const accept = request.headers.get('accept');
   const url = new URL(request.url);
+  if (url.pathname === '/.well-known/api-catalog')
+    return new Response(
+      request.method === 'HEAD'
+        ? null
+        : `${JSON.stringify(apiCatalog, null, 2)}\n`,
+      { headers: apiCatalogHeaders },
+    );
   // A Markdown copy (the only files the matcher lets in), or a page, asked
   // for as JSON: a JSON error if it doesn't exist, else the file or page.
   if (isFile(url.pathname) || !wantsMarkdown(accept)) {
