@@ -6,6 +6,8 @@
  *   the page's Markdown copy (`/` → `/index.md`, `/docs/x/` → `/docs/x.md`),
  *   an HTML-only page gets a short Markdown summary, and a missing page gets
  *   a 404 with a Markdown body.
+ * - A request with a method other than GET, HEAD or OPTIONS gets a 405 as
+ *   problem+json, with `Allow: GET, HEAD`: the site is read-only.
  * - A request that doesn't ask for HTML (an agent, a script, `curl`: Accept
  *   `application/json`, `*\/*` or none), for a page or a Markdown copy that
  *   doesn't exist, gets a 404 as RFC 9457 `application/problem+json` (see
@@ -124,6 +126,39 @@ export function notFoundProblem(pathname: string) {
   };
 }
 
+/** A method other than GET or HEAD, as RFC 9457 problem details. */
+export function methodNotAllowedProblem(method: string, pathname: string) {
+  return {
+    type: errorDocs,
+    title: 'Method not allowed',
+    status: 405,
+    detail: `${method} isn't supported at ${pathname}. dotquilt.dev is read-only: every address answers GET and HEAD.`,
+    instance: pathname,
+    code: 'method_not_allowed',
+    resolution: `Send a GET request. ${site}/openapi.json describes every endpoint.`,
+  };
+}
+
+/** A problem as an `application/problem+json` response (no body for HEAD). */
+function problem(
+  request: Request,
+  details: { status: number },
+  headers: Record<string, string> = {},
+): Response {
+  return new Response(
+    request.method === 'HEAD' ? null : JSON.stringify(details),
+    {
+      status: details.status,
+      headers: {
+        'content-type': 'application/problem+json',
+        vary: 'Accept',
+        'cache-control': 'public, max-age=0, must-revalidate',
+        ...headers,
+      },
+    },
+  );
+}
+
 /** A page's Markdown copy: `/` → `/index.md`, `/docs/theming/` → `/docs/theming.md`. */
 export function markdownFor(pathname: string): string {
   const path = pathname.replace(/\/+$/, '');
@@ -220,10 +255,17 @@ const isFile = (pathname: string) => /\.[^/]+$/.test(pathname);
 export default async function middleware(
   request: Request,
 ): Promise<Response | undefined> {
-  if (request.method !== 'GET' && request.method !== 'HEAD') return undefined;
   if (request.headers.has(internal)) return undefined;
-  const accept = request.headers.get('accept');
   const url = new URL(request.url);
+  // The site is read-only. OPTIONS stays Vercel's (CORS preflights).
+  if (request.method === 'OPTIONS') return undefined;
+  if (request.method !== 'GET' && request.method !== 'HEAD')
+    return problem(
+      request,
+      methodNotAllowedProblem(request.method, url.pathname),
+      { allow: 'GET, HEAD' },
+    );
+  const accept = request.headers.get('accept');
   // A file an agent reads (the only files the matcher lets in), or a page
   // not asked for as Markdown.
   if (isFile(url.pathname) || !wantsMarkdown(accept)) {
@@ -232,19 +274,7 @@ export default async function middleware(
     if (await exists(request, url)) return undefined;
     if (wantsMarkdown(accept))
       return answer(request, notFoundMarkdown(url.pathname), 404);
-    return new Response(
-      request.method === 'HEAD'
-        ? null
-        : JSON.stringify(notFoundProblem(url.pathname)),
-      {
-        status: 404,
-        headers: {
-          'content-type': 'application/problem+json',
-          vary: 'Accept',
-          'cache-control': 'public, max-age=0, must-revalidate',
-        },
-      },
-    );
+    return problem(request, notFoundProblem(url.pathname));
   }
   const copy = await fetch(new URL(markdownFor(url.pathname), url), {
     headers: own(request, 'text/markdown'),

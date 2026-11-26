@@ -7,6 +7,7 @@ import middleware, {
   asksForHtml,
   config,
   markdownFor,
+  methodNotAllowedProblem,
   notFoundMarkdown,
   notFoundProblem,
   pageSummary,
@@ -332,6 +333,30 @@ describe('middleware', () => {
     );
     expect(response?.status).toBe(404);
     expect(await response?.text()).toBe('');
+  });
+
+  test('answers any method but GET and HEAD with a 405 problem', async () => {
+    const requests = serve({ '/llms.txt': 'Dotquilt' });
+    for (const [method, path] of [
+      ['POST', '/llms.txt'],
+      ['DELETE', '/docs/theming.md'],
+      ['PUT', '/docs/'],
+    ] as const) {
+      const response = await middleware(request(path, '*/*', method));
+      expect(response?.status, method).toBe(405);
+      expect(response?.headers.get('allow')).toBe('GET, HEAD');
+      expect(response?.headers.get('content-type')).toBe(
+        'application/problem+json',
+      );
+      expect(await response?.json()).toEqual(
+        methodNotAllowedProblem(method, path),
+      );
+    }
+    // OPTIONS stays Vercel's, for CORS preflights.
+    expect(
+      await middleware(request('/openapi.json', '*/*', 'OPTIONS')),
+    ).toBeUndefined();
+    expect(requests).toEqual([]);
   });
 
   test('a HEAD request gets the headers without a body', async () => {

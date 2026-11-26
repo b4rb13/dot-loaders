@@ -89,15 +89,19 @@ test('every operation documents its errors as RFC 9457 problems', async ({
   request,
 }) => {
   const spec = (await (await request.get('/openapi.json')).json()) as Spec & {
-    components: { responses: Record<string, { content: object }> };
+    components: {
+      schemas: { Problem: { properties: { code: { enum: string[] } } } };
+    };
   };
   for (const [path, { get }] of Object.entries(spec.paths))
-    expect(get.responses['404'], path).toEqual({
-      $ref: '#/components/responses/NotFound',
-    });
-  expect(
-    Object.keys(spec.components.responses.NotFound?.content ?? {}),
-  ).toContain('application/problem+json');
+    expect(
+      get.responses['404']?.content?.['application/problem+json']?.schema,
+      path,
+    ).toEqual({ $ref: '#/components/schemas/Problem' });
+  expect(spec.components.schemas.Problem.properties.code.enum).toEqual([
+    'page_not_found',
+    'method_not_allowed',
+  ]);
 });
 
 test('every URL the description lists answers, with the type it says', async ({

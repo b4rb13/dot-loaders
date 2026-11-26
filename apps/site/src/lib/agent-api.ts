@@ -39,7 +39,20 @@ const text = (mediaType: string, description: string) => ({
   content: { [mediaType]: { schema: { type: 'string' } } },
 });
 
-const notFound = { $ref: '#/components/responses/NotFound' };
+/**
+ * Every operation's 404, typed as the Problem schema (not a shared response
+ * object, so a reader that doesn't follow response references still sees
+ * it).
+ */
+const notFound = {
+  description:
+    'Nothing is at that address. A request that doesn’t ask for HTML gets this problem, or Markdown if it prefers `text/markdown`; a browser gets the site’s 404 page.',
+  content: {
+    'application/problem+json': {
+      schema: { $ref: '#/components/schemas/Problem' },
+    },
+  },
+};
 
 function markdownOperation(options: {
   operationId: string;
@@ -235,7 +248,7 @@ export function openApi(ids: readonly string[], version: string) {
             },
             code: {
               type: 'string',
-              enum: ['page_not_found'],
+              enum: ['page_not_found', 'method_not_allowed'],
               description: 'A stable code for the kind of error.',
             },
             resolution: {
@@ -252,18 +265,6 @@ export function openApi(ids: readonly string[], version: string) {
           properties: {
             schemaVersion: { type: 'string' },
             modules: { type: 'array', items: { type: 'object' } },
-          },
-        },
-      },
-      responses: {
-        NotFound: {
-          description:
-            'Nothing is at that address. A request that doesn’t ask for HTML gets a problem, or Markdown if it prefers `text/markdown`; a browser gets the site’s 404 page.',
-          content: {
-            'application/problem+json': {
-              schema: { $ref: '#/components/schemas/Problem' },
-            },
-            'text/html': { schema: { type: 'string' } },
           },
         },
       },
