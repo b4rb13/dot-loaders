@@ -11,6 +11,7 @@
 import { cp, mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
+import { packResults } from './npm-pack.js';
 
 const root = resolve(import.meta.dir, '..');
 const work = await mkdtemp(resolve(tmpdir(), 'dotquilt-frameworks-'));
@@ -37,7 +38,7 @@ async function run(command: string[], cwd: string, env = {}) {
 // One tarball per package, from the workspace build.
 const tarballs: Record<string, string> = {};
 for (const dir of ['core', 'vue', 'svelte', 'angular']) {
-  const [pack] = JSON.parse(
+  const [pack] = packResults<{ name: string; filename: string }>(
     await run(
       [
         'npm',
@@ -49,7 +50,7 @@ for (const dir of ['core', 'vue', 'svelte', 'angular']) {
       ],
       resolve(root, 'packages', dir),
     ),
-  ) as { name: string; filename: string }[];
+  );
   if (!pack) throw new Error(`npm pack printed nothing for ${dir}`);
   tarballs[pack.name] = `file:${resolve(packs, pack.filename)}`;
 }

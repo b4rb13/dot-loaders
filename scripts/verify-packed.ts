@@ -9,6 +9,7 @@ import {
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { brotliCompressSync, gzipSync } from 'node:zlib';
+import { packResults } from './npm-pack.js';
 
 // Full-interface M4 amendment; historical reports retain their original ceilings.
 const skeletonClosureLimit = 6144;
@@ -36,7 +37,7 @@ async function run(args: string[], cwd: string) {
     throw new Error(`${args[0]} failed: ${stdout}\n${stderr}`);
   return stdout;
 }
-const pack = JSON.parse(
+const [pack] = packResults<{ filename: string; files: { path: string }[] }>(
   await run(
     [
       'npm',
@@ -48,9 +49,10 @@ const pack = JSON.parse(
     ],
     resolve(root, 'packages/core'),
   ),
-)[0];
+);
+if (!pack) throw new Error('npm pack printed nothing for packages/core');
 const tarball = resolve(artifacts, pack.filename);
-const files = pack.files.map((f: { path: string }) => f.path) as string[];
+const files = pack.files.map((f) => f.path);
 if (
   files.some(
     (f) =>
