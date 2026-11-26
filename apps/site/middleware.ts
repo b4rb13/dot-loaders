@@ -6,20 +6,19 @@
  *   the page's Markdown copy (`/` → `/index.md`, `/docs/x/` → `/docs/x.md`),
  *   an HTML-only page gets a short Markdown summary, and a missing page gets
  *   a 404 with a Markdown body.
- * - A request that prefers `application/json`, for a page or a Markdown copy
- *   that doesn't exist, gets a 404 as RFC 9457 `application/problem+json`
- *   (see /openapi.json). One for a page that exists gets the page.
+ * - A request that doesn't ask for HTML (an agent, a script, `curl`: Accept
+ *   `application/json`, `*\/*` or none), for a page or a Markdown copy that
+ *   doesn't exist, gets a 404 as RFC 9457 `application/problem+json` (see
+ *   /openapi.json), or as Markdown if it prefers Markdown. Browsers name
+ *   `text/html`, and get the site's 404 page as before.
  *
- * - /.well-known/api-catalog, the RFC 9727 API catalog, is answered here
- *   with its Linkset media type and `api-catalog` Link header: Vercel applies
- *   no vercel.json headers under /.well-known/, so the static copy in
- *   public/.well-known/ would go out as application/octet-stream. The body
- *   below is that file's; scripts/site-markdown.test.ts keeps them equal.
- *
- * Every other request, such as a browser's, passes through to the static site
- * untouched. Of the static files (anything with an extension), only the
- * Markdown copies run it, and it returns at once unless the request prefers
- * JSON; Vercel's own paths and the rest of /.well-known/ never run it.
+ * Everything that exists passes through to the static site untouched; for a
+ * request that doesn't ask for HTML, after one HEAD request to check. Of the
+ * static files (anything with an extension), only those agents read run it:
+ * `.md`, `.txt` and `.json`. Vercel's own paths never run it, and it can't run under /.well-known/:
+ * with `trailingSlash` on, Vercel ends routing for those paths before any
+ * vercel.json header or middleware (so public/.well-known/api-catalog goes
+ * out as application/octet-stream).
  *
  * Vercel compiles this file on its own, without bundling, so it imports
  * nothing: everything it needs is below. scripts/site-markdown.test.ts loads
@@ -29,47 +28,12 @@
 export const config = {
   matcher: [
     '/((?!_astro/|_vercel/|pagefind/|\\.well-known/|.*\\.[^/]+$).*)',
-    '/(.*)\\.md',
-    '/.well-known/api-catalog',
+    // The files an agent reads: Markdown copies, llms.txt and the JSON ones.
+    '/(.*)\\.(md|txt|json)',
   ],
 };
 
 const site = 'https://dotquilt.dev';
-
-/** The RFC 9727 API catalog, as public/.well-known/api-catalog holds it. */
-export const apiCatalog = {
-  linkset: [
-    {
-      anchor: `${site}/.well-known/api-catalog`,
-      item: [{ href: `${site}/` }],
-    },
-    {
-      anchor: `${site}/`,
-      'service-desc': [
-        {
-          href: `${site}/openapi.json`,
-          type: 'application/vnd.oai.openapi+json;version=3.1',
-        },
-      ],
-      'service-doc': [
-        {
-          href: `${site}/docs/ai-setup/#docs-for-agents-and-tools`,
-          type: 'text/html',
-        },
-      ],
-    },
-  ],
-};
-
-/** The API catalog's headers: GET and HEAD both carry the Link header. */
-export const apiCatalogHeaders = {
-  'content-type':
-    'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"',
-  link: `<${site}/.well-known/api-catalog>; rel="api-catalog", <${site}/openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json;version=3.1"`,
-  'access-control-allow-origin': '*',
-  'x-content-type-options': 'nosniff',
-  'cache-control': 'public, max-age=0, must-revalidate',
-} as const;
 
 /** The headers of every Markdown answer. */
 const markdownHeaders = {
@@ -121,6 +85,27 @@ export function wantsJson(accept: string | null | undefined): boolean {
       html = Math.max(html, quality);
   }
   return json > 0 && json >= html;
+}
+
+/**
+ * Whether an Accept header names HTML at all (`text/html` or
+ * `application/xhtml+xml` with a quality above zero), as every browser's
+ * does. A wildcard doesn't count.
+ */
+export function asksForHtml(accept: string | null | undefined): boolean {
+  if (!accept) return false;
+  return accept
+    .toLowerCase()
+    .split(',')
+    .some((part) => {
+      const [type = '', ...parameters] = part.split(';').map((s) => s.trim());
+      const q = parameters.find((parameter) => parameter.startsWith('q='));
+      const quality = q === undefined ? 1 : Number(q.slice(2));
+      return (
+        (type === 'text/html' || type === 'application/xhtml+xml') &&
+        quality > 0
+      );
+    });
 }
 
 /** Where the errors are documented (the `type` of each problem). */
@@ -206,13 +191,28 @@ function answer(request: Request, body: string, status: number): Response {
   });
 }
 
+/**
+ * Marks the middleware's own requests to the site, which pass straight
+ * through it.
+ */
+const internal = 'x-dotquilt-middleware';
+
+/**
+ * The same request's headers (a preview's login cookie included), asking
+ * for `accept`, marked as the middleware's own.
+ */
+function own(request: Request, accept: string): Headers {
+  const headers = new Headers(request.headers);
+  headers.set('accept', accept);
+  headers.set(internal, '1');
+  return headers;
+}
+
 /** Whether the site has a page or file at this request's address. */
 async function exists(request: Request, url: URL): Promise<boolean> {
-  // The same request's headers (a preview's login cookie included), asking
-  // for HTML or anything, which pass back through this middleware untouched.
-  const headers = new Headers(request.headers);
-  headers.set('accept', isFile(url.pathname) ? '*/*' : 'text/html');
-  return (await fetch(url, { method: 'HEAD', headers })).ok;
+  return (
+    await fetch(url, { method: 'HEAD', headers: own(request, 'text/html') })
+  ).ok;
 }
 
 const isFile = (pathname: string) => /\.[^/]+$/.test(pathname);
@@ -221,19 +221,17 @@ export default async function middleware(
   request: Request,
 ): Promise<Response | undefined> {
   if (request.method !== 'GET' && request.method !== 'HEAD') return undefined;
+  if (request.headers.has(internal)) return undefined;
   const accept = request.headers.get('accept');
   const url = new URL(request.url);
-  if (url.pathname === '/.well-known/api-catalog')
-    return new Response(
-      request.method === 'HEAD'
-        ? null
-        : `${JSON.stringify(apiCatalog, null, 2)}\n`,
-      { headers: apiCatalogHeaders },
-    );
-  // A Markdown copy (the only files the matcher lets in), or a page, asked
-  // for as JSON: a JSON error if it doesn't exist, else the file or page.
+  // A file an agent reads (the only files the matcher lets in), or a page
+  // not asked for as Markdown.
   if (isFile(url.pathname) || !wantsMarkdown(accept)) {
-    if (!wantsJson(accept) || (await exists(request, url))) return undefined;
+    // A browser, or a client that prefers HTML: the site as it is.
+    if (asksForHtml(accept) && !wantsJson(accept)) return undefined;
+    if (await exists(request, url)) return undefined;
+    if (wantsMarkdown(accept))
+      return answer(request, notFoundMarkdown(url.pathname), 404);
     return new Response(
       request.method === 'HEAD'
         ? null
@@ -248,18 +246,12 @@ export default async function middleware(
       },
     );
   }
-  // The same request's headers (a preview's login cookie included), asking
-  // for the file itself.
-  const headers = new Headers(request.headers);
-  headers.set('accept', 'text/markdown');
   const copy = await fetch(new URL(markdownFor(url.pathname), url), {
-    headers,
+    headers: own(request, 'text/markdown'),
   });
   if (copy.ok) return answer(request, await copy.text(), 200);
-  // No Markdown copy: is there a page at all? Asking for HTML passes back
-  // through this middleware untouched.
-  headers.set('accept', 'text/html');
-  const page = await fetch(url, { headers });
+  // No Markdown copy: is there a page at all?
+  const page = await fetch(url, { headers: own(request, 'text/html') });
   if (page.ok) return answer(request, pageSummary(url, await page.text()), 200);
   return answer(request, notFoundMarkdown(url.pathname), 404);
 }

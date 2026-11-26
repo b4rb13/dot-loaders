@@ -87,7 +87,7 @@ export function openApi(ids: readonly string[], version: string) {
       summary:
         'Read-only endpoints that serve the Dotquilt documentation as Markdown, plain text and JSON.',
       description:
-        'Dotquilt is a set of skeleton loaders for the web: native Web Components with components for React, Vue, Svelte and Angular. It runs in the browser and has no server API. These endpoints serve its documentation to agents and tools: an llms.txt index, every page as Markdown, a setup prompt for coding assistants, and the elements’ Custom Elements Manifest. Every endpoint is a GET (HEAD works too), needs no authentication and has no rate limit of its own. A request that prefers `application/json` gets errors as RFC 9457 `application/problem+json`.',
+        'Dotquilt is a set of skeleton loaders for the web: native Web Components with components for React, Vue, Svelte and Angular. It runs in the browser and has no server API. These endpoints serve its documentation to agents and tools: an llms.txt index, every page as Markdown, a setup prompt for coding assistants, and the elements’ Custom Elements Manifest. Every endpoint is a GET (HEAD works too), needs no authentication and has no rate limit of its own. A request that doesn’t ask for HTML gets errors as RFC 9457 `application/problem+json`, with a stable `code` and a `resolution`.',
       version,
       license: { name: 'MIT', identifier: 'MIT' },
       contact: { name: 'Dotquilt', url: `${site}/contact/` },
@@ -117,7 +117,10 @@ export function openApi(ids: readonly string[], version: string) {
           description:
             'An llms.txt index (https://llmstxt.org): when to use Dotquilt, how an agent should add it, and a link to every docs page as Markdown, grouped by section.',
           tags: ['Index'],
-          responses: { '200': text('text/plain', 'The llms.txt index.') },
+          responses: {
+            '200': text('text/plain', 'The llms.txt index.'),
+            '404': notFound,
+          },
         },
       },
       '/llms-full.txt': {
@@ -129,6 +132,7 @@ export function openApi(ids: readonly string[], version: string) {
           tags: ['Index'],
           responses: {
             '200': text('text/plain', 'Every docs page, as Markdown.'),
+            '404': notFound,
           },
         },
       },
@@ -141,6 +145,7 @@ export function openApi(ids: readonly string[], version: string) {
           tags: ['Index'],
           responses: {
             '200': text('text/markdown', 'The setup prompt, as Markdown.'),
+            '404': notFound,
           },
         },
       },
@@ -199,6 +204,7 @@ export function openApi(ids: readonly string[], version: string) {
                 },
               },
             },
+            '404': notFound,
           },
         },
       },
@@ -252,7 +258,7 @@ export function openApi(ids: readonly string[], version: string) {
       responses: {
         NotFound: {
           description:
-            'No page has that name. A request that prefers `application/json` gets a problem; any other gets the site’s 404 page.',
+            'Nothing is at that address. A request that doesn’t ask for HTML gets a problem, or Markdown if it prefers `text/markdown`; a browser gets the site’s 404 page.',
           content: {
             'application/problem+json': {
               schema: { $ref: '#/components/schemas/Problem' },

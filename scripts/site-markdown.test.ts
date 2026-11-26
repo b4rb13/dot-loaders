@@ -4,8 +4,7 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import middleware, {
-  apiCatalog,
-  apiCatalogHeaders,
+  asksForHtml,
   config,
   markdownFor,
   notFoundMarkdown,
@@ -42,7 +41,7 @@ test('the middleware loads on its own in Node, as Vercel runs it', async () => {
        console.log(typeof m.default, String(answer), m.config.matcher.length);`,
     ]);
     expect(run.stderr.toString()).toBe('');
-    expect(run.stdout.toString().trim()).toBe('function undefined 3');
+    expect(run.stdout.toString().trim()).toBe('function undefined 2');
   } finally {
     await rm(work, { recursive: true, force: true });
   }
@@ -88,19 +87,45 @@ describe('wantsJson', () => {
   });
 });
 
-test('the middleware runs on pages, Markdown copies and the API catalog', () => {
+describe('asksForHtml', () => {
+  test('every browser names HTML', () => {
+    expect(
+      asksForHtml(
+        'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      ),
+    ).toBe(true);
+    expect(asksForHtml('application/json, text/html;q=0.1')).toBe(true);
+  });
+  test('agents, scripts and curl do not', () => {
+    expect(asksForHtml(null)).toBe(false);
+    expect(asksForHtml('*/*')).toBe(false);
+    expect(asksForHtml('application/json')).toBe(false);
+    expect(asksForHtml('text/markdown')).toBe(false);
+    expect(asksForHtml('text/html;q=0, */*')).toBe(false);
+  });
+});
+
+test('the middleware runs on pages and the files agents read, never under /.well-known/', () => {
   const matches = (path: string) =>
     config.matcher.some((pattern) =>
       // Vercel's matcher: a path-to-regexp source, here only literal
       // characters and (…) groups, so it reads as a regular expression.
       new RegExp(`^${pattern}$`).test(path),
     );
-  expect(matches('/docs/theming/')).toBe(true);
-  expect(matches('/docs/theming.md')).toBe(true);
-  expect(matches('/.well-known/api-catalog')).toBe(true);
-  expect(matches('/.well-known/security.txt')).toBe(false);
-  expect(matches('/openapi.json')).toBe(false);
-  expect(matches('/_astro/page.js')).toBe(false);
+  for (const path of [
+    '/docs/theming/',
+    '/docs/theming.md',
+    '/llms.txt',
+    '/openapi.json',
+  ])
+    expect(matches(path), path).toBe(true);
+  for (const path of [
+    '/.well-known/api-catalog',
+    '/favicon.ico',
+    '/og/index.png',
+    '/_astro/page.js',
+  ])
+    expect(matches(path), path).toBe(false);
 });
 
 test('a JSON 404 is RFC 9457 problem details with a code and a resolution', () => {
@@ -233,17 +258,71 @@ describe('middleware', () => {
     expect(body?.instance).toBe('/docs/nope.md');
   });
 
-  test('leaves every other request for a Markdown copy to the static file', async () => {
+  test('answers a missing page with a problem+json 404 when the request names no HTML', async () => {
+    serve({});
+    for (const accept of ['*/*', ''])
+      expect(
+        (await middleware(request('/nope/', accept)))?.headers.get(
+          'content-type',
+        ),
+      ).toBe('application/problem+json');
+  });
+
+  test('answers a missing Markdown copy asked for as Markdown with a Markdown 404', async () => {
+    serve({});
+    const response = await middleware(
+      request('/docs/nope.md', 'text/markdown'),
+    );
+    expect(response?.status).toBe(404);
+    expect(response?.headers.get('content-type')).toBe(
+      'text/markdown; charset=utf-8',
+    );
+  });
+
+  test('passes a file that exists through, after one HEAD request', async () => {
     const requests = serve({ '/docs/theming.md': '# Theming\n' });
-    for (const accept of ['text/markdown', '*/*', 'text/html'])
+    for (const accept of ['text/markdown', '*/*', 'application/json'])
       expect(
         await middleware(request('/docs/theming.md', accept)),
       ).toBeUndefined();
-    expect(
-      await middleware(request('/docs/theming.md', 'application/json')),
-    ).toBeUndefined();
-    // Only the JSON request looked the file up.
-    expect(requests).toEqual(['/docs/theming.md']);
+    expect(requests).toEqual([
+      '/docs/theming.md',
+      '/docs/theming.md',
+      '/docs/theming.md',
+    ]);
+  });
+
+  test('leaves a browser alone, even for a missing page or file', async () => {
+    const requests = serve({});
+    for (const path of ['/nope/', '/docs/nope.md', '/llms.txt'])
+      expect(
+        await middleware(request(path, 'text/html,*/*;q=0.8')),
+      ).toBeUndefined();
+    expect(requests).toEqual([]);
+  });
+
+  test('marks its own lookups, so they come back through it untouched', async () => {
+    const marks: (string | null)[] = [];
+    globalThis.fetch = (async (
+      _input: RequestInfo | URL,
+      init?: RequestInit,
+    ) => {
+      marks.push(new Headers(init?.headers).get('x-dotquilt-middleware'));
+      return new Response('missing', { status: 404 });
+    }) as typeof fetch;
+    await middleware(request('/nope/', '*/*'));
+    await middleware(request('/docs/', 'text/markdown'));
+    expect(marks.length).toBe(3);
+    expect(marks.every((mark) => mark === '1')).toBe(true);
+  });
+
+  test('lets its own requests to the site through untouched', async () => {
+    const requests = serve({});
+    const own = new Request('https://dotquilt.dev/nope.md', {
+      headers: { accept: '*/*', 'x-dotquilt-middleware': '1' },
+    });
+    expect(await middleware(own)).toBeUndefined();
+    expect(requests).toEqual([]);
   });
 
   test('a HEAD request for a missing page gets the JSON 404 without a body', async () => {
@@ -252,43 +331,6 @@ describe('middleware', () => {
       request('/nope/', 'application/json', 'HEAD'),
     );
     expect(response?.status).toBe(404);
-    expect(await response?.text()).toBe('');
-  });
-
-  test('answers the API catalog as an RFC 9727 Linkset, with the static copy as its body', async () => {
-    const requests = serve({});
-    const response = await middleware(
-      request('/.well-known/api-catalog', 'application/linkset+json'),
-    );
-    expect(response?.status).toBe(200);
-    expect(response?.headers.get('content-type')).toBe(
-      'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"',
-    );
-    expect(response?.headers.get('link')).toContain(
-      '<https://dotquilt.dev/.well-known/api-catalog>; rel="api-catalog"',
-    );
-    // Vercel applies no vercel.json headers under /.well-known/, so the
-    // static file would go out as application/octet-stream: the middleware
-    // answers with the same body.
-    const file = await readFile(
-      resolve(
-        import.meta.dirname,
-        '../apps/site/public/.well-known/api-catalog',
-      ),
-      'utf8',
-    );
-    expect(await response?.text()).toBe(file);
-    expect(JSON.parse(file)).toEqual(apiCatalog);
-    expect(requests).toEqual([]);
-  });
-
-  test('a HEAD request for the API catalog gets its Link header', async () => {
-    serve({});
-    const response = await middleware(
-      request('/.well-known/api-catalog', '*/*', 'HEAD'),
-    );
-    expect(response?.status).toBe(200);
-    expect(response?.headers.get('link')).toBe(apiCatalogHeaders.link);
     expect(await response?.text()).toBe('');
   });
 

@@ -2,7 +2,6 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { Validator } from '@seriousme/openapi-schema-validator';
-import { apiCatalogHeaders } from '../../apps/site/middleware';
 import { elements } from '../../packages/core/meta/elements';
 import { customElementsManifest } from '../../scripts/element-manifest';
 
@@ -84,6 +83,21 @@ test('every operation is self-describing, for function calling', async ({
     expect(Object.keys(ok), operation.operationId).toHaveLength(1);
     for (const media of Object.values(ok)) expect(media.schema).toBeTruthy();
   }
+});
+
+test('every operation documents its errors as RFC 9457 problems', async ({
+  request,
+}) => {
+  const spec = (await (await request.get('/openapi.json')).json()) as Spec & {
+    components: { responses: Record<string, { content: object }> };
+  };
+  for (const [path, { get }] of Object.entries(spec.paths))
+    expect(get.responses['404'], path).toEqual({
+      $ref: '#/components/responses/NotFound',
+    });
+  expect(
+    Object.keys(spec.components.responses.NotFound?.content ?? {}),
+  ).toContain('application/problem+json');
 });
 
 test('every URL the description lists answers, with the type it says', async ({
@@ -169,15 +183,13 @@ test('the RFC 9727 API catalog links the OpenAPI description', async ({
   // The errors' type, too.
   await expect(page.locator('#errors')).toBeVisible();
 
-  // On Vercel the middleware answers it, with the RFC 9727 media type and
-  // Link header (scripts/site-markdown.test.ts): Vercel applies no
-  // vercel.json headers under /.well-known/.
-  expect(apiCatalogHeaders['content-type']).toBe(
-    'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"',
-  );
-  expect(apiCatalogHeaders.link).toContain(
-    '<https://dotquilt.dev/openapi.json>; rel="service-desc"',
-  );
+  // Its media type: Vercel serves files under /.well-known/ as they are,
+  // before any vercel.json header or middleware (with trailingSlash on), so
+  // it goes out as application/octet-stream instead of RFC 9727's
+  // application/linkset+json. Nothing in vercel.json pretends otherwise.
+  expect(
+    vercel.headers.some((rule) => rule.source.startsWith('/.well-known/')),
+  ).toBe(false);
 });
 
 test('pages and llms.txt point agents to the catalog and the files', async ({
