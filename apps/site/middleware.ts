@@ -14,13 +14,19 @@
  *   /openapi.json), or as Markdown if it prefers Markdown. Browsers name
  *   `text/html`, and get the site's 404 page as before.
  *
+ * - Trailing slashes are handled here, not by vercel.json's `trailingSlash`:
+ *   a page's address without its slash (`/docs`) is redirected to it
+ *   (`/docs/`) only when the page exists, and a file's with one (`/llms.txt/`)
+ *   loses it. So a missing page is a 404 at once, not a redirect to one.
+ *   (`trailingSlash: true` redirected every such path first, before this
+ *   middleware ran, and also stopped Vercel's routing for /.well-known/
+ *   before any vercel.json header.)
+ *
  * Everything that exists passes through to the static site untouched; for a
  * request that doesn't ask for HTML, after one HEAD request to check. Of the
  * static files (anything with an extension), only those agents read run it:
- * `.md`, `.txt` and `.json`. Vercel's own paths never run it, and it can't run under /.well-known/:
- * with `trailingSlash` on, Vercel ends routing for those paths before any
- * vercel.json header or middleware (so public/.well-known/api-catalog goes
- * out as application/octet-stream).
+ * `.md`, `.txt` and `.json`. Vercel's own paths and /.well-known/ never run
+ * it.
  *
  * Vercel compiles this file on its own, without bundling, so it imports
  * nothing: everything it needs is below. scripts/site-markdown.test.ts loads
@@ -252,6 +258,14 @@ async function exists(request: Request, url: URL): Promise<boolean> {
 
 const isFile = (pathname: string) => /\.[^/]+$/.test(pathname);
 
+/** A permanent redirect to `pathname`, keeping the query. */
+function redirect(url: URL, pathname: string): Response {
+  return new Response(null, {
+    status: 308,
+    headers: { location: `${pathname}${url.search}` },
+  });
+}
+
 export default async function middleware(
   request: Request,
 ): Promise<Response | undefined> {
@@ -265,6 +279,17 @@ export default async function middleware(
       methodNotAllowedProblem(request.method, url.pathname),
       { allow: 'GET, HEAD' },
     );
+  // Trailing slashes, which this middleware owns (vercel.json sets no
+  // `trailingSlash`): a page's address ends in one, a file's doesn't. A
+  // path without one is redirected only if the page exists, so a missing
+  // page is answered below as a 404, never a redirect.
+  if (/^\/(?:[^/]+\/)*[^/]+\.\w+\/$/.test(url.pathname))
+    return redirect(url, url.pathname.slice(0, -1));
+  if (!isFile(url.pathname) && !url.pathname.endsWith('/')) {
+    const page = new URL(url);
+    page.pathname += '/';
+    if (await exists(request, page)) return redirect(url, page.pathname);
+  }
   const accept = request.headers.get('accept');
   // A file an agent reads (the only files the matcher lets in), or a page
   // not asked for as Markdown.

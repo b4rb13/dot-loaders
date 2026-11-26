@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "trailingSlash": true,
   "cleanUrls": true,
   "redirects": [
     {
@@ -74,6 +73,23 @@
         {
           "key": "Content-Type",
           "value": "application/vnd.oai.openapi+json;version=3.1"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/.well-known/api-catalog",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/linkset+json; profile=\"https://www.rfc-editor.org/info/rfc9727\""
+        },
+        {
+          "key": "Link",
+          "value": "<https://dotquilt.dev/.well-known/api-catalog>; rel=\"api-catalog\", <https://dotquilt.dev/openapi.json>; rel=\"service-desc\"; type=\"application/vnd.oai.openapi+json;version=3.1\""
         },
         {
           "key": "Access-Control-Allow-Origin",

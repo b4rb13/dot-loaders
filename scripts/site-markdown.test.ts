@@ -359,6 +359,35 @@ describe('middleware', () => {
     expect(requests).toEqual([]);
   });
 
+  test('redirects an address without its slash to the page, when the page exists', async () => {
+    serve({ '/docs/': '<title>Docs</title>' });
+    for (const accept of ['text/html', '*/*', 'text/markdown']) {
+      const response = await middleware(request('/docs?tab=vue', accept));
+      expect(response?.status, accept).toBe(308);
+      expect(response?.headers.get('location')).toBe('/docs/?tab=vue');
+    }
+  });
+
+  test('answers a missing address without a slash as a 404, not a redirect', async () => {
+    serve({});
+    const response = await middleware(request('/nonexistent', '*/*'));
+    expect(response?.status).toBe(404);
+    expect(response?.headers.get('content-type')).toBe(
+      'application/problem+json',
+    );
+    // A browser gets the site's 404 page.
+    expect(
+      await middleware(request('/nonexistent', 'text/html,*/*;q=0.8')),
+    ).toBeUndefined();
+  });
+
+  test('drops the slash after a file name', async () => {
+    serve({});
+    const response = await middleware(request('/llms.txt/', '*/*'));
+    expect(response?.status).toBe(308);
+    expect(response?.headers.get('location')).toBe('/llms.txt');
+  });
+
   test('a HEAD request gets the headers without a body', async () => {
     serve({ '/index.md': '# Dotquilt\n' });
     const response = await middleware(request('/', 'text/markdown', 'HEAD'));
