@@ -21,6 +21,18 @@ export default defineConfig({
       // Head tags Starlight doesn't add: each page's social card, a link to
       // its Markdown copy, and JSON-LD.
       routeMiddleware: './src/routeData.ts',
+      // The icon as ICO and PNG beside Starlight's SVG, for apps that can't
+      // show an SVG (src/lib/icons.ts). sizes="32x32" keeps browsers on the SVG.
+      head: [
+        {
+          tag: 'link',
+          attrs: { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },
+        },
+        {
+          tag: 'link',
+          attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+        },
+      ],
       customCss: [
         // The fonts are served from the site itself (design/SPEC.md), so a
         // page makes no request to another origin and doesn't wait for one.
