@@ -1,12 +1,19 @@
 /**
- * Vercel Routing Middleware: Markdown for agents, by content negotiation.
+ * Vercel Routing Middleware: Markdown and JSON errors for agents, by content
+ * negotiation.
  *
- * A request whose Accept header prefers `text/markdown` gets the page's
- * Markdown copy (`/` → `/index.md`, `/docs/x/` → `/docs/x.md`), an HTML-only
- * page gets a short Markdown summary, and a missing page gets a 404 with a
- * Markdown body. Every other request, such as a browser's, passes through to
- * the static site untouched. Static files (anything with an extension) and
- * Vercel's own paths never run it.
+ * - A request for a page whose Accept header prefers `text/markdown` gets
+ *   the page's Markdown copy (`/` → `/index.md`, `/docs/x/` → `/docs/x.md`),
+ *   an HTML-only page gets a short Markdown summary, and a missing page gets
+ *   a 404 with a Markdown body.
+ * - A request that prefers `application/json`, for a page or a Markdown copy
+ *   that doesn't exist, gets a 404 as RFC 9457 `application/problem+json`
+ *   (see /openapi.json). One for a page that exists gets the page.
+ *
+ * Every other request, such as a browser's, passes through to the static site
+ * untouched. Of the static files (anything with an extension), only the
+ * Markdown copies run it, and it returns at once unless the request prefers
+ * JSON; Vercel's own paths and /.well-known/ never run it.
  *
  * Vercel compiles this file on its own, without bundling, so it imports
  * nothing: everything it needs is below. scripts/site-markdown.test.ts loads
@@ -14,7 +21,10 @@
  */
 
 export const config = {
-  matcher: ['/((?!_astro/|_vercel/|pagefind/|.*\\.[^/]+$).*)'],
+  matcher: [
+    '/((?!_astro/|_vercel/|pagefind/|\\.well-known/|.*\\.[^/]+$).*)',
+    '/(.*)\\.md',
+  ],
 };
 
 const site = 'https://dotquilt.dev';
@@ -47,6 +57,44 @@ export function wantsMarkdown(accept: string | null | undefined): boolean {
       html = Math.max(html, quality);
   }
   return markdown > 0 && markdown >= html;
+}
+
+/**
+ * Whether an Accept header asks for JSON before HTML: `application/json` or
+ * `application/problem+json` with a quality above zero and at least that of
+ * `text/html`. Wildcards don't count, as for Markdown.
+ */
+export function wantsJson(accept: string | null | undefined): boolean {
+  if (!accept) return false;
+  let json = 0;
+  let html = 0;
+  for (const part of accept.toLowerCase().split(',')) {
+    const [type = '', ...parameters] = part.split(';').map((s) => s.trim());
+    const q = parameters.find((parameter) => parameter.startsWith('q='));
+    const quality = q === undefined ? 1 : Number(q.slice(2));
+    if (!Number.isFinite(quality)) continue;
+    if (type === 'application/json' || type === 'application/problem+json')
+      json = Math.max(json, quality);
+    else if (type === 'text/html' || type === 'application/xhtml+xml')
+      html = Math.max(html, quality);
+  }
+  return json > 0 && json >= html;
+}
+
+/** Where the errors are documented (the `type` of each problem). */
+const errorDocs = `${site}/docs/ai-setup/#errors`;
+
+/** A missing page or Markdown copy, as RFC 9457 problem details. */
+export function notFoundProblem(pathname: string) {
+  return {
+    type: errorDocs,
+    title: 'Page not found',
+    status: 404,
+    detail: `There is no page at ${pathname} on dotquilt.dev. It may have moved, or the address may be mistyped.`,
+    instance: pathname,
+    code: 'page_not_found',
+    resolution: `Find the page in ${site}/llms.txt, which links every docs page as Markdown. ${site}/openapi.json describes every endpoint.`,
+  };
 }
 
 /** A page's Markdown copy: `/` → `/index.md`, `/docs/theming/` → `/docs/theming.md`. */
@@ -116,12 +164,41 @@ function answer(request: Request, body: string, status: number): Response {
   });
 }
 
+/** Whether the site has a page or file at this request's address. */
+async function exists(request: Request, url: URL): Promise<boolean> {
+  // The same request's headers (a preview's login cookie included), asking
+  // for HTML or anything, which pass back through this middleware untouched.
+  const headers = new Headers(request.headers);
+  headers.set('accept', isFile(url.pathname) ? '*/*' : 'text/html');
+  return (await fetch(url, { method: 'HEAD', headers })).ok;
+}
+
+const isFile = (pathname: string) => /\.[^/]+$/.test(pathname);
+
 export default async function middleware(
   request: Request,
 ): Promise<Response | undefined> {
-  if (!wantsMarkdown(request.headers.get('accept'))) return undefined;
   if (request.method !== 'GET' && request.method !== 'HEAD') return undefined;
+  const accept = request.headers.get('accept');
   const url = new URL(request.url);
+  // A Markdown copy (the only files the matcher lets in), or a page, asked
+  // for as JSON: a JSON error if it doesn't exist, else the file or page.
+  if (isFile(url.pathname) || !wantsMarkdown(accept)) {
+    if (!wantsJson(accept) || (await exists(request, url))) return undefined;
+    return new Response(
+      request.method === 'HEAD'
+        ? null
+        : JSON.stringify(notFoundProblem(url.pathname)),
+      {
+        status: 404,
+        headers: {
+          'content-type': 'application/problem+json',
+          vary: 'Accept',
+          'cache-control': 'public, max-age=0, must-revalidate',
+        },
+      },
+    );
+  }
   // The same request's headers (a preview's login cookie included), asking
   // for the file itself.
   const headers = new Headers(request.headers);

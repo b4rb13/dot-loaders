@@ -32,6 +32,11 @@ export default defineConfig({
           tag: 'link',
           attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
         },
+        // The site's read-only endpoints for agents (RFC 9727; /openapi.json).
+        {
+          tag: 'link',
+          attrs: { rel: 'api-catalog', href: '/.well-known/api-catalog' },
+        },
       ],
       customCss: [
         // The fonts are served from the site itself (design/SPEC.md), so a
