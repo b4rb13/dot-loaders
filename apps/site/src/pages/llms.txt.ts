@@ -53,6 +53,8 @@ export const GET: APIRoute = async ({ site }) => {
       '',
       `- [Setup prompt](${url('/setup-prompt.md')}): a prompt for coding assistants that analyses a project and adds Dotquilt one place at a time`,
       `- [Every page in one file](${url('/llms-full.txt')}): all the docs pages below, as one Markdown file`,
+      `- [Custom Elements Manifest](${url('/custom-elements.json')}): every element's attributes, properties, events, slots, CSS parts and custom properties, as JSON`,
+      `- [OpenAPI description](${url('/openapi.json')}): these endpoints, for tools that read OpenAPI; also linked from ${url('/.well-known/api-catalog')}`,
       '',
       ...section(
         'Getting started',

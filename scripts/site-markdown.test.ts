@@ -4,9 +4,12 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import middleware, {
+  config,
   markdownFor,
   notFoundMarkdown,
+  notFoundProblem,
   pageSummary,
+  wantsJson,
   wantsMarkdown,
 } from '../apps/site/middleware';
 
@@ -37,7 +40,7 @@ test('the middleware loads on its own in Node, as Vercel runs it', async () => {
        console.log(typeof m.default, String(answer), m.config.matcher.length);`,
     ]);
     expect(run.stderr.toString()).toBe('');
-    expect(run.stdout.toString().trim()).toBe('function undefined 1');
+    expect(run.stdout.toString().trim()).toBe('function undefined 2');
   } finally {
     await rm(work, { recursive: true, force: true });
   }
@@ -61,6 +64,53 @@ describe('wantsMarkdown', () => {
     expect(wantsMarkdown('text/markdown;q=0')).toBe(false);
     expect(wantsMarkdown('')).toBe(false);
     expect(wantsMarkdown(null)).toBe(false);
+  });
+});
+
+describe('wantsJson', () => {
+  test('a request that names JSON first, or alone, gets JSON errors', () => {
+    expect(wantsJson('application/json')).toBe(true);
+    expect(wantsJson('application/problem+json')).toBe(true);
+    expect(wantsJson('application/json, text/html;q=0.5')).toBe(true);
+  });
+  test('browsers, HTML-first and wildcard requests do not', () => {
+    expect(wantsJson(null)).toBe(false);
+    expect(wantsJson('*/*')).toBe(false);
+    expect(
+      wantsJson(
+        'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      ),
+    ).toBe(false);
+    expect(wantsJson('text/html, application/json;q=0.9')).toBe(false);
+    expect(wantsJson('application/json;q=0')).toBe(false);
+  });
+});
+
+test('the middleware runs on pages and Markdown copies, never on /.well-known/', () => {
+  const matches = (path: string) =>
+    config.matcher.some((pattern) =>
+      // Vercel's matcher: a path-to-regexp source, here only literal
+      // characters and (…) groups, so it reads as a regular expression.
+      new RegExp(`^${pattern}$`).test(path),
+    );
+  expect(matches('/docs/theming/')).toBe(true);
+  expect(matches('/docs/theming.md')).toBe(true);
+  expect(matches('/.well-known/api-catalog')).toBe(false);
+  expect(matches('/openapi.json')).toBe(false);
+  expect(matches('/_astro/page.js')).toBe(false);
+});
+
+test('a JSON 404 is RFC 9457 problem details with a code and a resolution', () => {
+  expect(notFoundProblem('/nope/')).toEqual({
+    type: 'https://dotquilt.dev/docs/ai-setup/#errors',
+    title: 'Page not found',
+    status: 404,
+    detail:
+      'There is no page at /nope/ on dotquilt.dev. It may have moved, or the address may be mistyped.',
+    instance: '/nope/',
+    code: 'page_not_found',
+    resolution:
+      'Find the page in https://dotquilt.dev/llms.txt, which links every docs page as Markdown. https://dotquilt.dev/openapi.json describes every endpoint.',
   });
 });
 
@@ -149,6 +199,57 @@ describe('middleware', () => {
       'text/markdown; charset=utf-8',
     );
     expect(await response?.text()).toContain('# Page not found');
+  });
+
+  test('answers a missing page asked for as JSON with a problem+json 404', async () => {
+    serve({});
+    const response = await middleware(request('/nope/', 'application/json'));
+    expect(response?.status).toBe(404);
+    expect(response?.headers.get('content-type')).toBe(
+      'application/problem+json',
+    );
+    expect(response?.headers.get('vary')).toBe('Accept');
+    expect(await response?.json()).toEqual(notFoundProblem('/nope/'));
+  });
+
+  test('passes a page that exists through to a JSON request', async () => {
+    const requests = serve({ '/docs/': '<title>Docs</title>' });
+    expect(
+      await middleware(request('/docs/', 'application/json')),
+    ).toBeUndefined();
+    expect(requests).toEqual(['/docs/']);
+  });
+
+  test('answers a missing Markdown copy asked for as JSON with a problem+json 404', async () => {
+    serve({});
+    const response = await middleware(
+      request('/docs/nope.md', 'application/json'),
+    );
+    expect(response?.status).toBe(404);
+    const body = (await response?.json()) as { instance: string } | undefined;
+    expect(body?.instance).toBe('/docs/nope.md');
+  });
+
+  test('leaves every other request for a Markdown copy to the static file', async () => {
+    const requests = serve({ '/docs/theming.md': '# Theming\n' });
+    for (const accept of ['text/markdown', '*/*', 'text/html'])
+      expect(
+        await middleware(request('/docs/theming.md', accept)),
+      ).toBeUndefined();
+    expect(
+      await middleware(request('/docs/theming.md', 'application/json')),
+    ).toBeUndefined();
+    // Only the JSON request looked the file up.
+    expect(requests).toEqual(['/docs/theming.md']);
+  });
+
+  test('a HEAD request for a missing page gets the JSON 404 without a body', async () => {
+    serve({});
+    const response = await middleware(
+      request('/nope/', 'application/json', 'HEAD'),
+    );
+    expect(response?.status).toBe(404);
+    expect(await response?.text()).toBe('');
   });
 
   test('a HEAD request gets the headers without a body', async () => {

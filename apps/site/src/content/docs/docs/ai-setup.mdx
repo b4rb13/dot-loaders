@@ -45,6 +45,25 @@ Paste one prompt into your coding assistant, such as Claude Code, Codex, Cursor 
 
 It works with any framework: React 19, Vue 3, Svelte 5 and Angular 22 get their packages' components, and everything else (plain HTML, or an older framework version) gets the native elements.
 
+## Docs for agents and tools
+
+Agents and tools can read these docs without a browser. Every address below is a plain GET, with no key and no sign-in:
+
+- **[llms.txt](/llms.txt)** is an index for language models: when to use Dotquilt, how to add it, and a link to every page as Markdown.
+- **[llms-full.txt](/llms-full.txt)** holds every docs page in one file.
+- **Every page as Markdown:** add `.md` to its address (`/docs/theming/` → `/docs/theming.md`), or ask for the page with `Accept: text/markdown`.
+- **[setup-prompt.md](/setup-prompt.md)** is the prompt on this page.
+- **[custom-elements.json](/custom-elements.json)** is the elements' [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest): every attribute, property, event, slot, CSS part and custom property. The [API reference](/docs/api/) is the same, for people.
+- **[openapi.json](/openapi.json)** describes all of these as an OpenAPI 3.1 document, and the [API catalog](/.well-known/api-catalog) (RFC 9727) links to it.
+
+### Errors
+
+A request that prefers JSON (`Accept: application/json`) for a page or Markdown copy that doesn't exist gets a `404` with an RFC 9457 `application/problem+json` body: a `code`, what went wrong (`detail`) and what to do instead (`resolution`). Any other request gets the site's 404 page, as HTML, or as Markdown for a page asked for with `Accept: text/markdown`.
+
+| `code` | Status | Meaning |
+| --- | --- | --- |
+| `page_not_found` | 404 | No page has that address. [llms.txt](/llms.txt) lists every page. |
+
 ## The prompt
 
 <div class="prompt-code">

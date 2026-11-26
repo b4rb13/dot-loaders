@@ -1,0 +1,27 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://dotquilt.dev/.well-known/api-catalog",
+      "item": [
+        {
+          "href": "https://dotquilt.dev/"
+        }
+      ]
+    },
+    {
+      "anchor": "https://dotquilt.dev/",
+      "service-desc": [
+        {
+          "href": "https://dotquilt.dev/openapi.json",
+          "type": "application/vnd.oai.openapi+json;version=3.1"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://dotquilt.dev/docs/ai-setup/#docs-for-agents-and-tools",
+          "type": "text/html"
+        }
+      ]
+    }
+  ]
+}
