@@ -25,6 +25,7 @@ export const pages = [
   '/docs/theming/',
   '/docs/stability/',
   '/docs/api/',
+  '/docs/changelog/',
   '/license/',
   '/about/',
   '/contact/',

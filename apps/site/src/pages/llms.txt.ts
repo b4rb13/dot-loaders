@@ -19,8 +19,9 @@ export const GET: APIRoute = async ({ site }) => {
     '',
   ];
   const prefix = (start: string) => (id: string) => id.startsWith(start);
-  // Generated from the element descriptions (lib/api-reference.ts).
-  const api = 'docs/api';
+  // Generated from the element descriptions (lib/api-reference.ts) and the
+  // packages' changelogs (lib/changelog.ts).
+  const reference = ['docs/api', 'docs/changelog'];
   return new Response(
     [
       '# Dotquilt',
@@ -55,11 +56,13 @@ export const GET: APIRoute = async ({ site }) => {
       '',
       ...section(
         'Getting started',
-        (id) => id === 'docs' || (/^docs\/[^/]+$/.test(id) && id !== api),
+        (id) =>
+          id === 'docs' ||
+          (/^docs\/[^/]+$/.test(id) && !reference.includes(id)),
       ),
       ...section('Components', prefix('docs/components/')),
       ...section('Guides', prefix('docs/guides/')),
-      ...section('Reference', (id) => id === api),
+      ...section('Reference', (id) => reference.includes(id)),
       '## Optional',
       '',
       `- [Examples](${url('/examples/')}): every loader in the place it lives, with its code`,

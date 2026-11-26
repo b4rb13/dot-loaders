@@ -123,7 +123,11 @@ export default defineConfig({
         {
           label: 'Reference',
           // Generated from the element descriptions (src/lib/api-reference.ts).
-          items: [{ label: 'API reference', slug: 'docs/api' }],
+          items: [
+            { label: 'API reference', slug: 'docs/api' },
+            // Generated from the packages' changelogs (src/lib/changelog.ts).
+            { label: 'Changelog', slug: 'docs/changelog' },
+          ],
         },
       ],
     }),
