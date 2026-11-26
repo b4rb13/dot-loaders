@@ -4,9 +4,13 @@
  * into `dist/custom-elements.json` (the Custom Elements Manifest standard)
  * and `dist/web-types.json` (JetBrains editors), and `tests/e2e/manifest.spec.ts`
  * checks it against the running elements, so it can't drift from the code.
+ * The docs site's API reference (`apps/site/src/lib/api-reference.ts`) is
+ * generated from it too.
  *
  * Types are written as they appear in `dotquilt`'s own declarations.
  */
+
+import type { HandoffDetail, LoaderErrorDetail } from 'dotquilt';
 
 export interface PropertySpec {
   readonly name: string;
@@ -32,9 +36,23 @@ export interface NamedSpec {
   readonly name: string;
   readonly description: string;
 }
+export interface FieldSpec {
+  readonly name: string;
+  readonly type: string;
+  readonly description: string;
+  /** Absent from some events of this type. */
+  readonly optional?: boolean;
+}
+export interface DetailSpec {
+  /** The type's name in `dotquilt`, e.g. `HandoffDetail`. */
+  readonly name: string;
+  readonly fields: readonly FieldSpec[];
+}
 export interface EventSpec extends NamedSpec {
   /** The event's type, e.g. `CustomEvent<HandoffDetail>`. */
   readonly type: string;
+  /** What `event.detail` holds. */
+  readonly detail: DetailSpec;
 }
 export interface CssPropertySpec extends NamedSpec {
   readonly default: string;
@@ -142,9 +160,62 @@ const refresh: MethodSpec = {
     'Measures and draws again, after a change the element cannot observe on its own.',
 };
 
+/**
+ * Describes every field of the detail type `T`, and only those, marking the
+ * optional ones: a field added to or removed from `T` fails the type check.
+ */
+type Fields<T> = {
+  readonly [K in keyof T]-?: {
+    readonly type: string;
+    readonly description: string;
+  } & (object extends Pick<T, K>
+    ? { readonly optional: true }
+    : { readonly optional?: never });
+};
+const detail = <T>(name: string, fields: Fields<T>): DetailSpec => ({
+  name,
+  fields: Object.entries(fields as Record<string, Omit<FieldSpec, 'name'>>).map(
+    ([field, spec]) => ({ name: field, ...spec }),
+  ),
+});
+const handoffDetail = detail<HandoffDetail>('HandoffDetail', {
+  cycle: {
+    type: 'string | undefined',
+    description: 'The `cycle` the handoff belongs to, if one was set.',
+  },
+  handoffId: {
+    type: 'number',
+    description:
+      "Counts the element's handoffs. The start, end and cancel events of one handoff carry the same number.",
+  },
+  animation: {
+    type: 'string',
+    description: "The handoff animation's id, such as `dotquilt/morph`.",
+  },
+  reason: {
+    type: 'string',
+    optional: true,
+    description:
+      'On `dotquilt-handoff-end` and `dotquilt-handoff-cancel`: `complete` when the animation ran to the end, otherwise why it stopped, such as `immediate`, `restricted` or `superseded`.',
+  },
+});
+const errorDetail = detail<LoaderErrorDetail>('LoaderErrorDetail', {
+  code: {
+    type: 'string',
+    description:
+      'What went wrong, such as `unknown-option`, `invalid-preset` or `animation-failed`.',
+  },
+  field: {
+    type: 'string',
+    description:
+      'The option it concerns, such as `speed` or `animations`, or `registration`.',
+  },
+});
+
 const error: EventSpec = {
   name: 'dotquilt-error',
   type: 'CustomEvent<LoaderErrorDetail>',
+  detail: errorDetail,
   description:
     'An option was invalid or an animation failed. `detail.code` says which, `detail.field` names the property.',
 };
@@ -152,17 +223,20 @@ const handoffEvents: readonly EventSpec[] = [
   {
     name: 'dotquilt-handoff-start',
     type: 'CustomEvent<HandoffDetail>',
+    detail: handoffDetail,
     description: 'The handoff from the placeholder to the content begins.',
   },
   {
     name: 'dotquilt-handoff-end',
     type: 'CustomEvent<HandoffDetail>',
+    detail: handoffDetail,
     description:
       'The handoff finished. `detail.reason` is `complete`, or why it swapped at once.',
   },
   {
     name: 'dotquilt-handoff-cancel',
     type: 'CustomEvent<HandoffDetail>',
+    detail: handoffDetail,
     description: 'A newer state or cycle replaced the handoff.',
   },
 ];

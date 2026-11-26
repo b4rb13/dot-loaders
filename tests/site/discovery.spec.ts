@@ -98,6 +98,11 @@ test('titles name what people search for, while headings stay short', async ({
       'Skeleton screen vs spinner: when to use each | Dotquilt',
       'Skeleton loader or spinner?',
     ],
+    [
+      '/docs/api/',
+      'Dotquilt API reference: elements, attributes, events and CSS properties | Dotquilt',
+      'Dotquilt API reference',
+    ],
   ] as const) {
     await page.goto(path);
     await expect(page).toHaveTitle(title);

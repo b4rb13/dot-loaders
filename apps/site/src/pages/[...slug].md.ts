@@ -7,6 +7,8 @@ import home from '../markdown/home.md?raw';
  * Every page as plain Markdown, for people and agents that read it without
  * a browser: /docs/components/skeleton/ → /docs/components/skeleton.md, and
  * the home page → /index.md (written by hand: its source is all components).
+ * The API reference (/docs/api.md) is the Markdown content.config.ts
+ * generates for it, as it is for the page itself.
  * Interactive pages (examples, playground, pricing) say what they are and
  * where to open them. middleware.ts serves these to requests that ask for
  * text/markdown.

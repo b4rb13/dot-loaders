@@ -19,6 +19,8 @@ export const GET: APIRoute = async ({ site }) => {
     '',
   ];
   const prefix = (start: string) => (id: string) => id.startsWith(start);
+  // Generated from the element descriptions (lib/api-reference.ts).
+  const api = 'docs/api';
   return new Response(
     [
       '# Dotquilt',
@@ -44,7 +46,7 @@ export const GET: APIRoute = async ({ site }) => {
       '1. To add Dotquilt to a project, follow the setup prompt (the first link below): analyse the project, ask the user, then convert one place at a time.',
       '2. Install with `npm install dotquilt`, plus the package for the framework: `@dotquilt/react` (React 19), `@dotquilt/vue` (Vue 3.5), `@dotquilt/svelte` (Svelte 5) or `@dotquilt/angular` (Angular 22).',
       "3. Wrap only the part that loads in a LoadingRegion with an `aria-label`, pass the existing loading state as `state` (`pending`, `refreshing` or `ready`), and give it a placeholder in the content's shape and size. Don't change how the data is fetched.",
-      '4. Check the details on the pages below before writing code: the API is new and may not be in your training data.',
+      '4. Check the details on the pages below before writing code: the API is new and may not be in your training data. The API reference lists every element, attribute, property, event, slot, CSS part and custom property, with the React, Vue, Svelte and Angular names.',
       '',
       '## Start here',
       '',
@@ -53,10 +55,11 @@ export const GET: APIRoute = async ({ site }) => {
       '',
       ...section(
         'Getting started',
-        (id) => id === 'docs' || /^docs\/[^/]+$/.test(id),
+        (id) => id === 'docs' || (/^docs\/[^/]+$/.test(id) && id !== api),
       ),
       ...section('Components', prefix('docs/components/')),
       ...section('Guides', prefix('docs/guides/')),
+      ...section('Reference', (id) => id === api),
       '## Optional',
       '',
       `- [Examples](${url('/examples/')}): every loader in the place it lives, with its code`,

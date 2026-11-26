@@ -23,6 +23,7 @@ export const pages = [
   '/docs/installation/',
   '/docs/ai-setup/',
   '/docs/theming/',
+  '/docs/api/',
   '/license/',
   '/about/',
   '/contact/',
