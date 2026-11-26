@@ -24,6 +24,7 @@ export const pages = [
   '/docs/ai-setup/',
   '/docs/theming/',
   '/docs/stability/',
+  '/docs/api/',
   '/license/',
   '/about/',
   '/contact/',

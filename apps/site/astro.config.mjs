@@ -120,6 +120,11 @@ export default defineConfig({
             },
           ],
         },
+        {
+          label: 'Reference',
+          // Generated from the element descriptions (src/lib/api-reference.ts).
+          items: [{ label: 'API reference', slug: 'docs/api' }],
+        },
       ],
     }),
   ],

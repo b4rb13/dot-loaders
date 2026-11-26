@@ -48,8 +48,8 @@ test('llms.txt links every docs page as clean Markdown', async ({
   ].map((match) => match[2] as string);
   // The setup prompt; introduction, installation, AI assistant setup,
   // theming, and stability and support; six components; nine guides (four of
-  // them frameworks); about, contact and privacy.
-  expect(links.length).toBe(24);
+  // them frameworks); the API reference; about, contact and privacy.
+  expect(links.length).toBe(25);
   for (const path of links) {
     const response = await request.get(path);
     expect(response.ok(), path).toBe(true);
@@ -87,8 +87,9 @@ test('llms-full.txt holds every docs page', async ({ request }) => {
     '# Server rendering',
   ])
     expect(full).toContain(`${title}\n`);
-  // Five getting-started pages, six components and nine guides.
-  expect(full.split('\n---\n').length).toBe(20);
+  // Five getting-started pages, six components, nine guides and the API
+  // reference.
+  expect(full.split('\n---\n').length).toBe(21);
 });
 
 test('Copy page copies the page as Markdown', async ({

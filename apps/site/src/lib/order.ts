@@ -1,6 +1,9 @@
 import type { CollectionEntry } from 'astro:content';
 
-/** The sidebar's order: getting started, then components, then guides. */
+/**
+ * The sidebar's order: getting started, then components, then guides, then
+ * the API reference.
+ */
 const first = [
   'docs',
   'docs/installation',
@@ -14,6 +17,7 @@ export function docsInOrder(
   const rank = (id: string) => {
     const start = first.indexOf(id);
     if (start >= 0) return start;
+    if (id === 'docs/api') return 30;
     return id.startsWith('docs/components/') ? 10 : 20;
   };
   return entries
