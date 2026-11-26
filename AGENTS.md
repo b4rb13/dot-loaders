@@ -31,16 +31,16 @@ Use Bun (pinned in `.bun-version`) and Node 24.15+ (Angular 22 in `examples/angu
 - **Lint:** `bun run lint` (Biome); `bun run format` to fix.
 - **Unit tests:** `bun run test` (a few seconds). This includes `scripts/pack-smoke.test.ts`, which covers the published file list, imports in Node and Bun, consumer types on TypeScript 7 and 5.7, and the dist import graph. Snapshot changes: `bun test --update-snapshots`, then review the `.snap` diff.
 - **Browser tests:** `bun run test:e2e` runs Chromium against the workspace build, in parallel. Run `bun run build` first. Filter with `--project=<name>-chromium`.
-  - `tests/e2e/` covers every component's pending/ready behaviour, layout containment and screenshots. Screenshot baselines live in `tests/e2e/__screenshots__/`; CI skips pixel comparisons.
+  - `tests/e2e/` covers every component's pending/ready behaviour, layout containment and screenshots. Screenshot baselines (Chromium only) live in `tests/e2e/__screenshots__/`; CI, Firefox and WebKit skip pixel comparisons. Never commit Firefox or WebKit baselines.
   - `tests/browser/` holds the detailed native runtime tests.
   - `tests/<suite>/`: coordination, presets, table, shared-wrapper, api, layout, react and m4. Each has its own fixture server, listed in `playwright.config.ts`.
   - `tests/next/` runs against `examples/next`, a Next.js App Router project that `bun run build` builds (server rendering, hydration and a client-side navigation).
-  - `bun run test:e2e:all` adds Firefox and WebKit.
+  - `bun run test:e2e:all` adds Firefox and WebKit (`bunx playwright install firefox webkit` once).
 - **Legacy suites:** `bun run test:legacy` (a few minutes). The checks that need packed tarballs: the React suite rerun on React 19.0, the oldest supported version; catalog SSR under Node and Bun; and `frameworks`, which installs the Vue, Svelte and Angular tarballs into fresh copies of their example apps, builds and serves them. Run them before a release, or `bun run test:legacy <suite>` when touching that package.
 - **Release dry run:** `bun run release:check` (after `bun run build`) shows the planned versions, the tarball contents and what still blocks publishing. Nothing is published.
 - **Sizes:** `bun run size` prints gzip sizes per entry and fails when one is over its budget in `scripts/size-budgets.json` (about 15% headroom). Raise a budget only on purpose, in a PR that says why.
 - **Docs site:** `bun run --cwd apps/site dev` (http://127.0.0.1:4330; Astro runs it in the background, `bunx astro dev stop` ends it). `bun run build` builds it; `tests/site` checks the built pages.
-- **Everything CI runs:** `bun run verify`. CI itself runs only what a change needs: docs-only changes skip it, site-only changes run the checks and the site's browser tests, and anything else runs the checks plus every browser test in three parallel shards. A merge to main reruns the checks only.
+- **Everything CI runs:** `bun run verify`. CI itself runs only what a change needs: docs-only changes skip it, site-only changes run the checks and the site's browser tests, and anything else runs the checks plus every browser test in Chromium, Firefox and WebKit, three parallel shards each. The site's browser tests also run in all three engines. A merge to main reruns the checks only.
 
 ## Rules
 

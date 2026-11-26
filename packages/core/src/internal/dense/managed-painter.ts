@@ -288,7 +288,11 @@ function createDensePainter(
         if (paused !== still || (!still && !canvas)) clear();
         paused = still;
         onScreen = visible(host);
-      }
+      } else if (!onScreen)
+        // The intersection observer reports crossings only: a host can leave
+        // and come back between two of its checks (a fast scroll, or a
+        // redraw while it was out of view). Seen off screen, look again.
+        onScreen = visible(host);
       if (idle && !onScreen) {
         clear();
         return;

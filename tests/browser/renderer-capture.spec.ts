@@ -93,6 +93,7 @@ for (const backend of ['available', 'unavailable'])
 for (const dpr of [1, 2, 3])
   test(`scrolling catalog admits only visible rich Canvas resources at DPR ${dpr}`, async ({
     browser,
+    browserName,
   }) => {
     const context = await browser.newContext({
       viewport: { width: 1280, height: 1000 },
@@ -102,11 +103,14 @@ for (const dpr of [1, 2, 3])
     const page = await context.newPage();
     await page.goto('http://127.0.0.1:4181/m2/catalog?profile=list&phase=idle');
     await page.waitForFunction(() => !!window.catalogFixture);
-    const result = await page.evaluate(async () => {
+    const result = await page.evaluate(async (browserName) => {
       const errors: unknown[] = [];
       document.addEventListener('dotquilt-error', (event) =>
         errors.push((event as CustomEvent).detail),
       );
+      // The loaders' idle motion starts after this, so it may stop no
+      // sooner than 4 s from here.
+      const opened = performance.now();
       await window.catalogFixture.prepare();
       const running = window.catalogFixture.run(true);
       const rows = [];
@@ -123,15 +127,27 @@ for (const dpr of [1, 2, 3])
             !host.shadowRoot?.querySelector('[data-dotquilt-painter]')
           );
         });
+      // Surfaces that left the view and still hold a canvas.
+      const held = (visibleIds: readonly string[]) =>
+        [...document.querySelectorAll('.catalog-surface')].filter(
+          (host) =>
+            !visibleIds.includes(host.id) &&
+            host.shadowRoot?.querySelector('canvas[data-dotquilt-bitmap]'),
+        );
       for (const top of [0, 960, 2400, 4320, 2400, 0]) {
         container.scrollTop = top;
         // Newly visible surfaces get their painter within a few frames; a
-        // slow runner may need more than three.
+        // slow runner may need more than three. Firefox can report the
+        // surfaces that left only several frames later (its intersection
+        // notifications wait while frames are busy), so there the wait also
+        // covers releasing their canvases.
         for (let waited = 0; waited < 30; waited++) {
           await frame();
+          const { visibleIds } = window.catalogFixture.snapshot();
           if (
             waited >= 2 &&
-            !unpainted(window.catalogFixture.snapshot().visibleIds).length
+            !unpainted(visibleIds).length &&
+            (browserName !== 'firefox' || !held(visibleIds).length)
           )
             break;
         }
@@ -139,23 +155,21 @@ for (const dpr of [1, 2, 3])
         const visible = new Set(snapshot.visibleIds);
         rows.push({
           top,
+          at: performance.now() - opened,
+          moving: snapshot.visibleIds.filter((id) =>
+            document.getElementById(id)?.hasAttribute('data-moving'),
+          ).length,
           visible: snapshot.visible,
           ledger: snapshot.ledger,
           canvases: snapshot.canvases,
           missing: unpainted(snapshot.visibleIds),
-          offscreen: [...document.querySelectorAll('.catalog-surface')]
-            .filter(
-              (host) =>
-                !visible.has(host.id) &&
-                host.shadowRoot?.querySelector('canvas[data-dotquilt-bitmap]'),
-            )
-            .map((host) => host.id),
+          offscreen: held([...visible]).map((host) => host.id),
         });
       }
       await running;
       const cleanup = await window.catalogFixture.teardown();
       return { rows, errors, cleanup };
-    });
+    }, browserName);
     await context.close();
     expect(result.errors).toEqual([]);
     expect(result.cleanup).toEqual({
@@ -167,7 +181,11 @@ for (const dpr of [1, 2, 3])
       expect(row.visible).toBe(20);
       expect(row.missing).toEqual([]);
       expect(row.offscreen).toEqual([]);
-      expect(row.canvases.length).toBeGreaterThan(0);
+      // Moving loaders draw with Canvas. Idle motion stops after 4 s, and
+      // still loaders draw SVG: a slow runner (Firefox on CI) can reach the
+      // last stops after that, but never before.
+      if (row.moving) expect(row.canvases.length).toBeGreaterThan(0);
+      else expect(row.at).toBeGreaterThanOrEqual(4000);
       expect(row.ledger?.pixels ?? 0).toBeLessThanOrEqual(4194304);
       expect(row.ledger?.bytes ?? 0).toBeLessThanOrEqual(2097152);
       expect(

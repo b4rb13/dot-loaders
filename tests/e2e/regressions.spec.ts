@@ -193,6 +193,45 @@ for (const kind of ['chart-loader', 'table-loader'] as const)
     });
   });
 
+// The intersection observer reports only crossings. A loader redrawn while
+// scrolled out of view, and back before the next frame, crossed nothing: its
+// painter kept the old answer (off screen) and drew nothing while visible.
+for (const kind of ['chart-loader', 'table-loader'] as const)
+  test(`${kind}: draws again when it comes back into view between two frames`, async ({
+    page,
+  }) => {
+    await open(page, `component=${kind}`);
+    const painted = await page.evaluate(async (kind) => {
+      const frames = async (count: number) => {
+        for (let i = 0; i < count; i++)
+          await new Promise(requestAnimationFrame);
+      };
+      const stage = document.getElementById('stage') as HTMLElement;
+      stage.replaceChildren();
+      stage.insertAdjacentHTML(
+        'beforeend',
+        `<div id="scroller" style="height:200px;overflow:auto"><dotquilt-${kind} id="loader" style="display:block;height:120px"></dotquilt-${kind}><div style="height:2000px"></div></div>`,
+      );
+      const scroller = document.getElementById('scroller') as HTMLElement;
+      const loader = document.getElementById('loader') as HTMLElement & {
+        refresh(): void;
+      };
+      const drawn = () =>
+        !!loader.shadowRoot?.querySelector('[data-dotquilt-painter]');
+      await frames(10);
+      const before = drawn();
+      scroller.scrollTop = 1000;
+      loader.refresh();
+      // The redraw runs in a microtask, while the loader is out of view.
+      await Promise.resolve();
+      await Promise.resolve();
+      scroller.scrollTop = 0;
+      await frames(10);
+      return { before, after: drawn() };
+    }, kind);
+    expect(painted).toEqual({ before: true, after: true });
+  });
+
 // Both table idles draw while pending, keep the content out of reach, and
 // release their drawing when the region becomes ready.
 for (const idle of ['typeOn', 'tableShimmer'] as const)
